@@ -1,0 +1,9 @@
+[install]
+minimumReleaseAge = 259200 # seconds
+
+minimumReleaseAgeExcludes = [
+  "@typescript/native-preview",
+  "@bloque/sdk"
+]
+
+linker = "isolated"

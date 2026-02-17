@@ -1,0 +1,13 @@
+pre-commit:
+  parallel: true
+  commands:
+    typecheck:
+      glob: "*.{ts,tsx}"
+      run: bun typecheck
+      fail_text: "TypeScript type checking failed for"
+    linter:
+      glob: "*.{js,ts,jsx,tsx}"
+      exclude: "src/routeTree.gen.ts"
+      run: bun check {staged_files}
+      stage_fixed: true
+      fail_text: "Biome linting/formatting failed for"

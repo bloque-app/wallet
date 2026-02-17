@@ -1,0 +1,10 @@
+/**
+ * For more details on how to configure Wrangler, refer to:
+ * https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "bloque-wallet",
+  "compatibility_date": "2026-02-12",
+  "pages_build_output_dir": "./dist"
+}
