@@ -77,6 +77,16 @@ function RouteComponent() {
         </p>
         <div className="overflow-hidden rounded-2xl border border-border/85 bg-card/85">
           <ProfileRow
+            icon={Landmark}
+            label="Todas las cuentas"
+            value="Ver"
+            chevron
+            onClick={() => {
+              navigate({ to: '/accounts' });
+            }}
+          />
+          <Separator />
+          <ProfileRow
             icon={Shield}
             label="Verificación KYC"
             value={kycLabel}

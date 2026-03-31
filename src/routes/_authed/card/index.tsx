@@ -32,7 +32,10 @@ function RouteComponent() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data, isLoading: isLoadingCards } = useCards();
-  const cards = data?.accounts ?? [];
+  const rawCards = (data?.accounts ?? []) as unknown as Array<
+    { medium?: string } & NonNullable<typeof data>['accounts'][number]
+  >;
+  const cards = rawCards.filter((account) => account.medium === 'card');
   const {
     mutateAsync,
     data: cardDetails,

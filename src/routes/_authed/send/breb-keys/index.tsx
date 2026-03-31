@@ -59,12 +59,7 @@ function majorToMinor(amountMajor: number, precision: number) {
   return (BigInt(amountMajor) * 10n ** BigInt(precision)).toString();
 }
 
-function minorToMajor(amountMinor: number, precision: number) {
-  return amountMinor / 10 ** precision;
-}
-
 const FROM_PRECISION = getAssetPrecision(FROM_ASSET);
-const TO_PRECISION = getAssetPrecision(TO_ASSET);
 
 function getRecipientName(data: {
   owner: { name: string | null; businessName: string | null } | null;
@@ -216,21 +211,6 @@ function RouteComponent() {
   });
 
   const selectedRate = ratesQuery.data?.rates?.[0] ?? null;
-
-  const rateSummary = useMemo(() => {
-    if (!selectedRate || !amountSrc) return null;
-    const srcAmountMinor = Number(amountSrc);
-    const dstAmountMinor = selectedRate.rate?.[1] ?? 0;
-    if (!srcAmountMinor || !dstAmountMinor) return null;
-
-    const srcAmountMajor = minorToMajor(srcAmountMinor, FROM_PRECISION);
-    const dstAmountMajor = minorToMajor(dstAmountMinor, TO_PRECISION);
-
-    return {
-      amountDst: dstAmountMajor,
-      ratio: dstAmountMajor / srcAmountMajor,
-    };
-  }, [selectedRate, amountSrc]);
 
   const formError = useMemo(() => {
     if (key.length > 0 && !hasValidKey) {
@@ -629,20 +609,6 @@ function RouteComponent() {
                     {formatCOP(parsedAmount)}
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Recibe</span>
-                  <span className="font-medium text-foreground">
-                    {rateSummary ? formatCOP(rateSummary.amountDst) : '...'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Tasa</span>
-                  <span className="font-medium text-foreground">
-                    {rateSummary
-                      ? `1 COPM = ${rateSummary.ratio.toFixed(4)} COP`
-                      : 'Consultando...'}
-                  </span>
-                </div>
               </div>
             </div>
           ) : null}
@@ -689,12 +655,6 @@ function RouteComponent() {
                 <span className="text-muted-foreground">Envías</span>
                 <span className="font-medium text-foreground">
                   {formatCOP(parsedAmount)}
-                </span>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-muted-foreground">Recibe</span>
-                <span className="font-medium text-foreground">
-                  {rateSummary ? formatCOP(rateSummary.amountDst) : '-'}
                 </span>
               </div>
               {message.trim() ? (

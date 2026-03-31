@@ -23,9 +23,8 @@ function RootComponent() {
 
   const isKycRoute = location.pathname.startsWith('/kyc');
   const isHomeRoute = location.pathname === '/';
-  const isBackToHomeRoute = /^\/(card|movements|profile|topup)\/?$/.test(
-    location.pathname,
-  );
+  const isBackToHomeRoute =
+    /^\/(accounts|card|movements|profile|topup)\/?$/.test(location.pathname);
 
   useEffect(() => {
     if (!isAuthenticated || isHomeRoute || isKycRoute || !isBackToHomeRoute)

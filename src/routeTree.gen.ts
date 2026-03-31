@@ -19,6 +19,7 @@ import { Route as AuthedMovementsIndexRouteImport } from './routes/_authed/movem
 import { Route as AuthedKycIndexRouteImport } from './routes/_authed/kyc/index'
 import { Route as AuthedConvertIndexRouteImport } from './routes/_authed/convert/index'
 import { Route as AuthedCardIndexRouteImport } from './routes/_authed/card/index'
+import { Route as AuthedAccountsIndexRouteImport } from './routes/_authed/accounts/index'
 import { Route as AuthedhomeIndexRouteImport } from './routes/_authed/(home)/index'
 import { Route as AuthedSendUsBanksWalletsIndexRouteImport } from './routes/_authed/send/us-banks-wallets/index'
 import { Route as AuthedSendColombianBanksIndexRouteImport } from './routes/_authed/send/colombian-banks/index'
@@ -75,6 +76,11 @@ const AuthedCardIndexRoute = AuthedCardIndexRouteImport.update({
   path: '/card/',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedAccountsIndexRoute = AuthedAccountsIndexRouteImport.update({
+  id: '/accounts/',
+  path: '/accounts/',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const AuthedhomeIndexRoute = AuthedhomeIndexRouteImport.update({
   id: '/(home)/',
   path: '/',
@@ -118,6 +124,7 @@ const AuthedCardDetailsUrnRoute = AuthedCardDetailsUrnRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof AuthedhomeIndexRoute
   '/card/': typeof AuthedCardIndexRoute
+  '/accounts/': typeof AuthedAccountsIndexRoute
   '/convert/': typeof AuthedConvertIndexRoute
   '/kyc/': typeof AuthedKycIndexRoute
   '/movements/': typeof AuthedMovementsIndexRoute
@@ -135,6 +142,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof AuthedhomeIndexRoute
   '/card': typeof AuthedCardIndexRoute
+  '/accounts': typeof AuthedAccountsIndexRoute
   '/convert': typeof AuthedConvertIndexRoute
   '/kyc': typeof AuthedKycIndexRoute
   '/movements': typeof AuthedMovementsIndexRoute
@@ -155,6 +163,7 @@ export interface FileRoutesById {
   '/_public': typeof PublicRouteWithChildren
   '/_authed/(home)/': typeof AuthedhomeIndexRoute
   '/_authed/card/': typeof AuthedCardIndexRoute
+  '/_authed/accounts/': typeof AuthedAccountsIndexRoute
   '/_authed/convert/': typeof AuthedConvertIndexRoute
   '/_authed/kyc/': typeof AuthedKycIndexRoute
   '/_authed/movements/': typeof AuthedMovementsIndexRoute
@@ -173,6 +182,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/accounts/'
     | '/card/'
     | '/convert/'
     | '/kyc/'
@@ -190,6 +200,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/accounts'
     | '/card'
     | '/convert'
     | '/kyc'
@@ -209,6 +220,7 @@ export interface FileRouteTypes {
     | '/_authed'
     | '/_public'
     | '/_authed/(home)/'
+    | '/_authed/accounts/'
     | '/_authed/card/'
     | '/_authed/convert/'
     | '/_authed/kyc/'
@@ -302,6 +314,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedCardIndexRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/accounts/': {
+      id: '/_authed/accounts/'
+      path: '/accounts'
+      fullPath: '/accounts/'
+      preLoaderRoute: typeof AuthedAccountsIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/(home)/': {
       id: '/_authed/(home)/'
       path: '/'
@@ -356,6 +375,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthedRouteChildren {
   AuthedhomeIndexRoute: typeof AuthedhomeIndexRoute
+  AuthedAccountsIndexRoute: typeof AuthedAccountsIndexRoute
   AuthedCardIndexRoute: typeof AuthedCardIndexRoute
   AuthedConvertIndexRoute: typeof AuthedConvertIndexRoute
   AuthedKycIndexRoute: typeof AuthedKycIndexRoute
@@ -373,6 +393,7 @@ interface AuthedRouteChildren {
 
 const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedhomeIndexRoute: AuthedhomeIndexRoute,
+  AuthedAccountsIndexRoute: AuthedAccountsIndexRoute,
   AuthedCardIndexRoute: AuthedCardIndexRoute,
   AuthedConvertIndexRoute: AuthedConvertIndexRoute,
   AuthedKycIndexRoute: AuthedKycIndexRoute,
