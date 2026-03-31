@@ -22,6 +22,7 @@ import { Route as AuthedCardIndexRouteImport } from './routes/_authed/card/index
 import { Route as AuthedhomeIndexRouteImport } from './routes/_authed/(home)/index'
 import { Route as AuthedSendUsBanksWalletsIndexRouteImport } from './routes/_authed/send/us-banks-wallets/index'
 import { Route as AuthedSendColombianBanksIndexRouteImport } from './routes/_authed/send/colombian-banks/index'
+import { Route as AuthedSendBrebKeysIndexRouteImport } from './routes/_authed/send/breb-keys/index'
 import { Route as AuthedSendBloqueFriendsIndexRouteImport } from './routes/_authed/send/bloque-friends/index'
 import { Route as AuthedSendBlockchainAddressesIndexRouteImport } from './routes/_authed/send/blockchain-addresses/index'
 import { Route as AuthedCardDetailsUrnRouteImport } from './routes/_authed/card/details/$urn'
@@ -91,6 +92,11 @@ const AuthedSendColombianBanksIndexRoute =
     path: '/send/colombian-banks/',
     getParentRoute: () => AuthedRoute,
   } as any)
+const AuthedSendBrebKeysIndexRoute = AuthedSendBrebKeysIndexRouteImport.update({
+  id: '/send/breb-keys/',
+  path: '/send/breb-keys/',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const AuthedSendBloqueFriendsIndexRoute =
   AuthedSendBloqueFriendsIndexRouteImport.update({
     id: '/send/bloque-friends/',
@@ -122,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/card/details/$urn': typeof AuthedCardDetailsUrnRoute
   '/send/blockchain-addresses/': typeof AuthedSendBlockchainAddressesIndexRoute
   '/send/bloque-friends/': typeof AuthedSendBloqueFriendsIndexRoute
+  '/send/breb-keys/': typeof AuthedSendBrebKeysIndexRoute
   '/send/colombian-banks/': typeof AuthedSendColombianBanksIndexRoute
   '/send/us-banks-wallets/': typeof AuthedSendUsBanksWalletsIndexRoute
 }
@@ -138,6 +145,7 @@ export interface FileRoutesByTo {
   '/card/details/$urn': typeof AuthedCardDetailsUrnRoute
   '/send/blockchain-addresses': typeof AuthedSendBlockchainAddressesIndexRoute
   '/send/bloque-friends': typeof AuthedSendBloqueFriendsIndexRoute
+  '/send/breb-keys': typeof AuthedSendBrebKeysIndexRoute
   '/send/colombian-banks': typeof AuthedSendColombianBanksIndexRoute
   '/send/us-banks-wallets': typeof AuthedSendUsBanksWalletsIndexRoute
 }
@@ -157,6 +165,7 @@ export interface FileRoutesById {
   '/_authed/card/details/$urn': typeof AuthedCardDetailsUrnRoute
   '/_authed/send/blockchain-addresses/': typeof AuthedSendBlockchainAddressesIndexRoute
   '/_authed/send/bloque-friends/': typeof AuthedSendBloqueFriendsIndexRoute
+  '/_authed/send/breb-keys/': typeof AuthedSendBrebKeysIndexRoute
   '/_authed/send/colombian-banks/': typeof AuthedSendColombianBanksIndexRoute
   '/_authed/send/us-banks-wallets/': typeof AuthedSendUsBanksWalletsIndexRoute
 }
@@ -175,6 +184,7 @@ export interface FileRouteTypes {
     | '/card/details/$urn'
     | '/send/blockchain-addresses/'
     | '/send/bloque-friends/'
+    | '/send/breb-keys/'
     | '/send/colombian-banks/'
     | '/send/us-banks-wallets/'
   fileRoutesByTo: FileRoutesByTo
@@ -191,6 +201,7 @@ export interface FileRouteTypes {
     | '/card/details/$urn'
     | '/send/blockchain-addresses'
     | '/send/bloque-friends'
+    | '/send/breb-keys'
     | '/send/colombian-banks'
     | '/send/us-banks-wallets'
   id:
@@ -209,6 +220,7 @@ export interface FileRouteTypes {
     | '/_authed/card/details/$urn'
     | '/_authed/send/blockchain-addresses/'
     | '/_authed/send/bloque-friends/'
+    | '/_authed/send/breb-keys/'
     | '/_authed/send/colombian-banks/'
     | '/_authed/send/us-banks-wallets/'
   fileRoutesById: FileRoutesById
@@ -311,6 +323,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedSendColombianBanksIndexRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/send/breb-keys/': {
+      id: '/_authed/send/breb-keys/'
+      path: '/send/breb-keys'
+      fullPath: '/send/breb-keys/'
+      preLoaderRoute: typeof AuthedSendBrebKeysIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/send/bloque-friends/': {
       id: '/_authed/send/bloque-friends/'
       path: '/send/bloque-friends'
@@ -347,6 +366,7 @@ interface AuthedRouteChildren {
   AuthedCardDetailsUrnRoute: typeof AuthedCardDetailsUrnRoute
   AuthedSendBlockchainAddressesIndexRoute: typeof AuthedSendBlockchainAddressesIndexRoute
   AuthedSendBloqueFriendsIndexRoute: typeof AuthedSendBloqueFriendsIndexRoute
+  AuthedSendBrebKeysIndexRoute: typeof AuthedSendBrebKeysIndexRoute
   AuthedSendColombianBanksIndexRoute: typeof AuthedSendColombianBanksIndexRoute
   AuthedSendUsBanksWalletsIndexRoute: typeof AuthedSendUsBanksWalletsIndexRoute
 }
@@ -364,6 +384,7 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedSendBlockchainAddressesIndexRoute:
     AuthedSendBlockchainAddressesIndexRoute,
   AuthedSendBloqueFriendsIndexRoute: AuthedSendBloqueFriendsIndexRoute,
+  AuthedSendBrebKeysIndexRoute: AuthedSendBrebKeysIndexRoute,
   AuthedSendColombianBanksIndexRoute: AuthedSendColombianBanksIndexRoute,
   AuthedSendUsBanksWalletsIndexRoute: AuthedSendUsBanksWalletsIndexRoute,
 }

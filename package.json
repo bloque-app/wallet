@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.1.0",
-    "@bloque/sdk": "^0.0.43",
+    "@bloque/sdk": "^0.0.49",
     "@fontsource-variable/outfit": "^5.2.8",
     "@tanstack/react-query": "^5.90.20",
     "@tanstack/react-router": "^1.159.4",

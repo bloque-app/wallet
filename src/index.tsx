@@ -4,9 +4,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createRouter, RouterProvider } from '@tanstack/react-router';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { Badge } from './components/ui/badge';
 import { Toaster } from './components/ui/sonner';
 import { Spinner } from './components/ui/spinner';
 import { ThemeProvider } from './components/ui/theme-provider';
+import { PUBLIC_APP_ENV } from './config/env';
 import {
   type AuthContextProps,
   AuthProvider,
@@ -78,6 +80,16 @@ if (rootEl) {
       <ThemeProvider defaultTheme="dark" storageKey="ui-theme">
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
+            {PUBLIC_APP_ENV === 'dev' && (
+              <div className="pointer-events-none fixed right-3 top-3 z-[100]">
+                <Badge
+                  className="border border-border/60 bg-background/90 text-foreground shadow-sm backdrop-blur"
+                  variant={PUBLIC_APP_ENV === 'dev' ? 'secondary' : 'outline'}
+                >
+                  {PUBLIC_APP_ENV.toUpperCase()}
+                </Badge>
+              </div>
+            )}
             <Toaster richColors closeButton expand />
             <App />
           </AuthProvider>

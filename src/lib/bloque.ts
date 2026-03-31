@@ -1,10 +1,11 @@
 import { SDK } from '@bloque/sdk';
+import { PUBLIC_BLOQUE_MODE } from '../config/env';
 
 export const createBloqueSdk = (origin?: string) => {
   return new SDK({
     origin,
     auth: { type: 'jwt' },
-    mode: 'production',
+    mode: PUBLIC_BLOQUE_MODE,
     platform: 'browser',
   });
 };

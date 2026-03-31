@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { ArrowLeft, Building2, Users, Wallet } from 'lucide-react';
+import { ArrowLeft, Building2, KeyRound, Users, Wallet } from 'lucide-react';
 import { cn } from '~/lib/utils';
 
 export const Route = createFileRoute('/_authed/send/')({
@@ -7,6 +7,13 @@ export const Route = createFileRoute('/_authed/send/')({
 });
 
 const options = [
+  {
+    title: 'Llaves BRE-B',
+    description: 'Envia a cualquier banco colombiano al instante.',
+    to: '/send/breb-keys',
+    icon: KeyRound,
+    enabled: true,
+  },
   {
     title: 'Bancos colombianos',
     description: 'Transfiere a cuentas bancarias en Colombia.',
