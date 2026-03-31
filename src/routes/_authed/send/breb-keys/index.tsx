@@ -20,7 +20,6 @@ import { Textarea } from '~/components/ui/textarea';
 import { useAuth } from '~/contexts/auth/auth-context';
 import { bloque } from '~/lib/bloque';
 import { formatCOP } from '~/lib/mock-data';
-import { useCards } from '../../card/-hooks/use-card';
 import { TopUpErrorStep } from '../../topup/-components/error-step';
 import { TopUpPendingStep } from '../../topup/-components/pending-step';
 
@@ -103,7 +102,6 @@ export const Route = createFileRoute('/_authed/send/breb-keys/')({
 
 function RouteComponent() {
   const { user } = useAuth();
-  const { data: cardsData, isLoading: isLoadingCards } = useCards();
 
   const [view, setView] = useState<ViewState>('form');
   const [key, setKey] = useState('');
@@ -126,7 +124,6 @@ function RouteComponent() {
     return majorToMinor(parsedAmount, FROM_PRECISION);
   }, [parsedAmount]);
 
-  const ledgerId = cardsData?.accounts?.[0]?.ledgerId ?? '';
   const hasValidKey = normalizedKey.length === 10;
   const selectedCreateKeyType = BREB_KEY_TYPES.find(
     (option) => option.value === createKeyType,
@@ -152,9 +149,6 @@ function RouteComponent() {
 
   const createKeyMutation = useMutation({
     mutationFn: async () => {
-      if (!ledgerId) {
-        throw new Error('No encontramos una cuenta base para crear tu llave.');
-      }
       if (!createKeyValue.trim()) {
         throw new Error('Ingresa el valor de la llave BRE-B.');
       }
@@ -178,7 +172,6 @@ function RouteComponent() {
         keyType: createKeyType,
         key: createKeyValue.trim(),
         displayName: user.name.trim() || 'Usuario Bloque',
-        ledgerId,
         metadata: {
           source: 'wallet',
           purpose: 'breb-send',
@@ -243,9 +236,6 @@ function RouteComponent() {
     if (key.length > 0 && !hasValidKey) {
       return 'La llave debe ser un número celular de 10 dígitos.';
     }
-    if (!ledgerId && !isLoadingCards) {
-      return 'No encontramos una cuenta base para enviar.';
-    }
     if (parsedAmount > 0 && parsedAmount < MIN_TRANSFER_AMOUNT) {
       return 'El monto mínimo es $10,000 COP.';
     }
@@ -262,9 +252,7 @@ function RouteComponent() {
     return null;
   }, [
     hasValidKey,
-    isLoadingCards,
     key.length,
-    ledgerId,
     parsedAmount,
     ratesQuery.isError,
     ratesQuery.isSuccess,
@@ -478,23 +466,13 @@ function RouteComponent() {
 
             <Button
               onClick={() => createKeyMutation.mutate()}
-              disabled={
-                createKeyMutation.isPending ||
-                !createKeyValue.trim() ||
-                !ledgerId
-              }
+              disabled={createKeyMutation.isPending || !createKeyValue.trim()}
               className="h-12 w-full rounded-2xl text-sm font-medium"
             >
               {createKeyMutation.isPending
                 ? 'Creando llave...'
                 : 'Crear llave BRE-B'}
             </Button>
-
-            {!ledgerId && !isLoadingCards ? (
-              <p className="text-xs text-destructive">
-                Necesitas una cuenta base disponible para crear tu llave BRE-B.
-              </p>
-            ) : null}
           </div>
         </section>
       </div>
