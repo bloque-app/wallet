@@ -11,6 +11,7 @@ export default defineConfig({
     template: './public/index.html',
     templateParameters: {
       TITLE: `Wallet ${isProd ? 'Bloque' : 'Dev'}`,
+      MANIFEST: isProd ? '/manifest.json' : '/manifest.dev.json',
     },
   },
   plugins: [pluginReact()],
