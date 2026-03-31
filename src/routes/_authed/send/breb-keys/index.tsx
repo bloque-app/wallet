@@ -550,7 +550,7 @@ function RouteComponent() {
                 Envio inmediato por llave
               </p>
               <p className="text-xs text-muted-foreground">
-                Igual que en Nequi: escribe la llave, el monto y un mensaje.
+                Escribe la llave, el monto y un mensaje.
               </p>
             </div>
           </div>
