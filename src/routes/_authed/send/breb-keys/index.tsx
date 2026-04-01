@@ -1,5 +1,13 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { ArrowLeft, KeyRound, QrCode, Settings2 } from 'lucide-react';
+import { useState } from 'react';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from '~/components/ui/drawer';
 import { cn } from '~/lib/utils';
 
 export const Route = createFileRoute('/_authed/send/breb-keys/')({
@@ -28,6 +36,9 @@ const options = [
 ] as const;
 
 function RouteComponent() {
+  const navigate = useNavigate();
+  const [payDrawerOpen, setPayDrawerOpen] = useState(false);
+
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center gap-2">
@@ -51,6 +62,35 @@ function RouteComponent() {
       <section className="flex flex-col gap-3">
         {options.map((option) => {
           const Icon = option.icon;
+          if (option.to === '/send/breb-keys/pay-transfer') {
+            return (
+              <button
+                key={option.to}
+                type="button"
+                onClick={() => setPayDrawerOpen(true)}
+                className="text-left"
+              >
+                <div
+                  className={cn(
+                    'flex items-start gap-3 rounded-2xl border border-border/75 bg-card/80 p-4 transition-all hover:bg-muted/70',
+                  )}
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-border/80 bg-background/85">
+                    <Icon className="h-4 w-4 text-foreground" />
+                  </div>
+                  <div className="flex flex-col">
+                    <p className="text-sm font-medium text-foreground">
+                      {option.title}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {option.description}
+                    </p>
+                  </div>
+                </div>
+              </button>
+            );
+          }
+
           return (
             <Link key={option.to} to={option.to}>
               <div
@@ -74,6 +114,48 @@ function RouteComponent() {
           );
         })}
       </section>
+
+      <Drawer open={payDrawerOpen} onOpenChange={setPayDrawerOpen}>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>Pagar o transferir</DrawerTitle>
+            <DrawerDescription>
+              Elige cómo quieres iniciar la transferencia.
+            </DrawerDescription>
+          </DrawerHeader>
+
+          <div className="flex flex-col gap-3 px-5 pb-5">
+            <button
+              type="button"
+              onClick={() => {
+                setPayDrawerOpen(false);
+                navigate({ to: '/send/breb-keys/pay-transfer' });
+              }}
+              className="flex w-full flex-col items-start rounded-2xl border border-border/80 bg-card/80 p-4 text-left transition-all hover:bg-muted/70"
+            >
+              <span className="text-sm font-medium text-foreground">
+                Ingresar llave
+              </span>
+              <span className="text-xs text-muted-foreground">
+                Escribe la llave BRE-B del destinatario.
+              </span>
+            </button>
+
+            <button
+              type="button"
+              disabled
+              className="flex w-full cursor-not-allowed flex-col items-start rounded-2xl border border-border/80 bg-card/50 p-4 text-left opacity-60"
+            >
+              <span className="text-sm font-medium text-foreground">
+                Escanear codigo QR
+              </span>
+              <span className="text-xs text-muted-foreground">
+                Proximamente.
+              </span>
+            </button>
+          </div>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 }
