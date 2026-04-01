@@ -21,7 +21,7 @@ const options = [
   },
   {
     title: 'Pagar o transferir',
-    description: 'Ingresa la llave o escanea el qr',
+    description: 'Ingresa la llave o escanea el QR',
     to: '/send/breb-keys/pay-transfer',
     icon: QrCode,
   },

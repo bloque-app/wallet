@@ -14,6 +14,13 @@ import {
   AlertDialogTitle,
 } from '~/components/ui/alert-dialog';
 import { Button } from '~/components/ui/button';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from '~/components/ui/drawer';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { Textarea } from '~/components/ui/textarea';
@@ -55,6 +62,10 @@ export const Route = createFileRoute('/_authed/send/breb-keys/pay-transfer/')({
 
 function RouteComponent() {
   const [view, setView] = useState<ViewState>('form');
+  const [transferMethod, setTransferMethod] = useState<'key' | 'qr' | null>(
+    null,
+  );
+  const [methodDrawerOpen, setMethodDrawerOpen] = useState(true);
   const [key, setKey] = useState('');
   const [amount, setAmount] = useState('');
   const [message, setMessage] = useState('');
@@ -274,7 +285,7 @@ function RouteComponent() {
             Pagar o transferir
           </h1>
           <p className="text-xs text-muted-foreground">
-            Ingresa la llave o escanea el qr
+            Ingresa la llave o escanea el QR
           </p>
         </div>
       </div>
@@ -287,7 +298,9 @@ function RouteComponent() {
             </div>
             <div className="flex flex-col">
               <p className="text-sm font-medium text-foreground">
-                Envio inmediato por llave
+                {transferMethod === 'qr'
+                  ? 'Pago desde codigo QR'
+                  : 'Envio inmediato por llave'}
               </p>
             </div>
           </div>
@@ -362,6 +375,52 @@ function RouteComponent() {
           </Button>
         </div>
       </section>
+
+      <Drawer open={methodDrawerOpen} onOpenChange={setMethodDrawerOpen}>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>Pagar o transferir</DrawerTitle>
+            <DrawerDescription>
+              Elige cómo quieres iniciar la transferencia.
+            </DrawerDescription>
+          </DrawerHeader>
+
+          <div className="flex flex-col gap-3 px-5 pb-5">
+            <button
+              type="button"
+              onClick={() => {
+                setTransferMethod('key');
+                setMethodDrawerOpen(false);
+              }}
+              className="flex w-full flex-col items-start rounded-2xl border border-border/80 bg-card/80 p-4 text-left transition-all hover:bg-muted/70"
+            >
+              <span className="text-sm font-medium text-foreground">
+                Ingresar llave
+              </span>
+              <span className="text-xs text-muted-foreground">
+                Escribe la llave BRE-B del destinatario.
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setTransferMethod('qr');
+                setMethodDrawerOpen(false);
+                toast.info('Escanear codigo QR estara disponible pronto.');
+              }}
+              className="flex w-full flex-col items-start rounded-2xl border border-border/80 bg-card/80 p-4 text-left transition-all hover:bg-muted/70"
+            >
+              <span className="text-sm font-medium text-foreground">
+                Escanear codigo QR
+              </span>
+              <span className="text-xs text-muted-foreground">
+                Usa la camara para leer un codigo QR.
+              </span>
+            </button>
+          </div>
+        </DrawerContent>
+      </Drawer>
 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent size="sm">
