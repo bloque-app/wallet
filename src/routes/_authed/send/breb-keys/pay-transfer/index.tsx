@@ -290,91 +290,97 @@ function RouteComponent() {
         </div>
       </div>
 
-      <section className="rounded-3xl border border-border/75 bg-card/80 p-5">
-        <div className="flex flex-col gap-5">
-          <div className="flex items-center gap-3 rounded-2xl border border-border/75 bg-background/70 p-4">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-border/80 bg-card">
-              <Landmark className="h-5 w-5 text-foreground" />
-            </div>
-            <div className="flex flex-col">
-              <p className="text-sm font-medium text-foreground">
-                {transferMethod === 'qr'
-                  ? 'Pago desde codigo QR'
-                  : 'Envio inmediato por llave'}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="breb-key">Llave BRE-B</Label>
-            <Input
-              id="breb-key"
-              inputMode="numeric"
-              placeholder="3001234567"
-              value={key}
-              onChange={(event) =>
-                setKey(event.target.value.replace(/\D/g, '').slice(0, 10))
-              }
-              className="h-12 rounded-2xl"
-              autoFocus
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="breb-amount">Monto</Label>
-            <Input
-              id="breb-amount"
-              inputMode="numeric"
-              placeholder="$0"
-              value={amount}
-              onChange={(event) =>
-                setAmount(event.target.value.replace(/\D/g, ''))
-              }
-              className="h-12 rounded-2xl"
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="breb-message">Mensaje</Label>
-            <Textarea
-              id="breb-message"
-              placeholder="¿Para qué es este envio?"
-              value={message}
-              onChange={(event) => setMessage(event.target.value)}
-              className="min-h-24 resize-none rounded-2xl"
-              maxLength={140}
-            />
-          </div>
-
-          {formError ? (
-            <p className="text-xs text-destructive">{formError}</p>
-          ) : null}
-
-          {parsedAmount >= MIN_TRANSFER_AMOUNT ? (
-            <div className="rounded-2xl border border-border/85 bg-background/70 p-4">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Envias</span>
-                <span className="font-medium text-foreground">
-                  {formatCOP(parsedAmount)}
-                </span>
+      {transferMethod === 'key' ? (
+        <section className="rounded-3xl border border-border/75 bg-card/80 p-5">
+          <div className="flex flex-col gap-5">
+            <div className="flex items-center gap-3 rounded-2xl border border-border/75 bg-background/70 p-4">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-border/80 bg-card">
+                <Landmark className="h-5 w-5 text-foreground" />
+              </div>
+              <div className="flex flex-col">
+                <p className="text-sm font-medium text-foreground">
+                  Envio inmediato por llave
+                </p>
               </div>
             </div>
-          ) : null}
 
-          <Button
-            onClick={() => previewRecipientMutation.mutate()}
-            disabled={!canSubmit}
-            className="h-12 w-full gap-2 rounded-2xl text-sm font-medium"
-          >
-            <Send className="h-4 w-4" />
-            {previewRecipientMutation.isPending
-              ? 'Validando llave...'
-              : createOrderMutation.isPending
-                ? 'Enviando...'
-                : 'Enviar dinero'}
-          </Button>
-        </div>
-      </section>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="breb-key">Llave BRE-B</Label>
+              <Input
+                id="breb-key"
+                inputMode="numeric"
+                placeholder="3001234567"
+                value={key}
+                onChange={(event) =>
+                  setKey(event.target.value.replace(/\D/g, '').slice(0, 10))
+                }
+                className="h-12 rounded-2xl"
+                autoFocus
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="breb-amount">Monto</Label>
+              <Input
+                id="breb-amount"
+                inputMode="numeric"
+                placeholder="$0"
+                value={amount}
+                onChange={(event) =>
+                  setAmount(event.target.value.replace(/\D/g, ''))
+                }
+                className="h-12 rounded-2xl"
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="breb-message">Mensaje</Label>
+              <Textarea
+                id="breb-message"
+                placeholder="¿Para qué es este envio?"
+                value={message}
+                onChange={(event) => setMessage(event.target.value)}
+                className="min-h-24 resize-none rounded-2xl"
+                maxLength={140}
+              />
+            </div>
+
+            {formError ? (
+              <p className="text-xs text-destructive">{formError}</p>
+            ) : null}
+
+            {parsedAmount >= MIN_TRANSFER_AMOUNT ? (
+              <div className="rounded-2xl border border-border/85 bg-background/70 p-4">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Envias</span>
+                  <span className="font-medium text-foreground">
+                    {formatCOP(parsedAmount)}
+                  </span>
+                </div>
+              </div>
+            ) : null}
+
+            <Button
+              onClick={() => previewRecipientMutation.mutate()}
+              disabled={!canSubmit}
+              className="h-12 w-full gap-2 rounded-2xl text-sm font-medium"
+            >
+              <Send className="h-4 w-4" />
+              {previewRecipientMutation.isPending
+                ? 'Validando llave...'
+                : createOrderMutation.isPending
+                  ? 'Enviando...'
+                  : 'Enviar dinero'}
+            </Button>
+          </div>
+        </section>
+      ) : (
+        <section className="rounded-3xl border border-dashed border-border/75 bg-card/60 p-6">
+          <p className="text-sm text-muted-foreground">
+            Elige una opción para comenzar.
+          </p>
+        </section>
+      )}
 
       <Drawer open={methodDrawerOpen} onOpenChange={setMethodDrawerOpen}>
         <DrawerContent>
@@ -404,18 +410,14 @@ function RouteComponent() {
 
             <button
               type="button"
-              onClick={() => {
-                setTransferMethod('qr');
-                setMethodDrawerOpen(false);
-                toast.info('Escanear codigo QR estara disponible pronto.');
-              }}
-              className="flex w-full flex-col items-start rounded-2xl border border-border/80 bg-card/80 p-4 text-left transition-all hover:bg-muted/70"
+              disabled
+              className="flex w-full cursor-not-allowed flex-col items-start rounded-2xl border border-border/80 bg-card/50 p-4 text-left opacity-60"
             >
               <span className="text-sm font-medium text-foreground">
                 Escanear codigo QR
               </span>
               <span className="text-xs text-muted-foreground">
-                Usa la camara para leer un codigo QR.
+                Proximamente.
               </span>
             </button>
           </div>
