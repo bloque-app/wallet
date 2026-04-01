@@ -3,31 +3,56 @@ import { createFileRoute } from '@tanstack/react-router';
 import { Building2, CreditCard, Wallet } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { bloque } from '~/lib/bloque';
-import { cn } from '~/lib/utils';
-import { useCards } from '../card/-hooks/use-card';
-import { TopUpAmountStep } from './-components/amount-step';
+import { Button } from '~/components/ui/button';
+import { Input } from '~/components/ui/input';
+import { Label } from '~/components/ui/label';
 import {
-  type TopUpBankAccountData,
-  TopUpBankStep,
-} from './-components/bank-step';
-import { TopUpConfirmStep } from './-components/confirm-step';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '~/components/ui/select';
+import { Separator } from '~/components/ui/separator';
+import { useAuth } from '~/contexts/auth/auth-context';
+import { bloque } from '~/lib/bloque';
+import { formatAmount, formatCOP } from '~/lib/mock-data';
+import { cn } from '~/lib/utils';
 import { TopUpErrorStep } from './-components/error-step';
 import { TopUpPendingStep } from './-components/pending-step';
 
-type TopUpStep = 'method' | 'amount' | 'bank' | 'confirm' | 'pending' | 'error';
+type TopUpStep =
+  | 'method'
+  | 'amount'
+  | 'details'
+  | 'confirm'
+  | 'pending'
+  | 'error';
+type ReceiveAsset = 'COP' | 'USD';
+
+type PseForm = {
+  bankCode: string;
+  userType: '0' | '1';
+  customerEmail: string;
+  userLegalIdType: 'CC' | 'NIT' | 'CE';
+  userLegalId: string;
+  fullName: string;
+  phoneNumber: string;
+};
 
 const MIN_TOPUP_AMOUNT = 10_000;
-const FROM_ASSET = 'COPM/2';
-const TO_ASSET = 'COP/2';
-const FROM_MEDIUM = 'kusama';
-const TO_MEDIUM = 'bancolombia' as const;
+const FROM_ASSET = 'COP/2';
+const FROM_MEDIUM = 'pse';
+const TO_MEDIUM = 'kusama';
 
-function getAssetPrecision(assetWithPrecision: string) {
-  const [, precisionStr] = assetWithPrecision.split('/');
-  const parsed = Number.parseInt(precisionStr ?? '0', 10);
-  return Number.isNaN(parsed) ? 0 : parsed;
-}
+const RECEIVE_ASSETS: Array<{
+  value: ReceiveAsset;
+  sdkAsset: 'COPM/2' | 'DUSD/6';
+  precision: number;
+}> = [
+  { value: 'COP', sdkAsset: 'COPM/2', precision: 2 },
+  { value: 'USD', sdkAsset: 'DUSD/6', precision: 6 },
+];
 
 function majorToMinor(amountMajor: number, precision: number) {
   return (BigInt(amountMajor) * 10n ** BigInt(precision)).toString();
@@ -37,48 +62,72 @@ function minorToMajor(amountMinor: number, precision: number) {
   return amountMinor / 10 ** precision;
 }
 
-const FROM_PRECISION = getAssetPrecision(FROM_ASSET);
-const TO_PRECISION = getAssetPrecision(TO_ASSET);
-
-const DEFAULT_BANK_FORM: TopUpBankAccountData = {
-  bankAccountType: 'savings',
-  bankAccountNumber: '',
-  bankAccountHolderName: '',
-  bankAccountHolderIdentificationType: 'CC',
-  bankAccountHolderIdentificationValue: '',
-};
-
 export const Route = createFileRoute('/_authed/topup/')({
   component: RouteComponent,
 });
 
 function RouteComponent() {
+  const { user } = useAuth();
   const [step, setStep] = useState<TopUpStep>('method');
+  const [receiveAsset, setReceiveAsset] = useState<ReceiveAsset>('COP');
   const [amount, setAmount] = useState('');
-  const [bankForm, setBankForm] =
-    useState<TopUpBankAccountData>(DEFAULT_BANK_FORM);
+  const [form, setForm] = useState<PseForm>({
+    bankCode: '',
+    userType: '0',
+    customerEmail: user.email ?? '',
+    userLegalIdType: 'CC',
+    userLegalId: '',
+    fullName: user.name ?? '',
+    phoneNumber: '',
+  });
   const [lastOrder, setLastOrder] = useState<{
     id: string;
     redirectUrl?: string;
   } | null>(null);
-  const { data: cardsData, isLoading: isLoadingCards } = useCards();
 
   const parsedAmount = Number.parseInt(amount.replace(/\D/g, ''), 10) || 0;
+  const selectedReceiveAsset = RECEIVE_ASSETS.find(
+    (asset) => asset.value === receiveAsset,
+  )!;
   const amountSrc = useMemo(() => {
     if (parsedAmount <= 0) return '';
-    return majorToMinor(parsedAmount, FROM_PRECISION);
+    return majorToMinor(parsedAmount, 2);
   }, [parsedAmount]);
 
-  const sourceAccountUrn = cardsData?.accounts?.[0]?.urn ?? '';
+  const accountsQuery = useQuery({
+    queryKey: ['topup-destination-accounts'],
+    queryFn: async () => bloque.accounts.list(),
+    staleTime: 30_000,
+  });
+
+  const destinationAccountUrn = (
+    (accountsQuery.data?.accounts ?? []) as unknown as Array<{
+      urn: string;
+      status?: string;
+    }>
+  ).find(
+    (account) =>
+      account.status !== 'deleted' &&
+      account.status !== 'disabled' &&
+      account.status !== 'inactive',
+  )?.urn;
+
+  const banksQuery = useQuery({
+    queryKey: ['pse-banks'],
+    queryFn: async () => bloque.swap.pse.banks(),
+    staleTime: 5 * 60_000,
+  });
 
   const ratesQuery = useQuery({
-    queryKey: ['topup-rates', amountSrc],
+    queryKey: ['pse-topup-rates', selectedReceiveAsset.sdkAsset, amountSrc],
     enabled:
-      parsedAmount >= MIN_TOPUP_AMOUNT && !!amountSrc && !!sourceAccountUrn,
+      parsedAmount >= MIN_TOPUP_AMOUNT &&
+      !!amountSrc &&
+      !!destinationAccountUrn,
     queryFn: () =>
       bloque.swap.findRates({
         fromAsset: FROM_ASSET,
-        toAsset: TO_ASSET,
+        toAsset: selectedReceiveAsset.sdkAsset,
         fromMediums: [FROM_MEDIUM],
         toMediums: [TO_MEDIUM],
         amountSrc,
@@ -88,23 +137,16 @@ function RouteComponent() {
   });
 
   const selectedRate = ratesQuery.data?.rates?.[0] ?? null;
-  const rateSummary = useMemo(() => {
-    if (!selectedRate || !amountSrc) return null;
-    const srcAmountMinor = Number(amountSrc);
+  const receiveAmount = useMemo(() => {
+    if (!selectedRate || !amountSrc) return 0;
     const dstAmountMinor = selectedRate.rate?.[1] ?? 0;
-    if (!srcAmountMinor || !dstAmountMinor) return null;
-    const srcAmountMajor = minorToMajor(srcAmountMinor, FROM_PRECISION);
-    const dstAmountMajor = minorToMajor(dstAmountMinor, TO_PRECISION);
-    return {
-      amountDst: dstAmountMajor,
-      ratio: dstAmountMajor / srcAmountMajor,
-    };
-  }, [selectedRate, amountSrc]);
+    return minorToMajor(dstAmountMinor, selectedReceiveAsset.precision);
+  }, [selectedRate, amountSrc, selectedReceiveAsset.precision]);
 
   const rateError = useMemo(() => {
     if (parsedAmount < MIN_TOPUP_AMOUNT) return null;
-    if (!sourceAccountUrn && !isLoadingCards) {
-      return 'No encontramos una tarjeta para hacer la recarga.';
+    if (!destinationAccountUrn && accountsQuery.isSuccess) {
+      return 'No encontramos una cuenta destino disponible.';
     }
     if (ratesQuery.isError) {
       return 'No pudimos consultar la tasa. Intenta de nuevo.';
@@ -115,32 +157,47 @@ function RouteComponent() {
     return null;
   }, [
     parsedAmount,
-    sourceAccountUrn,
-    isLoadingCards,
+    destinationAccountUrn,
+    accountsQuery.isSuccess,
     ratesQuery.isError,
     ratesQuery.isSuccess,
     selectedRate,
   ]);
 
+  const detailsValid =
+    !!form.bankCode &&
+    !!form.customerEmail.trim() &&
+    !!form.userLegalIdType &&
+    !!form.userLegalId.trim() &&
+    !!form.fullName.trim() &&
+    !!form.phoneNumber.trim();
+
   const createOrderMutation = useMutation({
     mutationFn: async () => {
       if (!selectedRate?.sig) {
-        throw new Error('No hay tasa seleccionada para crear la orden.');
+        throw new Error('No hay tasa disponible para crear la orden.');
       }
-      if (!amountSrc) {
-        throw new Error('Monto inválido para crear la orden.');
-      }
-      if (!sourceAccountUrn) {
-        throw new Error('No hay cuenta origen disponible.');
+      if (!destinationAccountUrn) {
+        throw new Error('No hay cuenta destino disponible.');
       }
 
-      return bloque.swap.bankTransfer.create({
+      return await bloque.swap.pse.create({
         rateSig: selectedRate.sig,
-        amountSrc,
         toMedium: TO_MEDIUM,
-        depositInformation: bankForm,
+        amountSrc,
+        depositInformation: {
+          urn: destinationAccountUrn,
+        },
         args: {
-          sourceAccountUrn,
+          bankCode: form.bankCode,
+          userType: Number(form.userType) as 0 | 1,
+          customerEmail: form.customerEmail.trim(),
+          userLegalIdType: form.userLegalIdType,
+          userLegalId: form.userLegalId.trim(),
+          customerData: {
+            fullName: form.fullName.trim(),
+            phoneNumber: form.phoneNumber.trim(),
+          },
         },
       });
     },
@@ -148,36 +205,24 @@ function RouteComponent() {
       const redirectUrl = result.execution?.result?.how?.url;
       setLastOrder({ id: result.order.id, redirectUrl });
       setStep('pending');
-      toast.success('Transferencia enviada correctamente.');
+      toast.success('Recarga PSE iniciada correctamente.');
       if (redirectUrl) {
         window.open(redirectUrl, '_blank', 'noopener,noreferrer');
       }
     },
     onError: (error) => {
-      const message =
+      toast.error(
         error instanceof Error
           ? error.message
-          : 'No se pudo enviar la transferencia.';
-      toast.error(message);
+          : 'No se pudo iniciar la recarga.',
+      );
       setStep('error');
     },
   });
 
-  const handleAmountNext = () => {
-    if (parsedAmount < MIN_TOPUP_AMOUNT) {
-      toast.error('El monto mínimo es $10,000 COP.');
-      return;
-    }
-    if (!selectedRate) {
-      toast.error('No hay tasa disponible para continuar.');
-      return;
-    }
-    setStep('bank');
-  };
-
-  const handleConfirm = () => {
-    createOrderMutation.mutate();
-  };
+  const selectedBankName =
+    banksQuery.data?.banks.find((bank) => bank.code === form.bankCode)?.name ??
+    'Banco';
 
   return (
     <div className="flex flex-col gap-5">
@@ -187,17 +232,15 @@ function RouteComponent() {
 
       {step !== 'method' && (
         <div className="flex items-center gap-2 rounded-2xl border border-border/75 bg-card/80 p-3">
-          {['Monto', 'Cuenta', 'Confirmar'].map((label, i) => {
+          {['Monto', 'Datos', 'Confirmar'].map((label, i) => {
             const stepIndex =
               step === 'amount'
                 ? 0
-                : step === 'bank'
+                : step === 'details'
                   ? 1
                   : step === 'confirm'
                     ? 2
-                    : step === 'pending'
-                      ? 3
-                      : 3;
+                    : 3;
             const isActive = i <= stepIndex;
             return (
               <div key={label} className="flex items-center gap-2">
@@ -262,7 +305,7 @@ function RouteComponent() {
               icon: CreditCard,
               enabled: true,
               onClick: () =>
-                toast.info('Recarga con tarjeta disponible próximamente.'),
+                toast.info('Recarga con tarjeta disponible proximamente.'),
             },
           ].map((option) => {
             const Icon = option.icon;
@@ -273,9 +316,7 @@ function RouteComponent() {
                 onClick={option.onClick}
                 className={cn(
                   'flex w-full items-start gap-3 rounded-2xl border border-border/75 bg-card/80 p-4 text-left transition-all',
-                  option.enabled
-                    ? 'hover:bg-muted/70'
-                    : 'cursor-not-allowed opacity-60',
+                  option.enabled ? 'hover:bg-muted/70' : 'opacity-60',
                 )}
               >
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-border/80 bg-background/85">
@@ -296,40 +337,298 @@ function RouteComponent() {
       )}
 
       {step === 'amount' && (
-        <TopUpAmountStep
-          amount={amount}
-          fee={0}
-          isLoadingRate={ratesQuery.isFetching}
-          rateError={rateError}
-          rateSummary={rateSummary}
-          onAmountChange={setAmount}
-          onNext={handleAmountNext}
-        />
+        <section className="rounded-3xl border border-border/75 bg-card/80 p-5">
+          <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-2">
+              <Label>Quiero recibir</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {RECEIVE_ASSETS.map((asset) => (
+                  <button
+                    key={asset.value}
+                    type="button"
+                    onClick={() => setReceiveAsset(asset.value)}
+                    className={`rounded-2xl border px-3 py-3 text-sm transition-all ${
+                      receiveAsset === asset.value
+                        ? 'border-foreground bg-foreground text-background'
+                        : 'border-border bg-background/70 text-foreground hover:bg-muted/70'
+                    }`}
+                  >
+                    {asset.value}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="topup-amount">Monto a pagar por PSE (COP)</Label>
+              <Input
+                id="topup-amount"
+                inputMode="numeric"
+                placeholder="$0"
+                value={amount}
+                onChange={(event) =>
+                  setAmount(event.target.value.replace(/\D/g, ''))
+                }
+                className="h-14 rounded-2xl text-center text-xl font-bold tabular-nums"
+              />
+              {parsedAmount > 0 && parsedAmount < MIN_TOPUP_AMOUNT ? (
+                <p className="text-xs text-destructive">
+                  Monto minimo: $10,000 COP
+                </p>
+              ) : null}
+            </div>
+
+            {parsedAmount > 0 ? (
+              <div className="rounded-2xl border border-border/85 bg-background/70 p-4">
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Pagas</span>
+                    <span className="font-medium text-foreground">
+                      {formatCOP(parsedAmount)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Recibes</span>
+                    <span className="font-medium text-foreground">
+                      {selectedRate
+                        ? formatAmount(receiveAsset, receiveAmount)
+                        : 'Consultando...'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
+            {rateError ? (
+              <p className="text-xs text-destructive">{rateError}</p>
+            ) : null}
+
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setStep('method')}
+                className="h-12 flex-1 rounded-2xl"
+              >
+                Volver
+              </Button>
+              <Button
+                onClick={() => setStep('details')}
+                disabled={
+                  parsedAmount < MIN_TOPUP_AMOUNT ||
+                  !selectedRate ||
+                  ratesQuery.isFetching
+                }
+                className="h-12 flex-1 rounded-2xl"
+              >
+                Continuar
+              </Button>
+            </div>
+          </div>
+        </section>
       )}
 
-      {step === 'bank' && (
-        <TopUpBankStep
-          form={bankForm}
-          onFormChange={setBankForm}
-          onBack={() => setStep('amount')}
-          onNext={() => setStep('confirm')}
-        />
+      {step === 'details' && (
+        <section className="rounded-3xl border border-border/75 bg-card/80 p-5">
+          <div className="flex flex-col gap-5">
+            <button
+              type="button"
+              onClick={() => setStep('amount')}
+              className="text-left text-sm text-muted-foreground hover:text-foreground"
+            >
+              Volver
+            </button>
+
+            <div className="flex flex-col gap-2">
+              <Label>Banco PSE</Label>
+              <Select
+                value={form.bankCode}
+                onValueChange={(value) =>
+                  setForm({ ...form, bankCode: value ?? '' })
+                }
+              >
+                <SelectTrigger className="h-12 rounded-2xl">
+                  <SelectValue placeholder="Selecciona tu banco" />
+                </SelectTrigger>
+                <SelectContent>
+                  {banksQuery.data?.banks.map((bank) => (
+                    <SelectItem key={bank.code} value={bank.code}>
+                      {bank.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-2">
+                <Label>Tipo de usuario</Label>
+                <Select
+                  value={form.userType}
+                  onValueChange={(value) =>
+                    setForm({ ...form, userType: value as '0' | '1' })
+                  }
+                >
+                  <SelectTrigger className="h-12 rounded-2xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">Natural</SelectItem>
+                    <SelectItem value="1">Juridica</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Label>Tipo de documento</Label>
+                <Select
+                  value={form.userLegalIdType}
+                  onValueChange={(value) =>
+                    setForm({
+                      ...form,
+                      userLegalIdType: value as 'CC' | 'NIT' | 'CE',
+                    })
+                  }
+                >
+                  <SelectTrigger className="h-12 rounded-2xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="CC">CC</SelectItem>
+                    <SelectItem value="NIT">NIT</SelectItem>
+                    <SelectItem value="CE">CE</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="pse-id">Numero de documento</Label>
+              <Input
+                id="pse-id"
+                inputMode="numeric"
+                value={form.userLegalId}
+                onChange={(event) =>
+                  setForm({
+                    ...form,
+                    userLegalId: event.target.value.replace(/\D/g, ''),
+                  })
+                }
+                className="h-12 rounded-2xl"
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="pse-name">Nombre completo</Label>
+              <Input
+                id="pse-name"
+                value={form.fullName}
+                onChange={(event) =>
+                  setForm({ ...form, fullName: event.target.value })
+                }
+                className="h-12 rounded-2xl"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="pse-email">Email</Label>
+                <Input
+                  id="pse-email"
+                  value={form.customerEmail}
+                  onChange={(event) =>
+                    setForm({ ...form, customerEmail: event.target.value })
+                  }
+                  className="h-12 rounded-2xl"
+                />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="pse-phone">Celular</Label>
+                <Input
+                  id="pse-phone"
+                  inputMode="numeric"
+                  value={form.phoneNumber}
+                  onChange={(event) =>
+                    setForm({
+                      ...form,
+                      phoneNumber: event.target.value.replace(/\D/g, ''),
+                    })
+                  }
+                  className="h-12 rounded-2xl"
+                />
+              </div>
+            </div>
+
+            <Button
+              onClick={() => setStep('confirm')}
+              disabled={!detailsValid || banksQuery.isLoading}
+              className="h-12 rounded-2xl"
+            >
+              Continuar
+            </Button>
+          </div>
+        </section>
       )}
 
       {step === 'confirm' && (
-        <TopUpConfirmStep
-          amount={parsedAmount}
-          amountDst={rateSummary?.amountDst ?? 0}
-          ratio={rateSummary?.ratio ?? 0}
-          bankAccountType={bankForm.bankAccountType}
-          bankAccountNumber={bankForm.bankAccountNumber}
-          bankAccountHolderName={bankForm.bankAccountHolderName}
-          identificationLabel={bankForm.bankAccountHolderIdentificationType}
-          identificationValue={bankForm.bankAccountHolderIdentificationValue}
-          isSubmitting={createOrderMutation.isPending}
-          onBack={() => setStep('bank')}
-          onConfirm={handleConfirm}
-        />
+        <section className="rounded-3xl border border-border/75 bg-card/80 p-5">
+          <div className="flex flex-col gap-5">
+            <button
+              type="button"
+              onClick={() => setStep('details')}
+              className="text-left text-sm text-muted-foreground hover:text-foreground"
+            >
+              Volver
+            </button>
+
+            <div className="rounded-2xl border border-border/85 bg-background/70 p-4">
+              <div className="flex flex-col gap-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Pagas</span>
+                  <span className="font-medium text-foreground">
+                    {formatCOP(parsedAmount)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Recibes</span>
+                  <span className="font-medium text-foreground">
+                    {formatAmount(receiveAsset, receiveAmount)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Banco</span>
+                  <span className="font-medium text-foreground">
+                    {selectedBankName}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Titular</span>
+                  <span className="font-medium text-foreground">
+                    {form.fullName}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Documento</span>
+                  <span className="font-medium text-foreground">
+                    {form.userLegalIdType} {form.userLegalId}
+                  </span>
+                </div>
+                <Separator />
+                <p className="text-xs text-muted-foreground">
+                  Serás redirigido a PSE para completar el pago.
+                </p>
+              </div>
+            </div>
+
+            <Button
+              onClick={() => createOrderMutation.mutate()}
+              disabled={createOrderMutation.isPending}
+              className="h-12 rounded-2xl"
+            >
+              {createOrderMutation.isPending ? 'Iniciando pago...' : 'Ir a PSE'}
+            </Button>
+          </div>
+        </section>
       )}
 
       {step === 'pending' && (
@@ -337,9 +636,7 @@ function RouteComponent() {
           amount={parsedAmount}
           orderId={lastOrder?.id}
           actionLabel={
-            lastOrder?.redirectUrl
-              ? 'Abrir enlace del banco'
-              : 'Verificar estado'
+            lastOrder?.redirectUrl ? 'Abrir PSE' : 'Verificar estado'
           }
           onRefresh={() => {
             if (lastOrder?.redirectUrl) {

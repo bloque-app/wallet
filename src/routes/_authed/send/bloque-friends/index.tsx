@@ -310,7 +310,7 @@ function RouteComponent() {
             <Label htmlFor="friend-alias">Alias</Label>
             <Input
               id="friend-alias"
-              placeholder="@alias o alias"
+              placeholder="alias"
               value={alias}
               onChange={(event) => setAlias(event.target.value)}
               className="h-12 rounded-2xl"
