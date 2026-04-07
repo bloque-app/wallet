@@ -41,6 +41,7 @@ type BalanceData = {
 type BalancesResponse = Record<string, BalanceData>;
 
 const ASSET_KEY_MAP: Record<string, Asset> = {
+  COPB: 'COP',
   COPM: 'COP',
   DUSD: 'USD',
   KSM: 'KSM',
