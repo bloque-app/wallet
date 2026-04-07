@@ -5,6 +5,11 @@ import { Drawer as DrawerPrimitive } from 'vaul';
 
 import { cn } from '~/lib/utils';
 
+type DrawerWindow = Window & {
+  __drawerBackHandling?: boolean;
+  __skipDrawerHistoryOnce?: boolean;
+};
+
 function Drawer({
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Root>) {
@@ -22,18 +27,22 @@ function Drawer({
     }
 
     if (lastOpen.current && !props.open) {
+      const drawerWindow = window as DrawerWindow;
       const currentUrl = [
         window.location.pathname,
         window.location.search,
         window.location.hash,
       ].join('');
       const shouldRewindDrawerHistory =
-        window.history.state?.drawer && openedAtUrl.current === currentUrl;
+        window.history.state?.drawer &&
+        openedAtUrl.current === currentUrl &&
+        !drawerWindow.__skipDrawerHistoryOnce;
 
       if (shouldRewindDrawerHistory) {
         window.history.back();
       }
 
+      drawerWindow.__skipDrawerHistoryOnce = false;
       openedAtUrl.current = null;
     }
 
@@ -43,9 +52,7 @@ function Drawer({
   React.useEffect(() => {
     const handlePopState = () => {
       if (props.open) {
-        const drawerBackState = window as Window & {
-          __drawerBackHandling?: boolean;
-        };
+        const drawerBackState = window as DrawerWindow;
         drawerBackState.__drawerBackHandling = true;
         props.onOpenChange?.(false);
         window.setTimeout(() => {

@@ -1,8 +1,9 @@
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { ArrowLeft, KeyRound, QrCode, Settings2 } from 'lucide-react';
 import { useState } from 'react';
 import {
   Drawer,
+  DrawerClose,
   DrawerContent,
   DrawerDescription,
   DrawerHeader,
@@ -36,8 +37,14 @@ const options = [
 ] as const;
 
 function RouteComponent() {
-  const navigate = useNavigate();
   const [payDrawerOpen, setPayDrawerOpen] = useState(false);
+  const handlePayTransferClick = () => {
+    (
+      window as Window & {
+        __skipDrawerHistoryOnce?: boolean;
+      }
+    ).__skipDrawerHistoryOnce = true;
+  };
 
   return (
     <div className="flex flex-col gap-5">
@@ -125,21 +132,20 @@ function RouteComponent() {
           </DrawerHeader>
 
           <div className="flex flex-col gap-3 px-5 pb-5">
-            <button
-              type="button"
-              onClick={() => {
-                setPayDrawerOpen(false);
-                navigate({ to: '/send/breb-keys/pay-transfer' });
-              }}
-              className="flex w-full flex-col items-start rounded-2xl border border-border/80 bg-card/80 p-4 text-left transition-all hover:bg-muted/70"
-            >
-              <span className="text-sm font-medium text-foreground">
-                Ingresar llave
-              </span>
-              <span className="text-xs text-muted-foreground">
-                Escribe la llave BRE-B del destinatario.
-              </span>
-            </button>
+            <DrawerClose asChild>
+              <Link
+                to="/send/breb-keys/pay-transfer"
+                onClick={handlePayTransferClick}
+                className="flex w-full flex-col items-start rounded-2xl border border-border/80 bg-card/80 p-4 text-left transition-all hover:bg-muted/70"
+              >
+                <span className="text-sm font-medium text-foreground">
+                  Ingresar llave
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  Escribe la llave BRE-B del destinatario.
+                </span>
+              </Link>
+            </DrawerClose>
 
             <button
               type="button"
