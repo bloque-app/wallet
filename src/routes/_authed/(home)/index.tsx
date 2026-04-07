@@ -46,6 +46,9 @@ const ASSET_KEY_MAP: Record<string, Asset> = {
   DUSD: 'USD',
   KSM: 'KSM',
 };
+const ASSET_PRECISION_OVERRIDE: Partial<Record<string, number>> = {
+  COPB: 2,
+};
 
 const ASSET_LOGO_MAP: Record<Asset, string> = {
   COP: '/images/assets/cop.webp',
@@ -62,7 +65,8 @@ function parseBalances(
 
   for (const [key, value] of Object.entries(balances)) {
     const [assetKey, precisionStr] = key.split('/');
-    const precision = Number.parseInt(precisionStr, 10);
+    const precision =
+      ASSET_PRECISION_OVERRIDE[assetKey] ?? Number.parseInt(precisionStr, 10);
     const mappedAsset = ASSET_KEY_MAP[assetKey];
 
     if (mappedAsset && !Number.isNaN(precision)) {
