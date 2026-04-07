@@ -9,16 +9,32 @@ function Drawer({
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Root>) {
   const lastOpen = React.useRef(props.open);
+  const openedAtUrl = React.useRef<string | null>(null);
 
   React.useEffect(() => {
     if (!lastOpen.current && props.open) {
+      openedAtUrl.current = [
+        window.location.pathname,
+        window.location.search,
+        window.location.hash,
+      ].join('');
       window.history.pushState({ drawer: true }, '');
     }
 
     if (lastOpen.current && !props.open) {
-      if (window.history.state?.drawer) {
+      const currentUrl = [
+        window.location.pathname,
+        window.location.search,
+        window.location.hash,
+      ].join('');
+      const shouldRewindDrawerHistory =
+        window.history.state?.drawer && openedAtUrl.current === currentUrl;
+
+      if (shouldRewindDrawerHistory) {
         window.history.back();
       }
+
+      openedAtUrl.current = null;
     }
 
     lastOpen.current = props.open;
