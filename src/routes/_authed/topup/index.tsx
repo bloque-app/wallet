@@ -138,10 +138,16 @@ function RouteComponent() {
 
   const selectedRate = ratesQuery.data?.rates?.[0] ?? null;
   const receiveAmount = useMemo(() => {
-    if (!selectedRate || !amountSrc) return 0;
+    if (!selectedRate || !amountSrc || parsedAmount <= 0) return 0;
+    if (
+      typeof selectedRate.ratio === 'number' &&
+      Number.isFinite(selectedRate.ratio)
+    ) {
+      return parsedAmount * selectedRate.ratio;
+    }
     const dstAmountMinor = selectedRate.rate?.[1] ?? 0;
     return minorToMajor(dstAmountMinor, selectedReceiveAsset.precision);
-  }, [selectedRate, amountSrc, selectedReceiveAsset.precision]);
+  }, [selectedRate, amountSrc, parsedAmount, selectedReceiveAsset.precision]);
 
   const rateError = useMemo(() => {
     if (parsedAmount < MIN_TOPUP_AMOUNT) return null;
