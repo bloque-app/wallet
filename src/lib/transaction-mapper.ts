@@ -8,6 +8,7 @@ import type {
 
 const ASSET_KEY_MAP: Record<string, Asset> = {
   COP: 'COP',
+  COPB: 'COP',
   COPM: 'COP',
   DUSD: 'USD',
   USD: 'USD',

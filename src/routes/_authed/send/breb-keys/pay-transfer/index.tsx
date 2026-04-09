@@ -22,6 +22,7 @@ import { formatCOP } from '~/lib/mock-data';
 import { TopUpErrorStep } from '../../../topup/-components/error-step';
 import { TopUpPendingStep } from '../../../topup/-components/pending-step';
 import {
+  type BrebKeyType,
   createBrebOrder,
   getRecipientName,
   listBrebAccounts,
@@ -49,6 +50,21 @@ function majorToMinor(amountMajor: number, precision: number) {
 
 const FROM_PRECISION = getAssetPrecision(FROM_ASSET);
 
+function normalizeBrebKey(value: string) {
+  return value.trim();
+}
+
+function inferBrebKeyType(value: string): BrebKeyType | null {
+  const normalized = normalizeBrebKey(value);
+
+  if (!normalized) return null;
+  if (normalized.includes('@') && !normalized.startsWith('@')) return 'EMAIL';
+  if (normalized.startsWith('@')) return 'ALPHA';
+  if (/^\d{10}$/.test(normalized)) return 'PHONE';
+  if (/^\d+$/.test(normalized)) return 'ID';
+  return 'ALPHA';
+}
+
 export const Route = createFileRoute('/_authed/send/breb-keys/pay-transfer/')({
   component: RouteComponent,
 });
@@ -66,14 +82,15 @@ function RouteComponent() {
     redirectUrl?: string;
   } | null>(null);
 
-  const normalizedKey = key.replace(/\D/g, '').slice(0, 10);
+  const normalizedKey = normalizeBrebKey(key);
+  const inferredKeyType = inferBrebKeyType(normalizedKey);
   const parsedAmount = Number.parseInt(amount.replace(/\D/g, ''), 10) || 0;
   const amountSrc = useMemo(() => {
     if (parsedAmount <= 0) return '';
     return majorToMinor(parsedAmount, FROM_PRECISION);
   }, [parsedAmount]);
 
-  const hasValidKey = normalizedKey.length === 10;
+  const hasValidKey = inferredKeyType !== null;
 
   const brebAccountsQuery = useQuery({
     queryKey: ['breb-accounts'],
@@ -107,7 +124,7 @@ function RouteComponent() {
       return 'Primero debes registrar una llave BRE-B activa.';
     }
     if (key.length > 0 && !hasValidKey) {
-      return 'La llave debe ser un número celular de 10 dígitos.';
+      return 'Ingresa una llave BRE-B valida, por ejemplo un celular, email o alias como @MBP313.';
     }
     if (parsedAmount > 0 && parsedAmount < MIN_TRANSFER_AMOUNT) {
       return 'El monto mínimo es $10,000 COP.';
@@ -137,7 +154,7 @@ function RouteComponent() {
   const previewRecipientMutation = useMutation({
     mutationFn: async () =>
       await resolveBrebKey({
-        keyType: 'PHONE',
+        keyType: inferredKeyType ?? 'ALPHA',
         key: normalizedKey,
       }),
     onSuccess: (result) => {
@@ -296,14 +313,15 @@ function RouteComponent() {
             <Label htmlFor="breb-key">Llave BRE-B</Label>
             <Input
               id="breb-key"
-              inputMode="numeric"
-              placeholder="3001234567"
+              inputMode="text"
+              placeholder="3001234567 o @MBP313"
               value={key}
-              onChange={(event) =>
-                setKey(event.target.value.replace(/\D/g, '').slice(0, 10))
-              }
+              onChange={(event) => setKey(event.target.value)}
               className="h-12 rounded-2xl"
               autoFocus
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
             />
           </div>
 
