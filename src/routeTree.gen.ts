@@ -21,6 +21,7 @@ import { Route as AuthedConvertIndexRouteImport } from './routes/_authed/convert
 import { Route as AuthedCardIndexRouteImport } from './routes/_authed/card/index'
 import { Route as AuthedAccountsIndexRouteImport } from './routes/_authed/accounts/index'
 import { Route as AuthedhomeIndexRouteImport } from './routes/_authed/(home)/index'
+import { Route as AuthedAccountsUrnRouteImport } from './routes/_authed/accounts/$urn'
 import { Route as AuthedSendUsBanksWalletsIndexRouteImport } from './routes/_authed/send/us-banks-wallets/index'
 import { Route as AuthedSendColombianBanksIndexRouteImport } from './routes/_authed/send/colombian-banks/index'
 import { Route as AuthedSendBrebKeysIndexRouteImport } from './routes/_authed/send/breb-keys/index'
@@ -89,6 +90,11 @@ const AuthedhomeIndexRoute = AuthedhomeIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedAccountsUrnRoute = AuthedAccountsUrnRouteImport.update({
+  id: '/accounts/$urn',
+  path: '/accounts/$urn',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const AuthedSendUsBanksWalletsIndexRoute =
   AuthedSendUsBanksWalletsIndexRouteImport.update({
     id: '/send/us-banks-wallets/',
@@ -144,6 +150,7 @@ const AuthedSendBrebKeysManageKeysIndexRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthedhomeIndexRoute
+  '/accounts/$urn': typeof AuthedAccountsUrnRoute
   '/accounts/': typeof AuthedAccountsIndexRoute
   '/card/': typeof AuthedCardIndexRoute
   '/convert/': typeof AuthedConvertIndexRoute
@@ -165,6 +172,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof AuthedhomeIndexRoute
+  '/accounts/$urn': typeof AuthedAccountsUrnRoute
   '/accounts': typeof AuthedAccountsIndexRoute
   '/card': typeof AuthedCardIndexRoute
   '/convert': typeof AuthedConvertIndexRoute
@@ -188,6 +196,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authed': typeof AuthedRouteWithChildren
   '/_public': typeof PublicRouteWithChildren
+  '/_authed/accounts/$urn': typeof AuthedAccountsUrnRoute
   '/_authed/(home)/': typeof AuthedhomeIndexRoute
   '/_authed/accounts/': typeof AuthedAccountsIndexRoute
   '/_authed/card/': typeof AuthedCardIndexRoute
@@ -212,6 +221,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/accounts/$urn'
     | '/accounts/'
     | '/card/'
     | '/convert/'
@@ -233,6 +243,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/accounts/$urn'
     | '/accounts'
     | '/card'
     | '/convert'
@@ -255,6 +266,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_authed'
     | '/_public'
+    | '/_authed/accounts/$urn'
     | '/_authed/(home)/'
     | '/_authed/accounts/'
     | '/_authed/card/'
@@ -367,6 +379,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedhomeIndexRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/accounts/$urn': {
+      id: '/_authed/accounts/$urn'
+      path: '/accounts/$urn'
+      fullPath: '/accounts/$urn'
+      preLoaderRoute: typeof AuthedAccountsUrnRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/send/us-banks-wallets/': {
       id: '/_authed/send/us-banks-wallets/'
       path: '/send/us-banks-wallets'
@@ -434,6 +453,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthedRouteChildren {
+  AuthedAccountsUrnRoute: typeof AuthedAccountsUrnRoute
   AuthedhomeIndexRoute: typeof AuthedhomeIndexRoute
   AuthedAccountsIndexRoute: typeof AuthedAccountsIndexRoute
   AuthedCardIndexRoute: typeof AuthedCardIndexRoute
@@ -455,6 +475,7 @@ interface AuthedRouteChildren {
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
+  AuthedAccountsUrnRoute: AuthedAccountsUrnRoute,
   AuthedhomeIndexRoute: AuthedhomeIndexRoute,
   AuthedAccountsIndexRoute: AuthedAccountsIndexRoute,
   AuthedCardIndexRoute: AuthedCardIndexRoute,

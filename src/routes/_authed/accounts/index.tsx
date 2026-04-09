@@ -92,9 +92,11 @@ function RouteComponent() {
               getMediumLabel(account.medium);
 
             return (
-              <div
+              <Link
                 key={account.urn}
-                className="flex items-center gap-3 rounded-2xl border border-border/75 bg-card/80 p-4"
+                to="/accounts/$urn"
+                params={{ urn: account.urn }}
+                className="flex items-center gap-3 rounded-2xl border border-border/75 bg-card/80 p-4 transition-colors hover:bg-muted/60"
               >
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-border/80 bg-background/85">
                   <Icon className="h-4 w-4 text-foreground" />
@@ -117,7 +119,7 @@ function RouteComponent() {
                   ) : null}
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </div>
+              </Link>
             );
           })}
         </section>
