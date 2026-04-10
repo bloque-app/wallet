@@ -3,11 +3,14 @@ import { bloque } from '~/lib/bloque';
 import type { Movement } from '~/lib/mock-data';
 import { mapGlobalTransactionToMovement } from '~/lib/transaction-mapper';
 
-export function useGlobalTransactions(limit: number) {
+export function useGlobalTransactions(limit: number, asset?: string) {
   return useQuery({
-    queryKey: ['global-transactions', limit],
+    queryKey: ['global-transactions', limit, asset],
     queryFn: async () => {
-      const result = await bloque.accounts.transactions({ limit });
+      const result = await bloque.accounts.transactions({
+        limit,
+        asset,
+      } as never);
 
       return {
         ...result,

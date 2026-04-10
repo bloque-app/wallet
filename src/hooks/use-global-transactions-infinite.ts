@@ -6,16 +6,18 @@ import { mapGlobalTransactionToMovement } from '~/lib/transaction-mapper';
 export function useGlobalTransactionsInfinite(
   limit = 10,
   direction?: 'in' | 'out',
+  asset?: string,
 ) {
   return useInfiniteQuery({
-    queryKey: ['global-transactions-infinite', limit, direction],
+    queryKey: ['global-transactions-infinite', limit, direction, asset],
     initialPageParam: undefined as string | undefined,
     queryFn: async ({ pageParam }) => {
       const result = await bloque.accounts.transactions({
         limit,
         direction,
+        asset,
         next: pageParam,
-      });
+      } as never);
 
       return {
         movements: (result.data ?? [])

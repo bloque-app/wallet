@@ -35,8 +35,16 @@ function RouteComponent() {
       : activeFilter === 'outgoing'
         ? 'out'
         : undefined;
+  const assetFilter =
+    activeFilter === 'COP'
+      ? 'COPM/2'
+      : activeFilter === 'USD'
+        ? 'DUSD/6'
+        : activeFilter === 'KSM'
+          ? 'KSM/12'
+          : undefined;
   const { data, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } =
-    useGlobalTransactionsInfinite(10, direction);
+    useGlobalTransactionsInfinite(10, direction, assetFilter);
 
   const allMovements = useMemo(
     () => (data?.pages ?? []).flatMap((page) => page.movements ?? []) ?? [],

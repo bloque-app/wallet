@@ -36,7 +36,6 @@ type BalanceEntry = {
 
 const ASSET_LABELS: Record<string, Asset> = {
   COP: 'COP',
-  COPB: 'COP',
   COPM: 'COP',
   DUSD: 'USD',
   USD: 'USD',
@@ -73,16 +72,8 @@ function getMediumIcon(medium?: string) {
   }
 }
 
-function normalizeAssetKey(rawAsset: string) {
-  if (rawAsset === 'COPB/6') {
-    return 'COPM/2';
-  }
-
-  return rawAsset;
-}
-
 function parseAmount(rawAmount: string, rawAsset: string) {
-  const [, precisionStr] = normalizeAssetKey(rawAsset).split('/');
+  const [, precisionStr] = rawAsset.split('/');
   const parsed = Number.parseInt(rawAmount, 10);
   const precision = Number.parseInt(precisionStr, 10);
 
@@ -93,7 +84,7 @@ function parseAmount(rawAmount: string, rawAsset: string) {
 }
 
 function getAssetLabel(rawAsset: string): Asset | null {
-  const [assetKey] = normalizeAssetKey(rawAsset).split('/');
+  const [assetKey] = rawAsset.split('/');
   return ASSET_LABELS[assetKey] ?? null;
 }
 

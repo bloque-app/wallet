@@ -41,13 +41,9 @@ type BalanceData = {
 type BalancesResponse = Record<string, BalanceData>;
 
 const ASSET_KEY_MAP: Record<string, Asset> = {
-  COPB: 'COP',
   COPM: 'COP',
   DUSD: 'USD',
   KSM: 'KSM',
-};
-const ASSET_PRECISION_OVERRIDE: Partial<Record<string, number>> = {
-  COPB: 2,
 };
 
 const ASSET_LOGO_MAP: Record<Asset, string> = {
@@ -65,8 +61,7 @@ function parseBalances(
 
   for (const [key, value] of Object.entries(balances)) {
     const [assetKey, precisionStr] = key.split('/');
-    const precision =
-      ASSET_PRECISION_OVERRIDE[assetKey] ?? Number.parseInt(precisionStr, 10);
+    const precision = Number.parseInt(precisionStr, 10);
     const mappedAsset = ASSET_KEY_MAP[assetKey];
 
     if (mappedAsset && !Number.isNaN(precision)) {

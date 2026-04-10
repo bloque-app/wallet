@@ -26,7 +26,7 @@ export const Route = createFileRoute('/_authed/send/bloque-friends/')({
 
 type ViewState = 'form' | 'pending' | 'error';
 type AssetOption = 'COP' | 'USD' | 'KSM';
-type TransferAsset = 'COPB/6' | 'COPM/2' | 'DUSD/6' | 'KSM/12';
+type TransferAsset = 'COPM/2' | 'DUSD/6' | 'KSM/12';
 type AliasResult = {
   alias: string;
   urn: string;
