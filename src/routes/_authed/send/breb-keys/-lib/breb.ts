@@ -1,13 +1,13 @@
+import type {
+  BrebDecodedQr as SdkBrebDecodedQr,
+  BrebKeyType as SdkBrebKeyType,
+  BrebResolvedKey as SdkBrebResolvedKey,
+} from '@bloque/sdk-accounts';
 import { bloque } from '~/lib/bloque';
 
-export type BrebKeyType = 'ID' | 'PHONE' | 'EMAIL' | 'ALPHA' | 'BCODE';
-
-export type ResolvedRecipient = {
-  resolutionId: string;
-  key: { keyValue: string };
-  owner: { name: string | null; businessName: string | null } | null;
-  participant: { name: string | null } | null;
-};
+export type BrebKeyType = SdkBrebKeyType;
+export type ResolvedRecipient = SdkBrebResolvedKey;
+export type DecodedBrebQr = SdkBrebDecodedQr;
 
 export type BrebAccountItem = {
   urn: string;
@@ -32,13 +32,26 @@ export const BREB_KEY_TYPES: Array<{
 ];
 
 export function getRecipientName(data: {
-  owner: { name: string | null; businessName: string | null } | null;
-  participant: { name: string | null } | null;
+  owner: ResolvedRecipient['owner'];
+  participant: ResolvedRecipient['participant'];
 }) {
+  const owner = data.owner;
+  const personalName = [
+    owner?.name,
+    owner?.firstName,
+    owner?.secondName,
+    owner?.firstLastName,
+    owner?.secondLastName,
+  ]
+    .filter((value): value is string => !!value?.trim())
+    .join(' ')
+    .trim();
+  const participantName = data.participant?.name ?? null;
+
   return (
-    data.owner?.name ??
-    data.owner?.businessName ??
-    data.participant?.name ??
+    personalName ||
+    owner?.businessName ||
+    participantName ||
     'Destinatario BRE-B'
   );
 }
@@ -190,4 +203,25 @@ export async function createBrebOrder(params: {
     },
     metadata: params.metadata,
   });
+}
+
+export async function decodeBrebQr(qrCodeData: string) {
+  const result = await (
+    bloque.accounts as typeof bloque.accounts & {
+      breb: {
+        decodeQr: (input: { qrCodeData: string }) => Promise<{
+          data: DecodedBrebQr | null;
+          error: { message: string } | null;
+        }>;
+      };
+    }
+  ).breb.decodeQr({ qrCodeData });
+
+  if (result.error || !result.data) {
+    throw new Error(
+      result.error?.message ?? 'No se pudo decodificar el QR BRE-B.',
+    );
+  }
+
+  return result.data;
 }
