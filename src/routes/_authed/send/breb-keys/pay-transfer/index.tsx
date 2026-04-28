@@ -32,7 +32,7 @@ import {
 
 type ViewState = 'form' | 'pending' | 'error';
 
-const MIN_TRANSFER_AMOUNT = 10_000;
+const MIN_TRANSFER_AMOUNT = 10;
 const FROM_ASSET = 'COPM/2';
 const TO_ASSET = 'COP/2';
 const FROM_MEDIUM = 'kusama';
@@ -127,7 +127,7 @@ function RouteComponent() {
       return 'Ingresa una llave BRE-B valida, por ejemplo un celular, email o alias como @MBP313.';
     }
     if (parsedAmount > 0 && parsedAmount < MIN_TRANSFER_AMOUNT) {
-      return 'El monto mínimo es $10,000 COP.';
+      return 'El monto mínimo es $10 COP.';
     }
     if (ratesQuery.isError) {
       return 'No pudimos consultar la tasa. Intenta de nuevo.';
