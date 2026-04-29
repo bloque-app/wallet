@@ -11,7 +11,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '~/components/ui/drawer';
-import { useWallet } from '~/lib/wallet-mock';
+import { useAuth } from '~/contexts/auth/auth-context';
 import { CardsSkeleton } from './-components/cards-skeleton';
 import { KycGate } from './-components/kyc-gate';
 import { KycStatus } from './-components/kyc-status';
@@ -35,7 +35,9 @@ function RouteComponent() {
   const rawCards = (data?.accounts ?? []) as unknown as Array<
     { medium?: string } & NonNullable<typeof data>['accounts'][number]
   >;
-  const cards = rawCards.filter((account) => account.medium === 'card');
+  const cards = rawCards.filter(
+    (account) => account.medium === undefined || account.medium === 'card',
+  );
   const {
     mutateAsync,
     data: cardDetails,
@@ -44,14 +46,17 @@ function RouteComponent() {
   const cardDetailsUrl = cardDetails?.detailsUrl ?? null;
   const toggleFreezeMutation = useCardToggleFreeze();
 
-  const { user } = useWallet();
+  const { user } = useAuth();
   const [view, setView] = useState<CardView>('main');
   const [pendingAddCard, setPendingAddCard] = useState(false);
   const [pendingCardLabel, setPendingCardLabel] = useState<string | null>(null);
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
   const [showCardDetails, setShowCardDetails] = useState(false);
 
-  const kycStatus = user?.kycStatus ?? 'not_started';
+  const kycStatus =
+    user?.kycStatus === 'not_verified' || !user?.kycStatus
+      ? 'not_started'
+      : user.kycStatus;
   const activeCard = cards.find((c) => c.id === activeCardId) ?? null;
 
   useEffect(() => {
