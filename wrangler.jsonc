@@ -4,7 +4,7 @@
  */
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "bloque-wallet",
+  "name": "accounts-preview",
   "compatibility_date": "2026-02-12",
   "pages_build_output_dir": "./dist"
 }
