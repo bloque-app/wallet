@@ -36,4 +36,4 @@ jobs:
         with:
           apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ env.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy --project-name bloque-wallet-dev
+          command: pages deploy --project-name accounts-preview-dev
