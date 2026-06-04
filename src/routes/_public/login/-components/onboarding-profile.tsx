@@ -51,7 +51,9 @@ export function OnboardingProfile({
       };
       if (isPreOtp) {
         await onSubmitProfile(profile);
-      } else if (pending) {
+        return;
+      }
+      if (pending) {
         await completeOnboarding(pending, profile);
       } else {
         throw new Error('Missing onboarding state');
