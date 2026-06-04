@@ -24,6 +24,17 @@ export interface OnboardingProfile {
   lastName: string;
 }
 
+export interface PendingProfileOnboarding {
+  method: LoginMethod;
+  origin: 'bloque-email' | 'bloque-whatsapp';
+  alias: string;
+  profile: OnboardingProfile;
+}
+
+export type AliasCheckResult =
+  | { status: 'registered' }
+  | { status: 'not_registered' };
+
 export type LoginResult =
   | { status: 'authenticated' }
   | { status: 'onboarding_required'; pending: PendingOnboarding };

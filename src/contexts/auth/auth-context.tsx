@@ -11,10 +11,13 @@ import { toast } from 'sonner';
 import { apiFetch } from '~/lib/api-fetch';
 import { createBloqueSdk } from '~/lib/bloque';
 import type {
+  AliasCheckResult,
   LoginData,
+  LoginMethod,
   LoginResult,
   OnboardingProfile,
   PendingOnboarding,
+  PendingProfileOnboarding,
 } from './types';
 
 interface User {
@@ -27,12 +30,15 @@ interface User {
 export type AuthContextProps = {
   loading: boolean;
   isAuthenticated: boolean;
+  checkAlias: (method: LoginMethod, alias: string) => Promise<AliasCheckResult>;
   sendOTP: (method: 'email' | 'phone', alias: string) => Promise<void>;
+  setPendingProfileOnboarding: (data: PendingProfileOnboarding | null) => void;
   login: (data: LoginData) => Promise<LoginResult>;
   completeOnboarding: (
     pending: PendingOnboarding,
     profile: OnboardingProfile,
   ) => Promise<void>;
+  resetOnboardingState: () => void;
   logout: () => Promise<void>;
   user: User;
 };
@@ -43,6 +49,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
   const pendingOnboardingSessionRef = useRef<OnboardingSession | null>(null);
+  const pendingProfileOnboardingRef = useRef<PendingProfileOnboarding | null>(
+    null,
+  );
 
   const isAuthenticated = currentUser !== null;
 
@@ -54,6 +63,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email: me.profile.email,
         kycStatus: me.metadata.kyc_verified ? 'approved' : 'rejected',
       });
+    },
+    [],
+  );
+
+  const checkAlias = useCallback(
+    async (method: LoginMethod, alias: string): Promise<AliasCheckResult> => {
+      const origin = method === 'phone' ? 'bloque-whatsapp' : 'bloque-email';
+      const sdk = createBloqueSdk(origin);
+      const identitySdk = sdk as unknown as AliasLookupApi;
+      try {
+        await identitySdk.identity.aliases.get(alias);
+        return { status: 'registered' };
+      } catch (error) {
+        if (isNotFoundError(error)) {
+          return { status: 'not_registered' };
+        }
+        throw error;
+      }
     },
     [],
   );
@@ -75,6 +102,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const setPendingProfileOnboarding = useCallback(
+    (data: PendingProfileOnboarding | null) => {
+      pendingProfileOnboardingRef.current = data;
+    },
+    [],
+  );
+
   const login = useCallback(
     async (data: LoginData): Promise<LoginResult> => {
       const alias = 'phone' in data ? data.phone : data.email;
@@ -85,8 +119,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const session = await sdk.connect(origin, alias, data.code);
         pendingOnboardingSessionRef.current = session;
+        if (pendingProfileOnboardingRef.current) {
+          const pendingProfile = pendingProfileOnboardingRef.current;
+          await session.identity.updateMe({
+            profile: {
+              firstName: pendingProfile.profile.firstName,
+              lastName: pendingProfile.profile.lastName,
+              email:
+                pendingProfile.method === 'email'
+                  ? pendingProfile.alias
+                  : undefined,
+              phone:
+                pendingProfile.method === 'phone'
+                  ? pendingProfile.alias
+                  : undefined,
+            },
+          });
+        }
         const me = await sdk.me();
         pendingOnboardingSessionRef.current = null;
+        pendingProfileOnboardingRef.current = null;
         setAuthenticatedUser(me);
         return { status: 'authenticated' };
       } catch (error) {
@@ -96,6 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             pending: { method, origin, alias, code: data.code },
           };
         }
+        pendingOnboardingSessionRef.current = null;
         throw error;
       }
     },
@@ -119,10 +172,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       const me = await sdk.me();
       pendingOnboardingSessionRef.current = null;
+      pendingProfileOnboardingRef.current = null;
       setAuthenticatedUser(me);
     },
     [setAuthenticatedUser],
   );
+
+  const resetOnboardingState = useCallback(() => {
+    pendingOnboardingSessionRef.current = null;
+    pendingProfileOnboardingRef.current = null;
+  }, []);
 
   const logout = useCallback(async () => {
     setLoading(true);
@@ -162,9 +221,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         loading: loading,
         isAuthenticated,
+        checkAlias,
         sendOTP,
+        setPendingProfileOnboarding,
         login,
         completeOnboarding,
+        resetOnboardingState,
         logout,
         user: currentUser as User,
       }}
@@ -195,6 +257,11 @@ function isIdentityNotFoundError(error: unknown): boolean {
   return false;
 }
 
+function isNotFoundError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  return 'status' in error && (error as { status?: unknown }).status === 404;
+}
+
 type OnboardingSession = {
   identity: {
     updateMe: (params: {
@@ -205,5 +272,13 @@ type OnboardingSession = {
         phone?: string;
       };
     }) => Promise<unknown>;
+  };
+};
+
+type AliasLookupApi = {
+  identity: {
+    aliases: {
+      get: (alias: string) => Promise<unknown>;
+    };
   };
 };

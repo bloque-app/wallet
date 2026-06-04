@@ -1,7 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
 import { useAuth } from '~/contexts/auth/auth-context';
-import type { PendingOnboarding } from '~/contexts/auth/types';
+import type {
+  LoginMethod,
+  OnboardingProfile as OnboardingProfileData,
+  PendingOnboarding,
+} from '~/contexts/auth/types';
 import { LoginMethodSelect } from './-components/login-method-select';
 import { OnboardingProfile } from './-components/onboarding-profile';
 import { OTPVerify } from './-components/otp-verify';
@@ -11,7 +15,12 @@ export const Route = createFileRoute('/_public/login/')({
 });
 
 function RouteComponent() {
-  const { sendOTP } = useAuth();
+  const {
+    checkAlias,
+    sendOTP,
+    setPendingProfileOnboarding,
+    resetOnboardingState,
+  } = useAuth();
 
   const [step, setStep] = useState<'method' | 'otp' | 'onboarding'>('method');
   const [method, setMethod] = useState<'email' | 'phone'>('email');
@@ -20,9 +29,25 @@ function RouteComponent() {
     useState<PendingOnboarding | null>(null);
 
   async function handleMethodSelect(m: 'email' | 'phone', c: string) {
-    await sendOTP(m, c);
+    resetOnboardingState();
+    setPendingOnboarding(null);
+    setPendingProfileOnboarding(null);
     setMethod(m);
     setContact(c);
+    const aliasStatus = await checkAlias(m, c);
+    if (aliasStatus.status === 'registered') {
+      await sendOTP(m, c);
+      setStep('otp');
+      return;
+    }
+    setStep('onboarding');
+  }
+
+  async function handleProfileSubmit(profile: OnboardingProfileData) {
+    const origin = getOriginFromMethod(method);
+    const pending = { method, alias: contact, origin, profile };
+    setPendingProfileOnboarding(pending);
+    await sendOTP(method, contact);
     setStep('otp');
   }
 
@@ -39,24 +64,46 @@ function RouteComponent() {
           <OTPVerify
             method={method}
             contact={contact}
-            onBack={() => setStep('method')}
+            onBack={() => {
+              resetOnboardingState();
+              setPendingOnboarding(null);
+              setPendingProfileOnboarding(null);
+              setStep('method');
+            }}
             onOnboardingRequired={(pending) => {
               setPendingOnboarding(pending);
               setStep('onboarding');
             }}
           />
         ) : (
-          pendingOnboarding && (
-            <OnboardingProfile
-              pending={pendingOnboarding}
-              onBack={() => setStep('otp')}
-              onCompleted={() => {
-                window.location.replace('/');
-              }}
-            />
-          )
+          <OnboardingProfile
+            pending={pendingOnboarding}
+            isPreOtp={!pendingOnboarding}
+            onBack={() => {
+              if (pendingOnboarding) {
+                setStep('otp');
+                return;
+              }
+              resetOnboardingState();
+              setPendingOnboarding(null);
+              setPendingProfileOnboarding(null);
+              setStep('method');
+            }}
+            onSubmitProfile={handleProfileSubmit}
+            onCompleted={() => {
+              setPendingOnboarding(null);
+              setPendingProfileOnboarding(null);
+              window.location.replace('/');
+            }}
+          />
         )}
       </div>
     </div>
   );
+}
+
+function getOriginFromMethod(
+  method: LoginMethod,
+): 'bloque-email' | 'bloque-whatsapp' {
+  return method === 'phone' ? 'bloque-whatsapp' : 'bloque-email';
 }

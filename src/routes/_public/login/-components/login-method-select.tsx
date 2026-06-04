@@ -37,7 +37,15 @@ export function LoginMethodSelect({ onContinue }: LoginMethodSelectProps) {
       setError('Número de teléfono inválido');
       return;
     }
-    await onContinue(tab!, normalizedValue);
+    if (!tab) {
+      setError('Selecciona un método para continuar');
+      return;
+    }
+    try {
+      await onContinue(tab, normalizedValue);
+    } catch {
+      setError('No pudimos validar este contacto. Intenta de nuevo.');
+    }
   }
 
   return (

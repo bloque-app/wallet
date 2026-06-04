@@ -6,17 +6,24 @@ import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { useAuth } from '~/contexts/auth/auth-context';
-import type { PendingOnboarding } from '~/contexts/auth/types';
+import type {
+  OnboardingProfile as OnboardingProfileData,
+  PendingOnboarding,
+} from '~/contexts/auth/types';
 
 interface OnboardingProfileProps {
-  pending: PendingOnboarding;
+  pending: PendingOnboarding | null;
+  isPreOtp: boolean;
   onBack: () => void;
+  onSubmitProfile: (profile: OnboardingProfileData) => Promise<void>;
   onCompleted: () => void;
 }
 
 export function OnboardingProfile({
   pending,
+  isPreOtp,
   onBack,
+  onSubmitProfile,
   onCompleted,
 }: OnboardingProfileProps) {
   const { completeOnboarding } = useAuth();
@@ -38,10 +45,17 @@ export function OnboardingProfile({
     setLoading(true);
     setError('');
     try {
-      await completeOnboarding(pending, {
+      const profile = {
         firstName: normalizedFirstName,
         lastName: normalizedLastName,
-      });
+      };
+      if (isPreOtp) {
+        await onSubmitProfile(profile);
+      } else if (pending) {
+        await completeOnboarding(pending, profile);
+      } else {
+        throw new Error('Missing onboarding state');
+      }
       onCompleted();
     } catch (error) {
       setError(getOnboardingErrorMessage(error));
@@ -63,10 +77,12 @@ export function OnboardingProfile({
 
       <div className="flex flex-col gap-2">
         <h2 className="text-2xl font-bold tracking-tight text-foreground">
-          Completa tu perfil
+          {isPreOtp ? 'Completa tu perfil' : 'Termina tu registro'}
         </h2>
         <p className="text-sm leading-relaxed text-muted-foreground">
-          Necesitamos tus datos basicos para terminar de crear tu identidad.
+          {isPreOtp
+            ? 'Necesitamos tus datos basicos antes de enviarte el codigo.'
+            : 'Necesitamos tus datos basicos para terminar de crear tu identidad.'}
         </p>
       </div>
 
@@ -117,7 +133,11 @@ export function OnboardingProfile({
           disabled={loading}
           className="h-12 w-full rounded-2xl text-sm font-medium dark:shadow-[0_14px_28px_-20px_rgb(0_0_0_/_0.72)]"
         >
-          {loading ? 'Guardando...' : 'Continuar'}
+          {loading
+            ? 'Guardando...'
+            : isPreOtp
+              ? 'Continuar a verificacion'
+              : 'Continuar'}
         </Button>
       </form>
     </div>
