@@ -9,3 +9,21 @@ type LoginPhone = {
 export type LoginData = (LoginEmail | LoginPhone) & {
   code: string;
 };
+
+export type LoginMethod = 'email' | 'phone';
+
+export interface PendingOnboarding {
+  method: LoginMethod;
+  origin: 'bloque-email' | 'bloque-whatsapp';
+  alias: string;
+  code: string;
+}
+
+export interface OnboardingProfile {
+  firstName: string;
+  lastName: string;
+}
+
+export type LoginResult =
+  | { status: 'authenticated' }
+  | { status: 'onboarding_required'; pending: PendingOnboarding };

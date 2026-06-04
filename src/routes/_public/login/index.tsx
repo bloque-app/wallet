@@ -1,7 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
 import { useAuth } from '~/contexts/auth/auth-context';
+import type { PendingOnboarding } from '~/contexts/auth/types';
 import { LoginMethodSelect } from './-components/login-method-select';
+import { OnboardingProfile } from './-components/onboarding-profile';
 import { OTPVerify } from './-components/otp-verify';
 
 export const Route = createFileRoute('/_public/login/')({
@@ -11,9 +13,11 @@ export const Route = createFileRoute('/_public/login/')({
 function RouteComponent() {
   const { sendOTP } = useAuth();
 
-  const [step, setStep] = useState<'method' | 'otp'>('method');
+  const [step, setStep] = useState<'method' | 'otp' | 'onboarding'>('method');
   const [method, setMethod] = useState<'email' | 'phone'>('email');
   const [contact, setContact] = useState('');
+  const [pendingOnboarding, setPendingOnboarding] =
+    useState<PendingOnboarding | null>(null);
 
   async function handleMethodSelect(m: 'email' | 'phone', c: string) {
     await sendOTP(m, c);
@@ -31,12 +35,26 @@ function RouteComponent() {
       <div className="w-full max-w-sm rounded-[1.9rem] border border-border/70 bg-card/85 p-6 shadow-[0_24px_45px_-35px_color-mix(in_oklch,var(--foreground)_38%,transparent)] dark:shadow-[0_24px_45px_-35px_rgb(0_0_0_/_0.76)] backdrop-blur-xl">
         {step === 'method' ? (
           <LoginMethodSelect onContinue={handleMethodSelect} />
-        ) : (
+        ) : step === 'otp' ? (
           <OTPVerify
             method={method}
             contact={contact}
             onBack={() => setStep('method')}
+            onOnboardingRequired={(pending) => {
+              setPendingOnboarding(pending);
+              setStep('onboarding');
+            }}
           />
+        ) : (
+          pendingOnboarding && (
+            <OnboardingProfile
+              pending={pendingOnboarding}
+              onBack={() => setStep('otp')}
+              onCompleted={() => {
+                window.location.replace('/');
+              }}
+            />
+          )
         )}
       </div>
     </div>

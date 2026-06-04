@@ -10,14 +10,21 @@ import {
   InputOTPSlot,
 } from '~/components/ui/input-otp';
 import { useAuth } from '~/contexts/auth/auth-context';
+import type { PendingOnboarding } from '~/contexts/auth/types';
 
 interface OTPVerifyProps {
   method: 'email' | 'phone';
   contact: string;
   onBack: () => void;
+  onOnboardingRequired: (pending: PendingOnboarding) => void;
 }
 
-export function OTPVerify({ method, contact, onBack }: OTPVerifyProps) {
+export function OTPVerify({
+  method,
+  contact,
+  onBack,
+  onOnboardingRequired,
+}: OTPVerifyProps) {
   const { sendOTP, login } = useAuth();
 
   const [otp, setOtp] = useState('');
@@ -57,14 +64,33 @@ export function OTPVerify({ method, contact, onBack }: OTPVerifyProps) {
 
     const data = method === 'email' ? { email: contact } : { phone: contact };
     try {
-      await login({ code: otp, ...data });
+      const result = await login({ code: otp, ...data });
+      if (result.status === 'onboarding_required') {
+        setLoading(false);
+        setOtp('');
+        setError('');
+        onOnboardingRequired(result.pending);
+        return;
+      }
       navigate({ to: '/', replace: true });
-    } catch {
+    } catch (error) {
+      if (isOtpError(error)) {
+        setError('Codigo invalido o expirado. Intenta de nuevo.');
+      } else {
+        setError('No pudimos validar el codigo. Intenta otra vez.');
+      }
       setLastFailedOtp(otp);
-      setError('Código incorrecto. Intenta de nuevo.');
       setLoading(false);
     }
-  }, [otp, login, method, navigate, contact, lastFailedOtp]);
+  }, [
+    otp,
+    login,
+    method,
+    navigate,
+    contact,
+    lastFailedOtp,
+    onOnboardingRequired,
+  ]);
 
   useEffect(() => {
     if (otp.length === 6 && !loading && otp !== lastFailedOtp) {
@@ -180,5 +206,21 @@ export function OTPVerify({ method, contact, onBack }: OTPVerifyProps) {
         Cambiar método de inicio de sesión
       </button>
     </div>
+  );
+}
+
+function isOtpError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const maybeCode = (error as { code?: unknown }).code;
+  const maybeMessage = (error as { message?: unknown }).message;
+  const normalizedCode =
+    typeof maybeCode === 'string' ? maybeCode.toUpperCase() : '';
+  const normalizedMessage =
+    typeof maybeMessage === 'string' ? maybeMessage.toUpperCase() : '';
+  return (
+    normalizedCode.includes('OTP') ||
+    normalizedCode.includes('ASSERT') ||
+    normalizedMessage.includes('OTP') ||
+    normalizedMessage.includes('ASSERT')
   );
 }
