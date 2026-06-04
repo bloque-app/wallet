@@ -4,6 +4,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from 'react';
 import { toast } from 'sonner';
@@ -41,6 +42,7 @@ export const AuthContext = createContext<AuthContextProps | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
+  const pendingOnboardingSessionRef = useRef<OnboardingSession | null>(null);
 
   const isAuthenticated = currentUser !== null;
 
@@ -81,8 +83,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const sdk = createBloqueSdk(origin);
 
       try {
-        await sdk.connect(origin, alias, data.code);
+        const session = await sdk.connect(origin, alias, data.code);
+        pendingOnboardingSessionRef.current = session;
         const me = await sdk.me();
+        pendingOnboardingSessionRef.current = null;
         setAuthenticatedUser(me);
         return { status: 'authenticated' };
       } catch (error) {
@@ -101,11 +105,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const completeOnboarding = useCallback(
     async (pending: PendingOnboarding, profile: OnboardingProfile) => {
       const sdk = createBloqueSdk(pending.origin);
-      const session = await sdk.connect(
-        pending.origin,
-        pending.alias,
-        pending.code,
-      );
+      const session = pendingOnboardingSessionRef.current;
+      if (!session) {
+        throw new Error('Missing onboarding session');
+      }
       await session.identity.updateMe({
         profile: {
           firstName: profile.firstName,
@@ -115,6 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         },
       });
       const me = await sdk.me();
+      pendingOnboardingSessionRef.current = null;
       setAuthenticatedUser(me);
     },
     [setAuthenticatedUser],
@@ -190,3 +194,16 @@ function isIdentityNotFoundError(error: unknown): boolean {
   }
   return false;
 }
+
+type OnboardingSession = {
+  identity: {
+    updateMe: (params: {
+      profile?: {
+        firstName?: string;
+        lastName?: string;
+        email?: string;
+        phone?: string;
+      };
+    }) => Promise<unknown>;
+  };
+};
