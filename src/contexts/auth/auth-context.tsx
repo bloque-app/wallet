@@ -188,6 +188,7 @@ type IdentityRegisterApi = {
             challengeType: 'OTP';
             value: { code: string; email?: string; phone?: string };
           };
+          extraContext?: Record<string, unknown>;
         },
       ) => Promise<{ accessToken: string }>;
     };
@@ -216,6 +217,7 @@ async function registerIdentityWithOtp(
           ? { code: pending.code, email: pending.alias }
           : { code: pending.code, phone: pending.alias },
     },
+    extraContext: {},
   });
 }
 
