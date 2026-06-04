@@ -101,9 +101,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const completeOnboarding = useCallback(
     async (pending: PendingOnboarding, profile: OnboardingProfile) => {
       const sdk = createBloqueSdk(pending.origin);
-      await registerIdentityWithOtp(sdk, pending, profile);
-
-      await sdk.connect(pending.origin, pending.alias, pending.code);
+      const session = await sdk.connect(
+        pending.origin,
+        pending.alias,
+        pending.code,
+      );
+      await session.identity.updateMe({
+        profile: {
+          firstName: profile.firstName,
+          lastName: profile.lastName,
+          email: pending.method === 'email' ? pending.alias : undefined,
+          phone: pending.method === 'phone' ? pending.alias : undefined,
+        },
+      });
       const me = await sdk.me();
       setAuthenticatedUser(me);
     },
@@ -167,58 +177,6 @@ export function useAuth() {
   }
 
   return context;
-}
-
-type IdentityRegisterApi = {
-  identity: {
-    origins: {
-      register: (
-        alias: string,
-        origin: string,
-        params: {
-          type: 'individual';
-          profile: {
-            firstName: string;
-            lastName: string;
-            email?: string;
-            phone?: string;
-          };
-          assertionResult: {
-            alias: string;
-            challengeType: 'OTP';
-            value: { code: string; email?: string; phone?: string };
-          };
-          extraContext?: Record<string, unknown>;
-        },
-      ) => Promise<{ accessToken: string }>;
-    };
-  };
-};
-
-async function registerIdentityWithOtp(
-  sdk: ReturnType<typeof createBloqueSdk>,
-  pending: PendingOnboarding,
-  profile: OnboardingProfile,
-) {
-  const identitySdk = sdk as unknown as IdentityRegisterApi;
-  await identitySdk.identity.origins.register(pending.alias, pending.origin, {
-    type: 'individual',
-    profile: {
-      firstName: profile.firstName,
-      lastName: profile.lastName,
-      email: pending.method === 'email' ? pending.alias : undefined,
-      phone: pending.method === 'phone' ? pending.alias : undefined,
-    },
-    assertionResult: {
-      alias: pending.alias,
-      challengeType: 'OTP',
-      value:
-        pending.method === 'email'
-          ? { code: pending.code, email: pending.alias }
-          : { code: pending.code, phone: pending.alias },
-    },
-    extraContext: {},
-  });
 }
 
 function isIdentityNotFoundError(error: unknown): boolean {
