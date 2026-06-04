@@ -115,13 +115,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const origin = 'phone' in data ? 'bloque-whatsapp' : 'bloque-email';
       const method = 'phone' in data ? 'phone' : 'email';
       const sdk = createBloqueSdk(origin);
+      const registerApi = sdk as unknown as OriginRegisterApi;
 
       try {
-        const session = await sdk.connect(origin, alias, data.code);
-        pendingOnboardingSessionRef.current = session;
         if (pendingProfileOnboardingRef.current) {
           const pendingProfile = pendingProfileOnboardingRef.current;
-          await session.identity.updateMe({
+          await registerApi.identity.origins.register(alias, origin, {
+            type: 'individual',
             profile: {
               firstName: pendingProfile.profile.firstName,
               lastName: pendingProfile.profile.lastName,
@@ -134,7 +134,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   ? pendingProfile.alias
                   : undefined,
             },
+            assertionResult: {
+              alias,
+              challengeType: 'OTP',
+              value:
+                method === 'email'
+                  ? { code: data.code, email: alias }
+                  : { code: data.code, phone: alias },
+            },
+            extraContext: {},
           });
+          pendingOnboardingSessionRef.current = null;
+        } else {
+          const session = await sdk.connect(origin, alias, data.code);
+          pendingOnboardingSessionRef.current = session;
         }
         const me = await sdk.me();
         pendingOnboardingSessionRef.current = null;
@@ -149,6 +162,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           };
         }
         pendingOnboardingSessionRef.current = null;
+        pendingProfileOnboardingRef.current = null;
         throw error;
       }
     },
@@ -279,6 +293,32 @@ type AliasLookupApi = {
   identity: {
     aliases: {
       get: (alias: string) => Promise<unknown>;
+    };
+  };
+};
+
+type OriginRegisterApi = {
+  identity: {
+    origins: {
+      register: (
+        alias: string,
+        origin: 'bloque-email' | 'bloque-whatsapp',
+        params: {
+          type: 'individual';
+          profile: {
+            firstName: string;
+            lastName: string;
+            email?: string;
+            phone?: string;
+          };
+          assertionResult: {
+            alias: string;
+            challengeType: 'OTP';
+            value: { code: string; email?: string; phone?: string };
+          };
+          extraContext: Record<string, unknown>;
+        },
+      ) => Promise<{ accessToken: string }>;
     };
   };
 };
