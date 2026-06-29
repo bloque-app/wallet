@@ -1,5 +1,4 @@
 'use client';
-
 import { Mail, Phone } from 'lucide-react';
 import type React from 'react';
 import { useState } from 'react';

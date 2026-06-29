@@ -61,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         urn: me.urn,
         name: me.profile.first_name,
         email: me.profile.email,
-        kycStatus: me.metadata.kyc_verified ? 'approved' : 'rejected',
+        kycStatus: me.metadata.kyc_verified ? 'approved' : 'not_verified',
       });
     },
     [],
@@ -72,6 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const origin = method === 'phone' ? 'bloque-whatsapp' : 'bloque-email';
       const sdk = createBloqueSdk(origin);
       const identitySdk = sdk as unknown as AliasLookupApi;
+
       try {
         await identitySdk.identity.aliases.get(alias);
         return { status: 'registered' };
@@ -93,8 +94,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const result = await sdk.assert(origin, alias);
       if (!result.value) {
         toast.error('Upps, something went wrong. Please try again.');
-        return;
+        throw new Error('Failed to send OTP');
       }
+
       toast.success(
         `OTP sent to your ${method === 'phone' ? 'phone' : 'email'}`,
       );
@@ -149,6 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const session = await sdk.connect(origin, alias, data.code);
           pendingOnboardingSessionRef.current = session;
         }
+
         const me = await sdk.me();
         pendingOnboardingSessionRef.current = null;
         pendingProfileOnboardingRef.current = null;
@@ -161,6 +164,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             pending: { method, origin, alias, code: data.code },
           };
         }
+
         pendingOnboardingSessionRef.current = null;
         pendingProfileOnboardingRef.current = null;
         throw error;
@@ -173,9 +177,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (pending: PendingOnboarding, profile: OnboardingProfile) => {
       const sdk = createBloqueSdk(pending.origin);
       const session = pendingOnboardingSessionRef.current;
+
       if (!session) {
         throw new Error('Missing onboarding session');
       }
+
       await session.identity.updateMe({
         profile: {
           firstName: profile.firstName,
@@ -184,6 +190,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           phone: pending.method === 'phone' ? pending.alias : undefined,
         },
       });
+
       const me = await sdk.me();
       pendingOnboardingSessionRef.current = null;
       pendingProfileOnboardingRef.current = null;
@@ -201,8 +208,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     try {
       await apiFetch('/api/auth/logout', { method: 'DELETE' });
-    } catch (error) {
-      console.error('Error logging out:', error);
+    } catch {
+      console.error('Error logging out');
     } finally {
       localStorage.clear();
       setCurrentUser(null);
@@ -219,21 +226,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (me) {
           setAuthenticatedUser(me);
         }
-      } catch (error) {
-        console.error('Error checking auth:', error);
+      } catch {
+        console.error('Error checking auth');
         setCurrentUser(null);
       } finally {
         setLoading(false);
       }
     };
 
-    checkAuth();
+    void checkAuth();
   }, [setAuthenticatedUser]);
 
   return (
     <AuthContext.Provider
       value={{
-        loading: loading,
+        loading,
         isAuthenticated,
         checkAlias,
         sendOTP,
