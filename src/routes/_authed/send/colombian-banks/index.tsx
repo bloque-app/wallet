@@ -61,12 +61,6 @@ function RouteComponent() {
   const [selectedBank, setSelectedBank] = useState('');
   const { data: cardsData, isLoading: isLoadingCards } = useCards();
 
-  const banksQuery = useQuery({
-    queryKey: ['pse-banks'],
-    queryFn: async () => bloque.swap.pse.banks(),
-    staleTime: 5 * 60_000,
-  });
-
   const parsedAmount = Number.parseInt(amount.replace(/\D/g, ''), 10) || 0;
   const amountSrc = useMemo(() => {
     if (parsedAmount <= 0) return '';
@@ -271,7 +265,6 @@ function RouteComponent() {
       {step === 'bank' && (
         <TopUpBankStep
           form={bankForm}
-          banks={banksQuery.data?.banks ?? []}
           selectedBank={selectedBank}
           onBankChange={setSelectedBank}
           onFormChange={setBankForm}

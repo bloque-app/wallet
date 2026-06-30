@@ -20,6 +20,48 @@ export interface TopUpBankAccountData {
   bankAccountHolderIdentificationValue: string;
 }
 
+export const COLOMBIAN_BANKS = [
+  { code: 'banco_agrario_de_colombia', name: 'Banco Agrario de Colombia' },
+  { code: 'banco_av_villas', name: 'Banco AV Villas' },
+  { code: 'banco_bancamia', name: 'Banco Bancamia' },
+  { code: 'banco_bbva_colombia', name: 'BBVA Colombia' },
+  { code: 'banco_btg_pactual_colombia', name: 'Banco BTG Pactual Colombia' },
+  { code: 'citibank_colombia', name: 'Citibank Colombia' },
+  { code: 'banco_caja_social_bcsc', name: 'Banco Caja Social BCSC' },
+  { code: 'davibank', name: 'Davibank' },
+  { code: 'banco_contactar', name: 'Banco Contactar' },
+  {
+    code: 'banco_cooperativo_coopcentral',
+    name: 'Banco Cooperativo Coopcentral',
+  },
+  { code: 'ban100', name: 'Ban100' },
+  { code: 'banco_de_bogota', name: 'Banco de Bogotá' },
+  { code: 'banco_de_occidente', name: 'Banco de Occidente' },
+  { code: 'banco_gnb_sudameris', name: 'Banco GNB Sudameris' },
+  { code: 'banco_jp_morgan_colombia', name: 'Banco JP Morgan Colombia' },
+  { code: 'banco_popular', name: 'Banco Popular' },
+  { code: 'banco_itau', name: 'Banco Itaú' },
+  { code: 'banco_w', name: 'Banco W' },
+  { code: 'daviplata', name: 'Daviplata' },
+  { code: 'banco_coomeva', name: 'Banco Coomeva' },
+  { code: 'banco_finandina_bic', name: 'Banco Finandina BIC' },
+  { code: 'banco_falabella', name: 'Banco Falabella' },
+  { code: 'banco_pichincha', name: 'Banco Pichincha' },
+  {
+    code: 'banco_santander_de_negocios_colombia',
+    name: 'Banco Santander de Negocios Colombia',
+  },
+  { code: 'banco_mundo_mujer', name: 'Banco Mundo Mujer' },
+  { code: 'banco_serfinanza', name: 'Banco Serfinanza' },
+  { code: 'mibanco', name: 'Mibanco' },
+  { code: 'lulo_bank', name: 'Lulo Bank' },
+  { code: 'banco_union', name: 'Banco Unión' },
+  { code: 'nubank', name: 'Nubank' },
+  { code: 'rappipay', name: 'RappiPay' },
+  { code: 'banco_davivienda', name: 'Banco Davivienda' },
+  { code: 'nequi', name: 'Nequi' },
+] as const;
+
 const ID_TYPE_LABELS: Record<
   TopUpBankAccountData['bankAccountHolderIdentificationType'],
   string
@@ -32,7 +74,6 @@ const ID_TYPE_LABELS: Record<
 
 interface BankStepProps {
   form: TopUpBankAccountData;
-  banks: Array<{ code: string; name: string }>;
   selectedBank: string;
   onBankChange: (code: string) => void;
   onFormChange: (value: TopUpBankAccountData) => void;
@@ -42,7 +83,6 @@ interface BankStepProps {
 
 export function TopUpBankStep({
   form,
-  banks,
   selectedBank,
   onBankChange,
   onFormChange,
@@ -50,7 +90,7 @@ export function TopUpBankStep({
   onNext,
 }: BankStepProps) {
   const selectedBankName =
-    banks.find((b) => b.code === selectedBank)?.name ?? '';
+    COLOMBIAN_BANKS.find((b) => b.code === selectedBank)?.name ?? '';
 
   const isValid =
     !!selectedBank &&
@@ -97,7 +137,7 @@ export function TopUpBankStep({
               )}
             </SelectTrigger>
             <SelectContent>
-              {banks.map((bank) => (
+              {COLOMBIAN_BANKS.map((bank) => (
                 <SelectItem key={bank.code} value={bank.code}>
                   {bank.name}
                 </SelectItem>
