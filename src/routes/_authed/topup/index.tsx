@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { createFileRoute } from '@tanstack/react-router';
-import { Building2, CreditCard, Wallet } from 'lucide-react';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { Building2, CreditCard, KeyRound, Wallet } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '~/components/ui/button';
@@ -16,7 +16,7 @@ import {
 import { Separator } from '~/components/ui/separator';
 import { useAuth } from '~/contexts/auth/auth-context';
 import { bloque } from '~/lib/bloque';
-import { formatAmount, formatCOP } from '~/lib/mock-data';
+import { formatAmount, formatCOP } from '~/lib/formatters';
 import { cn } from '~/lib/utils';
 import { TopUpErrorStep } from './-components/error-step';
 import { TopUpPendingStep } from './-components/pending-step';
@@ -67,6 +67,7 @@ export const Route = createFileRoute('/_authed/topup/')({
 });
 
 function RouteComponent() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [step, setStep] = useState<TopUpStep>('method');
   const [receiveAsset, setReceiveAsset] = useState<ReceiveAsset>('COP');
@@ -288,32 +289,37 @@ function RouteComponent() {
               onClick: () => setStep('amount'),
             },
             {
+              title: 'Llaves BRE-B',
+              subtitle: 'Registra y gestiona tus llaves',
+              icon: KeyRound,
+              enabled: true,
+              onClick: () => navigate({ to: '/send/breb-keys' }),
+            },
+            {
               title: 'Desde bancos en EE.UU.',
               subtitle: 'ACH / Wire',
               icon: Building2,
-              enabled: true,
+              enabled: false,
               onClick: () =>
                 toast.info(
-                  'Recarga desde bancos en EE.UU. disponible proximamente.',
+                  'Recarga desde bancos en EE.UU. disponible próximamente.',
                 ),
             },
             {
               title: 'Desde direcciones blockchain',
               subtitle: 'Wallets externas',
               icon: Wallet,
-              enabled: true,
+              enabled: false,
               onClick: () =>
-                toast.info(
-                  'Recarga desde direcciones blockchain disponible proximamente.',
-                ),
+                toast.info('Recarga desde blockchain disponible próximamente.'),
             },
             {
               title: 'Con tarjeta',
               subtitle: 'Visa, Mastercard, etc',
               icon: CreditCard,
-              enabled: true,
+              enabled: false,
               onClick: () =>
-                toast.info('Recarga con tarjeta disponible proximamente.'),
+                toast.info('Recarga con tarjeta disponible próximamente.'),
             },
           ].map((option) => {
             const Icon = option.icon;
@@ -327,8 +333,8 @@ function RouteComponent() {
                   option.enabled ? 'hover:bg-muted/70' : 'opacity-60',
                 )}
               >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-border/80 bg-background/85">
-                  <Icon className="h-4 w-4 text-foreground" />
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
+                  <Icon className="h-4 w-4 text-primary" />
                 </div>
                 <div className="flex flex-col">
                   <p className="text-sm font-medium text-foreground">

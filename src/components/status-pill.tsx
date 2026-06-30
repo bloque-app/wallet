@@ -1,5 +1,5 @@
 import { Badge } from '~/components/ui/badge';
-import type { MovementStatus } from '~/lib/mock-data';
+import type { MovementStatus } from '~/lib/formatters';
 import { cn } from '~/lib/utils';
 
 interface StatusPillProps {

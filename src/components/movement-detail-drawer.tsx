@@ -17,7 +17,7 @@ import {
   formatFullDate,
   getMovementLabel,
   type Movement,
-} from '~/lib/mock-data';
+} from '~/lib/formatters';
 import { StatusPill } from './status-pill';
 
 interface MovementDetailDrawerProps {

@@ -1,6 +1,7 @@
+import { useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { ArrowDownUp } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
@@ -12,8 +13,30 @@ import {
   SelectValue,
 } from '~/components/ui/select';
 import { Separator } from '~/components/ui/separator';
-import { type Asset, formatAmount } from '~/lib/mock-data';
-import { useWallet } from '~/lib/wallet-mock';
+import { bloque } from '~/lib/bloque';
+import { type Asset, formatAmount } from '~/lib/formatters';
+
+const ASSET_KEY_MAP: Record<string, Asset> = {
+  COPM: 'COP',
+  DUSD: 'USD',
+  KSM: 'KSM',
+};
+
+type BalancesData = Record<string, { current: string; pending: string }>;
+
+function parseBalances(data: BalancesData | undefined): Record<Asset, number> {
+  const out: Record<Asset, number> = { COP: 0, USD: 0, KSM: 0 };
+  if (!data) return out;
+  for (const [key, value] of Object.entries(data)) {
+    const [assetKey, precisionStr] = key.split('/');
+    const precision = Number.parseInt(precisionStr, 10);
+    const mapped = ASSET_KEY_MAP[assetKey];
+    if (mapped && !Number.isNaN(precision)) {
+      out[mapped] = Number.parseInt(value.current, 10) / 10 ** precision;
+    }
+  }
+  return out;
+}
 
 const rates: Record<string, number> = {
   'COP-USD': 1 / 4150,
@@ -24,14 +47,23 @@ const rates: Record<string, number> = {
   'KSM-USD': 28.92,
 };
 
-const feeRate = 0.006; // 0.6%
+const feeRate = 0.006;
 
 export const Route = createFileRoute('/_authed/convert/')({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const { balances } = useWallet();
+  const { data: balancesData } = useQuery({
+    queryKey: ['balances'],
+    queryFn: async () => bloque.accounts.balances(),
+  });
+
+  const balances = useMemo(
+    () => parseBalances(balancesData as BalancesData),
+    [balancesData],
+  );
+
   const [fromAsset, setFromAsset] = useState<Asset>('COP');
   const [toAsset, setToAsset] = useState<Asset>('USD');
   const [amount, setAmount] = useState('');
@@ -52,11 +84,10 @@ function RouteComponent() {
 
   return (
     <div className="flex flex-col gap-5">
-      <h1 className="text-2xl font-bold tracking-tight text-foreground">
+      <h1 className="text-2xl font-bold tracking-[-0.025em] text-foreground">
         Convertir
       </h1>
 
-      {/* From */}
       <div className="flex flex-col gap-2">
         <Label className="text-xs text-muted-foreground">De</Label>
         <div className="flex gap-2">
@@ -87,7 +118,6 @@ function RouteComponent() {
         </p>
       </div>
 
-      {/* Swap button */}
       <div className="flex justify-center">
         <button
           type="button"
@@ -99,7 +129,6 @@ function RouteComponent() {
         </button>
       </div>
 
-      {/* To */}
       <div className="flex flex-col gap-2">
         <Label className="text-xs text-muted-foreground">A</Label>
         <div className="flex gap-2">
@@ -119,7 +148,6 @@ function RouteComponent() {
         </div>
       </div>
 
-      {/* Rate & fee */}
       {parsed > 0 && fromAsset !== toAsset && (
         <div className="rounded-2xl border border-border/85 bg-card/85 p-4">
           <div className="flex flex-col gap-2">

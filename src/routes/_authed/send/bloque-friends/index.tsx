@@ -18,7 +18,7 @@ import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { Textarea } from '~/components/ui/textarea';
 import { bloque } from '~/lib/bloque';
-import { formatAmount } from '~/lib/mock-data';
+import { formatAmount } from '~/lib/formatters';
 
 export const Route = createFileRoute('/_authed/send/bloque-friends/')({
   component: RouteComponent,

@@ -3,7 +3,7 @@
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
-import { formatCOP } from '~/lib/mock-data';
+import { formatCOP } from '~/lib/formatters';
 
 interface AmountStepProps {
   amount: string;

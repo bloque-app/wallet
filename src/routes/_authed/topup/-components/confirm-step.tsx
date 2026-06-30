@@ -3,7 +3,7 @@
 import { ArrowLeft, ExternalLink } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { Separator } from '~/components/ui/separator';
-import { formatCOP } from '~/lib/mock-data';
+import { formatCOP } from '~/lib/formatters';
 
 interface ConfirmStepProps {
   amount: number;

@@ -18,7 +18,7 @@ import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { Textarea } from '~/components/ui/textarea';
 import { bloque } from '~/lib/bloque';
-import { formatCOP } from '~/lib/mock-data';
+import { formatCOP } from '~/lib/formatters';
 import { TopUpErrorStep } from '../../../topup/-components/error-step';
 import { TopUpPendingStep } from '../../../topup/-components/pending-step';
 import {

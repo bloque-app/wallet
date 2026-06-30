@@ -5,7 +5,7 @@ import { MovementDetailDrawer } from '~/components/movement-detail-drawer';
 import { MovementRow } from '~/components/movement-row';
 import { Input } from '~/components/ui/input';
 import { useGlobalTransactionsInfinite } from '~/hooks/use-global-transactions-infinite';
-import type { Asset, Movement } from '~/lib/mock-data';
+import type { Asset, Movement } from '~/lib/formatters';
 import { cn } from '~/lib/utils';
 
 type FilterType = 'all' | Asset | 'incoming' | 'outgoing';

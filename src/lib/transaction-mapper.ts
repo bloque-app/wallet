@@ -4,7 +4,7 @@ import type {
   Movement,
   MovementStatus,
   MovementType,
-} from './mock-data';
+} from './formatters';
 
 const ASSET_KEY_MAP: Record<string, Asset> = {
   COP: 'COP',

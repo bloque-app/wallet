@@ -1,8 +1,8 @@
 'use client';
 
 import { Eye, EyeOff } from 'lucide-react';
-import { type Asset, formatAmount } from '~/lib/mock-data';
-import { useWallet } from '~/lib/wallet-mock';
+import { type Asset, formatAmount } from '~/lib/formatters';
+import { setShowBalances, useShowBalances } from '~/lib/show-balances';
 
 interface CurrencyBalanceCardProps {
   asset: Asset;
@@ -21,7 +21,7 @@ export function CurrencyBalanceCard({
   balance,
   onDetails,
 }: CurrencyBalanceCardProps) {
-  const { showBalances } = useWallet();
+  const showBalances = useShowBalances();
 
   return (
     <div className="flex items-center justify-between rounded-2xl border border-border/85 bg-card/90 px-4 py-3.5 shadow-[0_15px_30px_-32px_color-mix(in_oklch,var(--foreground)_50%,transparent)] dark:shadow-[0_15px_30px_-32px_rgb(0_0_0_/_0.72)]">
@@ -57,7 +57,7 @@ export function CurrencyBalanceCard({
 }
 
 export function BalanceToggle() {
-  const { showBalances, setShowBalances } = useWallet();
+  const showBalances = useShowBalances();
   return (
     <button
       type="button"

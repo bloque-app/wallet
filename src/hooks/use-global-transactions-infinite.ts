@@ -1,6 +1,6 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { bloque } from '~/lib/bloque';
-import type { Movement } from '~/lib/mock-data';
+import type { Movement } from '~/lib/formatters';
 import { mapGlobalTransactionToMovement } from '~/lib/transaction-mapper';
 
 export function useGlobalTransactionsInfinite(

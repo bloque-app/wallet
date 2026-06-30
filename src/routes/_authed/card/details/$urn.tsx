@@ -22,7 +22,7 @@ import {
 } from '~/components/ui/alert-dialog';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
-import { formatAmount, formatDate } from '~/lib/mock-data';
+import { formatAmount, formatDate } from '~/lib/formatters';
 import { cn } from '~/lib/utils';
 import { useCardToggleFreeze, useCardUpdateName } from '../-hooks/use-card';
 import { BalanceSkeleton } from './-components/balance-skeleton';

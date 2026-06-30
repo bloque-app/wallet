@@ -12,7 +12,7 @@ import { MovementDetailDrawer } from '~/components/movement-detail-drawer';
 import { MovementRow } from '~/components/movement-row';
 import { Button } from '~/components/ui/button';
 import { bloque } from '~/lib/bloque';
-import type { Asset, Movement } from '~/lib/mock-data';
+import type { Asset, Movement } from '~/lib/formatters';
 import { cn } from '~/lib/utils';
 
 export const Route = createFileRoute('/_authed/accounts/$urn')({

@@ -12,7 +12,7 @@ import {
   formatDate,
   getMovementLabel,
   type Movement,
-} from '~/lib/mock-data';
+} from '~/lib/formatters';
 import { StatusPill } from './status-pill';
 
 interface MovementRowProps {

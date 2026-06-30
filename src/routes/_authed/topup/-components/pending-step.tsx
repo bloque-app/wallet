@@ -2,7 +2,7 @@
 
 import { Clock, RefreshCw } from 'lucide-react';
 import { Button } from '~/components/ui/button';
-import { formatCOP } from '~/lib/mock-data';
+import { formatCOP } from '~/lib/formatters';
 
 interface PendingStepProps {
   amount: number;

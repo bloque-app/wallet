@@ -3,7 +3,7 @@
 import { Separator } from '@base-ui/react';
 import { ExternalLink, EyeOff, Snowflake } from 'lucide-react';
 import { Switch } from '~/components/ui/switch';
-import { formatUSD } from '~/lib/mock-data';
+import { formatUSD } from '~/lib/formatters';
 import type { CardDetailsResponse } from '~/routes/_authed/card/-hooks/use-card';
 
 interface CardActiveProps {

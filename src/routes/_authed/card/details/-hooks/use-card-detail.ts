@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { Asset } from '~/lib/mock-data';
-import { useWallet } from '~/lib/wallet-mock';
+import type { Asset } from '~/lib/formatters';
+import { useShowBalances } from '~/lib/show-balances';
 import { useCards } from '../../-hooks/use-card';
 import { useBalance, useTransactions } from './use-accounts';
 
@@ -21,7 +21,7 @@ export const MOVEMENT_FILTERS: { label: string; value: MovementFilter }[] = [
 export function useCardDetail(urn: string) {
   const { data, isLoading: isLoadingCard } = useCards();
   const cards = data?.accounts ?? [];
-  const { showBalances } = useWallet();
+  const showBalances = useShowBalances();
 
   const [selectedAssetKey, setSelectedAssetKey] = useState<string>('');
   const [movementFilter, setMovementFilter] = useState<MovementFilter>('todas');

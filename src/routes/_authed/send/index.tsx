@@ -1,48 +1,50 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { ArrowLeft, Building2, KeyRound, Users, Wallet } from 'lucide-react';
+import { toast } from 'sonner';
 import { cn } from '~/lib/utils';
 
 export const Route = createFileRoute('/_authed/send/')({
   component: RouteComponent,
 });
 
-const options = [
+type SendOption = {
+  title: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+} & ({ to: string; onClick?: never } | { to?: never; onClick: () => void });
+
+const options: SendOption[] = [
   {
     title: 'Llaves BRE-B',
     description: 'Envia a cualquier banco colombiano al instante.',
     to: '/send/breb-keys',
     icon: KeyRound,
-    enabled: true,
   },
   {
     title: 'Bancos colombianos',
     description: 'Transfiere a cuentas bancarias en Colombia.',
     to: '/send/colombian-banks',
     icon: Building2,
-    enabled: true,
-  },
-  {
-    title: 'Bancos/billeteras en EE.UU.',
-    description: 'Envia USD a bancos y wallets en Estados Unidos.',
-    to: '/send/us-banks-wallets',
-    icon: Building2,
-    enabled: true,
   },
   {
     title: 'Amigos en bloque',
     description: 'Envia a contactos dentro de Bloque.',
     to: '/send/bloque-friends',
     icon: Users,
-    enabled: true,
+  },
+  {
+    title: 'Bancos/billeteras en EE.UU.',
+    description: 'Envia USD a bancos y wallets en Estados Unidos.',
+    icon: Building2,
+    onClick: () => toast.info('Envío a EE.UU. disponible próximamente.'),
   },
   {
     title: 'Direcciones blockchain',
     description: 'Envia fondos a wallets externas.',
-    to: '/send/blockchain-addresses',
     icon: Wallet,
-    enabled: true,
+    onClick: () => toast.info('Envío a blockchain disponible próximamente.'),
   },
-] as const;
+];
 
 function RouteComponent() {
   return (
@@ -64,13 +66,12 @@ function RouteComponent() {
       <section className="flex flex-col gap-3">
         {options.map((option) => {
           const Icon = option.icon;
+          const isDisabled = !option.to;
           const content = (
             <div
               className={cn(
                 'flex items-start gap-3 rounded-2xl border border-border/75 bg-card/80 p-4 transition-all',
-                option.enabled
-                  ? 'hover:bg-muted/70'
-                  : 'opacity-60 cursor-not-allowed',
+                isDisabled ? 'opacity-60' : 'hover:bg-muted/70',
               )}
             >
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
@@ -87,12 +88,23 @@ function RouteComponent() {
             </div>
           );
 
-          if (!option.enabled) return <div key={option.title}>{content}</div>;
+          if (option.to) {
+            return (
+              <Link key={option.title} to={option.to}>
+                {content}
+              </Link>
+            );
+          }
 
           return (
-            <Link key={option.title} to={option.to}>
+            <button
+              key={option.title}
+              type="button"
+              onClick={option.onClick}
+              className="text-left"
+            >
               {content}
-            </Link>
+            </button>
           );
         })}
       </section>
