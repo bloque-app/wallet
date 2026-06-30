@@ -1,5 +1,5 @@
 'use client';
-import { Mail, Phone } from 'lucide-react';
+import { LoaderCircle, Mail, Phone } from 'lucide-react';
 import type React from 'react';
 import { useState } from 'react';
 import { Button } from '~/components/ui/button';
@@ -14,9 +14,14 @@ export function LoginMethodSelect({ onContinue }: LoginMethodSelectProps) {
   const [tab, setTab] = useState<'email' | 'phone' | null>(null);
   const [value, setValue] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (isSubmitting) {
+      return;
+    }
+
     const normalizedValue =
       tab === 'phone' ? value.replace('+', '').trim() : value.trim();
 
@@ -40,10 +45,14 @@ export function LoginMethodSelect({ onContinue }: LoginMethodSelectProps) {
       setError('Selecciona un método para continuar');
       return;
     }
+
     try {
+      setIsSubmitting(true);
       await onContinue(tab, normalizedValue);
     } catch {
       setError('No pudimos validar este contacto. Intenta de nuevo.');
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -109,14 +118,23 @@ export function LoginMethodSelect({ onContinue }: LoginMethodSelectProps) {
               className="h-12 rounded-2xl dark:shadow-[0_10px_24px_-24px_rgb(0_0_0_/_0.66)]"
               inputMode={tab === 'phone' ? 'numeric' : 'email'}
               autoComplete={tab === 'email' ? 'email' : 'tel'}
+              disabled={isSubmitting}
             />
             {error && <p className="text-xs text-destructive">{error}</p>}
           </div>
           <Button
             type="submit"
             className="h-12 w-full rounded-2xl text-sm font-medium dark:shadow-[0_14px_28px_-20px_rgb(0_0_0_/_0.72)]"
+            disabled={isSubmitting}
           >
-            Enviar código
+            {isSubmitting ? (
+              <>
+                <LoaderCircle className="h-4 w-4 animate-spin" />
+                Enviando código...
+              </>
+            ) : (
+              'Enviar código'
+            )}
           </Button>
           <button
             type="button"
@@ -125,6 +143,7 @@ export function LoginMethodSelect({ onContinue }: LoginMethodSelectProps) {
               setValue('');
               setError('');
             }}
+            disabled={isSubmitting}
             className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
           >
             Cambiar método
