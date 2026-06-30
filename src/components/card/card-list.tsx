@@ -11,6 +11,7 @@ interface CardListProps {
   activeCardId: string | null;
   onSelectCard: (id: string) => void;
   onAddCard: () => void;
+  canAddCard?: boolean;
 }
 
 function CardMiniVisual({
@@ -88,6 +89,7 @@ export function CardList({
   activeCardId,
   onSelectCard,
   onAddCard,
+  canAddCard = true,
 }: CardListProps) {
   return (
     <div
@@ -106,7 +108,11 @@ export function CardList({
       <button
         type="button"
         onClick={onAddCard}
-        className="flex h-[7.4rem] w-[11.5rem] shrink-0 snap-center flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border bg-card/35 transition-colors hover:bg-muted"
+        disabled={!canAddCard}
+        className={cn(
+          'flex h-[7.4rem] w-[11.5rem] shrink-0 snap-center flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border bg-card/35 transition-colors',
+          canAddCard ? 'hover:bg-muted' : 'cursor-not-allowed opacity-55',
+        )}
         aria-label="Crear nueva tarjeta"
       >
         <div className="flex h-9 w-9 items-center justify-center rounded-2xl border border-border">

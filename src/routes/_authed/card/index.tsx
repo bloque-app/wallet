@@ -13,16 +13,11 @@ import {
 } from '~/components/ui/drawer';
 import { useAuth } from '~/contexts/auth/auth-context';
 import { CardsSkeleton } from './-components/cards-skeleton';
-import { KycGate } from './-components/kyc-gate';
-import { KycStatus } from './-components/kyc-status';
-import { KycStepper } from './-components/kyc-stepper';
 import {
   useCardDetails,
   useCards,
   useCardToggleFreeze,
 } from './-hooks/use-card';
-
-type CardView = 'main' | 'kyc-gate' | 'kyc-stepper' | 'kyc-status';
 
 export const Route = createFileRoute('/_authed/card/')({
   component: RouteComponent,
@@ -47,9 +42,6 @@ function RouteComponent() {
   const toggleFreezeMutation = useCardToggleFreeze();
 
   const { user } = useAuth();
-  const [view, setView] = useState<CardView>('main');
-  const [pendingAddCard, setPendingAddCard] = useState(false);
-  const [pendingCardLabel, setPendingCardLabel] = useState<string | null>(null);
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
   const [showCardDetails, setShowCardDetails] = useState(false);
 
@@ -80,18 +72,17 @@ function RouteComponent() {
   };
 
   const handleAddCard = () => {
+    if (kycStatus !== 'approved') {
+      navigate({ to: '/kyc' });
+      return;
+    }
+
     const label = requestCardLabel();
     if (!label) return;
 
-    if (kycStatus === 'approved') {
-      toast.info(
-        `Solicitud de creación enviada para "${label}". La tarjeta aparecerá cuando esté lista.`,
-      );
-    } else {
-      setPendingCardLabel(label);
-      setPendingAddCard(true);
-      setView('kyc-gate');
-    }
+    toast.info(
+      `Solicitud de creación enviada para "${label}". La tarjeta aparecerá cuando esté lista.`,
+    );
   };
 
   const handleQuickViewCard = async (cardUrn: string) => {
@@ -134,47 +125,6 @@ function RouteComponent() {
     }
   };
 
-  if (view === 'kyc-stepper') {
-    return (
-      <KycStepper
-        onComplete={() => setView('kyc-status')}
-        onBack={() => setView('main')}
-      />
-    );
-  }
-
-  if (view === 'kyc-status') {
-    return (
-      <KycStatus
-        status={kycStatus}
-        onBack={() => {
-          setView('main');
-          if (pendingAddCard && kycStatus === 'approved' && pendingCardLabel) {
-            toast.info(
-              `Solicitud de creación enviada para "${pendingCardLabel}". La tarjeta aparecerá cuando esté lista.`,
-            );
-          }
-          setPendingAddCard(false);
-          setPendingCardLabel(null);
-        }}
-      />
-    );
-  }
-
-  if (view === 'kyc-gate') {
-    return (
-      <KycGate
-        kycStatus={kycStatus}
-        onStartKyc={() => setView('kyc-stepper')}
-        onBack={() => {
-          setView('main');
-          setPendingAddCard(false);
-          setPendingCardLabel(null);
-        }}
-      />
-    );
-  }
-
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-bold tracking-tight text-foreground">
@@ -184,7 +134,10 @@ function RouteComponent() {
       {isLoadingCards ? (
         <CardsSkeleton />
       ) : cards.length === 0 ? (
-        <CardNoCard onCreateCard={handleAddCard} />
+        <CardNoCard
+          onCreateCard={handleAddCard}
+          canCreateCard={kycStatus === 'approved'}
+        />
       ) : (
         <>
           <CardList
@@ -192,6 +145,7 @@ function RouteComponent() {
             activeCardId={activeCardId}
             onSelectCard={setActiveCardId}
             onAddCard={handleAddCard}
+            canAddCard={kycStatus === 'approved'}
           />
 
           {activeCard && (

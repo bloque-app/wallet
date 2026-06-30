@@ -143,7 +143,9 @@ function RouteComponent() {
       });
     },
     onSuccess: (result) => {
-      const redirectUrl = result.execution?.result?.how?.url;
+      const redirectUrl = getExecutionRedirectUrl(
+        result.execution?.result?.how,
+      );
       setLastOrder({ id: result.order.id, redirectUrl });
       setStep('pending');
       toast.success('Transferencia enviada correctamente.');
@@ -286,4 +288,12 @@ function RouteComponent() {
       {step === 'error' && <TopUpErrorStep onRetry={() => setStep('amount')} />}
     </div>
   );
+}
+
+function getExecutionRedirectUrl(how: unknown): string | undefined {
+  if (!how || typeof how !== 'object') return undefined;
+  if ('url' in how && typeof how.url === 'string') {
+    return how.url;
+  }
+  return undefined;
 }

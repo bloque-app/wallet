@@ -9,6 +9,7 @@ interface CardListProps {
   activeCardId: string | null;
   onSelectCard: (id: string) => void;
   onAddCard: () => void;
+  canAddCard?: boolean;
 }
 
 function CardMini({
@@ -76,12 +77,22 @@ function CardMini({
   );
 }
 
-function AddCardButton({ onClick }: { onClick: () => void }) {
+function AddCardButton({
+  onClick,
+  disabled = false,
+}: {
+  onClick: () => void;
+  disabled?: boolean;
+}) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex h-28 w-44 shrink-0 snap-center flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border transition-colors hover:bg-muted"
+      disabled={disabled}
+      className={cn(
+        'flex h-28 w-44 shrink-0 snap-center flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border transition-colors',
+        disabled ? 'cursor-not-allowed opacity-55' : 'hover:bg-muted',
+      )}
       aria-label="Crear nueva tarjeta"
     >
       <div className="flex h-8 w-8 items-center justify-center rounded-full border border-border">
@@ -99,6 +110,7 @@ export function CardList({
   activeCardId,
   onSelectCard,
   onAddCard,
+  canAddCard = true,
 }: CardListProps) {
   return (
     <div
@@ -114,7 +126,7 @@ export function CardList({
           onClick={() => onSelectCard(card.id)}
         />
       ))}
-      <AddCardButton onClick={onAddCard} />
+      <AddCardButton onClick={onAddCard} disabled={!canAddCard} />
     </div>
   );
 }

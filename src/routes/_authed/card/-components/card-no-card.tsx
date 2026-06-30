@@ -5,9 +5,13 @@ import { Button } from '~/components/ui/button';
 
 interface CardNoCardProps {
   onCreateCard: () => void;
+  canCreateCard?: boolean;
 }
 
-export function CardNoCard({ onCreateCard }: CardNoCardProps) {
+export function CardNoCard({
+  onCreateCard,
+  canCreateCard = true,
+}: CardNoCardProps) {
   return (
     <div className="flex flex-col items-center gap-6 py-8">
       {/* Placeholder card illustration */}
@@ -35,6 +39,7 @@ export function CardNoCard({ onCreateCard }: CardNoCardProps) {
 
       <Button
         onClick={onCreateCard}
+        disabled={!canCreateCard}
         className="h-12 w-full max-w-xs gap-2 text-sm font-medium"
       >
         <CreditCard className="h-4 w-4" />
@@ -43,7 +48,11 @@ export function CardNoCard({ onCreateCard }: CardNoCardProps) {
 
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <Shield className="h-3.5 w-3.5" />
-        <span>Requiere verificación de identidad (KYC)</span>
+        <span>
+          {canCreateCard
+            ? 'Tu identidad ya fue verificada.'
+            : 'Requiere verificación de identidad (KYC)'}
+        </span>
       </div>
     </div>
   );

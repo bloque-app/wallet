@@ -194,7 +194,7 @@ function RouteComponent() {
       setConfirmOpen(false);
       setLastOrder({
         id: result.order.id,
-        redirectUrl: result.execution?.result.how?.url,
+        redirectUrl: getExecutionRedirectUrl(result.execution?.result.how),
       });
       setView('pending');
       toast.success('Transferencia BRE-B enviada correctamente.');
@@ -442,4 +442,12 @@ function RouteComponent() {
       </AlertDialog>
     </div>
   );
+}
+
+function getExecutionRedirectUrl(how: unknown): string | undefined {
+  if (!how || typeof how !== 'object') return undefined;
+  if ('url' in how && typeof how.url === 'string') {
+    return how.url;
+  }
+  return undefined;
 }
