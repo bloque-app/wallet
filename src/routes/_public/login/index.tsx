@@ -55,7 +55,7 @@ function RouteComponent() {
     <div className="relative flex min-h-dvh flex-col items-center justify-center bg-background px-5 py-8">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(95%_55%_at_50%_0%,color-mix(in_oklch,var(--muted)_70%,transparent),transparent_65%)]"
+        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(95%_55%_at_50%_0%,rgba(167,139,250,0.18),transparent_65%)] dark:bg-[radial-gradient(95%_55%_at_50%_0%,color-mix(in_oklch,var(--muted)_70%,transparent),transparent_65%)]"
       />
       <div className="w-full max-w-sm rounded-[1.9rem] border border-border/70 bg-card/85 p-6 shadow-[0_24px_45px_-35px_color-mix(in_oklch,var(--foreground)_38%,transparent)] dark:shadow-[0_24px_45px_-35px_rgb(0_0_0_/_0.76)] backdrop-blur-xl">
         {step === 'method' ? (
