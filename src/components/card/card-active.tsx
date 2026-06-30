@@ -1,9 +1,6 @@
 'use client';
 
-import { Separator } from '@base-ui/react';
 import { ExternalLink, EyeOff, Snowflake } from 'lucide-react';
-import { Switch } from '~/components/ui/switch';
-import { formatUSD } from '~/lib/formatters';
 import type { CardDetailsResponse } from '~/routes/_authed/card/-hooks/use-card';
 
 interface CardActiveProps {
@@ -125,51 +122,6 @@ export function CardActive({
                 : 'Congelar'}
           </span>
         </button>
-      </div>
-
-      <Separator />
-
-      <div className="flex flex-col gap-3">
-        <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-          Limites
-        </p>
-        <div className="rounded-2xl border border-border/85 bg-card/85 p-[1.125rem]">
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Diario</span>
-              <span className="text-sm font-medium text-foreground tabular-nums">
-                {formatUSD(100)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Mensual</span>
-              <span className="text-sm font-medium text-foreground tabular-nums">
-                {formatUSD(500)}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <Separator />
-
-      <div className="flex flex-col gap-3">
-        <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-          Configuracion
-        </p>
-        <div className="rounded-2xl border border-border/85 bg-card/85 p-[1.125rem]">
-          <div className="flex items-center justify-between">
-            <div className="flex flex-col gap-0.5">
-              <span className="text-sm font-medium text-foreground">
-                Pagos internacionales
-              </span>
-              <span className="text-xs text-muted-foreground">
-                Permitir compras fuera de Colombia
-              </span>
-            </div>
-            <Switch defaultChecked />
-          </div>
-        </div>
       </div>
     </div>
   );

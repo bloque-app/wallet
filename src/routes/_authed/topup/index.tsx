@@ -309,7 +309,7 @@ function RouteComponent() {
               subtitle: 'Registra y gestiona tus llaves',
               icon: KeyRound,
               enabled: true,
-              onClick: () => navigate({ to: '/send/breb-keys' }),
+              onClick: () => navigate({ to: '/breb-keys' }),
             },
             {
               title: 'Desde bancos en EE.UU.',

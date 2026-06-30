@@ -17,7 +17,7 @@ const options: SendOption[] = [
   {
     title: 'Llaves BRE-B',
     description: 'Envia a cualquier banco colombiano al instante.',
-    to: '/send/breb-keys',
+    to: '/breb-keys',
     icon: KeyRound,
   },
   {

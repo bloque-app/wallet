@@ -5,53 +5,24 @@ import {
   KeyRound,
   LoaderCircle,
   QrCode,
+  Send,
   Settings2,
+  Vault,
   X,
 } from 'lucide-react';
 import { useEffect, useId, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '~/components/ui/button';
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerHeader,
-  DrawerTitle,
-} from '~/components/ui/drawer';
-import { cn } from '~/lib/utils';
 import { type DecodedBrebQr, decodeBrebQr } from './-lib/breb';
 
-export const Route = createFileRoute('/_authed/send/breb-keys/')({
+export const Route = createFileRoute('/_authed/breb-keys/')({
   component: RouteComponent,
 });
 
 type ScannerView = 'menu' | 'scanner' | 'decoding';
 
-const options = [
-  {
-    title: 'Registrar llave',
-    description: 'Asocia una llave a tu cuenta',
-    to: '/send/breb-keys/register-key',
-    icon: KeyRound,
-  },
-  {
-    title: 'Tus llaves',
-    description: 'Gestiona tus llaves registradas',
-    to: '/send/breb-keys/manage-keys',
-    icon: Settings2,
-  },
-  {
-    title: 'Pagar o transferir',
-    description: 'Ingresa la llave o escanea el QR',
-    to: '/send/breb-keys/pay-transfer',
-    icon: QrCode,
-  },
-] as const;
-
 function RouteComponent() {
   const navigate = useNavigate();
-  const [payDrawerOpen, setPayDrawerOpen] = useState(false);
   const [scannerView, setScannerView] = useState<ScannerView>('menu');
   const [pendingQrValue, setPendingQrValue] = useState('');
   const scannerId = useId().replace(/:/g, '-');
@@ -185,12 +156,11 @@ function RouteComponent() {
           recipientOwnerName ||
           recipientParticipantName;
 
-        setPayDrawerOpen(false);
         setPendingQrValue('');
         setScannerView('menu');
 
         void navigate({
-          to: '/send/breb-keys/pay-transfer-qr',
+          to: '/breb-keys/pay-transfer-qr',
           search: {
             key: normalizedKey,
             amount,
@@ -233,16 +203,8 @@ function RouteComponent() {
     setScannerView('menu');
   };
 
-  const handlePayTransferClick = () => {
-    (
-      window as Window & {
-        __skipDrawerHistoryOnce?: boolean;
-      }
-    ).__skipDrawerHistoryOnce = true;
-  };
-
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex min-h-[calc(100dvh-8rem)] flex-col gap-5">
       <div className="flex items-center gap-2">
         <Link
           to="/send"
@@ -253,109 +215,94 @@ function RouteComponent() {
         </Link>
         <div>
           <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
-            Llaves BRE-B
+            BRE-B
           </h1>
           <p className="text-xs text-muted-foreground">
-            Envia a cualquier banco colombiano al instante
+            Envía y recibe al instante desde cualquier banco
           </p>
         </div>
       </div>
 
       <section className="flex flex-col gap-3">
-        {options.map((option) => {
-          const Icon = option.icon;
-          if (option.to === '/send/breb-keys/pay-transfer') {
-            return (
-              <button
-                key={option.to}
-                type="button"
-                onClick={() => setPayDrawerOpen(true)}
-                className="text-left"
-              >
-                <div className="flex items-start gap-3 rounded-2xl border border-border/75 bg-card/80 p-4 transition-all hover:bg-muted/70">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-border/80 bg-background/85">
-                    <Icon className="h-4 w-4 text-foreground" />
-                  </div>
-                  <div className="flex flex-col">
-                    <p className="text-sm font-medium text-foreground">
-                      {option.title}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {option.description}
-                    </p>
-                  </div>
-                </div>
-              </button>
-            );
-          }
+        <Link to="/breb-keys/pay-transfer">
+          <div className="flex items-center gap-3 rounded-2xl border border-border/75 bg-card/80 p-4 transition-all hover:bg-muted/70">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
+              <Send className="h-4 w-4 text-primary" strokeWidth={1.5} />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-foreground">
+                Enviar con llaves
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Transfiere usando una llave BRE-B
+              </p>
+            </div>
+          </div>
+        </Link>
 
-          return (
-            <Link key={option.to} to={option.to}>
-              <div
-                className={cn(
-                  'flex items-start gap-3 rounded-2xl border border-border/75 bg-card/80 p-4 transition-all hover:bg-muted/70',
-                )}
-              >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
-                  <Icon className="h-4 w-4 text-primary" />
-                </div>
-                <div className="flex flex-col">
-                  <p className="text-sm font-medium text-foreground">
-                    {option.title}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {option.description}
-                  </p>
-                </div>
-              </div>
-            </Link>
-          );
-        })}
+        <Link to="/breb-keys/manage-keys">
+          <div className="flex items-center gap-3 rounded-2xl border border-border/75 bg-card/80 p-4 transition-all hover:bg-muted/70">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
+              <Vault className="h-4 w-4 text-primary" strokeWidth={1.5} />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-foreground">Depositar</p>
+              <p className="text-xs text-muted-foreground">
+                Comparte tu llave para recibir dinero
+              </p>
+            </div>
+          </div>
+        </Link>
+
+        <Link to="/breb-keys/manage-keys">
+          <div className="flex items-center gap-3 rounded-2xl border border-border/75 bg-card/80 p-4 transition-all hover:bg-muted/70">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
+              <Settings2 className="h-4 w-4 text-primary" strokeWidth={1.5} />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-foreground">Tus llaves</p>
+              <p className="text-xs text-muted-foreground">
+                Gestiona tus llaves registradas
+              </p>
+            </div>
+          </div>
+        </Link>
+
+        <button
+          type="button"
+          className="text-left"
+          onClick={() => setScannerView('scanner')}
+        >
+          <div className="flex items-center gap-3 rounded-2xl border border-border/75 bg-card/80 p-4 transition-all hover:bg-muted/70">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
+              <QrCode className="h-4 w-4 text-primary" strokeWidth={1.5} />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-foreground">Código QR</p>
+              <p className="text-xs text-muted-foreground">
+                Escanea un QR BRE-B para transferir
+              </p>
+            </div>
+          </div>
+        </button>
       </section>
 
-      <Drawer open={payDrawerOpen} onOpenChange={setPayDrawerOpen}>
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>Pagar o transferir</DrawerTitle>
-            <DrawerDescription>
-              Elige cómo quieres iniciar la transferencia.
-            </DrawerDescription>
-          </DrawerHeader>
-
-          <div className="flex flex-col gap-3 px-5 pb-5">
-            <DrawerClose asChild>
-              <Link
-                to="/send/breb-keys/pay-transfer"
-                onClick={handlePayTransferClick}
-                className="flex w-full flex-col items-start rounded-2xl border border-border/80 bg-card/80 p-4 text-left transition-all hover:bg-muted/70"
-              >
-                <span className="text-sm font-medium text-foreground">
-                  Ingresar llave
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  Escribe la llave BRE-B del destinatario.
-                </span>
-              </Link>
-            </DrawerClose>
-
-            <button
-              type="button"
-              onClick={() => {
-                setPayDrawerOpen(false);
-                setScannerView('scanner');
-              }}
-              className="flex w-full flex-col items-start rounded-2xl border border-border/80 bg-card/80 p-4 text-left transition-all hover:bg-muted/70"
-            >
-              <span className="text-sm font-medium text-foreground">
-                Escanear codigo QR
-              </span>
-              <span className="text-xs text-muted-foreground">
-                Usa la cámara para leer un QR BRE-B.
-              </span>
-            </button>
-          </div>
-        </DrawerContent>
-      </Drawer>
+      <div className="mt-auto rounded-2xl border border-primary/20 bg-primary/[0.06] p-4">
+        <p className="text-sm font-semibold tracking-[-0.015em] text-foreground">
+          Descubre tu zona BRE-B
+        </p>
+        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+          Registra y gestiona tus llaves. Envía dinero gratis de forma
+          instantánea. Todo desde un solo lugar.
+        </p>
+        <Link
+          to="/breb-keys/register-key"
+          className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary"
+        >
+          <KeyRound className="h-3 w-3" />
+          Registrar llave
+        </Link>
+      </div>
 
       {scannerView === 'scanner' ? (
         <div className="fixed inset-0 z-50 bg-background">

@@ -11,7 +11,7 @@ import {
   suspendBrebKey,
 } from '../-lib/breb';
 
-export const Route = createFileRoute('/_authed/send/breb-keys/manage-keys/')({
+export const Route = createFileRoute('/_authed/breb-keys/manage-keys/')({
   component: RouteComponent,
 });
 
@@ -71,7 +71,7 @@ function RouteComponent() {
     <div className="flex flex-col gap-5">
       <div className="flex items-center gap-2">
         <Link
-          to="/send/breb-keys"
+          to="/breb-keys"
           className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-3.5 w-3.5" />

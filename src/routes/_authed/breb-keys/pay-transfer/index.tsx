@@ -19,8 +19,8 @@ import { Label } from '~/components/ui/label';
 import { Textarea } from '~/components/ui/textarea';
 import { bloque } from '~/lib/bloque';
 import { formatCOP } from '~/lib/formatters';
-import { TopUpErrorStep } from '../../../topup/-components/error-step';
-import { TopUpPendingStep } from '../../../topup/-components/pending-step';
+import { TopUpErrorStep } from '../../topup/-components/error-step';
+import { TopUpPendingStep } from '../../topup/-components/pending-step';
 import {
   type BrebKeyType,
   createBrebOrder,
@@ -65,7 +65,7 @@ function inferBrebKeyType(value: string): BrebKeyType | null {
   return 'ALPHA';
 }
 
-export const Route = createFileRoute('/_authed/send/breb-keys/pay-transfer/')({
+export const Route = createFileRoute('/_authed/breb-keys/pay-transfer/')({
   component: RouteComponent,
 });
 
@@ -239,7 +239,7 @@ function RouteComponent() {
       <div className="flex flex-col gap-5">
         <div className="flex items-center gap-2">
           <Link
-            to="/send/breb-keys"
+            to="/breb-keys"
             className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
@@ -278,7 +278,7 @@ function RouteComponent() {
       <div className="flex flex-col gap-5">
         <div className="flex items-center gap-2">
           <Link
-            to="/send/breb-keys"
+            to="/breb-keys"
             className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
@@ -297,7 +297,7 @@ function RouteComponent() {
     <div className="flex flex-col gap-5">
       <div className="flex items-center gap-2">
         <Link
-          to="/send/breb-keys"
+          to="/breb-keys"
           className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
