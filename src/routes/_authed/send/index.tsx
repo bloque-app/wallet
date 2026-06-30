@@ -11,13 +11,15 @@ type SendOption = {
   title: string;
   description: string;
   icon: React.ComponentType<{ className?: string }>;
+  search?: Record<string, string>;
 } & ({ to: string; onClick?: never } | { to?: never; onClick: () => void });
 
 const options: SendOption[] = [
   {
     title: 'Llaves BRE-B',
     description: 'Envia a cualquier banco colombiano al instante.',
-    to: '/breb-keys',
+    to: '/breb-keys/pay-transfer',
+    search: { from: '/send' },
     icon: KeyRound,
   },
   {
@@ -90,7 +92,7 @@ function RouteComponent() {
 
           if (option.to) {
             return (
-              <Link key={option.title} to={option.to}>
+              <Link key={option.title} to={option.to} search={option.search}>
                 {content}
               </Link>
             );

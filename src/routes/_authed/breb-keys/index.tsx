@@ -13,6 +13,7 @@ import {
 import { useEffect, useId, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '~/components/ui/button';
+import { goBackOrFallback } from '~/lib/navigation';
 import { type DecodedBrebQr, decodeBrebQr } from './-lib/breb';
 
 export const Route = createFileRoute('/_authed/breb-keys/')({
@@ -206,13 +207,18 @@ function RouteComponent() {
   return (
     <div className="flex min-h-[calc(100dvh-8rem)] flex-col gap-5">
       <div className="flex items-center gap-2">
-        <Link
-          to="/send"
+        <button
+          type="button"
+          onClick={() =>
+            goBackOrFallback(() => {
+              void navigate({ to: '/send' });
+            })
+          }
           className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           Volver
-        </Link>
+        </button>
         <div>
           <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
             BRE-B
@@ -224,7 +230,7 @@ function RouteComponent() {
       </div>
 
       <section className="flex flex-col gap-3">
-        <Link to="/breb-keys/pay-transfer">
+        <Link to="/breb-keys/pay-transfer" search={{ from: '/breb-keys' }}>
           <div className="flex items-center gap-3 rounded-2xl border border-border/75 bg-card/80 p-4 transition-all hover:bg-muted/70">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
               <Send className="h-4 w-4 text-primary" strokeWidth={1.5} />
@@ -240,7 +246,7 @@ function RouteComponent() {
           </div>
         </Link>
 
-        <Link to="/breb-keys/manage-keys">
+        <Link to="/breb-keys/deposit" search={{ from: '/breb-keys' }}>
           <div className="flex items-center gap-3 rounded-2xl border border-border/75 bg-card/80 p-4 transition-all hover:bg-muted/70">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
               <Vault className="h-4 w-4 text-primary" strokeWidth={1.5} />
@@ -248,7 +254,7 @@ function RouteComponent() {
             <div>
               <p className="text-sm font-medium text-foreground">Depositar</p>
               <p className="text-xs text-muted-foreground">
-                Comparte tu llave para recibir dinero
+                Trae tu dinero desde otro banco
               </p>
             </div>
           </div>

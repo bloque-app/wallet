@@ -1,6 +1,6 @@
 import { BloqueAPIError } from '@bloque/sdk';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import {
   ArrowLeft,
   CreditCard,
@@ -20,6 +20,7 @@ import {
   DrawerTitle,
 } from '~/components/ui/drawer';
 import { createBloqueSdk } from '~/lib/bloque';
+import { goBackOrFallback } from '~/lib/navigation';
 import {
   BrebKeyError,
   type BrebKeyType,
@@ -61,6 +62,7 @@ function stripCountryCode(phone: string): string {
 }
 
 function RouteComponent() {
+  const navigate = useNavigate();
   const [p901Drawer, setP901Drawer] = useState<{ open: boolean; key: string }>({
     open: false,
     key: '',
@@ -162,16 +164,23 @@ function RouteComponent() {
 
   const isLoading = profileQuery.isLoading || accountsQuery.isLoading;
 
+  const handleBack = () => {
+    goBackOrFallback(() => {
+      void navigate({ to: '/breb-keys' });
+    });
+  };
+
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center gap-2">
-        <Link
-          to="/breb-keys"
+        <button
+          type="button"
+          onClick={handleBack}
           className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           Volver
-        </Link>
+        </button>
         <div>
           <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
             Registrar llave

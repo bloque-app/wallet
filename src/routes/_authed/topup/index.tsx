@@ -309,7 +309,11 @@ function RouteComponent() {
               subtitle: 'Registra y gestiona tus llaves',
               icon: KeyRound,
               enabled: true,
-              onClick: () => navigate({ to: '/breb-keys' }),
+              onClick: () =>
+                navigate({
+                  to: '/breb-keys/deposit',
+                  search: { from: '/topup' },
+                }),
             },
             {
               title: 'Desde bancos en EE.UU.',

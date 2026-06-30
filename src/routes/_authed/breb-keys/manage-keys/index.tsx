@@ -1,6 +1,6 @@
 import { BloqueAPIError } from '@bloque/sdk';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import {
   ArrowLeft,
   CreditCard,
@@ -21,6 +21,7 @@ import {
   DrawerTitle,
 } from '~/components/ui/drawer';
 import { createBloqueSdk } from '~/lib/bloque';
+import { goBackOrFallback } from '~/lib/navigation';
 import {
   activateBrebKey,
   BrebKeyError,
@@ -73,6 +74,7 @@ type KeyOption = {
 };
 
 function RouteComponent() {
+  const navigate = useNavigate();
   const [conflictDrawer, setConflictDrawer] = useState<{
     open: boolean;
     key: string;
@@ -207,16 +209,23 @@ function RouteComponent() {
     activateMutation.isPending ||
     deleteMutation.isPending;
 
+  const handleBack = () => {
+    goBackOrFallback(() => {
+      void navigate({ to: '/breb-keys' });
+    });
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-2">
-        <Link
-          to="/breb-keys"
+        <button
+          type="button"
+          onClick={handleBack}
           className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           Volver
-        </Link>
+        </button>
         <div>
           <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
             Tus llaves

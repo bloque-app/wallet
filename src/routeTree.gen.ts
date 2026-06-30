@@ -29,6 +29,7 @@ import { Route as AuthedBrebKeysRegisterKeyIndexRouteImport } from './routes/_au
 import { Route as AuthedBrebKeysPayTransferIndexRouteImport } from './routes/_authed/breb-keys/pay-transfer/index'
 import { Route as AuthedBrebKeysPayTransferQrIndexRouteImport } from './routes/_authed/breb-keys/pay-transfer-qr/index'
 import { Route as AuthedBrebKeysManageKeysIndexRouteImport } from './routes/_authed/breb-keys/manage-keys/index'
+import { Route as AuthedBrebKeysDepositIndexRouteImport } from './routes/_authed/breb-keys/deposit/index'
 import { Route as AuthedCardDetailsUrnRouteImport } from './routes/_authed/card/details/$urn'
 
 const PublicRoute = PublicRouteImport.update({
@@ -135,6 +136,12 @@ const AuthedBrebKeysManageKeysIndexRoute =
     path: '/breb-keys/manage-keys/',
     getParentRoute: () => AuthedRoute,
   } as any)
+const AuthedBrebKeysDepositIndexRoute =
+  AuthedBrebKeysDepositIndexRouteImport.update({
+    id: '/breb-keys/deposit/',
+    path: '/breb-keys/deposit/',
+    getParentRoute: () => AuthedRoute,
+  } as any)
 const AuthedCardDetailsUrnRoute = AuthedCardDetailsUrnRouteImport.update({
   id: '/card/details/$urn',
   path: '/card/details/$urn',
@@ -155,6 +162,7 @@ export interface FileRoutesByFullPath {
   '/topup/': typeof AuthedTopupIndexRoute
   '/login/': typeof PublicLoginIndexRoute
   '/card/details/$urn': typeof AuthedCardDetailsUrnRoute
+  '/breb-keys/deposit/': typeof AuthedBrebKeysDepositIndexRoute
   '/breb-keys/manage-keys/': typeof AuthedBrebKeysManageKeysIndexRoute
   '/breb-keys/pay-transfer-qr/': typeof AuthedBrebKeysPayTransferQrIndexRoute
   '/breb-keys/pay-transfer/': typeof AuthedBrebKeysPayTransferIndexRoute
@@ -176,6 +184,7 @@ export interface FileRoutesByTo {
   '/topup': typeof AuthedTopupIndexRoute
   '/login': typeof PublicLoginIndexRoute
   '/card/details/$urn': typeof AuthedCardDetailsUrnRoute
+  '/breb-keys/deposit': typeof AuthedBrebKeysDepositIndexRoute
   '/breb-keys/manage-keys': typeof AuthedBrebKeysManageKeysIndexRoute
   '/breb-keys/pay-transfer-qr': typeof AuthedBrebKeysPayTransferQrIndexRoute
   '/breb-keys/pay-transfer': typeof AuthedBrebKeysPayTransferIndexRoute
@@ -200,6 +209,7 @@ export interface FileRoutesById {
   '/_authed/topup/': typeof AuthedTopupIndexRoute
   '/_public/login/': typeof PublicLoginIndexRoute
   '/_authed/card/details/$urn': typeof AuthedCardDetailsUrnRoute
+  '/_authed/breb-keys/deposit/': typeof AuthedBrebKeysDepositIndexRoute
   '/_authed/breb-keys/manage-keys/': typeof AuthedBrebKeysManageKeysIndexRoute
   '/_authed/breb-keys/pay-transfer-qr/': typeof AuthedBrebKeysPayTransferQrIndexRoute
   '/_authed/breb-keys/pay-transfer/': typeof AuthedBrebKeysPayTransferIndexRoute
@@ -223,6 +233,7 @@ export interface FileRouteTypes {
     | '/topup/'
     | '/login/'
     | '/card/details/$urn'
+    | '/breb-keys/deposit/'
     | '/breb-keys/manage-keys/'
     | '/breb-keys/pay-transfer-qr/'
     | '/breb-keys/pay-transfer/'
@@ -244,6 +255,7 @@ export interface FileRouteTypes {
     | '/topup'
     | '/login'
     | '/card/details/$urn'
+    | '/breb-keys/deposit'
     | '/breb-keys/manage-keys'
     | '/breb-keys/pay-transfer-qr'
     | '/breb-keys/pay-transfer'
@@ -267,6 +279,7 @@ export interface FileRouteTypes {
     | '/_authed/topup/'
     | '/_public/login/'
     | '/_authed/card/details/$urn'
+    | '/_authed/breb-keys/deposit/'
     | '/_authed/breb-keys/manage-keys/'
     | '/_authed/breb-keys/pay-transfer-qr/'
     | '/_authed/breb-keys/pay-transfer/'
@@ -422,6 +435,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedBrebKeysManageKeysIndexRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/breb-keys/deposit/': {
+      id: '/_authed/breb-keys/deposit/'
+      path: '/breb-keys/deposit'
+      fullPath: '/breb-keys/deposit/'
+      preLoaderRoute: typeof AuthedBrebKeysDepositIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/card/details/$urn': {
       id: '/_authed/card/details/$urn'
       path: '/card/details/$urn'
@@ -445,6 +465,7 @@ interface AuthedRouteChildren {
   AuthedSendIndexRoute: typeof AuthedSendIndexRoute
   AuthedTopupIndexRoute: typeof AuthedTopupIndexRoute
   AuthedCardDetailsUrnRoute: typeof AuthedCardDetailsUrnRoute
+  AuthedBrebKeysDepositIndexRoute: typeof AuthedBrebKeysDepositIndexRoute
   AuthedBrebKeysManageKeysIndexRoute: typeof AuthedBrebKeysManageKeysIndexRoute
   AuthedBrebKeysPayTransferQrIndexRoute: typeof AuthedBrebKeysPayTransferQrIndexRoute
   AuthedBrebKeysPayTransferIndexRoute: typeof AuthedBrebKeysPayTransferIndexRoute
@@ -466,6 +487,7 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedSendIndexRoute: AuthedSendIndexRoute,
   AuthedTopupIndexRoute: AuthedTopupIndexRoute,
   AuthedCardDetailsUrnRoute: AuthedCardDetailsUrnRoute,
+  AuthedBrebKeysDepositIndexRoute: AuthedBrebKeysDepositIndexRoute,
   AuthedBrebKeysManageKeysIndexRoute: AuthedBrebKeysManageKeysIndexRoute,
   AuthedBrebKeysPayTransferQrIndexRoute: AuthedBrebKeysPayTransferQrIndexRoute,
   AuthedBrebKeysPayTransferIndexRoute: AuthedBrebKeysPayTransferIndexRoute,
