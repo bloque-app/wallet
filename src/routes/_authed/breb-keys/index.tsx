@@ -296,11 +296,11 @@ function RouteComponent() {
           instantánea. Todo desde un solo lugar.
         </p>
         <Link
-          to="/breb-keys/register-key"
+          to="/breb-keys/manage-keys"
           className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary"
         >
           <KeyRound className="h-3 w-3" />
-          Registrar llave
+          Ir a tus llaves
         </Link>
       </div>
 
