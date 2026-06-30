@@ -9,8 +9,8 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from '~/components/ui/select';
+import { cn } from '~/lib/utils';
 
 export interface TopUpBankAccountData {
   bankAccountType: 'savings' | 'checking';
@@ -20,8 +20,21 @@ export interface TopUpBankAccountData {
   bankAccountHolderIdentificationValue: string;
 }
 
+const ID_TYPE_LABELS: Record<
+  TopUpBankAccountData['bankAccountHolderIdentificationType'],
+  string
+> = {
+  CC: 'Cédula de ciudadanía (CC)',
+  CE: 'Cédula de extranjería (CE)',
+  NIT: 'NIT',
+  PP: 'Pasaporte (PP)',
+};
+
 interface BankStepProps {
   form: TopUpBankAccountData;
+  banks: Array<{ code: string; name: string }>;
+  selectedBank: string;
+  onBankChange: (code: string) => void;
   onFormChange: (value: TopUpBankAccountData) => void;
   onBack: () => void;
   onNext: () => void;
@@ -29,11 +42,18 @@ interface BankStepProps {
 
 export function TopUpBankStep({
   form,
+  banks,
+  selectedBank,
+  onBankChange,
   onFormChange,
   onBack,
   onNext,
 }: BankStepProps) {
+  const selectedBankName =
+    banks.find((b) => b.code === selectedBank)?.name ?? '';
+
   const isValid =
+    !!selectedBank &&
     !!form.bankAccountType &&
     !!form.bankAccountNumber.trim() &&
     !!form.bankAccountHolderName.trim() &&
@@ -58,33 +78,60 @@ export function TopUpBankStep({
         Volver
       </button>
 
-      <div className="rounded-2xl border border-border/80 bg-card/80 p-4">
-        <p className="text-sm font-medium text-foreground">Banco destino</p>
-        <p className="mt-1 text-sm text-muted-foreground">Bancolombia</p>
-      </div>
-
       <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
+          <Label className="text-sm font-medium text-foreground">
+            Banco destino
+          </Label>
+          <Select
+            value={selectedBank}
+            onValueChange={(v) => onBankChange(v ?? '')}
+          >
+            <SelectTrigger className="h-12 rounded-2xl">
+              {selectedBank ? (
+                <span>{selectedBankName}</span>
+              ) : (
+                <span className="text-muted-foreground">
+                  Selecciona un banco
+                </span>
+              )}
+            </SelectTrigger>
+            <SelectContent>
+              {banks.map((bank) => (
+                <SelectItem key={bank.code} value={bank.code}>
+                  {bank.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         <div className="flex flex-col gap-2">
           <Label className="text-sm font-medium text-foreground">
             Tipo de cuenta
           </Label>
-          <Select
-            value={form.bankAccountType}
-            onValueChange={(value) =>
-              update(
-                'bankAccountType',
-                value as TopUpBankAccountData['bankAccountType'],
-              )
-            }
-          >
-            <SelectTrigger className="h-12 rounded-2xl">
-              <SelectValue placeholder="Selecciona tipo de cuenta" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="savings">Ahorros</SelectItem>
-              <SelectItem value="checking">Corriente</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="grid grid-cols-2 gap-2">
+            {(
+              [
+                ['savings', 'Ahorros'],
+                ['checking', 'Corriente'],
+              ] as const
+            ).map(([val, label]) => (
+              <button
+                key={val}
+                type="button"
+                onClick={() => update('bankAccountType', val)}
+                className={cn(
+                  'h-12 rounded-2xl border px-3 text-sm font-medium transition-all',
+                  form.bankAccountType === val
+                    ? 'border-foreground bg-foreground text-background'
+                    : 'border-border bg-background/70 text-foreground hover:bg-muted/70',
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="flex flex-col gap-2">
@@ -129,13 +176,15 @@ export function TopUpBankStep({
               }
             >
               <SelectTrigger className="h-12 rounded-2xl">
-                <SelectValue placeholder="Tipo" />
+                <span>
+                  {ID_TYPE_LABELS[form.bankAccountHolderIdentificationType]}
+                </span>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="CC">CC</SelectItem>
-                <SelectItem value="CE">CE</SelectItem>
+                <SelectItem value="CC">Cédula de ciudadanía (CC)</SelectItem>
+                <SelectItem value="CE">Cédula de extranjería (CE)</SelectItem>
                 <SelectItem value="NIT">NIT</SelectItem>
-                <SelectItem value="PP">PP</SelectItem>
+                <SelectItem value="PP">Pasaporte (PP)</SelectItem>
               </SelectContent>
             </Select>
           </div>

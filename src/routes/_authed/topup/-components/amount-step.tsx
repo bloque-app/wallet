@@ -30,7 +30,7 @@ export function TopUpAmountStep({
   onNext,
 }: AmountStepProps) {
   const parsed = Number.parseInt(amount.replace(/\D/g, ''), 10) || 0;
-  const isValid = parsed >= 10_000;
+  const isValid = parsed >= 5_000;
 
   return (
     <div className="flex flex-col gap-5">
@@ -51,8 +51,8 @@ export function TopUpAmountStep({
           className="h-14 rounded-2xl text-center text-xl font-bold tabular-nums"
           autoFocus
         />
-        {parsed > 0 && parsed < 10_000 && (
-          <p className="text-xs text-destructive">Monto mínimo: $10,000 COP</p>
+        {parsed > 0 && parsed < 5_000 && (
+          <p className="text-xs text-destructive">Monto mínimo: $5,000 COP</p>
         )}
       </div>
 

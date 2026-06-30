@@ -15,11 +15,10 @@ import { TopUpPendingStep } from '../../topup/-components/pending-step';
 
 type TransferStep = 'amount' | 'bank' | 'confirm' | 'pending' | 'error';
 
-const MIN_TRANSFER_AMOUNT = 10_000;
+const MIN_TRANSFER_AMOUNT = 5_000;
 const FROM_ASSET = 'COPM/2';
 const TO_ASSET = 'COP/2';
 const FROM_MEDIUM = 'kusama';
-const TO_MEDIUM = 'bancolombia' as const;
 
 function getAssetPrecision(assetWithPrecision: string) {
   const [, precisionStr] = assetWithPrecision.split('/');
@@ -36,7 +35,6 @@ function minorToMajor(amountMinor: number, precision: number) {
 }
 
 const FROM_PRECISION = getAssetPrecision(FROM_ASSET);
-const TO_PRECISION = getAssetPrecision(TO_ASSET);
 
 const DEFAULT_BANK_FORM: TopUpBankAccountData = {
   bankAccountType: 'savings',
@@ -60,7 +58,14 @@ function RouteComponent() {
     redirectUrl?: string;
   } | null>(null);
   const [autoRetry, setAutoRetry] = useState(false);
+  const [selectedBank, setSelectedBank] = useState('');
   const { data: cardsData, isLoading: isLoadingCards } = useCards();
+
+  const banksQuery = useQuery({
+    queryKey: ['pse-banks'],
+    queryFn: async () => bloque.swap.pse.banks(),
+    staleTime: 5 * 60_000,
+  });
 
   const parsedAmount = Number.parseInt(amount.replace(/\D/g, ''), 10) || 0;
   const amountSrc = useMemo(() => {
@@ -79,7 +84,7 @@ function RouteComponent() {
         fromAsset: FROM_ASSET,
         toAsset: TO_ASSET,
         fromMediums: [FROM_MEDIUM],
-        toMediums: [TO_MEDIUM],
+        toMediums: ['bancolombia'],
         amountSrc,
       }),
     staleTime: 30_000,
@@ -90,13 +95,17 @@ function RouteComponent() {
   const rateSummary = useMemo(() => {
     if (!selectedRate || !amountSrc) return null;
     const srcAmountMinor = Number(amountSrc);
-    const dstAmountMinor = selectedRate.rate?.[1] ?? 0;
-    if (!srcAmountMinor || !dstAmountMinor) return null;
+    if (!srcAmountMinor) return null;
     const srcAmountMajor = minorToMajor(srcAmountMinor, FROM_PRECISION);
-    const dstAmountMajor = minorToMajor(dstAmountMinor, TO_PRECISION);
+    const ratio =
+      typeof selectedRate.ratio === 'number' &&
+      Number.isFinite(selectedRate.ratio)
+        ? selectedRate.ratio
+        : (selectedRate.rate?.[1] ?? 1) / (selectedRate.rate?.[0] ?? 1);
+    const dstAmountMajor = srcAmountMajor * ratio;
     return {
       amountDst: dstAmountMajor,
-      ratio: dstAmountMajor / srcAmountMajor,
+      ratio,
     };
   }, [selectedRate, amountSrc]);
 
@@ -133,10 +142,16 @@ function RouteComponent() {
         throw new Error('No hay cuenta origen disponible.');
       }
 
+      if (!selectedBank) {
+        throw new Error('Selecciona un banco destino.');
+      }
+
       return bloque.swap.bankTransfer.create({
         rateSig: selectedRate.sig,
         amountSrc,
-        toMedium: TO_MEDIUM,
+        toMedium: selectedBank as Parameters<
+          typeof bloque.swap.bankTransfer.create
+        >[0]['toMedium'],
         depositInformation: bankForm,
         args: {
           sourceAccountUrn,
@@ -182,7 +197,7 @@ function RouteComponent() {
 
   const handleAmountNext = () => {
     if (parsedAmount < MIN_TRANSFER_AMOUNT) {
-      toast.error('El monto mínimo es $10,000 COP.');
+      toast.error('El monto mínimo es $5,000 COP.');
       return;
     }
     if (!selectedRate) {
@@ -256,6 +271,9 @@ function RouteComponent() {
       {step === 'bank' && (
         <TopUpBankStep
           form={bankForm}
+          banks={banksQuery.data?.banks ?? []}
+          selectedBank={selectedBank}
+          onBankChange={setSelectedBank}
           onFormChange={setBankForm}
           onBack={() => setStep('amount')}
           onNext={() => setStep('confirm')}

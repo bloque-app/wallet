@@ -39,7 +39,7 @@ type PseForm = {
   phoneNumber: string;
 };
 
-const MIN_TOPUP_AMOUNT = 10_000;
+const MIN_TOPUP_AMOUNT = 5_000;
 const FROM_ASSET = 'COP/2';
 const FROM_MEDIUM = 'pse';
 const TO_MEDIUM = 'kusama';
@@ -403,7 +403,7 @@ function RouteComponent() {
               />
               {parsedAmount > 0 && parsedAmount < MIN_TOPUP_AMOUNT ? (
                 <p className="text-xs text-destructive">
-                  Monto minimo: $10,000 COP
+                  Monto minimo: $5,000 COP
                 </p>
               ) : null}
             </div>
