@@ -26,11 +26,10 @@ export function TopUpPendingStep({
       </div>
 
       <div className="flex flex-col items-center gap-2 text-center">
-        <h2 className="text-lg font-bold text-foreground">
-          Transferencia enviada
-        </h2>
+        <h2 className="text-lg font-bold text-foreground">Orden creada</h2>
         <p className="text-sm text-muted-foreground">
-          Tu orden fue creada. Puedes verificar su estado en unos minutos.
+          Tu orden está siendo procesada. Puede completarse, quedar pendiente o
+          ser rechazada.
         </p>
         <p className="text-2xl font-bold tabular-nums text-foreground">
           {formatCOP(amount)}
@@ -59,7 +58,7 @@ export function TopUpPendingStep({
       </div>
 
       <p className="text-[11px] text-muted-foreground text-center">
-        Si no se refleja después de 30 minutos, contacta soporte.
+        Si tienes dudas sobre el estado de tu orden, contacta soporte.
       </p>
     </div>
   );

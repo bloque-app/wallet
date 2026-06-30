@@ -381,8 +381,8 @@ function RouteComponent() {
             </div>
 
             <div className="flex flex-1 flex-col items-center justify-center gap-5 px-5 py-6">
-              <div className="flex h-14 w-14 items-center justify-center rounded-3xl border border-border/75 bg-card/80">
-                <Camera className="h-6 w-6 text-foreground" />
+              <div className="flex h-14 w-14 items-center justify-center rounded-3xl border border-primary/25 bg-primary/[0.06]">
+                <Camera className="h-6 w-6 text-primary" />
               </div>
               <div
                 id={scannerId}
@@ -407,8 +407,8 @@ function RouteComponent() {
       {scannerView === 'decoding' ? (
         <div className="fixed inset-0 z-50 bg-background">
           <div className="flex h-full flex-col items-center justify-center gap-4 px-6 text-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-3xl border border-border/75 bg-card/80">
-              <LoaderCircle className="h-6 w-6 animate-spin text-foreground" />
+            <div className="flex h-14 w-14 items-center justify-center rounded-3xl border border-primary/25 bg-primary/[0.06]">
+              <LoaderCircle className="h-6 w-6 animate-spin text-primary" />
             </div>
             <div className="space-y-1">
               <p className="text-sm font-medium text-foreground">

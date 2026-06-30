@@ -191,6 +191,7 @@ function RouteComponent() {
     id: string;
     redirectUrl?: string;
   } | null>(null);
+  const [autoRetry, setAutoRetry] = useState(false);
 
   const normalizedKey = normalizeBrebKey(search.key ?? '');
   const qrType = (search.qrType ?? '').toLowerCase();
@@ -334,15 +335,28 @@ function RouteComponent() {
     onError: (error) => {
       const msg = error instanceof Error ? error.message : '';
       if (msg.includes('E_RATE_EXPIRED')) {
-        toast.error('La tasa expiró. Recalcula el monto e intenta de nuevo.');
-        void ratesQuery.refetch();
+        toast.info('La tasa expiró. Recalculando...');
         setConfirmOpen(false);
+        setAutoRetry(true);
+        void ratesQuery.refetch();
         return;
       }
       toast.error(msg || 'No se pudo enviar la transferencia BRE-B.');
       setView('error');
     },
   });
+
+  const createOrderMutate = createOrderMutation.mutate;
+
+  useEffect(() => {
+    if (!autoRetry || ratesQuery.isFetching) return;
+    setAutoRetry(false);
+    if (selectedRate) {
+      createOrderMutate();
+    } else {
+      toast.error('No hay tasa disponible. Intenta de nuevo.');
+    }
+  }, [autoRetry, createOrderMutate, ratesQuery.isFetching, selectedRate]);
 
   const previewRecipientMutation = useMutation({
     mutationFn: async () => {

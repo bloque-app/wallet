@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Building2, CreditCard, KeyRound, Wallet } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
@@ -85,6 +85,7 @@ function RouteComponent() {
     id: string;
     redirectUrl?: string;
   } | null>(null);
+  const [autoRetry, setAutoRetry] = useState(false);
 
   const parsedAmount = Number.parseInt(amount.replace(/\D/g, ''), 10) || 0;
   const selectedReceiveAsset = RECEIVE_ASSETS.find(
@@ -222,15 +223,28 @@ function RouteComponent() {
     onError: (error) => {
       const message = error instanceof Error ? error.message : '';
       if (message.includes('E_RATE_EXPIRED')) {
-        toast.error('La tasa expiró. Ingresa el monto nuevamente.');
+        toast.info('La tasa expiró. Recalculando...');
+        setAutoRetry(true);
         void ratesQuery.refetch();
-        setStep('amount');
         return;
       }
       toast.error(message || 'No se pudo iniciar la recarga.');
       setStep('error');
     },
   });
+
+  const createOrderMutate = createOrderMutation.mutate;
+
+  useEffect(() => {
+    if (!autoRetry || ratesQuery.isFetching) return;
+    setAutoRetry(false);
+    if (selectedRate) {
+      createOrderMutate();
+    } else {
+      toast.error('No hay tasa disponible. Intenta de nuevo.');
+      setStep('amount');
+    }
+  }, [autoRetry, createOrderMutate, ratesQuery.isFetching, selectedRate]);
 
   const selectedBankName =
     banksQuery.data?.banks.find((bank) => bank.code === form.bankCode)?.name ??
