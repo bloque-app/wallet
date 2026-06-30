@@ -19,6 +19,15 @@ export type BrebAccountItem = {
   metadata?: Record<string, unknown>;
 };
 
+export class BrebKeyError extends Error {
+  providerCode?: string;
+  constructor(message: string, providerCode?: string) {
+    super(message);
+    this.name = 'BrebKeyError';
+    this.providerCode = providerCode;
+  }
+}
+
 export const BREB_KEY_TYPES: Array<{
   value: BrebKeyType;
   label: string;
@@ -92,15 +101,17 @@ export async function createBrebKey(params: {
           metadata?: Record<string, unknown>;
         }) => Promise<{
           data: { urn: string } | null;
-          error: { message: string } | null;
+          error: Record<string, unknown> | null;
         }>;
       };
     }
   ).breb.createKey(params);
 
   if (result.error || !result.data) {
-    throw new Error(
-      result.error?.message ?? 'No se pudo crear la llave BRE-B.',
+    const e = result.error;
+    throw new BrebKeyError(
+      (e?.message as string) ?? 'No se pudo crear la llave BRE-B.',
+      e?.code as string | undefined,
     );
   }
 

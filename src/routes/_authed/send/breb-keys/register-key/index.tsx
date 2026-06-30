@@ -1,14 +1,27 @@
+import { BloqueAPIError } from '@bloque/sdk';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { ArrowLeft } from 'lucide-react';
+import {
+  ArrowLeft,
+  CreditCard,
+  KeyRound,
+  Mail,
+  Smartphone,
+} from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '~/components/ui/button';
-import { Input } from '~/components/ui/input';
-import { Label } from '~/components/ui/label';
-import { useAuth } from '~/contexts/auth/auth-context';
 import {
-  BREB_KEY_TYPES,
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from '~/components/ui/drawer';
+import { createBloqueSdk } from '~/lib/bloque';
+import {
+  BrebKeyError,
   type BrebKeyType,
   createBrebKey,
   listBrebAccounts,
@@ -18,10 +31,46 @@ export const Route = createFileRoute('/_authed/send/breb-keys/register-key/')({
   component: RouteComponent,
 });
 
+const DRAWER_PROVIDER_CODES = new Set(['P901', 'U807']);
+
+function getProviderCode(error: unknown): string | undefined {
+  if (error instanceof BrebKeyError) return error.providerCode;
+  if (error instanceof BloqueAPIError) {
+    const details = (error.response as Record<string, unknown> | undefined)
+      ?.extra_details as Record<string, unknown> | undefined;
+    if (details?.provider_code) return details.provider_code as string;
+  }
+  return undefined;
+}
+
+function getBrebKeyCreationError(error: unknown): string {
+  if (
+    error instanceof Error &&
+    error.message &&
+    !error.message.startsWith('E_')
+  ) {
+    return error.message;
+  }
+  return 'No se pudo registrar la llave BRE-B. Intenta de nuevo.';
+}
+
+function stripCountryCode(phone: string): string {
+  if (phone.startsWith('+57')) return phone.slice(3);
+  if (phone.startsWith('57') && phone.length > 10) return phone.slice(2);
+  return phone;
+}
+
 function RouteComponent() {
-  const { user } = useAuth();
-  const [keyType, setKeyType] = useState<BrebKeyType>('PHONE');
-  const [keyValue, setKeyValue] = useState('');
+  const [p901Drawer, setP901Drawer] = useState<{ open: boolean; key: string }>({
+    open: false,
+    key: '',
+  });
+
+  const profileQuery = useQuery({
+    queryKey: ['me-profile'],
+    queryFn: () => createBloqueSdk().me(),
+    staleTime: 5 * 60_000,
+  });
 
   const accountsQuery = useQuery({
     queryKey: ['breb-accounts'],
@@ -29,34 +78,89 @@ function RouteComponent() {
     staleTime: 30_000,
   });
 
+  const profile = profileQuery.data?.profile;
+  const localPhone = profile?.phone ? stripCountryCode(profile.phone) : null;
+  const displayName =
+    [profileQuery.data?.profile.first_name].filter(Boolean).join(' ') ||
+    'Usuario Bloque';
+
+  type KeyOption = {
+    keyType: BrebKeyType;
+    value: string;
+    label: string;
+    description: string;
+    icon: React.ElementType;
+  };
+
+  const keyOptions: KeyOption[] = [];
+  if (localPhone) {
+    keyOptions.push({
+      keyType: 'ALPHA',
+      value: `@bl${localPhone}`,
+      label: 'Llave Bloque',
+      description: 'Tu llave personal de Bloque',
+      icon: KeyRound,
+    });
+    keyOptions.push({
+      keyType: 'PHONE',
+      value: localPhone,
+      label: 'Celular',
+      description: 'Tu número de celular',
+      icon: Smartphone,
+    });
+  }
+  if (profile?.email) {
+    keyOptions.push({
+      keyType: 'EMAIL',
+      value: profile.email,
+      label: 'Correo electrónico',
+      description: 'Tu correo electrónico',
+      icon: Mail,
+    });
+  }
+  if (profile?.personal_id_number && profile?.personal_id_type === 'CC') {
+    keyOptions.push({
+      keyType: 'ID',
+      value: profile.personal_id_number,
+      label: 'Documento',
+      description: 'Tu documento de identidad',
+      icon: CreditCard,
+    });
+  }
+
+  const registeredKeys = new Set(
+    (accountsQuery.data ?? []).map((a) => a.key).filter(Boolean),
+  );
+
   const createMutation = useMutation({
-    mutationFn: async () =>
+    mutationFn: async ({
+      keyType,
+      value,
+    }: {
+      keyType: BrebKeyType;
+      value: string;
+    }) =>
       await createBrebKey({
         keyType,
-        key: keyValue.trim(),
-        displayName: user.name.trim() || 'Usuario Bloque',
-        metadata: {
-          source: 'wallet',
-          purpose: 'breb-send',
-        },
+        key: value,
+        displayName,
+        metadata: { source: 'wallet', purpose: 'breb-send' },
       }),
     onSuccess: async () => {
-      toast.success('Llave BRE-B creada correctamente.');
-      setKeyValue('');
+      toast.success('Llave BRE-B registrada correctamente.');
       await accountsQuery.refetch();
     },
-    onError: (error) => {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : 'No se pudo crear la llave BRE-B.',
-      );
+    onError: (error, variables) => {
+      const code = getProviderCode(error);
+      if (code && DRAWER_PROVIDER_CODES.has(code)) {
+        setP901Drawer({ open: true, key: variables.value });
+        return;
+      }
+      toast.error(getBrebKeyCreationError(error));
     },
   });
 
-  const selectedType = BREB_KEY_TYPES.find(
-    (option) => option.value === keyType,
-  );
+  const isLoading = profileQuery.isLoading || accountsQuery.isLoading;
 
   return (
     <div className="flex flex-col gap-5">
@@ -73,56 +177,97 @@ function RouteComponent() {
             Registrar llave
           </h1>
           <p className="text-xs text-muted-foreground">
-            Asocia una llave a tu cuenta
+            Elige las llaves para enviar y recibir dinero al instante
           </p>
         </div>
       </div>
 
-      <section className="rounded-3xl border border-border/75 bg-card/80 p-5">
-        <div className="flex flex-col gap-5">
-          <div className="flex flex-col gap-2">
-            <Label>Tipo de llave</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {BREB_KEY_TYPES.map((option) => (
-                <button
+      <div className="flex flex-col gap-3">
+        {isLoading
+          ? Array.from({ length: 4 }).map((_, i) => (
+              <div
+                key={`ske-${i}`}
+                className="h-20 animate-pulse rounded-2xl border border-border/75 bg-card/80"
+              />
+            ))
+          : keyOptions.map((option) => {
+              const Icon = option.icon;
+              const registered = registeredKeys.has(option.value);
+              const isPending =
+                createMutation.isPending &&
+                createMutation.variables?.value === option.value;
+
+              return (
+                <div
                   key={option.value}
-                  type="button"
-                  onClick={() => setKeyType(option.value)}
-                  className={`rounded-2xl border px-3 py-3 text-sm transition-all ${
-                    keyType === option.value
-                      ? 'border-foreground bg-foreground text-background'
-                      : 'border-border bg-background/70 text-foreground hover:bg-muted/70'
-                  }`}
+                  className="flex items-center gap-4 rounded-2xl border border-border/75 bg-card/80 px-4 py-4"
                 >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          </div>
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
+                    <Icon className="h-4 w-4 text-primary" />
+                  </div>
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="breb-register-key">Valor de la llave</Label>
-            <Input
-              id="breb-register-key"
-              inputMode={
-                keyType === 'PHONE' || keyType === 'ID' ? 'numeric' : 'text'
-              }
-              placeholder={selectedType?.placeholder}
-              value={keyValue}
-              onChange={(event) => setKeyValue(event.target.value)}
-              className="h-12 rounded-2xl"
-            />
-          </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-foreground">
+                      {option.value}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {option.label}
+                    </p>
+                  </div>
 
-          <Button
-            onClick={() => createMutation.mutate()}
-            disabled={createMutation.isPending || !keyValue.trim()}
-            className="h-12 w-full rounded-2xl text-sm font-medium"
-          >
-            {createMutation.isPending ? 'Creando llave...' : 'Registrar llave'}
-          </Button>
-        </div>
-      </section>
+                  {registered ? (
+                    <span className="shrink-0 rounded-full border border-primary/25 bg-primary/[0.06] px-3 py-1 text-xs font-medium text-primary">
+                      Registrada
+                    </span>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-9 shrink-0 rounded-xl px-4 text-xs font-medium"
+                      disabled={createMutation.isPending}
+                      onClick={() =>
+                        createMutation.mutate({
+                          keyType: option.keyType,
+                          value: option.value,
+                        })
+                      }
+                    >
+                      {isPending ? 'Registrando...' : 'Registrar'}
+                    </Button>
+                  )}
+                </div>
+              );
+            })}
+      </div>
+
+      <Drawer
+        open={p901Drawer.open}
+        onOpenChange={(open) => setP901Drawer((s) => ({ ...s, open }))}
+      >
+        <DrawerContent>
+          <DrawerHeader className="text-left">
+            <DrawerTitle className="text-lg font-bold tracking-[-0.025em]">
+              Esta llave ya está registrada en otra entidad
+            </DrawerTitle>
+            <DrawerDescription className="mt-1 text-sm leading-relaxed">
+              La llave{' '}
+              <span className="font-medium text-foreground">
+                {p901Drawer.key}
+              </span>{' '}
+              ya está activa en otro banco. Para registrarla en Bloque, primero
+              debes eliminarla o desactivarla desde la app de esa entidad.
+            </DrawerDescription>
+          </DrawerHeader>
+          <DrawerFooter>
+            <Button
+              className="h-12 w-full rounded-2xl text-sm font-medium"
+              onClick={() => setP901Drawer((s) => ({ ...s, open: false }))}
+            >
+              Entendido
+            </Button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 }
