@@ -11,7 +11,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from '~/components/ui/select';
 import { Separator } from '~/components/ui/separator';
 import { useAuth } from '~/contexts/auth/auth-context';
@@ -478,7 +477,13 @@ function RouteComponent() {
                 }
               >
                 <SelectTrigger className="h-12 rounded-2xl">
-                  <SelectValue placeholder="Selecciona tu banco" />
+                  {form.bankCode ? (
+                    <span>{selectedBankName}</span>
+                  ) : (
+                    <span className="text-muted-foreground">
+                      Selecciona tu banco
+                    </span>
+                  )}
                 </SelectTrigger>
                 <SelectContent>
                   {banksQuery.data?.banks.map((bank) => (
@@ -490,46 +495,58 @@ function RouteComponent() {
               </Select>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-2">
-                <Label>Tipo de usuario</Label>
-                <Select
-                  value={form.userType}
-                  onValueChange={(value) =>
-                    setForm({ ...form, userType: value as '0' | '1' })
-                  }
-                >
-                  <SelectTrigger className="h-12 rounded-2xl">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">Natural</SelectItem>
-                    <SelectItem value="1">Juridica</SelectItem>
-                  </SelectContent>
-                </Select>
+            <div className="flex flex-col gap-2">
+              <Label>Tipo de usuario</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {(
+                  [
+                    ['0', 'Natural'],
+                    ['1', 'Jurídica'],
+                  ] as const
+                ).map(([val, label]) => (
+                  <button
+                    key={val}
+                    type="button"
+                    onClick={() => setForm({ ...form, userType: val })}
+                    className={cn(
+                      'h-12 rounded-2xl border px-3 text-sm font-medium transition-all',
+                      form.userType === val
+                        ? 'border-foreground bg-foreground text-background'
+                        : 'border-border bg-background/70 text-foreground hover:bg-muted/70',
+                    )}
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
+            </div>
 
-              <div className="flex flex-col gap-2">
-                <Label>Tipo de documento</Label>
-                <Select
-                  value={form.userLegalIdType}
-                  onValueChange={(value) =>
-                    setForm({
-                      ...form,
-                      userLegalIdType: value as 'CC' | 'NIT' | 'CE',
-                    })
-                  }
-                >
-                  <SelectTrigger className="h-12 rounded-2xl">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="CC">CC</SelectItem>
-                    <SelectItem value="NIT">NIT</SelectItem>
-                    <SelectItem value="CE">CE</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="flex flex-col gap-2">
+              <Label>Tipo de documento</Label>
+              <Select
+                value={form.userLegalIdType}
+                onValueChange={(value) =>
+                  setForm({
+                    ...form,
+                    userLegalIdType: value as 'CC' | 'NIT' | 'CE',
+                  })
+                }
+              >
+                <SelectTrigger className="h-12 rounded-2xl">
+                  {form.userLegalIdType === 'CC' && (
+                    <span>Cédula de ciudadanía (CC)</span>
+                  )}
+                  {form.userLegalIdType === 'NIT' && <span>NIT</span>}
+                  {form.userLegalIdType === 'CE' && (
+                    <span>Cédula de extranjería (CE)</span>
+                  )}
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="CC">Cédula de ciudadanía (CC)</SelectItem>
+                  <SelectItem value="NIT">NIT</SelectItem>
+                  <SelectItem value="CE">Cédula de extranjería (CE)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex flex-col gap-2">
