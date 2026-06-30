@@ -58,7 +58,7 @@ function RouteComponent() {
           <ArrowLeft className="h-3.5 w-3.5" />
           Volver
         </Link>
-        <h1 className="text-xl font-bold tracking-tight text-foreground">
+        <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
           Enviar
         </h1>
       </div>

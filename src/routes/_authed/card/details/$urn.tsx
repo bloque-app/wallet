@@ -66,7 +66,7 @@ function getMovementTitle(type: unknown) {
 }
 
 function DirectionIcon({ direction }: { direction: TxDirection }) {
-  const iconClass = 'h-4 w-4 text-foreground';
+  const iconClass = 'h-4 w-4 text-primary';
   return direction === 'out' ? (
     <ArrowUpRight className={iconClass} />
   ) : (
@@ -203,7 +203,7 @@ function RouteComponent() {
           <ArrowLeft className="h-3.5 w-3.5" />
           Volver
         </Link>
-        <h1 className="text-xl font-bold tracking-tight text-foreground">
+        <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
           Detalle de tarjeta
         </h1>
       </div>
@@ -305,7 +305,7 @@ function RouteComponent() {
                 </button>
               ))}
             </div>
-            <p className="text-3xl font-bold tabular-nums tracking-tight text-foreground">
+            <p className="text-3xl font-bold tabular-nums tracking-[-0.025em] text-foreground">
               {showBalances
                 ? formatAmount(displayAsset, assetBalance)
                 : '••••••'}
@@ -361,7 +361,7 @@ function RouteComponent() {
                 className="flex w-full items-center justify-between gap-3 rounded-2xl border border-border/65 bg-card/75 px-3 py-3 text-left transition-all duration-200 hover:bg-muted/75"
               >
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-border/80 bg-background/85">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
                     <DirectionIcon direction={tx.direction} />
                   </div>
                   <div className="flex flex-col gap-0.5">

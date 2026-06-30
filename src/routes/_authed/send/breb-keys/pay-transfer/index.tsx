@@ -200,11 +200,14 @@ function RouteComponent() {
       toast.success('Transferencia BRE-B enviada correctamente.');
     },
     onError: (error) => {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : 'No se pudo enviar la transferencia BRE-B.',
-      );
+      const msg = error instanceof Error ? error.message : '';
+      if (msg.includes('E_RATE_EXPIRED')) {
+        toast.error('La tasa expiró. Recalcula el monto e intenta de nuevo.');
+        void ratesQuery.refetch();
+        setConfirmOpen(false);
+        return;
+      }
+      toast.error(msg || 'No se pudo enviar la transferencia BRE-B.');
       setView('error');
     },
   });
@@ -228,7 +231,7 @@ function RouteComponent() {
             <ArrowLeft className="h-3.5 w-3.5" />
             Volver
           </Link>
-          <h1 className="text-xl font-bold tracking-tight text-foreground">
+          <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
             Pagar o transferir
           </h1>
         </div>
@@ -267,7 +270,7 @@ function RouteComponent() {
             <ArrowLeft className="h-3.5 w-3.5" />
             Volver
           </Link>
-          <h1 className="text-xl font-bold tracking-tight text-foreground">
+          <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
             Pagar o transferir
           </h1>
         </div>
@@ -287,7 +290,7 @@ function RouteComponent() {
           Volver
         </Link>
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-foreground">
+          <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
             Pagar o transferir
           </h1>
           <p className="text-xs text-muted-foreground">
@@ -299,8 +302,8 @@ function RouteComponent() {
       <section className="rounded-3xl border border-border/75 bg-card/80 p-5">
         <div className="flex flex-col gap-5">
           <div className="flex items-center gap-3 rounded-2xl border border-border/75 bg-background/70 p-4">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-border/80 bg-card">
-              <Landmark className="h-5 w-5 text-foreground" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
+              <Landmark className="h-4 w-4 text-primary" />
             </div>
             <div className="flex flex-col">
               <p className="text-sm font-medium text-foreground">

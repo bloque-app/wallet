@@ -181,7 +181,7 @@ function RouteComponent() {
             </p>
             <BalanceToggle />
           </div>
-          <p className="text-3xl font-bold tabular-nums tracking-tight text-foreground">
+          <p className="text-3xl font-bold tabular-nums tracking-[-0.025em] text-foreground">
             {isLoadingBalances
               ? '...'
               : showBalances

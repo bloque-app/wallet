@@ -69,7 +69,7 @@ function RouteComponent() {
           Volver
         </Link>
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-foreground">
+          <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
             Registrar llave
           </h1>
           <p className="text-xs text-muted-foreground">

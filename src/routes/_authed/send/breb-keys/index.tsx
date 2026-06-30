@@ -252,7 +252,7 @@ function RouteComponent() {
           Volver
         </Link>
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-foreground">
+          <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
             Llaves BRE-B
           </h1>
           <p className="text-xs text-muted-foreground">
@@ -296,8 +296,8 @@ function RouteComponent() {
                   'flex items-start gap-3 rounded-2xl border border-border/75 bg-card/80 p-4 transition-all hover:bg-muted/70',
                 )}
               >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-border/80 bg-background/85">
-                  <Icon className="h-4 w-4 text-foreground" />
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
+                  <Icon className="h-4 w-4 text-primary" />
                 </div>
                 <div className="flex flex-col">
                   <p className="text-sm font-medium text-foreground">

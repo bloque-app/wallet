@@ -204,7 +204,7 @@ function RouteComponent() {
             <ArrowLeft className="h-3.5 w-3.5" />
             Volver
           </Link>
-          <h1 className="text-xl font-bold tracking-tight text-foreground">
+          <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
             Amigos en bloque
           </h1>
         </div>
@@ -233,7 +233,7 @@ function RouteComponent() {
             <ArrowLeft className="h-3.5 w-3.5" />
             Volver
           </Link>
-          <h1 className="text-xl font-bold tracking-tight text-foreground">
+          <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
             Amigos en bloque
           </h1>
         </div>
@@ -264,7 +264,7 @@ function RouteComponent() {
           Volver
         </Link>
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-foreground">
+          <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
             Amigos en bloque
           </h1>
           <p className="text-xs text-muted-foreground">
@@ -276,8 +276,8 @@ function RouteComponent() {
       <section className="rounded-3xl border border-border/75 bg-card/80 p-5">
         <div className="flex flex-col gap-5">
           <div className="flex items-center gap-3 rounded-2xl border border-border/75 bg-background/70 p-4">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-border/80 bg-card">
-              <Users className="h-5 w-5 text-foreground" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
+              <Users className="h-4 w-4 text-primary" />
             </div>
             <div className="flex flex-col">
               <p className="text-sm font-medium text-foreground">

@@ -21,8 +21,8 @@ export function TopUpPendingStep({
 }: PendingStepProps) {
   return (
     <div className="flex flex-col items-center gap-6 py-8">
-      <div className="flex h-16 w-16 items-center justify-center rounded-3xl border border-border/80 bg-card">
-        <Clock className="h-7 w-7 text-muted-foreground" strokeWidth={1.5} />
+      <div className="flex h-16 w-16 items-center justify-center rounded-3xl border border-primary/25 bg-primary/[0.06]">
+        <Clock className="h-7 w-7 text-primary" strokeWidth={1.5} />
       </div>
 
       <div className="flex flex-col items-center gap-2 text-center">

@@ -69,7 +69,7 @@ function RouteComponent() {
           <ArrowLeft className="h-3.5 w-3.5" />
           Volver
         </Link>
-        <h1 className="text-xl font-bold tracking-tight text-foreground">
+        <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
           Cuentas
         </h1>
       </div>
@@ -98,8 +98,8 @@ function RouteComponent() {
                 params={{ urn: account.urn }}
                 className="flex items-center gap-3 rounded-2xl border border-border/75 bg-card/80 p-4 transition-colors hover:bg-muted/60"
               >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-border/80 bg-background/85">
-                  <Icon className="h-4 w-4 text-foreground" />
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
+                  <Icon className="h-4 w-4 text-primary" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-foreground">

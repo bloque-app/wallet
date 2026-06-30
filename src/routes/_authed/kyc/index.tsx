@@ -103,7 +103,7 @@ function RouteComponent() {
         <button
           type="button"
           onClick={() => history.back()}
-          className="pointer-events-auto inline-flex items-center gap-1 rounded-full border border-border/80 bg-background/85 px-2.5 py-1 text-xs text-muted-foreground backdrop-blur hover:text-foreground"
+          className="pointer-events-auto inline-flex items-center gap-1 rounded-full border border-border bg-background/85 px-2.5 py-1 text-xs text-muted-foreground backdrop-blur hover:text-foreground"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           Volver

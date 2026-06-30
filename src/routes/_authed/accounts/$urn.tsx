@@ -322,7 +322,7 @@ function RouteComponent() {
           <ArrowLeft className="h-3.5 w-3.5" />
           Volver
         </Link>
-        <h1 className="text-xl font-bold tracking-tight text-foreground">
+        <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
           Detalle de cuenta
         </h1>
       </div>
@@ -339,8 +339,8 @@ function RouteComponent() {
         <>
           <section className="rounded-3xl border border-border/75 bg-card/85 p-4">
             <div className="flex items-start gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-border/80 bg-background/85">
-                <Icon className="h-4 w-4 text-foreground" />
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
+                <Icon className="h-4 w-4 text-primary" />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-base font-semibold text-foreground">

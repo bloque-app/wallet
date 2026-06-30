@@ -76,7 +76,7 @@ function RouteComponent() {
 
   return (
     <div className="flex flex-col gap-5">
-      <h1 className="text-xl font-bold tracking-tight text-foreground">
+      <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
         Movimientos
       </h1>
 

@@ -220,11 +220,14 @@ function RouteComponent() {
       }
     },
     onError: (error) => {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : 'No se pudo iniciar la recarga.',
-      );
+      const message = error instanceof Error ? error.message : '';
+      if (message.includes('E_RATE_EXPIRED')) {
+        toast.error('La tasa expiró. Ingresa el monto nuevamente.');
+        void ratesQuery.refetch();
+        setStep('amount');
+        return;
+      }
+      toast.error(message || 'No se pudo iniciar la recarga.');
       setStep('error');
     },
   });
@@ -235,7 +238,7 @@ function RouteComponent() {
 
   return (
     <div className="flex flex-col gap-5">
-      <h1 className="text-2xl font-bold tracking-tight text-foreground">
+      <h1 className="text-2xl font-bold tracking-[-0.025em] text-foreground">
         Recargar saldo
       </h1>
 
