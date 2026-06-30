@@ -1,6 +1,6 @@
 import './styles.css';
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { createRouter, RouterProvider } from '@tanstack/react-router';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
@@ -15,11 +15,10 @@ import {
   useAuth,
 } from './contexts/auth/auth-context';
 import { initBloque } from './lib/bloque';
+import { queryClient } from './lib/query-client';
 
 // Import the generated route tree
 import { routeTree } from './routeTree.gen';
-
-const queryClient = new QueryClient();
 
 const router = createRouter({
   routeTree,

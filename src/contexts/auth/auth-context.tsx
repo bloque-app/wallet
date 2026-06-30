@@ -10,6 +10,7 @@ import {
 import { toast } from 'sonner';
 import { apiFetch } from '~/lib/api-fetch';
 import { createBloqueSdk } from '~/lib/bloque';
+import { queryClient } from '~/lib/query-client';
 import type {
   AliasCheckResult,
   LoginData,
@@ -211,6 +212,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       console.error('Error logging out');
     } finally {
+      queryClient.clear();
       localStorage.clear();
       setCurrentUser(null);
       setLoading(false);
