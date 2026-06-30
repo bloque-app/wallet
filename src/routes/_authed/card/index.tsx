@@ -1,22 +1,28 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
+import { CreditCard, LoaderCircle } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { CardActive } from '~/components/card/card-active';
 import { CardList } from '~/components/card/card-list';
 import { CardNoCard } from '~/components/card/card-no-card';
+import { Button } from '~/components/ui/button';
 import {
   Drawer,
   DrawerContent,
+  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
 } from '~/components/ui/drawer';
+import { Input } from '~/components/ui/input';
+import { Label } from '~/components/ui/label';
 import { useAuth } from '~/contexts/auth/auth-context';
 import { CardsSkeleton } from './-components/cards-skeleton';
 import {
   useCardDetails,
   useCards,
   useCardToggleFreeze,
+  useCreateCard,
 } from './-hooks/use-card';
 
 export const Route = createFileRoute('/_authed/card/')({
@@ -40,10 +46,14 @@ function RouteComponent() {
   } = useCardDetails();
   const cardDetailsUrl = cardDetails?.detailsUrl ?? null;
   const toggleFreezeMutation = useCardToggleFreeze();
+  const createCardMutation = useCreateCard();
 
   const { user } = useAuth();
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
   const [showCardDetails, setShowCardDetails] = useState(false);
+  const [showCreateDrawer, setShowCreateDrawer] = useState(false);
+  const [cardName, setCardName] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const kycStatus =
     user?.kycStatus === 'not_verified' || !user?.kycStatus
@@ -63,26 +73,28 @@ function RouteComponent() {
     }
   }, [cards, activeCardId]);
 
-  const requestCardLabel = () => {
-    const defaultLabel =
-      cards.length === 0 ? 'Personal' : `Tarjeta ${cards.length + 1}`;
-    const label = window.prompt('Nombre de la nueva tarjeta', defaultLabel);
-    if (!label?.trim()) return null;
-    return label.trim();
-  };
-
   const handleAddCard = () => {
     if (kycStatus !== 'approved') {
       navigate({ to: '/kyc' });
       return;
     }
+    const defaultName =
+      cards.length === 0 ? 'Personal' : `Tarjeta ${cards.length + 1}`;
+    setCardName(defaultName);
+    setShowCreateDrawer(true);
+    setTimeout(() => inputRef.current?.select(), 150);
+  };
 
-    const label = requestCardLabel();
-    if (!label) return;
-
-    toast.info(
-      `Solicitud de creación enviada para "${label}". La tarjeta aparecerá cuando esté lista.`,
-    );
+  const handleCreateCard = async () => {
+    if (!cardName.trim()) return;
+    try {
+      await createCardMutation.mutateAsync(cardName.trim());
+      await queryClient.invalidateQueries({ queryKey: ['cards'] });
+      setShowCreateDrawer(false);
+      toast.success('Tarjeta creada exitosamente');
+    } catch {
+      toast.error('No se pudo crear la tarjeta. Intenta de nuevo.');
+    }
   };
 
   const handleQuickViewCard = async (cardUrn: string) => {
@@ -127,7 +139,7 @@ function RouteComponent() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold tracking-tight text-foreground">
+      <h1 className="text-2xl font-bold tracking-[-0.025em] text-foreground">
         Tarjetas
       </h1>
 
@@ -161,6 +173,103 @@ function RouteComponent() {
         </>
       )}
 
+      {/* Create card drawer */}
+      <Drawer
+        open={showCreateDrawer}
+        onOpenChange={(open) => {
+          if (!createCardMutation.isPending) setShowCreateDrawer(open);
+        }}
+      >
+        <DrawerContent>
+          <DrawerHeader className="text-left">
+            <div className="mb-1 flex items-center gap-2">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary" />
+              <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground/60">
+                Nueva tarjeta
+              </span>
+            </div>
+            <DrawerTitle className="text-lg font-bold tracking-[-0.02em]">
+              Tarjeta virtual
+            </DrawerTitle>
+          </DrawerHeader>
+
+          <div className="px-5 pb-2">
+            <div className="flex flex-col gap-5">
+              <div className="flex flex-col gap-2">
+                <Label
+                  htmlFor="card-name-input"
+                  className="text-sm font-medium text-foreground"
+                >
+                  Nombre de la tarjeta
+                </Label>
+                <Input
+                  id="card-name-input"
+                  ref={inputRef}
+                  value={cardName}
+                  onChange={(e) => setCardName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleCreateCard();
+                  }}
+                  placeholder="Personal"
+                  maxLength={40}
+                  disabled={createCardMutation.isPending}
+                  className="h-12 rounded-xl"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Solo tú verás este nombre. Puedes cambiarlo después.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-card/60 px-4 py-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/25 bg-primary/[0.06]">
+                  <CreditCard
+                    className="h-4 w-4 text-primary"
+                    strokeWidth={1.5}
+                  />
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <p className="text-xs font-medium text-foreground">
+                    Tarjeta virtual USD
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Sin costo de emisión · Aceptada en todo el mundo
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DrawerFooter>
+            <Button
+              onClick={handleCreateCard}
+              disabled={!cardName.trim() || createCardMutation.isPending}
+              className="h-12 w-full gap-2 rounded-xl text-sm font-medium"
+            >
+              {createCardMutation.isPending ? (
+                <>
+                  <LoaderCircle className="h-4 w-4 animate-spin" />
+                  Creando tarjeta...
+                </>
+              ) : (
+                <>
+                  <CreditCard className="h-4 w-4" />
+                  Crear tarjeta
+                </>
+              )}
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => setShowCreateDrawer(false)}
+              disabled={createCardMutation.isPending}
+              className="h-10 w-full text-sm text-muted-foreground"
+            >
+              Cancelar
+            </Button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+
+      {/* Card quick-view drawer */}
       <Drawer open={showCardDetails} onOpenChange={setShowCardDetails}>
         <DrawerContent className="h-[85vh]">
           <DrawerHeader>

@@ -41,6 +41,15 @@ export function useCardToggleFreeze() {
   });
 }
 
+export function useCreateCard() {
+  return useMutation({
+    mutationFn: async (name: string) => {
+      if (!name?.trim()) throw new Error('No card name provided');
+      return bloque.accounts.card.create({ name: name.trim() });
+    },
+  });
+}
+
 export function useCardUpdateName() {
   return useMutation({
     mutationFn: async ({
