@@ -1,20 +1,13 @@
 'use client';
 
 import { Link, useLocation } from '@tanstack/react-router';
-import {
-  ArrowLeftRight,
-  CreditCard,
-  Home,
-  Landmark,
-  UserCircle,
-} from 'lucide-react';
+import { ArrowLeftRight, CreditCard, Home, UserCircle } from 'lucide-react';
 import { cn } from '~/lib/utils';
 
 const navItems = [
   { href: '/', label: 'Inicio', icon: Home },
   { href: '/movements', label: 'Movimientos', icon: ArrowLeftRight },
   { href: '/card', label: 'Tarjeta', icon: CreditCard },
-  { href: '/topup', label: 'Recargar', icon: Landmark },
   { href: '/profile', label: 'Perfil', icon: UserCircle },
 ];
 
