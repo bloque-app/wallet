@@ -58,13 +58,21 @@ export function LoginMethodSelect({ onContinue }: LoginMethodSelectProps) {
 
   return (
     <div className="flex flex-col gap-7">
-      <div className="flex flex-col gap-2 text-center">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">
-          Wallet
-        </h1>
-        <p className="text-sm leading-relaxed text-muted-foreground">
-          Inicia sesión para acceder a tu billetera
-        </p>
+      <div className="flex flex-col items-center gap-3 text-center">
+        <span className="inline-flex items-center gap-2">
+          <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary" />
+          <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground/60">
+            Bloque Wallet
+          </span>
+        </span>
+        <div className="flex flex-col gap-1.5">
+          <h1 className="text-3xl font-bold tracking-[-0.03em] text-foreground">
+            Bienvenido
+          </h1>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Inicia sesión para acceder a tu billetera
+          </p>
+        </div>
       </div>
 
       {tab === null ? (

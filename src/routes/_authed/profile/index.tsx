@@ -54,16 +54,13 @@ function RouteComponent() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold tracking-tight text-foreground">
+      <h1 className="text-2xl font-bold tracking-[-0.025em] text-foreground">
         Perfil
       </h1>
 
       <div className="flex items-center gap-4 rounded-2xl border border-border/80 bg-card/90 p-4 shadow-[0_16px_30px_-34px_color-mix(in_oklch,var(--foreground)_55%,transparent)]">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted">
-          <UserCircle
-            className="h-6 w-6 text-muted-foreground"
-            strokeWidth={1.5}
-          />
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
+          <UserCircle className="h-6 w-6 text-primary" strokeWidth={1.5} />
         </div>
         <div className="flex flex-col gap-0.5">
           <p className="text-sm font-semibold text-foreground">{profileName}</p>

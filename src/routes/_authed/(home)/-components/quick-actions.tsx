@@ -40,11 +40,8 @@ export function QuickActions() {
                   : 'bg-muted/50 opacity-40 cursor-not-allowed',
               )}
             >
-              <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-primary">
-                <Icon
-                  className="h-4 w-4 text-primary-foreground"
-                  strokeWidth={1.5}
-                />
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.07]">
+                <Icon className="h-4 w-4 text-primary" strokeWidth={1.5} />
               </div>
               <span className="text-[11px] font-medium text-foreground leading-tight text-center">
                 {action.label}

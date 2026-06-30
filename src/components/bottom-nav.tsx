@@ -38,7 +38,7 @@ export function BottomNav() {
               className={cn(
                 'flex min-w-[58px] flex-col items-center gap-0.5 rounded-2xl px-2 py-1.5 text-center transition-all',
                 isActive
-                  ? 'bg-muted/90 text-foreground shadow-[0_10px_20px_-16px_color-mix(in_oklch,var(--foreground)_45%,transparent)]'
+                  ? 'bg-primary/10 text-primary'
                   : 'text-muted-foreground hover:text-foreground',
               )}
               aria-current={isActive ? 'page' : undefined}

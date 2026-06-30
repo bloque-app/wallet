@@ -12,7 +12,6 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '~/components/ui/drawer';
-import { Separator } from '~/components/ui/separator';
 import { useGlobalTransactions } from '~/hooks/use-global-transactions';
 import {
   type Asset,
@@ -118,8 +117,8 @@ function RouteComponent() {
                 onClick={() => setSelectedAsset(asset)}
                 className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
                   isActive
-                    ? 'border-primary bg-primary text-primary-foreground'
-                    : 'border-border bg-background/70 text-muted-foreground hover:text-foreground'
+                    ? 'border-primary/40 bg-primary/10 text-primary'
+                    : 'border-border/60 bg-background/70 text-muted-foreground hover:text-foreground'
                 }`}
               >
                 <img
@@ -163,7 +162,7 @@ function RouteComponent() {
 
       <QuickActions />
 
-      <Separator className="my-1" />
+      <div className="my-1 h-px w-full bg-gradient-to-r from-transparent via-border to-transparent" />
 
       <section className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
@@ -261,7 +260,9 @@ function RouteComponent() {
                       </button>
                     </div>
                   </div>
-                  {index < polygonAccounts.length - 1 && <Separator />}
+                  {index < polygonAccounts.length - 1 && (
+                    <div className="h-px w-full bg-border/50" />
+                  )}
                 </div>
               ))}
               {polygonAccounts.length === 0 && (
