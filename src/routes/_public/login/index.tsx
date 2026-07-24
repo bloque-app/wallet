@@ -9,10 +9,17 @@ import type {
 import { LoginMethodSelect } from './-components/login-method-select';
 import { OnboardingProfile } from './-components/onboarding-profile';
 import { OTPVerify } from './-components/otp-verify';
+import {
+  clearPendingLogin,
+  readPendingLogin,
+  savePendingLogin,
+} from './-lib/pending-login';
 
 export const Route = createFileRoute('/_public/login/')({
   component: RouteComponent,
 });
+
+const OTP_RESEND_INTERVAL_MS = 60_000;
 
 function RouteComponent() {
   const {
@@ -22,9 +29,17 @@ function RouteComponent() {
     resetOnboardingState,
   } = useAuth();
 
-  const [step, setStep] = useState<'method' | 'otp' | 'onboarding'>('method');
-  const [method, setMethod] = useState<'email' | 'phone'>('email');
-  const [contact, setContact] = useState('');
+  const [pendingLogin] = useState(() => readPendingLogin());
+  const [step, setStep] = useState<'method' | 'otp' | 'onboarding'>(
+    pendingLogin ? 'otp' : 'method',
+  );
+  const [method, setMethod] = useState<'email' | 'phone'>(
+    pendingLogin?.method ?? 'email',
+  );
+  const [contact, setContact] = useState(pendingLogin?.contact ?? '');
+  const [resendAvailableAt, setResendAvailableAt] = useState(
+    pendingLogin?.resendAvailableAt ?? 0,
+  );
   const [pendingOnboarding, setPendingOnboarding] =
     useState<PendingOnboarding | null>(null);
 
@@ -37,6 +52,13 @@ function RouteComponent() {
     const aliasStatus = await checkAlias(m, c);
     if (aliasStatus.status === 'registered') {
       await sendOTP(m, c);
+      const availableAt = Date.now() + OTP_RESEND_INTERVAL_MS;
+      setResendAvailableAt(availableAt);
+      savePendingLogin({
+        method: m,
+        contact: c,
+        resendAvailableAt: availableAt,
+      });
       setStep('otp');
       return;
     }
@@ -48,6 +70,9 @@ function RouteComponent() {
     const pending = { method, alias: contact, origin, profile };
     setPendingProfileOnboarding(pending);
     await sendOTP(method, contact);
+    const availableAt = Date.now() + OTP_RESEND_INTERVAL_MS;
+    setResendAvailableAt(availableAt);
+    savePendingLogin({ method, contact, resendAvailableAt: availableAt });
     setStep('otp');
   }
 
@@ -64,13 +89,25 @@ function RouteComponent() {
           <OTPVerify
             method={method}
             contact={contact}
+            resendAvailableAt={resendAvailableAt}
+            onResendAvailableAtChange={(availableAt) => {
+              setResendAvailableAt(availableAt);
+              savePendingLogin({
+                method,
+                contact,
+                resendAvailableAt: availableAt,
+              });
+            }}
+            onVerified={() => clearPendingLogin()}
             onBack={() => {
               resetOnboardingState();
               setPendingOnboarding(null);
               setPendingProfileOnboarding(null);
+              clearPendingLogin();
               setStep('method');
             }}
             onOnboardingRequired={(pending) => {
+              clearPendingLogin();
               setPendingOnboarding(pending);
               setStep('onboarding');
             }}
@@ -87,10 +124,12 @@ function RouteComponent() {
               resetOnboardingState();
               setPendingOnboarding(null);
               setPendingProfileOnboarding(null);
+              clearPendingLogin();
               setStep('method');
             }}
             onSubmitProfile={handleProfileSubmit}
             onCompleted={() => {
+              clearPendingLogin();
               setPendingOnboarding(null);
               setPendingProfileOnboarding(null);
               window.location.replace('/');

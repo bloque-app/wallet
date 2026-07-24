@@ -61,6 +61,10 @@ function stripCountryCode(phone: string): string {
   return phone;
 }
 
+function isColombianPhone(phone: string): boolean {
+  return !phone.startsWith('+') || phone.startsWith('+57');
+}
+
 function RouteComponent() {
   const navigate = useNavigate();
   const [p901Drawer, setP901Drawer] = useState<{ open: boolean; key: string }>({
@@ -103,13 +107,15 @@ function RouteComponent() {
       description: 'Tu llave personal de Bloque',
       icon: KeyRound,
     });
-    keyOptions.push({
-      keyType: 'PHONE',
-      value: localPhone,
-      label: 'Celular',
-      description: 'Tu número de celular',
-      icon: Smartphone,
-    });
+    if (profile?.phone && isColombianPhone(profile.phone)) {
+      keyOptions.push({
+        keyType: 'PHONE',
+        value: localPhone,
+        label: 'Celular',
+        description: 'Tu número de celular',
+        icon: Smartphone,
+      });
+    }
   }
   if (profile?.email) {
     keyOptions.push({

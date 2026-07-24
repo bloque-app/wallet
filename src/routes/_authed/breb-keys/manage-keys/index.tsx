@@ -66,6 +66,10 @@ function stripCountryCode(phone: string): string {
   return phone;
 }
 
+function isColombianPhone(phone: string): boolean {
+  return !phone.startsWith('+') || phone.startsWith('+57');
+}
+
 type KeyOption = {
   keyType: BrebKeyType;
   value: string;
@@ -111,12 +115,14 @@ function RouteComponent() {
       label: 'Llave Bloque',
       icon: KeyRound,
     });
-    keyOptions.push({
-      keyType: 'PHONE',
-      value: localPhone,
-      label: 'Celular',
-      icon: Smartphone,
-    });
+    if (profile?.phone && isColombianPhone(profile.phone)) {
+      keyOptions.push({
+        keyType: 'PHONE',
+        value: localPhone,
+        label: 'Celular',
+        icon: Smartphone,
+      });
+    }
   }
   if (profile?.email) {
     keyOptions.push({

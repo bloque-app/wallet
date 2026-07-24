@@ -15,6 +15,9 @@ import type { PendingOnboarding } from '~/contexts/auth/types';
 interface OTPVerifyProps {
   method: 'email' | 'phone';
   contact: string;
+  resendAvailableAt: number;
+  onResendAvailableAtChange: (availableAt: number) => void;
+  onVerified: () => void;
   onBack: () => void;
   onOnboardingRequired: (pending: PendingOnboarding) => void;
 }
@@ -22,6 +25,9 @@ interface OTPVerifyProps {
 export function OTPVerify({
   method,
   contact,
+  resendAvailableAt,
+  onResendAvailableAtChange,
+  onVerified,
   onBack,
   onOnboardingRequired,
 }: OTPVerifyProps) {
@@ -31,16 +37,20 @@ export function OTPVerify({
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [lastFailedOtp, setLastFailedOtp] = useState('');
-  const [resendTimer, setResendTimer] = useState(60);
+  const [resendTimer, setResendTimer] = useState(() =>
+    Math.max(0, Math.ceil((resendAvailableAt - Date.now()) / 1000)),
+  );
   const { navigate } = useRouter();
 
   useEffect(() => {
     if (resendTimer <= 0) return;
     const interval = setInterval(() => {
-      setResendTimer((t) => t - 1);
+      setResendTimer(
+        Math.max(0, Math.ceil((resendAvailableAt - Date.now()) / 1000)),
+      );
     }, 1000);
     return () => clearInterval(interval);
-  }, [resendTimer]);
+  }, [resendTimer, resendAvailableAt]);
 
   const handleVerify = useCallback(async () => {
     if (otp.length < 6) {
@@ -67,6 +77,7 @@ export function OTPVerify({
         return;
       }
 
+      onVerified();
       navigate({ to: '/', replace: true });
     } catch (error) {
       if (isOtpError(error)) {
@@ -77,7 +88,16 @@ export function OTPVerify({
       setLastFailedOtp(otp);
       setLoading(false);
     }
-  }, [otp, lastFailedOtp, method, contact, login, onOnboardingRequired, navigate]);
+  }, [
+    otp,
+    lastFailedOtp,
+    method,
+    contact,
+    login,
+    onOnboardingRequired,
+    onVerified,
+    navigate,
+  ]);
 
   useEffect(() => {
     if (otp.length === 6 && !loading && otp !== lastFailedOtp) {
@@ -87,6 +107,8 @@ export function OTPVerify({
 
   async function handleResend() {
     await sendOTP(method, contact);
+    const availableAt = Date.now() + 60_000;
+    onResendAvailableAtChange(availableAt);
     setResendTimer(60);
     setOtp('');
     setLastFailedOtp('');
