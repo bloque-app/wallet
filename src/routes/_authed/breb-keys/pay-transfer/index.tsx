@@ -22,14 +22,15 @@ import { formatCOP } from '~/lib/formatters';
 import { goBackOrFallback } from '~/lib/navigation';
 import { TopUpErrorStep } from '../../topup/-components/error-step';
 import { TopUpPendingStep } from '../../topup/-components/pending-step';
+import { BrebSourceAccountSelect } from '../-components/source-account-select';
 import {
   type BrebKeyType,
   createBrebOrder,
   getRecipientName,
-  listBrebAccounts,
   type ResolvedRecipient,
   resolveBrebKey,
 } from '../-lib/breb';
+import { useBrebSourceAccounts } from '../-lib/use-breb-source-accounts';
 
 type ViewState = 'form' | 'pending' | 'error';
 
@@ -88,6 +89,9 @@ function RouteComponent() {
     redirectUrl?: string;
   } | null>(null);
   const [autoRetry, setAutoRetry] = useState(false);
+  const [selectedSourceUrn, setSelectedSourceUrn] = useState<string | null>(
+    null,
+  );
 
   const normalizedKey = normalizeBrebKey(key);
   const inferredKeyType = inferBrebKeyType(normalizedKey);
@@ -99,15 +103,23 @@ function RouteComponent() {
 
   const hasValidKey = inferredKeyType !== null;
 
-  const brebAccountsQuery = useQuery({
-    queryKey: ['breb-accounts'],
-    queryFn: listBrebAccounts,
-    staleTime: 30_000,
-  });
+  const { accountsQuery: brebAccountsQuery, fundedAccounts } =
+    useBrebSourceAccounts(FROM_ASSET);
 
-  const activeBrebAccount = brebAccountsQuery.data?.find(
-    (account) => account.status === 'active',
-  );
+  useEffect(() => {
+    if (fundedAccounts.length === 1 && fundedAccounts[0]) {
+      setSelectedSourceUrn(fundedAccounts[0].urn);
+      return;
+    }
+    setSelectedSourceUrn((current) =>
+      current && fundedAccounts.some((account) => account.urn === current)
+        ? current
+        : null,
+    );
+  }, [fundedAccounts]);
+
+  const selectedSourceAccount =
+    fundedAccounts.find((account) => account.urn === selectedSourceUrn) ?? null;
 
   const ratesQuery = useQuery({
     queryKey: ['breb-transfer-rates', amountSrc],
@@ -127,8 +139,11 @@ function RouteComponent() {
   const selectedRate = ratesQuery.data?.rates?.[0] ?? null;
 
   const formError = useMemo(() => {
-    if (!activeBrebAccount && brebAccountsQuery.isSuccess) {
-      return 'Primero debes registrar una llave BRE-B activa.';
+    if (brebAccountsQuery.isSuccess && fundedAccounts.length === 0) {
+      return 'No tienes saldo disponible en ninguna llave BRE-B activa.';
+    }
+    if (fundedAccounts.length > 1 && !selectedSourceAccount) {
+      return 'Selecciona la cuenta BRE-B desde la que quieres enviar.';
     }
     if (key.length > 0 && !hasValidKey) {
       return 'Ingresa una llave BRE-B valida, por ejemplo un celular, email o alias como @MBP313.';
@@ -148,14 +163,15 @@ function RouteComponent() {
     }
     return null;
   }, [
-    activeBrebAccount,
     brebAccountsQuery.isSuccess,
+    fundedAccounts.length,
     hasValidKey,
     key.length,
     parsedAmount,
     ratesQuery.isError,
     ratesQuery.isSuccess,
     selectedRate,
+    selectedSourceAccount,
   ]);
 
   const previewRecipientMutation = useMutation({
@@ -185,15 +201,17 @@ function RouteComponent() {
       if (!selectedRate?.sig) {
         throw new Error('No hay tasa disponible para enviar.');
       }
-      if (!activeBrebAccount?.urn) {
-        throw new Error('Primero debes registrar una llave BRE-B activa.');
+      if (!selectedSourceAccount?.urn) {
+        throw new Error(
+          'Selecciona la cuenta BRE-B desde la que quieres enviar.',
+        );
       }
 
       return await createBrebOrder({
         rateSig: selectedRate.sig,
         amountSrc,
         resolutionId: recipientPreview.resolutionId,
-        sourceAccountUrn: activeBrebAccount.urn,
+        sourceAccountUrn: selectedSourceAccount.urn,
         metadata: message.trim() ? { message: message.trim() } : undefined,
       });
     },
@@ -233,7 +251,7 @@ function RouteComponent() {
   }, [autoRetry, createOrderMutate, ratesQuery.isFetching, selectedRate]);
 
   const canSubmit =
-    !!activeBrebAccount &&
+    !!selectedSourceAccount &&
     hasValidKey &&
     parsedAmount >= MIN_TRANSFER_AMOUNT &&
     !!selectedRate &&
@@ -355,8 +373,28 @@ function RouteComponent() {
             />
           </div>
 
+          {fundedAccounts.length > 1 ? (
+            <BrebSourceAccountSelect
+              accounts={fundedAccounts}
+              precision={FROM_PRECISION}
+              value={selectedSourceUrn}
+              onChange={setSelectedSourceUrn}
+            />
+          ) : null}
+
           <div className="flex flex-col gap-2">
-            <Label htmlFor="breb-amount">Monto</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="breb-amount">Monto</Label>
+              {selectedSourceAccount ? (
+                <span className="text-xs text-muted-foreground">
+                  Disponible:{' '}
+                  {formatCOP(
+                    Number.parseInt(selectedSourceAccount.balance, 10) /
+                      10 ** FROM_PRECISION,
+                  )}
+                </span>
+              ) : null}
+            </div>
             <Input
               id="breb-amount"
               inputMode="numeric"
@@ -434,6 +472,16 @@ function RouteComponent() {
                   {recipientPreview?.key.keyValue ?? normalizedKey}
                 </span>
               </div>
+              {selectedSourceAccount ? (
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-muted-foreground">Desde</span>
+                  <span className="font-medium text-foreground">
+                    {selectedSourceAccount.key ??
+                      selectedSourceAccount.displayName ??
+                      'Llave BRE-B'}
+                  </span>
+                </div>
+              ) : null}
               <div className="flex items-center justify-between gap-3">
                 <span className="text-muted-foreground">Monto</span>
                 <span className="font-medium text-foreground">
