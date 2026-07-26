@@ -86,6 +86,12 @@ export function getMovementLabel(
   return labels[type];
 }
 
+export function getAssetPrecision(assetWithPrecision: string): number {
+  const [, precisionStr] = assetWithPrecision.split('/');
+  const parsed = Number.parseInt(precisionStr ?? '0', 10);
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
 export function formatPolygonAddress(addr: string): string {
   if (addr.length < 12) return addr;
   return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
