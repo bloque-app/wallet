@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MovementDetailDrawer } from '~/components/movement-detail-drawer';
 import { MovementRow } from '~/components/movement-row';
 import { Input } from '~/components/ui/input';
@@ -11,13 +12,13 @@ import { cn } from '~/lib/utils';
 
 type FilterType = 'all' | Asset | 'incoming' | 'outgoing';
 
-const filters: { label: string; value: FilterType }[] = [
-  { label: 'Todos', value: 'all' },
-  { label: 'COP', value: 'COP' },
-  { label: 'USD', value: 'USD' },
-  { label: 'KSM', value: 'KSM' },
-  { label: 'Entrantes', value: 'incoming' },
-  { label: 'Salientes', value: 'outgoing' },
+const filters: { labelKey: string; value: FilterType }[] = [
+  { labelKey: 'movements.filters.all', value: 'all' },
+  { labelKey: 'movements.filters.cop', value: 'COP' },
+  { labelKey: 'movements.filters.usd', value: 'USD' },
+  { labelKey: 'movements.filters.ksm', value: 'KSM' },
+  { labelKey: 'movements.filters.incoming', value: 'incoming' },
+  { labelKey: 'movements.filters.outgoing', value: 'outgoing' },
 ];
 
 export const Route = createFileRoute('/_authed/movements/')({
@@ -25,6 +26,7 @@ export const Route = createFileRoute('/_authed/movements/')({
 });
 
 function RouteComponent() {
+  const { t } = useTranslation();
   const [selectedMovement, setSelectedMovement] = useState<Movement | null>(
     null,
   );
@@ -79,14 +81,14 @@ function RouteComponent() {
   return (
     <div className="flex flex-col gap-5">
       <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
-        Movimientos
+        {t('movements.title')}
       </h1>
 
       {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder="Buscar por referencia..."
+          placeholder={t('movements.searchPlaceholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="h-11 rounded-2xl pl-9"
@@ -107,7 +109,7 @@ function RouteComponent() {
                 : 'border-border bg-card text-muted-foreground hover:border-foreground hover:text-foreground',
             )}
           >
-            {f.label}
+            {t(f.labelKey)}
           </button>
         ))}
       </div>
@@ -116,14 +118,16 @@ function RouteComponent() {
       {isLoading ? (
         <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-border py-12">
           <p className="text-sm text-muted-foreground">
-            Cargando movimientos...
+            {t('home.loadingMovements')}
           </p>
         </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-border py-12">
-          <p className="text-sm text-muted-foreground">Sin resultados</p>
+          <p className="text-sm text-muted-foreground">
+            {t('movements.noResults')}
+          </p>
           <p className="text-xs text-muted-foreground">
-            Intenta con otro filtro o referencia
+            {t('movements.noResultsHint')}
           </p>
         </div>
       ) : (
@@ -142,7 +146,7 @@ function RouteComponent() {
               disabled={isFetchingNextPage}
               className="mt-2 w-full rounded-2xl border border-border px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground disabled:opacity-60"
             >
-              {isFetchingNextPage ? 'Cargando...' : 'Ver más'}
+              {isFetchingNextPage ? t('common.loading') : t('home.viewMore')}
             </button>
           )}
         </div>

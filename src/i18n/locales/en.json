@@ -155,6 +155,45 @@
       "send": "Send"
     }
   },
+  "movements": {
+    "title": "Movements",
+    "searchPlaceholder": "Search by reference...",
+    "noResults": "No results",
+    "noResultsHint": "Try another filter or reference",
+    "types": {
+      "topup": "Top-up",
+      "withdraw": "Withdrawal",
+      "sendIncoming": "Transfer received",
+      "sendOutgoing": "Transfer sent",
+      "convert": "Conversion",
+      "card": "Card payment"
+    },
+    "status": {
+      "completed": "Completed",
+      "pending": "Pending",
+      "failed": "Failed"
+    },
+    "filters": {
+      "all": "All",
+      "cop": "COP",
+      "usd": "USD",
+      "ksm": "KSM",
+      "incoming": "Incoming",
+      "outgoing": "Outgoing"
+    },
+    "detail": {
+      "title": "Movement details",
+      "description": "Full details of the selected movement",
+      "type": "Type",
+      "asset": "Asset",
+      "date": "Date",
+      "counterparty": "Counterparty",
+      "fee": "Fee",
+      "reference": "Reference",
+      "copyReferenceAria": "Copy reference",
+      "downloadReceipt": "Download receipt"
+    }
+  },
   "nav": {
     "ariaLabel": "Main navigation",
     "home": "Home",

@@ -2,6 +2,7 @@
 
 import { Copy, Download, X } from 'lucide-react';
 import type React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '~/components/ui/button';
 import {
   Drawer,
@@ -48,6 +49,7 @@ export function MovementDetailDrawer({
   open,
   onClose,
 }: MovementDetailDrawerProps) {
+  const { t } = useTranslation();
   return (
     <Drawer open={open} onOpenChange={(o) => !o && onClose()}>
       {movement && (
@@ -55,21 +57,21 @@ export function MovementDetailDrawer({
           <DrawerHeader className="text-left">
             <div className="flex items-center justify-between">
               <DrawerTitle className="text-lg font-bold text-foreground">
-                Detalle del movimiento
+                {t('movements.detail.title')}
               </DrawerTitle>
               <DrawerClose asChild>
                 <Button
                   variant="ghost"
                   size="icon"
                   className="h-9 w-9 rounded-xl"
-                  aria-label="Cerrar"
+                  aria-label={t('common.close')}
                 >
                   <X className="h-4 w-4" />
                 </Button>
               </DrawerClose>
             </div>
             <DrawerDescription className="sr-only">
-              Detalles completos del movimiento seleccionado
+              {t('movements.detail.description')}
             </DrawerDescription>
           </DrawerHeader>
 
@@ -86,23 +88,29 @@ export function MovementDetailDrawer({
             {/* Details */}
             <div className="flex flex-col rounded-2xl border border-border/80 bg-card/70 px-4">
               <DetailRow
-                label="Tipo"
+                label={t('movements.detail.type')}
                 value={getMovementLabel(movement.type, movement.direction)}
               />
-              <DetailRow label="Activo" value={movement.asset} />
               <DetailRow
-                label="Fecha"
+                label={t('movements.detail.asset')}
+                value={movement.asset}
+              />
+              <DetailRow
+                label={t('movements.detail.date')}
                 value={formatFullDate(movement.createdAt)}
               />
               {movement.counterparty && (
-                <DetailRow label="Contraparte" value={movement.counterparty} />
+                <DetailRow
+                  label={t('movements.detail.counterparty')}
+                  value={movement.counterparty}
+                />
               )}
               <DetailRow
-                label="Comisión"
+                label={t('movements.detail.fee')}
                 value={formatAmount(movement.asset, movement.fee)}
               />
               <DetailRow
-                label="Referencia"
+                label={t('movements.detail.reference')}
                 value={
                   <span className="flex items-center gap-1.5">
                     <span className="font-mono text-xs">
@@ -114,7 +122,7 @@ export function MovementDetailDrawer({
                         navigator.clipboard.writeText(movement.reference)
                       }
                       className="text-muted-foreground hover:text-foreground"
-                      aria-label="Copiar referencia"
+                      aria-label={t('movements.detail.copyReferenceAria')}
                     >
                       <Copy className="h-3 w-3" />
                     </button>
@@ -130,7 +138,7 @@ export function MovementDetailDrawer({
               className="h-12 w-full gap-2 rounded-2xl text-sm bg-transparent"
             >
               <Download className="h-4 w-4" />
-              Descargar comprobante
+              {t('movements.detail.downloadReceipt')}
             </Button>
           </DrawerFooter>
         </DrawerContent>
