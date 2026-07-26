@@ -9,6 +9,7 @@ import {
   Smartphone,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { AccountCarousel } from '~/components/account/account-carousel';
 import { Button } from '~/components/ui/button';
@@ -30,6 +31,7 @@ import {
   useDeleteBrebKey,
   useSuspendBrebKey,
 } from '~/hooks/accounts/use-breb-keys';
+import i18n from '~/i18n/config';
 import { getAssetPrecision } from '~/lib/formatters';
 import { goBackOrFallback } from '~/lib/navigation';
 import {
@@ -68,7 +70,7 @@ function getBrebKeyCreationError(error: unknown): string {
   ) {
     return error.message;
   }
-  return 'No se pudo registrar la llave BRE-B. Intenta de nuevo.';
+  return i18n.t('brebKeys.manageKeys.creationErrorFallback');
 }
 
 function stripCountryCode(phone: string): string {
@@ -89,6 +91,7 @@ type KeyOption = {
 };
 
 function RouteComponent() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { ledgerId: contextLedgerId } = Route.useSearch();
   const [conflictDrawer, setConflictDrawer] = useState<{
@@ -135,21 +138,23 @@ function RouteComponent() {
     null;
 
   const localPhone = user.phone ? stripCountryCode(user.phone) : null;
-  const displayName = [user.name].filter(Boolean).join(' ') || 'Usuario Bloque';
+  const displayName =
+    [user.name].filter(Boolean).join(' ') ||
+    t('brebKeys.manageKeys.defaultDisplayName');
 
   const keyOptions: KeyOption[] = [];
   if (localPhone) {
     keyOptions.push({
       keyType: 'ALPHA',
       value: `@bl${localPhone}`,
-      label: 'Llave Bloque',
+      label: t('brebKeys.manageKeys.bloqueKey'),
       icon: KeyRound,
     });
     if (user.phone && isColombianPhone(user.phone)) {
       keyOptions.push({
         keyType: 'PHONE',
         value: localPhone,
-        label: 'Celular',
+        label: t('brebKeys.manageKeys.phone'),
         icon: Smartphone,
       });
     }
@@ -158,7 +163,7 @@ function RouteComponent() {
     keyOptions.push({
       keyType: 'EMAIL',
       value: user.email,
-      label: 'Correo electrónico',
+      label: t('brebKeys.manageKeys.email'),
       icon: Mail,
     });
   }
@@ -166,7 +171,7 @@ function RouteComponent() {
     keyOptions.push({
       keyType: 'ID',
       value: user.personalIdNumber,
-      label: 'Documento',
+      label: t('brebKeys.manageKeys.document'),
       icon: CreditCard,
     });
   }
@@ -210,7 +215,7 @@ function RouteComponent() {
       },
       {
         onSuccess: () => {
-          toast.success('Llave BRE-B registrada correctamente.');
+          toast.success(t('brebKeys.manageKeys.keyRegisteredToast'));
           setCreateDrawer(null);
           setSelectedLedgerId(null);
         },
@@ -235,14 +240,14 @@ function RouteComponent() {
           className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Volver
+          {t('common.back')}
         </button>
         <div>
           <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
-            Tus llaves
+            {t('brebKeys.manageKeys.title')}
           </h1>
           <p className="text-xs text-muted-foreground">
-            Registra o edita tus llaves para recibir dinero al instante
+            {t('brebKeys.manageKeys.subtitle')}
           </p>
         </div>
       </div>
@@ -261,7 +266,7 @@ function RouteComponent() {
           {activeAccounts.length > 0 && (
             <section className="flex flex-col gap-1">
               <p className="px-1 text-xs font-medium text-muted-foreground">
-                Llaves listas para usar
+                {t('brebKeys.manageKeys.readyKeys')}
               </p>
               <div className="flex flex-col divide-y divide-border/60 rounded-2xl border border-border/75 bg-card/80 overflow-hidden">
                 {activeAccounts.map((product) => (
@@ -304,7 +309,7 @@ function RouteComponent() {
           {unregisteredOptions.length > 0 && (
             <section className="flex flex-col gap-1">
               <p className="px-1 text-xs font-medium text-muted-foreground">
-                Registra tus llaves en BRE-B
+                {t('brebKeys.manageKeys.registerYourKeys')}
               </p>
               <div className="flex flex-col gap-3">
                 {unregisteredOptions.map((option) => {
@@ -352,7 +357,9 @@ function RouteComponent() {
                           registerKey(option, pickerAccounts[0]?.ledgerId);
                         }}
                       >
-                        {isPending ? 'Registrando...' : 'Registrar'}
+                        {isPending
+                          ? t('brebKeys.manageKeys.registering')
+                          : t('brebKeys.manageKeys.register')}
                       </Button>
                     </div>
                   );
@@ -363,7 +370,7 @@ function RouteComponent() {
 
           {activeAccounts.length === 0 && unregisteredOptions.length === 0 && (
             <p className="rounded-2xl border border-border/75 bg-card/80 p-4 text-sm text-muted-foreground">
-              No hay llaves disponibles para registrar.
+              {t('brebKeys.manageKeys.noKeysAvailable')}
             </p>
           )}
         </>
@@ -377,15 +384,14 @@ function RouteComponent() {
         <DrawerContent>
           <DrawerHeader className="text-left">
             <DrawerTitle className="text-lg font-bold tracking-[-0.025em]">
-              Esta llave ya está registrada en otra entidad
+              {t('brebKeys.manageKeys.conflictTitle')}
             </DrawerTitle>
             <DrawerDescription className="mt-1 text-sm leading-relaxed">
-              La llave{' '}
+              {t('brebKeys.manageKeys.conflictDescriptionPrefix')}{' '}
               <span className="font-medium text-foreground">
                 {conflictDrawer.key}
               </span>{' '}
-              ya está activa en otro banco. Para registrarla en Bloque, primero
-              debes eliminarla o desactivarla desde la app de esa entidad.
+              {t('brebKeys.manageKeys.conflictDescriptionSuffix')}
             </DrawerDescription>
           </DrawerHeader>
           <DrawerFooter>
@@ -393,7 +399,7 @@ function RouteComponent() {
               className="h-12 w-full rounded-2xl text-sm font-medium"
               onClick={() => setConflictDrawer((s) => ({ ...s, open: false }))}
             >
-              Entendido
+              {t('brebKeys.manageKeys.understood')}
             </Button>
           </DrawerFooter>
         </DrawerContent>
@@ -411,9 +417,9 @@ function RouteComponent() {
             </DrawerTitle>
             <DrawerDescription className="text-xs">
               {actionsDrawer.status === 'active'
-                ? 'Llave activa'
+                ? t('brebKeys.manageKeys.activeKey')
                 : actionsDrawer.status === 'frozen'
-                  ? 'Llave suspendida'
+                  ? t('brebKeys.manageKeys.suspendedKey')
                   : getBrebStatusLabel(actionsDrawer.status)}
             </DrawerDescription>
           </DrawerHeader>
@@ -426,17 +432,17 @@ function RouteComponent() {
                 onClick={() =>
                   suspendMutation.mutate(actionsDrawer.urn, {
                     onSuccess: () => {
-                      toast.success('Llave suspendida.');
+                      toast.success(t('brebKeys.manageKeys.keySuspendedToast'));
                       setActionsDrawer((s) => ({ ...s, open: false }));
                     },
                     onError: () =>
-                      toast.error('No se pudo suspender la llave.'),
+                      toast.error(t('brebKeys.manageKeys.suspendErrorToast')),
                   })
                 }
               >
                 {suspendMutation.isPending
-                  ? 'Suspendiendo...'
-                  : 'Suspender llave'}
+                  ? t('brebKeys.manageKeys.suspending')
+                  : t('brebKeys.manageKeys.suspendKey')}
               </Button>
             )}
             {actionsDrawer.status === 'frozen' && (
@@ -447,14 +453,17 @@ function RouteComponent() {
                 onClick={() =>
                   activateMutation.mutate(actionsDrawer.urn, {
                     onSuccess: () => {
-                      toast.success('Llave activada.');
+                      toast.success(t('brebKeys.manageKeys.keyActivatedToast'));
                       setActionsDrawer((s) => ({ ...s, open: false }));
                     },
-                    onError: () => toast.error('No se pudo activar la llave.'),
+                    onError: () =>
+                      toast.error(t('brebKeys.manageKeys.activateErrorToast')),
                   })
                 }
               >
-                {activateMutation.isPending ? 'Activando...' : 'Activar llave'}
+                {activateMutation.isPending
+                  ? t('brebKeys.manageKeys.activating')
+                  : t('brebKeys.manageKeys.activateKey')}
               </Button>
             )}
             <Button
@@ -464,14 +473,17 @@ function RouteComponent() {
               onClick={() =>
                 deleteMutation.mutate(actionsDrawer.urn, {
                   onSuccess: () => {
-                    toast.success('Llave eliminada.');
+                    toast.success(t('brebKeys.manageKeys.keyDeletedToast'));
                     setActionsDrawer((s) => ({ ...s, open: false }));
                   },
-                  onError: () => toast.error('No se pudo eliminar la llave.'),
+                  onError: () =>
+                    toast.error(t('brebKeys.manageKeys.deleteErrorToast')),
                 })
               }
             >
-              {deleteMutation.isPending ? 'Eliminando...' : 'Eliminar llave'}
+              {deleteMutation.isPending
+                ? t('brebKeys.manageKeys.deleting')
+                : t('brebKeys.manageKeys.deleteKey')}
             </Button>
           </DrawerFooter>
         </DrawerContent>
@@ -487,14 +499,14 @@ function RouteComponent() {
         <DrawerContent>
           <DrawerHeader className="text-left">
             <DrawerTitle className="text-lg font-bold tracking-[-0.025em]">
-              Elige la cuenta para tu nueva llave
+              {t('brebKeys.manageKeys.chooseAccountTitle')}
             </DrawerTitle>
             <DrawerDescription className="mt-1 text-sm leading-relaxed">
-              La llave{' '}
+              {t('brebKeys.manageKeys.chooseAccountDescriptionPrefix')}{' '}
               <span className="font-medium text-foreground">
                 {createDrawer?.value}
               </span>{' '}
-              compartirá el saldo de la cuenta que elijas.
+              {t('brebKeys.manageKeys.chooseAccountDescriptionSuffix')}
             </DrawerDescription>
           </DrawerHeader>
           <div className="px-4 pb-2">
@@ -505,7 +517,7 @@ function RouteComponent() {
               unit="COP"
               value={selectedLedgerId}
               onChange={setSelectedLedgerId}
-              label="Cuenta a la que se vincula"
+              label={t('brebKeys.manageKeys.linkedAccountLabel')}
             />
           </div>
           <DrawerFooter>
@@ -517,7 +529,9 @@ function RouteComponent() {
                 registerKey(createDrawer, selectedAccount.ledgerId);
               }}
             >
-              {createMutation.isPending ? 'Registrando...' : 'Confirmar'}
+              {createMutation.isPending
+                ? t('brebKeys.manageKeys.registering')
+                : t('brebKeys.manageKeys.confirm')}
             </Button>
           </DrawerFooter>
         </DrawerContent>

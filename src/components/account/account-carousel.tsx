@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Label } from '~/components/ui/label';
 import type { Account } from '~/domain/accounts/types';
 import { cn } from '~/lib/utils';
@@ -34,6 +35,7 @@ function AccountCard({
   isActive: boolean;
   onClick: () => void;
 }) {
+  const { t } = useTranslation();
   const primary = account.products.find(
     (product) => product.urn === account.primaryUrn,
   );
@@ -50,12 +52,15 @@ function AccountCard({
           ? 'border-primary ring-2 ring-primary/45 shadow-[0_20px_28px_-22px_color-mix(in_oklch,var(--foreground)_80%,transparent)] dark:shadow-[0_20px_28px_-22px_rgb(0_0_0_/_0.75)]'
           : 'border-border/90 shadow-[0_14px_25px_-26px_color-mix(in_oklch,var(--foreground)_55%,transparent)] dark:shadow-[0_14px_25px_-26px_rgb(0_0_0_/_0.65)] opacity-90 hover:opacity-100',
       )}
-      aria-label={`Cuenta ${account.label}, disponible ${balanceLabel}`}
+      aria-label={t('accountCarousel.accountAria', {
+        label: account.label,
+        balance: balanceLabel,
+      })}
       aria-pressed={isActive}
     >
       {isActive ? (
         <span className="absolute top-2 left-2 z-10 rounded-full bg-primary px-2 py-0.5 text-[9px] font-semibold tracking-wide text-primary-foreground uppercase">
-          Seleccionada
+          {t('accountCarousel.selected')}
         </span>
       ) : null}
 
@@ -92,7 +97,7 @@ export function AccountCarousel({
   unit,
   value,
   onChange,
-  label = 'Cuenta',
+  label,
 }: {
   accounts: Account[];
   asset: string;
@@ -102,13 +107,14 @@ export function AccountCarousel({
   onChange: (ledgerId: string) => void;
   label?: string;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col gap-2">
-      <Label>{label}</Label>
+      <Label>{label ?? t('accountCarousel.defaultLabel')}</Label>
       <div
         className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none"
         role="listbox"
-        aria-label="Cuentas disponibles"
+        aria-label={t('accountCarousel.availableAccountsAria')}
       >
         {accounts.map((account) => (
           <AccountCard
