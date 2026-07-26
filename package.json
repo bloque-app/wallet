@@ -13,7 +13,7 @@
     "deploy": "bun run build && wrangler pages deploy",
     "preview": "rsbuild preview",
     "typecheck": "tsgo --noEmit",
-    "test:unit": "bun test src/domain src/lib src/infra src/hooks",
+    "test:unit": "bun test src/domain src/lib src/infra src/hooks src/contexts",
     "test:components": "vitest run",
     "test:e2e": "playwright test",
     "test": "bun run test:unit && bun run test:components"
