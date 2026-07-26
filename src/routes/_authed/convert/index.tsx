@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { ArrowDownUp } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
@@ -69,6 +70,7 @@ export const Route = createFileRoute('/_authed/convert/')({
 });
 
 function RouteComponent() {
+  const { t } = useTranslation();
   const { data: balancesData } = useQuery({
     queryKey: ['balances'],
     queryFn: async () => bloque.accounts.balances(),
@@ -122,10 +124,10 @@ function RouteComponent() {
   const rateError = useMemo(() => {
     if (parsed <= 0 || fromAsset === toAsset) return null;
     if (ratesQuery.isError) {
-      return 'No pudimos consultar la tasa. Intenta de nuevo.';
+      return t('convert.rateFetchError');
     }
     if (ratesQuery.isSuccess && !selectedRate) {
-      return 'No hay tasas disponibles para este monto.';
+      return t('convert.noRatesAvailable');
     }
     return null;
   }, [
@@ -135,6 +137,7 @@ function RouteComponent() {
     ratesQuery.isError,
     ratesQuery.isSuccess,
     selectedRate,
+    t,
   ]);
 
   const isValid =
@@ -152,7 +155,7 @@ function RouteComponent() {
 
   const submitConversion = useCallback(() => {
     if (!selectedRate?.sig) {
-      toast.error('No hay una tasa vigente para confirmar la conversión.');
+      toast.error(t('convert.noCurrentRateError'));
       return;
     }
 
@@ -170,19 +173,19 @@ function RouteComponent() {
     // stops short of creating an order rather than guessing. Flagged in the
     // PR description for a human to confirm, and to point at the right
     // endpoint if/when the backend exposes one.
-    toast.error(
-      'La conversión directa entre saldos aún no está disponible desde la app. Usa Recargar o Enviar mientras tanto.',
-    );
-  }, [selectedRate]);
+    toast.error(t('convert.directConversionUnavailable'));
+  }, [selectedRate, t]);
 
   return (
     <div className="flex flex-col gap-5">
       <h1 className="text-2xl font-bold tracking-[-0.025em] text-foreground">
-        Convertir
+        {t('convert.title')}
       </h1>
 
       <div className="flex flex-col gap-2">
-        <Label className="text-xs text-muted-foreground">De</Label>
+        <Label className="text-xs text-muted-foreground">
+          {t('convert.from')}
+        </Label>
         <div className="flex gap-2">
           <Select
             value={fromAsset}
@@ -206,7 +209,9 @@ function RouteComponent() {
           />
         </div>
         <p className="text-xs text-muted-foreground">
-          Disponible: {formatAmount(fromAsset, available)}
+          {t('convert.available', {
+            amount: formatAmount(fromAsset, available),
+          })}
         </p>
       </div>
 
@@ -215,14 +220,16 @@ function RouteComponent() {
           type="button"
           onClick={handleSwap}
           className="flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-card transition-all hover:bg-muted"
-          aria-label="Intercambiar activos"
+          aria-label={t('convert.swapAssetsAria')}
         >
           <ArrowDownUp className="h-4 w-4 text-foreground" />
         </button>
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label className="text-xs text-muted-foreground">A</Label>
+        <Label className="text-xs text-muted-foreground">
+          {t('convert.to')}
+        </Label>
         <div className="flex gap-2">
           <Select value={toAsset} onValueChange={(v) => setToAsset(v as Asset)}>
             <SelectTrigger className="h-12 w-28 rounded-2xl">
@@ -237,7 +244,7 @@ function RouteComponent() {
             {parsed > 0 && selectedRate
               ? formatAmount(toAsset, received)
               : parsed > 0 && ratesQuery.isFetching
-                ? 'Consultando...'
+                ? t('convert.querying')
                 : '0'}
           </div>
         </div>
@@ -247,7 +254,7 @@ function RouteComponent() {
         <div className="rounded-2xl border border-border/85 bg-card/85 p-4">
           <div className="flex flex-col gap-2">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Tasa</span>
+              <span className="text-muted-foreground">{t('convert.rate')}</span>
               <span className="font-medium text-foreground tabular-nums">
                 1 {fromAsset} ={' '}
                 {selectedRate.ratio < 0.01
@@ -258,7 +265,9 @@ function RouteComponent() {
             </div>
             <Separator />
             <div className="flex justify-between text-sm">
-              <span className="font-medium text-foreground">Recibes</span>
+              <span className="font-medium text-foreground">
+                {t('convert.youReceive')}
+              </span>
               <span className="font-bold text-foreground">
                 {formatAmount(toAsset, received)}
               </span>
@@ -276,20 +285,21 @@ function RouteComponent() {
         onClick={submitConversion}
         className="h-12 w-full rounded-2xl text-sm font-medium"
       >
-        {ratesQuery.isFetching ? 'Consultando tasa...' : 'Confirmar conversión'}
+        {ratesQuery.isFetching
+          ? t('convert.queryingRate')
+          : t('convert.confirmConversion')}
       </Button>
 
       <p className="text-center text-[10px] text-muted-foreground leading-relaxed">
-        Las tasas de cambio son indicativas y pueden variar al momento de
-        ejecutar la operación.{' '}
+        {t('convert.disclaimer')}{' '}
         <Link to="/send" className="underline">
-          Enviar
+          {t('home.quickActions.send')}
         </Link>{' '}
-        y{' '}
+        {t('convert.and')}{' '}
         <Link to="/topup" className="underline">
-          Recargar
+          {t('home.quickActions.topup')}
         </Link>{' '}
-        siguen disponibles mientras tanto.
+        {t('convert.stillAvailable')}
       </p>
     </div>
   );
