@@ -1,0 +1,56 @@
+import type { SupportedBank } from '@bloque/sdk-swap';
+
+/**
+ * Runtime mirror of the SDK's `SupportedBank` literal union. The SDK only
+ * exposes `SupportedBank` as a compile-time type — validating an arbitrary
+ * UI string (e.g. free-text/select bank state) against it needs a
+ * hand-kept runtime list. `_AssertNoMissingBanks` below fails to compile
+ * if this list and the SDK's union type ever drift apart, so it can't
+ * silently go stale.
+ */
+export const SUPPORTED_BANKS = [
+  'banco_agrario_de_colombia',
+  'banco_av_villas',
+  'banco_bancamia',
+  'banco_bbva_colombia',
+  'banco_btg_pactual_colombia',
+  'citibank_colombia',
+  'banco_caja_social_bcsc',
+  'davibank',
+  'banco_contactar',
+  'banco_cooperativo_coopcentral',
+  'ban100',
+  'banco_davivienda',
+  'banco_de_bogota',
+  'banco_de_occidente',
+  'banco_gnb_sudameris',
+  'banco_jp_morgan_colombia',
+  'banco_popular',
+  'banco_itau',
+  'bancolombia',
+  'banco_w',
+  'banco_coomeva',
+  'banco_finandina_bic',
+  'banco_falabella',
+  'banco_pichincha',
+  'banco_santander_de_negocios_colombia',
+  'banco_mundo_mujer',
+  'banco_serfinanza',
+  'mibanco',
+  'lulo_bank',
+  'banco_union',
+] as const satisfies readonly SupportedBank[];
+
+type _AssertNoMissingBanks =
+  SupportedBank extends (typeof SUPPORTED_BANKS)[number]
+    ? true
+    : 'SUPPORTED_BANKS is missing a member of SupportedBank — update the list above';
+const _exhaustivenessCheck: _AssertNoMissingBanks = true;
+void _exhaustivenessCheck;
+
+const SUPPORTED_BANK_SET = new Set<string>(SUPPORTED_BANKS);
+
+/** Validates a free-text/select bank code before casting it to `SupportedBank`. */
+export function isSupportedBank(value: string): value is SupportedBank {
+  return SUPPORTED_BANK_SET.has(value);
+}
