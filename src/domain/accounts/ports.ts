@@ -2,6 +2,7 @@ import type {
   BrebDecodedQr,
   BrebKeyType,
   BrebResolvedKey,
+  SupportedAsset,
 } from '@bloque/sdk-accounts';
 import type { AssetBalance, Product } from './types';
 
@@ -63,6 +64,21 @@ export type CreatePolygonAccountInput = { name?: string; ledgerId?: string };
 
 export type CreateVirtualAccountInput = { name?: string };
 
+export type TransferInput = {
+  sourceUrn: string;
+  destinationUrn: string;
+  /** Bigint string, scaled by the asset's precision. */
+  amount: string;
+  asset: SupportedAsset;
+  metadata?: Record<string, unknown>;
+};
+
+export type TransferOutcome = {
+  queueId: string;
+  status: string;
+  message: string;
+};
+
 /**
  * The seam the rest of the app depends on for accounts/products data.
  * Consumers never import `bloque` directly for this domain — only an
@@ -75,12 +91,18 @@ export type CreateVirtualAccountInput = { name?: string };
  * shapes with no meaningful domain abstraction beyond what the SDK already
  * models — reusing its types here directly is a deliberate, narrow
  * exception to "no SDK types past the port," not a precedent to generalize.
+ *
+ * `transfer` wraps `bloque.accounts.transfer` — a plain account-to-account
+ * ledger transfer with no rate/order/execution involved, so it lives here
+ * rather than in the Payments/Transfers domain (`~/domain/payments`), which
+ * is scoped to swap-based rails (PSE, bank transfer, BRE-B payout, rates).
  */
 export type AccountsRepository = {
   listProducts(): Promise<Product[]>;
   getBalance(urn: string): Promise<AssetBalance[]>;
   getMovements(params: GetMovementsParams): Promise<MovementsPage>;
   getTransactions(params: GetTransactionsParams): Promise<MovementsPage>;
+  transfer(input: TransferInput): Promise<TransferOutcome>;
 
   createCard(input: CreateCardInput): Promise<Product>;
   freezeCard(urn: string): Promise<void>;
