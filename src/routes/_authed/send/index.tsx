@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { ArrowLeft, Building2, KeyRound, Users, Wallet } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { cn } from '~/lib/utils';
 
@@ -14,41 +15,43 @@ type SendOption = {
   search?: Record<string, string>;
 } & ({ to: string; onClick?: never } | { to?: never; onClick: () => void });
 
-const options: SendOption[] = [
-  {
-    title: 'Llaves BRE-B',
-    description: 'Envia a cualquier banco colombiano al instante.',
-    to: '/breb-keys/pay-transfer',
-    search: { from: '/send' },
-    icon: KeyRound,
-  },
-  {
-    title: 'Bancos colombianos',
-    description: 'Transfiere a cuentas bancarias en Colombia.',
-    to: '/send/colombian-banks',
-    icon: Building2,
-  },
-  {
-    title: 'Amigos en bloque',
-    description: 'Envia a contactos dentro de Bloque.',
-    to: '/send/bloque-friends',
-    icon: Users,
-  },
-  {
-    title: 'Bancos/billeteras en EE.UU.',
-    description: 'Envia USD a bancos y wallets en Estados Unidos.',
-    icon: Building2,
-    onClick: () => toast.info('Envío a EE.UU. disponible próximamente.'),
-  },
-  {
-    title: 'Direcciones blockchain',
-    description: 'Envia fondos a wallets externas.',
-    icon: Wallet,
-    onClick: () => toast.info('Envío a blockchain disponible próximamente.'),
-  },
-];
-
 function RouteComponent() {
+  const { t } = useTranslation();
+
+  const options: SendOption[] = [
+    {
+      title: t('send.options.brebKeys.title'),
+      description: t('send.options.brebKeys.description'),
+      to: '/breb-keys/pay-transfer',
+      search: { from: '/send' },
+      icon: KeyRound,
+    },
+    {
+      title: t('send.options.colombianBanks.title'),
+      description: t('send.options.colombianBanks.description'),
+      to: '/send/colombian-banks',
+      icon: Building2,
+    },
+    {
+      title: t('send.options.bloqueFriends.title'),
+      description: t('send.options.bloqueFriends.description'),
+      to: '/send/bloque-friends',
+      icon: Users,
+    },
+    {
+      title: t('send.options.usBanks.title'),
+      description: t('send.options.usBanks.description'),
+      icon: Building2,
+      onClick: () => toast.info(t('send.options.usBanks.comingSoon')),
+    },
+    {
+      title: t('send.options.blockchain.title'),
+      description: t('send.options.blockchain.description'),
+      icon: Wallet,
+      onClick: () => toast.info(t('send.options.blockchain.comingSoon')),
+    },
+  ];
+
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center gap-2">
@@ -58,10 +61,10 @@ function RouteComponent() {
           className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Volver
+          {t('common.back')}
         </Link>
         <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
-          Enviar
+          {t('send.title')}
         </h1>
       </div>
 

@@ -3,6 +3,7 @@ import { useMutation } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { ArrowLeft, Send, Users } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -54,6 +55,7 @@ function getAliasDisplayName(aliasResult: Alias) {
 }
 
 function RouteComponent() {
+  const { t } = useTranslation();
   const [view, setView] = useState<ViewState>('form');
   const [selectedAsset, setSelectedAsset] = useState<AssetOption>('USD');
   const [alias, setAlias] = useState('');
@@ -82,13 +84,13 @@ function RouteComponent() {
 
   const formError = useMemo(() => {
     if (!sourceAccount && !isLoadingAccounts) {
-      return 'No encontramos una cuenta origen disponible.';
+      return t('send.bloqueFriends.noSourceAccount');
     }
     if (!normalizedAlias && alias.length > 0) {
-      return 'Ingresa un alias valido.';
+      return t('send.bloqueFriends.invalidAlias');
     }
     if (parsedAmount > 0 && parsedAmount < 1) {
-      return 'Ingresa un monto valido.';
+      return t('send.bloqueFriends.invalidAmount');
     }
     return null;
   }, [
@@ -97,13 +99,14 @@ function RouteComponent() {
     normalizedAlias,
     parsedAmount,
     sourceAccount,
+    t,
   ]);
 
   const validateAliasMutation = useMutation({
     mutationFn: async () => await bloque.identity.aliases.get(normalizedAlias),
     onSuccess: (result) => {
       if (!result?.urn) {
-        toast.error('No encontramos ese alias.');
+        toast.error(t('send.bloqueFriends.aliasNotFound'));
         return;
       }
       setRecipientPreview(result);
@@ -111,7 +114,9 @@ function RouteComponent() {
     },
     onError: (error) => {
       toast.error(
-        error instanceof Error ? error.message : 'No se pudo validar el alias.',
+        error instanceof Error
+          ? error.message
+          : t('send.bloqueFriends.aliasValidationError'),
       );
     },
   });
@@ -120,15 +125,15 @@ function RouteComponent() {
 
   const submitTransfer = () => {
     if (!sourceAccount?.primaryUrn) {
-      toast.error('No encontramos una cuenta origen disponible.');
+      toast.error(t('send.bloqueFriends.noSourceAccount'));
       return;
     }
     if (!recipientPreview?.urn) {
-      toast.error('No hay destinatario confirmado.');
+      toast.error(t('send.bloqueFriends.noConfirmedRecipient'));
       return;
     }
     if (!amountMinor) {
-      toast.error('Monto invalido para transferir.');
+      toast.error(t('send.bloqueFriends.invalidTransferAmount'));
       return;
     }
 
@@ -151,13 +156,13 @@ function RouteComponent() {
             amount: parsedAmount,
           });
           setView('pending');
-          toast.success('Transferencia enviada correctamente.');
+          toast.success(t('send.bloqueFriends.transferSentToast'));
         },
         onError: (error) => {
           toast.error(
             error instanceof Error
               ? error.message
-              : 'No se pudo enviar la transferencia.',
+              : t('send.bloqueFriends.transferErrorToast'),
           );
           setView('error');
         },
@@ -181,20 +186,21 @@ function RouteComponent() {
             className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            Volver
+            {t('common.back')}
           </Link>
           <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
-            Amigos en bloque
+            {t('send.options.bloqueFriends.title')}
           </h1>
         </div>
 
         <div className="rounded-2xl border border-border/75 bg-card/80 p-5">
           <p className="text-sm font-medium text-foreground">
-            Transferencia enviada
+            {t('send.bloqueFriends.transferSentTitle')}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Enviamos {formatAmount(selectedAsset, lastTransfer?.amount ?? 0)} a
-            tu contacto de Bloque.
+            {t('send.bloqueFriends.transferSentDescription', {
+              amount: formatAmount(selectedAsset, lastTransfer?.amount ?? 0),
+            })}
           </p>
         </div>
       </div>
@@ -210,22 +216,22 @@ function RouteComponent() {
             className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            Volver
+            {t('common.back')}
           </Link>
           <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
-            Amigos en bloque
+            {t('send.options.bloqueFriends.title')}
           </h1>
         </div>
 
         <div className="rounded-2xl border border-border/75 bg-card/80 p-5">
           <p className="text-sm font-medium text-foreground">
-            No se pudo enviar la transferencia
+            {t('send.bloqueFriends.transferFailedTitle')}
           </p>
           <Button
             onClick={() => setView('form')}
             className="mt-4 h-11 rounded-2xl"
           >
-            Reintentar
+            {t('common.retry')}
           </Button>
         </div>
       </div>
@@ -240,14 +246,14 @@ function RouteComponent() {
           className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Volver
+          {t('common.back')}
         </Link>
         <div>
           <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
-            Amigos en bloque
+            {t('send.options.bloqueFriends.title')}
           </h1>
           <p className="text-xs text-muted-foreground">
-            Envia dinero a un alias de Bloque
+            {t('send.bloqueFriends.subtitle')}
           </p>
         </div>
       </div>
@@ -260,13 +266,13 @@ function RouteComponent() {
             </div>
             <div className="flex flex-col">
               <p className="text-sm font-medium text-foreground">
-                Transferencia entre usuarios Bloque
+                {t('send.bloqueFriends.transferBetweenUsers')}
               </p>
             </div>
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label>Moneda</Label>
+            <Label>{t('send.bloqueFriends.currency')}</Label>
             <div className="grid grid-cols-3 gap-2">
               {ASSET_OPTIONS.map((asset) => (
                 <button
@@ -286,7 +292,9 @@ function RouteComponent() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="friend-alias">Alias</Label>
+            <Label htmlFor="friend-alias">
+              {t('send.bloqueFriends.alias')}
+            </Label>
             <Input
               id="friend-alias"
               placeholder="alias"
@@ -298,7 +306,9 @@ function RouteComponent() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="friend-amount">Monto</Label>
+            <Label htmlFor="friend-amount">
+              {t('send.bloqueFriends.amount')}
+            </Label>
             <Input
               id="friend-amount"
               inputMode="numeric"
@@ -312,10 +322,12 @@ function RouteComponent() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="friend-message">Mensaje</Label>
+            <Label htmlFor="friend-message">
+              {t('send.bloqueFriends.message')}
+            </Label>
             <Textarea
               id="friend-message"
-              placeholder="¿Para qué es este envio?"
+              placeholder={t('send.bloqueFriends.messagePlaceholder')}
               value={message}
               onChange={(event) => setMessage(event.target.value)}
               className="min-h-24 resize-none rounded-2xl"
@@ -330,7 +342,9 @@ function RouteComponent() {
           {parsedAmount > 0 ? (
             <div className="rounded-2xl border border-border/85 bg-background/70 p-4">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Envias</span>
+                <span className="text-muted-foreground">
+                  {t('send.bloqueFriends.youSend')}
+                </span>
                 <span className="font-medium text-foreground">
                   {formatAmount(selectedAsset, parsedAmount)}
                 </span>
@@ -345,10 +359,10 @@ function RouteComponent() {
           >
             <Send className="h-4 w-4" />
             {validateAliasMutation.isPending
-              ? 'Validando alias...'
+              ? t('send.bloqueFriends.validatingAlias')
               : transferMutation.isPending
-                ? 'Enviando...'
-                : 'Enviar dinero'}
+                ? t('send.bloqueFriends.sending')
+                : t('send.bloqueFriends.sendMoney')}
           </Button>
         </div>
       </section>
@@ -356,16 +370,20 @@ function RouteComponent() {
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent size="sm">
           <AlertDialogHeader className="items-start text-left">
-            <AlertDialogTitle>Confirmar envio</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t('send.bloqueFriends.confirmSend')}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Verifica la persona antes de enviar el dinero.
+              {t('send.bloqueFriends.confirmSendDescription')}
             </AlertDialogDescription>
           </AlertDialogHeader>
 
           <div className="rounded-2xl border border-border/85 bg-background/70 p-4">
             <div className="flex flex-col gap-2 text-sm">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-muted-foreground">Destinatario</span>
+                <span className="text-muted-foreground">
+                  {t('send.bloqueFriends.recipient')}
+                </span>
                 <span className="max-w-[60%] text-right font-semibold text-foreground">
                   {recipientPreview
                     ? getAliasDisplayName(recipientPreview)
@@ -373,20 +391,26 @@ function RouteComponent() {
                 </span>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <span className="text-muted-foreground">Alias</span>
+                <span className="text-muted-foreground">
+                  {t('send.bloqueFriends.alias')}
+                </span>
                 <span className="font-medium text-foreground">
                   {recipientPreview?.alias ?? normalizedAlias}
                 </span>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <span className="text-muted-foreground">Monto</span>
+                <span className="text-muted-foreground">
+                  {t('send.bloqueFriends.amount')}
+                </span>
                 <span className="font-medium text-foreground">
                   {formatAmount(selectedAsset, parsedAmount)}
                 </span>
               </div>
               {message.trim() ? (
                 <div className="flex flex-col gap-1 pt-2">
-                  <span className="text-muted-foreground">Mensaje</span>
+                  <span className="text-muted-foreground">
+                    {t('send.bloqueFriends.message')}
+                  </span>
                   <p className="text-foreground">{message.trim()}</p>
                 </div>
               ) : null}
@@ -398,7 +422,7 @@ function RouteComponent() {
               disabled={transferMutation.isPending}
               onClick={() => setRecipientPreview(null)}
             >
-              Cancelar
+              {t('common.cancel')}
             </AlertDialogCancel>
             <AlertDialogAction
               disabled={transferMutation.isPending}
@@ -407,7 +431,9 @@ function RouteComponent() {
                 submitTransfer();
               }}
             >
-              {transferMutation.isPending ? 'Enviando...' : 'Confirmar envio'}
+              {transferMutation.isPending
+                ? t('send.bloqueFriends.sending')
+                : t('send.bloqueFriends.confirmSend')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
