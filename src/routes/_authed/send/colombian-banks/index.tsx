@@ -2,8 +2,9 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import type { CardProduct } from '~/domain/accounts/types';
+import { useAccounts } from '~/hooks/accounts/use-accounts';
 import { bloque } from '~/lib/bloque';
-import { useCards } from '../../card/-hooks/use-card';
 import { TopUpAmountStep } from '../../topup/-components/amount-step';
 import {
   type TopUpBankAccountData,
@@ -59,7 +60,14 @@ function RouteComponent() {
   } | null>(null);
   const [autoRetry, setAutoRetry] = useState(false);
   const [selectedBank, setSelectedBank] = useState('');
-  const { data: cardsData, isLoading: isLoadingCards } = useCards();
+  const accountsQuery = useAccounts();
+  const isLoadingCards = accountsQuery.isLoading;
+  const cards =
+    accountsQuery.data?.flatMap((account) =>
+      account.products.filter(
+        (product): product is CardProduct => product.kind === 'card',
+      ),
+    ) ?? [];
 
   const parsedAmount = Number.parseInt(amount.replace(/\D/g, ''), 10) || 0;
   const amountSrc = useMemo(() => {
@@ -67,7 +75,11 @@ function RouteComponent() {
     return majorToMinor(parsedAmount, FROM_PRECISION);
   }, [parsedAmount]);
 
-  const sourceAccountUrn = cardsData?.accounts?.[0]?.urn ?? '';
+  // TODO: silently uses the first card as the funding source when more than
+  // one exists — same class of bug fixed elsewhere in the accounts/products
+  // work this session (BRE-B send, product creation). Flagged, not fixed
+  // here — out of this pass's approved scope.
+  const sourceAccountUrn = cards[0]?.urn ?? '';
 
   const ratesQuery = useQuery({
     queryKey: ['transfer-rates', amountSrc],

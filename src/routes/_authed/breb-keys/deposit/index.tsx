@@ -1,10 +1,10 @@
-import { useQuery } from '@tanstack/react-query';
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router';
 import { ArrowLeft, Check, Copy, KeyRound } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import type { BrebKeyProduct } from '~/domain/accounts/types';
+import { useAccounts } from '~/hooks/accounts/use-accounts';
 import { goBackOrFallback } from '~/lib/navigation';
-import { listBrebAccounts } from '../-lib/breb';
 
 export const Route = createFileRoute('/_authed/breb-keys/deposit/')({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -18,15 +18,18 @@ function RouteComponent() {
   const { history } = useRouter();
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
-  const accountsQuery = useQuery({
-    queryKey: ['breb-accounts'],
-    queryFn: listBrebAccounts,
-    staleTime: 30_000,
-  });
-
-  const activeKeys = (accountsQuery.data ?? []).filter(
-    (a) => a.status === 'active',
+  const accountsQuery = useAccounts();
+  const brebProducts = useMemo(
+    () =>
+      (accountsQuery.data ?? []).flatMap((account) =>
+        account.products.filter(
+          (product): product is BrebKeyProduct => product.kind === 'breb',
+        ),
+      ),
+    [accountsQuery.data],
   );
+
+  const activeKeys = brebProducts.filter((p) => p.status === 'active');
 
   const copyKey = async (key: string) => {
     try {
@@ -94,6 +97,7 @@ function RouteComponent() {
           </div>
           <Link
             to="/breb-keys/manage-keys"
+            search={{ ledgerId: undefined }}
             className="inline-flex h-10 items-center rounded-xl border border-primary/30 bg-primary/[0.06] px-4 text-xs font-medium text-primary"
           >
             Registrar llave
@@ -111,7 +115,7 @@ function RouteComponent() {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-foreground">
-                  {account.key}
+                  {account.keyValue}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {account.displayName ?? account.keyType ?? 'Llave BRE-B'}
@@ -119,10 +123,10 @@ function RouteComponent() {
               </div>
               <button
                 type="button"
-                onClick={() => account.key && copyKey(account.key)}
+                onClick={() => copyKey(account.keyValue)}
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border/80 bg-background/70 transition-all hover:bg-muted/70"
               >
-                {copiedKey === account.key ? (
+                {copiedKey === account.keyValue ? (
                   <Check className="h-4 w-4 text-primary" />
                 ) : (
                   <Copy className="h-4 w-4 text-muted-foreground" />
