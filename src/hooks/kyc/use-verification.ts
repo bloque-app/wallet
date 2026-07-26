@@ -23,12 +23,17 @@ function isNotFoundError(error: unknown): boolean {
  *
  * `refetchOnWindowFocus` covers "user returns from the provider's iframe/tab
  * without a manual reload" — a full realtime completion webhook is out of
- * scope for this pass.
+ * scope for this pass. That refetch only updates THIS hook's own query
+ * cache though, so a `refreshUser()` call below propagates a terminal
+ * status (`approved`/`rejected`) into the app-wide `AuthContext.kycStatus`
+ * too — otherwise the header banner/card-creation gate would still show
+ * stale data until a full reload even after this hook noticed completion.
  */
 export function useVerification() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const urn = user?.urn;
   const startedForUrnRef = useRef<string | null>(null);
+  const syncedStatusRef = useRef<string | null>(null);
 
   const verificationQuery = useQuery({
     queryKey: ['kyc-verification', urn],
@@ -55,6 +60,17 @@ export function useVerification() {
     startVerification.mutate(urn);
   }, [urn, shouldStartVerification, startVerification.mutate]);
 
+  const status = verificationQuery.data?.status;
+
+  useEffect(() => {
+    if (!urn) return;
+    if (status !== 'approved' && status !== 'rejected') return;
+    const key = `${urn}:${status}`;
+    if (syncedStatusRef.current === key) return;
+    syncedStatusRef.current = key;
+    void refreshUser();
+  }, [urn, status, refreshUser]);
+
   const url =
     verificationQuery.data?.url ?? startVerification.data?.url ?? null;
 
@@ -70,6 +86,8 @@ export function useVerification() {
   return {
     /** The verification the user should complete, once one exists. */
     verification: verificationQuery.data ?? startVerification.data,
+    /** The real wire status, once known — `undefined` while still resolving. */
+    status,
     /** Convenience accessor — the iframe src once bootstrapping is done. */
     url,
     /** True while resolving the initial GET and/or the auto-started POST. */

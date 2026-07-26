@@ -8,7 +8,7 @@ export const Route = createFileRoute('/_authed/kyc/')({
 
 function RouteComponent() {
   const { history } = useRouter();
-  const { url, isBootstrapping, isError, hasUser } = useVerification();
+  const { url, status, isBootstrapping, isError, hasUser } = useVerification();
 
   if (!hasUser) {
     return (
@@ -33,6 +33,23 @@ function RouteComponent() {
         <p className="text-sm text-muted-foreground">
           Iniciando verificación KYC...
         </p>
+      </div>
+    );
+  }
+
+  if (status === 'approved') {
+    return (
+      <div className="flex min-h-dvh flex-col items-center justify-center gap-4 px-6 text-center">
+        <p className="text-sm text-muted-foreground">
+          Tu identidad ya fue verificada.
+        </p>
+        <Link
+          to="/"
+          replace
+          className="rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground"
+        >
+          Volver al inicio
+        </Link>
       </div>
     );
   }
