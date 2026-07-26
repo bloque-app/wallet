@@ -208,6 +208,18 @@
       "confirmSend": "Confirmar envio",
       "confirmSendDescription": "Verifica la persona antes de enviar el dinero.",
       "recipient": "Destinatario"
+    },
+    "colombianBanks": {
+      "title": "Enviar a bancos colombianos",
+      "stepAccount": "Cuenta",
+      "noCardToSend": "No encontramos una tarjeta para enviar.",
+      "noRateForOrder": "No hay tasa seleccionada para crear la orden.",
+      "invalidAmountForOrder": "Monto inválido para crear la orden.",
+      "noSourceAccount": "No hay cuenta origen disponible.",
+      "selectDestinationBank": "Selecciona un banco destino.",
+      "unsupportedBank": "El banco seleccionado no es válido para esta transferencia.",
+      "minAmountToast": "El monto mínimo es $5,000 COP.",
+      "noRateToContinue": "No hay tasa disponible para continuar."
     }
   },
   "topup": {
