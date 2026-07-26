@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { ArrowLeft, Lock, Pencil, Unlock } from 'lucide-react';
+import { ArrowLeft, EyeOff, Lock, Pencil, Unlock } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -16,9 +16,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '~/components/ui/alert-dialog';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from '~/components/ui/drawer';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import {
+  useCardDetailsUrl,
   useCardToggleFreeze,
   useCardUpdateName,
 } from '~/hooks/accounts/use-cards';
@@ -69,6 +76,23 @@ function RouteComponent() {
   const [selectedMovement, setSelectedMovement] = useState<Movement | null>(
     null,
   );
+
+  const {
+    mutateAsync: fetchCardDetailsUrl,
+    data: cardDetailsUrl,
+    isPending: isLoadingCardDetails,
+  } = useCardDetailsUrl();
+  const [showCardDetails, setShowCardDetails] = useState(false);
+
+  const handleViewCardDetails = async () => {
+    try {
+      await fetchCardDetailsUrl(urn);
+      setShowCardDetails(true);
+    } catch (error) {
+      toast.error(t('card.detailsLoadError'));
+      console.error('Error fetching card details:', error);
+    }
+  };
 
   const handleToggleFreeze = async () => {
     if (!selectedCard) return;
@@ -226,8 +250,44 @@ function RouteComponent() {
               </button>
             </div>
           </div>
+
+          <button
+            type="button"
+            onClick={handleViewCardDetails}
+            disabled={isLoadingCardDetails}
+            className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-border bg-background px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
+          >
+            <EyeOff className="h-3.5 w-3.5" />
+            {isLoadingCardDetails
+              ? t('common.loading')
+              : t('card.viewCardData')}
+          </button>
         </section>
       )}
+
+      <Drawer open={showCardDetails} onOpenChange={setShowCardDetails}>
+        <DrawerContent className="h-[85vh]">
+          <DrawerHeader>
+            <DrawerTitle>{t('card.detailsDrawerTitle')}</DrawerTitle>
+          </DrawerHeader>
+          <div className="flex-1 px-4 pb-6">
+            {cardDetailsUrl ? (
+              <iframe
+                src={cardDetailsUrl}
+                title={t('card.detailsDrawerTitle')}
+                className="h-full w-full rounded-xl border-0"
+                sandbox="allow-scripts allow-same-origin"
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center">
+                <p className="text-sm text-muted-foreground">
+                  {t('card.detailsLoadError')}
+                </p>
+              </div>
+            )}
+          </div>
+        </DrawerContent>
+      </Drawer>
 
       <section className="rounded-3xl border border-border/75 bg-card/80 p-5">
         <p className="mb-3 text-xs font-medium tracking-wider text-muted-foreground uppercase">

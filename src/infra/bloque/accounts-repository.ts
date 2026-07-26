@@ -269,6 +269,13 @@ async function updateCardName(urn: string, name: string): Promise<void> {
   await bloque.accounts.card.updateName(urn, name);
 }
 
+/** `detailsUrl` is a provider-hosted, PCI-compliant iframe URL — the SDK
+ * never returns raw PAN/CVV to the client directly. */
+async function getCardDetailsUrl(urn: string): Promise<string> {
+  const account = await bloque.accounts.get(urn);
+  return (account as CardAccount).detailsUrl;
+}
+
 async function createBrebKey(input: CreateBrebKeyInput): Promise<Product> {
   const result = await bloque.accounts.breb.createKey(input);
   if (result.error || !result.data) {
@@ -361,6 +368,7 @@ export const bloqueAccountsRepository: AccountsRepository = {
   freezeCard,
   activateCard,
   updateCardName,
+  getCardDetailsUrl,
   createBrebKey,
   resolveBrebKey,
   decodeBrebQr,
