@@ -155,6 +155,25 @@
       "send": "Enviar"
     }
   },
+  "convert": {
+    "title": "Convertir",
+    "from": "De",
+    "to": "A",
+    "available": "Disponible: {{amount}}",
+    "swapAssetsAria": "Intercambiar activos",
+    "querying": "Consultando...",
+    "rate": "Tasa",
+    "youReceive": "Recibes",
+    "queryingRate": "Consultando tasa...",
+    "confirmConversion": "Confirmar conversión",
+    "disclaimer": "Las tasas de cambio son indicativas y pueden variar al momento de ejecutar la operación.",
+    "and": "y",
+    "stillAvailable": "siguen disponibles mientras tanto.",
+    "rateFetchError": "No pudimos consultar la tasa. Intenta de nuevo.",
+    "noRatesAvailable": "No hay tasas disponibles para este monto.",
+    "noCurrentRateError": "No hay una tasa vigente para confirmar la conversión.",
+    "directConversionUnavailable": "La conversión directa entre saldos aún no está disponible desde la app. Usa Recargar o Enviar mientras tanto."
+  },
   "kyc": {
     "banner": {
       "rejectedTitle": "No pudimos verificar tu identidad",

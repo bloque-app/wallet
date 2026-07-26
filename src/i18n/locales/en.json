@@ -155,6 +155,25 @@
       "send": "Send"
     }
   },
+  "convert": {
+    "title": "Convert",
+    "from": "From",
+    "to": "To",
+    "available": "Available: {{amount}}",
+    "swapAssetsAria": "Swap assets",
+    "querying": "Fetching...",
+    "rate": "Rate",
+    "youReceive": "You receive",
+    "queryingRate": "Fetching rate...",
+    "confirmConversion": "Confirm conversion",
+    "disclaimer": "Exchange rates are indicative and may vary at the time the operation is executed.",
+    "and": "and",
+    "stillAvailable": "are still available in the meantime.",
+    "rateFetchError": "We couldn't fetch the rate. Please try again.",
+    "noRatesAvailable": "No rates are available for this amount.",
+    "noCurrentRateError": "There's no current rate to confirm the conversion.",
+    "directConversionUnavailable": "Direct conversion between balances isn't available from the app yet. Use Top up or Send in the meantime."
+  },
   "kyc": {
     "banner": {
       "rejectedTitle": "We couldn't verify your identity",
