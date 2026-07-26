@@ -1,3 +1,5 @@
+import i18n from '~/i18n/config';
+
 export type LoginMethod = 'email' | 'phone';
 export type MovementType = 'topup' | 'withdraw' | 'send' | 'convert' | 'card';
 export type MovementStatus = 'completed' | 'pending' | 'failed';
@@ -93,14 +95,14 @@ export function getMovementLabel(
   direction?: Movement['direction'],
 ): string {
   const labels: Record<MovementType, string> = {
-    topup: 'Recarga',
-    withdraw: 'Retiro',
+    topup: i18n.t('movements.types.topup'),
+    withdraw: i18n.t('movements.types.withdraw'),
     send:
       direction === 'incoming'
-        ? 'Transferencia recibida'
-        : 'Transferencia enviada',
-    convert: 'Conversión',
-    card: 'Pago con tarjeta',
+        ? i18n.t('movements.types.sendIncoming')
+        : i18n.t('movements.types.sendOutgoing'),
+    convert: i18n.t('movements.types.convert'),
+    card: i18n.t('movements.types.card'),
   };
   return labels[type];
 }
