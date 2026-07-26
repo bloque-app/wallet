@@ -1,7 +1,7 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { ArrowLeft, Landmark, Send } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { AccountCarousel } from '~/components/account/account-carousel';
 import {
@@ -18,16 +18,17 @@ import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { Textarea } from '~/components/ui/textarea';
+import type { ExecutionOutcome } from '~/domain/payments/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useResolveBrebKey } from '~/hooks/accounts/use-breb-keys';
-import { bloque } from '~/lib/bloque';
+import { useCreateBrebOrder } from '~/hooks/payments/use-breb-order';
+import { useRates } from '~/hooks/payments/use-rates';
 import { formatCOP, getAssetPrecision } from '~/lib/formatters';
 import { goBackOrFallback } from '~/lib/navigation';
 import { TopUpErrorStep } from '../../topup/-components/error-step';
-import { TopUpPendingStep } from '../../topup/-components/pending-step';
+import { ExecutionOutcomeStep } from '../../topup/-components/execution-outcome-step';
 import {
   type BrebKeyType,
-  createBrebOrder,
   getRecipientName,
   type ResolvedRecipient,
 } from '../-lib/breb';
@@ -183,7 +184,7 @@ function RouteComponent() {
     });
   const [lastOrder, setLastOrder] = useState<{
     id: string;
-    redirectUrl?: string;
+    execution: ExecutionOutcome;
   } | null>(null);
   const [autoRetry, setAutoRetry] = useState(false);
   const [selectedLedgerId, setSelectedLedgerId] = useState<string | null>(null);
@@ -236,22 +237,19 @@ function RouteComponent() {
     (balance) => balance.asset === FROM_ASSET,
   );
 
-  const ratesQuery = useQuery({
-    queryKey: ['breb-transfer-qr-rates', amountSrc],
-    enabled: parsedAmount >= MIN_TRANSFER_AMOUNT && !!amountSrc,
-    queryFn: () =>
-      bloque.swap.findRates({
-        fromAsset: FROM_ASSET,
-        toAsset: TO_ASSET,
-        fromMediums: [FROM_MEDIUM],
-        toMediums: [TO_MEDIUM],
-        amountSrc,
-      }),
-    staleTime: 30_000,
-    retry: 1,
-  });
+  const ratesQuery = useRates(
+    parsedAmount >= MIN_TRANSFER_AMOUNT && amountSrc
+      ? {
+          fromAsset: FROM_ASSET,
+          toAsset: TO_ASSET,
+          fromMediums: [FROM_MEDIUM],
+          toMediums: [TO_MEDIUM],
+          amountSrc,
+        }
+      : undefined,
+  );
 
-  const selectedRate = ratesQuery.data?.rates?.[0] ?? null;
+  const selectedRate = ratesQuery.data?.[0] ?? null;
   const formError = useMemo(() => {
     if (!isLoadingFundedAccounts && fundedAccounts.length === 0) {
       return 'No tienes saldo disponible en ninguna llave BRE-B activa.';
@@ -313,62 +311,75 @@ function RouteComponent() {
     isStaticQr,
   ]);
 
-  const createOrderMutation = useMutation({
-    mutationFn: async () => {
-      if (!recipientPreview?.resolutionId) {
-        throw new Error('No hay destinatario confirmado.');
-      }
-      if (!selectedRate?.sig) {
-        throw new Error('No hay tasa disponible para enviar.');
-      }
-      if (!selectedSourceBrebUrn) {
-        throw new Error(
-          'Selecciona la cuenta BRE-B desde la que quieres enviar.',
-        );
-      }
+  const createOrderMutation = useCreateBrebOrder();
 
-      return await createBrebOrder({
-        rateSig: selectedRate.sig,
-        amountSrc,
-        resolutionId: recipientPreview.resolutionId,
-        sourceAccountUrn: selectedSourceBrebUrn,
-        metadata: message.trim() ? { message: message.trim() } : undefined,
-      });
-    },
-    onSuccess: (result) => {
-      setConfirmOpen(false);
-      setLastOrder({
-        id: result.order.id,
-        redirectUrl: getExecutionRedirectUrl(result.execution?.result.how),
-      });
-      setView('pending');
-      toast.success('Transferencia BRE-B enviada correctamente.');
-    },
-    onError: (error) => {
-      const msg = error instanceof Error ? error.message : '';
-      if (msg.includes('E_RATE_EXPIRED')) {
-        toast.info('La tasa expiró. Recalculando...');
-        setConfirmOpen(false);
-        setAutoRetry(true);
-        void ratesQuery.refetch();
-        return;
-      }
-      toast.error(msg || 'No se pudo enviar la transferencia BRE-B.');
-      setView('error');
-    },
-  });
+  const submitOrder = useCallback(() => {
+    if (!recipientPreview?.resolutionId) {
+      toast.error('No hay destinatario confirmado.');
+      return;
+    }
+    if (!selectedRate?.sig) {
+      toast.error('No hay tasa disponible para enviar.');
+      return;
+    }
+    if (!selectedSourceBrebUrn) {
+      toast.error('Selecciona la cuenta BRE-B desde la que quieres enviar.');
+      return;
+    }
 
-  const createOrderMutate = createOrderMutation.mutate;
+    createOrderMutation.mutate(
+      {
+        params: {
+          rateSig: selectedRate.sig,
+          amountSrc,
+          depositInformation: { resolutionId: recipientPreview.resolutionId },
+          args: { sourceAccountUrn: selectedSourceBrebUrn },
+          metadata: message.trim() ? { message: message.trim() } : undefined,
+        },
+      },
+      {
+        onSuccess: (result) => {
+          setConfirmOpen(false);
+          setLastOrder({
+            id: result.order.id,
+            execution: result.execution ?? { kind: 'none' },
+          });
+          setView('pending');
+          toast.success('Transferencia BRE-B enviada correctamente.');
+        },
+        onError: (error) => {
+          const msg = error instanceof Error ? error.message : '';
+          if (msg.includes('E_RATE_EXPIRED')) {
+            toast.info('La tasa expiró. Recalculando...');
+            setConfirmOpen(false);
+            setAutoRetry(true);
+            void ratesQuery.refetch();
+            return;
+          }
+          toast.error(msg || 'No se pudo enviar la transferencia BRE-B.');
+          setView('error');
+        },
+      },
+    );
+  }, [
+    recipientPreview,
+    selectedRate,
+    amountSrc,
+    selectedSourceBrebUrn,
+    message,
+    createOrderMutation,
+    ratesQuery,
+  ]);
 
   useEffect(() => {
     if (!autoRetry || ratesQuery.isFetching) return;
     setAutoRetry(false);
     if (selectedRate) {
-      createOrderMutate();
+      submitOrder();
     } else {
       toast.error('No hay tasa disponible. Intenta de nuevo.');
     }
-  }, [autoRetry, createOrderMutate, ratesQuery.isFetching, selectedRate]);
+  }, [autoRetry, ratesQuery.isFetching, selectedRate, submitOrder]);
 
   const resolveBrebKeyMutation = useResolveBrebKey();
   const previewRecipientMutation = useMutation({
@@ -423,23 +434,10 @@ function RouteComponent() {
           </h1>
         </div>
 
-        <TopUpPendingStep
+        <ExecutionOutcomeStep
           amount={parsedAmount}
           orderId={lastOrder?.id}
-          actionLabel={
-            lastOrder?.redirectUrl ? 'Abrir instrucciones' : 'Verificar estado'
-          }
-          onRefresh={() => {
-            if (lastOrder?.redirectUrl) {
-              window.open(
-                lastOrder.redirectUrl,
-                '_blank',
-                'noopener,noreferrer',
-              );
-              return;
-            }
-            toast.info('Revisa el estado en movimientos.');
-          }}
+          execution={lastOrder?.execution}
           onError={() => setView('error')}
         />
       </div>
@@ -671,7 +669,7 @@ function RouteComponent() {
                 disabled={createOrderMutation.isPending}
                 onClick={(event) => {
                   event.preventDefault();
-                  createOrderMutation.mutate();
+                  submitOrder();
                 }}
               >
                 {createOrderMutation.isPending
@@ -803,7 +801,7 @@ function RouteComponent() {
               disabled={createOrderMutation.isPending || !selectedSourceBrebUrn}
               onClick={(event) => {
                 event.preventDefault();
-                createOrderMutation.mutate();
+                submitOrder();
               }}
             >
               {createOrderMutation.isPending
@@ -815,12 +813,4 @@ function RouteComponent() {
       </AlertDialog>
     </div>
   );
-}
-
-function getExecutionRedirectUrl(how: unknown): string | undefined {
-  if (!how || typeof how !== 'object') return undefined;
-  if ('url' in how && typeof how.url === 'string') {
-    return how.url;
-  }
-  return undefined;
 }
