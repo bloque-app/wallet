@@ -25,6 +25,9 @@ interface User {
   urn: string;
   name: string;
   email: string;
+  phone: string;
+  personalIdNumber: string;
+  personalIdType: string;
   kycStatus?: 'approved' | 'in_review' | 'rejected' | 'not_verified';
 }
 
@@ -44,6 +47,12 @@ export type AuthContextProps = {
   user: User;
 };
 
+function originForMethod(
+  method: LoginMethod,
+): 'bloque-whatsapp' | 'bloque-email' {
+  return method === 'phone' ? 'bloque-whatsapp' : 'bloque-email';
+}
+
 export const AuthContext = createContext<AuthContextProps | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -62,6 +71,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         urn: me.urn,
         name: me.profile.first_name,
         email: me.profile.email,
+        phone: me.profile.phone,
+        personalIdNumber: me.profile.personal_id_number,
+        personalIdType: me.profile.personal_id_type,
         kycStatus: me.metadata.kyc_verified ? 'approved' : 'not_verified',
       });
     },
@@ -70,7 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkAlias = useCallback(
     async (method: LoginMethod, alias: string): Promise<AliasCheckResult> => {
-      const origin = method === 'phone' ? 'bloque-whatsapp' : 'bloque-email';
+      const origin = originForMethod(method);
       const sdk = createBloqueSdk(origin);
       const identitySdk = sdk as unknown as AliasLookupApi;
 
@@ -89,7 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const sendOTP = useCallback(
     async (method: 'email' | 'phone', alias: string) => {
-      const origin = method === 'phone' ? 'bloque-whatsapp' : 'bloque-email';
+      const origin = originForMethod(method);
       const sdk = createBloqueSdk(origin);
 
       const result = await sdk.assert(origin, alias);
@@ -115,8 +127,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(
     async (data: LoginData): Promise<LoginResult> => {
       const alias = 'phone' in data ? data.phone : data.email;
-      const origin = 'phone' in data ? 'bloque-whatsapp' : 'bloque-email';
       const method = 'phone' in data ? 'phone' : 'email';
+      const origin = originForMethod(method);
       const sdk = createBloqueSdk(origin);
       const registerApi = sdk as unknown as OriginRegisterApi;
 

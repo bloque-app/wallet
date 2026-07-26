@@ -1,5 +1,4 @@
 import { BloqueAPIError } from '@bloque/sdk';
-import { useQuery } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import {
   ArrowLeft,
@@ -21,6 +20,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '~/components/ui/drawer';
+import { useAuth } from '~/contexts/auth/auth-context';
 import type { BrebKeyProduct } from '~/domain/accounts/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useAccounts } from '~/hooks/accounts/use-accounts';
@@ -30,7 +30,6 @@ import {
   useDeleteBrebKey,
   useSuspendBrebKey,
 } from '~/hooks/accounts/use-breb-keys';
-import { createBloqueSdk } from '~/lib/bloque';
 import { getAssetPrecision } from '~/lib/formatters';
 import { goBackOrFallback } from '~/lib/navigation';
 import {
@@ -109,11 +108,7 @@ function RouteComponent() {
   } | null>(null);
   const [selectedLedgerId, setSelectedLedgerId] = useState<string | null>(null);
 
-  const profileQuery = useQuery({
-    queryKey: ['me-profile'],
-    queryFn: () => createBloqueSdk().me(),
-    staleTime: 5 * 60_000,
-  });
+  const { user } = useAuth();
 
   const accountsQuery = useAccounts();
   const brebProducts = useMemo(
@@ -132,10 +127,8 @@ function RouteComponent() {
     pickerAccounts.find((account) => account.ledgerId === selectedLedgerId) ??
     null;
 
-  const profile = profileQuery.data?.profile;
-  const localPhone = profile?.phone ? stripCountryCode(profile.phone) : null;
-  const displayName =
-    [profile?.first_name].filter(Boolean).join(' ') || 'Usuario Bloque';
+  const localPhone = user.phone ? stripCountryCode(user.phone) : null;
+  const displayName = [user.name].filter(Boolean).join(' ') || 'Usuario Bloque';
 
   const keyOptions: KeyOption[] = [];
   if (localPhone) {
@@ -145,7 +138,7 @@ function RouteComponent() {
       label: 'Llave Bloque',
       icon: KeyRound,
     });
-    if (profile?.phone && isColombianPhone(profile.phone)) {
+    if (user.phone && isColombianPhone(user.phone)) {
       keyOptions.push({
         keyType: 'PHONE',
         value: localPhone,
@@ -154,18 +147,18 @@ function RouteComponent() {
       });
     }
   }
-  if (profile?.email) {
+  if (user.email) {
     keyOptions.push({
       keyType: 'EMAIL',
-      value: profile.email,
+      value: user.email,
       label: 'Correo electrónico',
       icon: Mail,
     });
   }
-  if (profile?.personal_id_number && profile?.personal_id_type === 'CC') {
+  if (user.personalIdNumber && user.personalIdType === 'CC') {
     keyOptions.push({
       keyType: 'ID',
-      value: profile.personal_id_number,
+      value: user.personalIdNumber,
       label: 'Documento',
       icon: CreditCard,
     });
@@ -184,7 +177,7 @@ function RouteComponent() {
   const activateMutation = useActivateBrebKey();
   const deleteMutation = useDeleteBrebKey();
 
-  const isLoading = profileQuery.isLoading || accountsQuery.isLoading;
+  const isLoading = accountsQuery.isLoading;
   const actionsPending =
     suspendMutation.isPending ||
     activateMutation.isPending ||
