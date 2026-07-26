@@ -22,9 +22,12 @@ import {
 } from '~/components/ui/alert-dialog';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
+import {
+  useCardToggleFreeze,
+  useCardUpdateName,
+} from '~/hooks/accounts/use-cards';
 import { formatAmount, formatDate } from '~/lib/formatters';
 import { cn } from '~/lib/utils';
-import { useCardToggleFreeze, useCardUpdateName } from '../-hooks/use-card';
 import { BalanceSkeleton } from './-components/balance-skeleton';
 import { CardInfoSkeleton } from './-components/card-info-skeleton';
 import { MovementsSkeleton } from './-components/movements-skeleton';
@@ -127,11 +130,10 @@ function RouteComponent() {
 
     try {
       await toggleFreezeMutation.mutateAsync({
-        cardUrn: urn,
+        urn,
         freeze: !isFrozen,
       });
 
-      await queryClient.invalidateQueries({ queryKey: ['cards'] });
       await queryClient.invalidateQueries({ queryKey: ['card-detail', urn] });
 
       toast.success(
@@ -162,11 +164,10 @@ function RouteComponent() {
 
     try {
       await updateNameMutation.mutateAsync({
-        cardUrn: urn,
+        urn,
         name: trimmedName,
       });
 
-      await queryClient.invalidateQueries({ queryKey: ['cards'] });
       await queryClient.invalidateQueries({ queryKey: ['card-detail', urn] });
 
       toast.success('Nombre de tarjeta actualizado exitosamente');

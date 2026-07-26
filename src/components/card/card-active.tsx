@@ -1,10 +1,10 @@
 'use client';
 
 import { ExternalLink, EyeOff, Snowflake } from 'lucide-react';
-import type { CardDetailsResponse } from '~/routes/_authed/card/-hooks/use-card';
+import type { CardProduct } from '~/domain/accounts/types';
 
 interface CardActiveProps {
-  card: CardDetailsResponse;
+  card: CardProduct;
   onFreeze: (cardId: string) => void;
   onQuickView: (cardUrn: string) => void;
   onViewDetails: (cardId: string) => void;
@@ -20,10 +20,7 @@ export function CardActive({
   isLoadingQuickView = false,
   isLoadingFreeze = false,
 }: CardActiveProps) {
-  const label =
-    (card.metadata?.card_name as string) ||
-    (card.metadata?.name as string) ||
-    'Tarjeta';
+  const label = card.label;
   const isFrozen = card.status === 'frozen';
 
   return (

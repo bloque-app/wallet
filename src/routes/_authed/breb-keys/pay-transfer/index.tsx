@@ -3,6 +3,7 @@ import { createFileRoute, useRouter } from '@tanstack/react-router';
 import { ArrowLeft, Landmark, Send } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import { AccountCarousel } from '~/components/account/account-carousel';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,20 +18,19 @@ import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { Textarea } from '~/components/ui/textarea';
+import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
+import { useResolveBrebKey } from '~/hooks/accounts/use-breb-keys';
 import { bloque } from '~/lib/bloque';
-import { formatCOP } from '~/lib/formatters';
+import { formatCOP, getAssetPrecision } from '~/lib/formatters';
 import { goBackOrFallback } from '~/lib/navigation';
 import { TopUpErrorStep } from '../../topup/-components/error-step';
 import { TopUpPendingStep } from '../../topup/-components/pending-step';
-import { BrebSourceAccountSelect } from '../-components/source-account-select';
 import {
   type BrebKeyType,
   createBrebOrder,
   getRecipientName,
   type ResolvedRecipient,
-  resolveBrebKey,
 } from '../-lib/breb';
-import { useBrebSourceAccounts } from '../-lib/use-breb-source-accounts';
 
 type ViewState = 'form' | 'pending' | 'error';
 
@@ -39,12 +39,6 @@ const FROM_ASSET = 'COPM/2';
 const TO_ASSET = 'COP/2';
 const FROM_MEDIUM = 'kusama';
 const TO_MEDIUM = 'breb' as const;
-
-function getAssetPrecision(assetWithPrecision: string) {
-  const [, precisionStr] = assetWithPrecision.split('/');
-  const parsed = Number.parseInt(precisionStr ?? '0', 10);
-  return Number.isNaN(parsed) ? 0 : parsed;
-}
 
 function majorToMinor(amountMajor: number, precision: number) {
   return (BigInt(amountMajor) * 10n ** BigInt(precision)).toString();
@@ -89,9 +83,7 @@ function RouteComponent() {
     redirectUrl?: string;
   } | null>(null);
   const [autoRetry, setAutoRetry] = useState(false);
-  const [selectedSourceUrn, setSelectedSourceUrn] = useState<string | null>(
-    null,
-  );
+  const [selectedLedgerId, setSelectedLedgerId] = useState<string | null>(null);
 
   const normalizedKey = normalizeBrebKey(key);
   const inferredKeyType = inferBrebKeyType(normalizedKey);
@@ -103,23 +95,30 @@ function RouteComponent() {
 
   const hasValidKey = inferredKeyType !== null;
 
-  const { accountsQuery: brebAccountsQuery, fundedAccounts } =
-    useBrebSourceAccounts(FROM_ASSET);
+  const { accounts: fundedAccounts, isLoading: isLoadingFundedAccounts } =
+    useAccountPicker({ asset: FROM_ASSET, requireProductKind: 'breb' });
 
   useEffect(() => {
     if (fundedAccounts.length === 1 && fundedAccounts[0]) {
-      setSelectedSourceUrn(fundedAccounts[0].urn);
+      setSelectedLedgerId(fundedAccounts[0].ledgerId);
       return;
     }
-    setSelectedSourceUrn((current) =>
-      current && fundedAccounts.some((account) => account.urn === current)
+    setSelectedLedgerId((current) =>
+      current && fundedAccounts.some((account) => account.ledgerId === current)
         ? current
         : null,
     );
   }, [fundedAccounts]);
 
-  const selectedSourceAccount =
-    fundedAccounts.find((account) => account.urn === selectedSourceUrn) ?? null;
+  const selectedAccount =
+    fundedAccounts.find((account) => account.ledgerId === selectedLedgerId) ??
+    null;
+  const selectedSourceBrebUrn = selectedAccount?.products.find(
+    (product) => product.kind === 'breb',
+  )?.urn;
+  const selectedBalance = selectedAccount?.balances.find(
+    (balance) => balance.asset === FROM_ASSET,
+  );
 
   const ratesQuery = useQuery({
     queryKey: ['breb-transfer-rates', amountSrc],
@@ -139,10 +138,10 @@ function RouteComponent() {
   const selectedRate = ratesQuery.data?.rates?.[0] ?? null;
 
   const formError = useMemo(() => {
-    if (brebAccountsQuery.isSuccess && fundedAccounts.length === 0) {
+    if (!isLoadingFundedAccounts && fundedAccounts.length === 0) {
       return 'No tienes saldo disponible en ninguna llave BRE-B activa.';
     }
-    if (fundedAccounts.length > 1 && !selectedSourceAccount) {
+    if (fundedAccounts.length > 1 && !selectedAccount) {
       return 'Selecciona la cuenta BRE-B desde la que quieres enviar.';
     }
     if (key.length > 0 && !hasValidKey) {
@@ -163,7 +162,7 @@ function RouteComponent() {
     }
     return null;
   }, [
-    brebAccountsQuery.isSuccess,
+    isLoadingFundedAccounts,
     fundedAccounts.length,
     hasValidKey,
     key.length,
@@ -171,27 +170,10 @@ function RouteComponent() {
     ratesQuery.isError,
     ratesQuery.isSuccess,
     selectedRate,
-    selectedSourceAccount,
+    selectedAccount,
   ]);
 
-  const previewRecipientMutation = useMutation({
-    mutationFn: async () =>
-      await resolveBrebKey({
-        keyType: inferredKeyType ?? 'ALPHA',
-        key: normalizedKey,
-      }),
-    onSuccess: (result) => {
-      setRecipientPreview(result);
-      setConfirmOpen(true);
-    },
-    onError: (error) => {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : 'No se pudo validar la llave BRE-B.',
-      );
-    },
-  });
+  const previewRecipientMutation = useResolveBrebKey();
 
   const createOrderMutation = useMutation({
     mutationFn: async () => {
@@ -201,7 +183,7 @@ function RouteComponent() {
       if (!selectedRate?.sig) {
         throw new Error('No hay tasa disponible para enviar.');
       }
-      if (!selectedSourceAccount?.urn) {
+      if (!selectedSourceBrebUrn) {
         throw new Error(
           'Selecciona la cuenta BRE-B desde la que quieres enviar.',
         );
@@ -211,7 +193,7 @@ function RouteComponent() {
         rateSig: selectedRate.sig,
         amountSrc,
         resolutionId: recipientPreview.resolutionId,
-        sourceAccountUrn: selectedSourceAccount.urn,
+        sourceAccountUrn: selectedSourceBrebUrn,
         metadata: message.trim() ? { message: message.trim() } : undefined,
       });
     },
@@ -251,7 +233,7 @@ function RouteComponent() {
   }, [autoRetry, createOrderMutate, ratesQuery.isFetching, selectedRate]);
 
   const canSubmit =
-    !!selectedSourceAccount &&
+    !!selectedSourceBrebUrn &&
     hasValidKey &&
     parsedAmount >= MIN_TRANSFER_AMOUNT &&
     !!selectedRate &&
@@ -374,22 +356,25 @@ function RouteComponent() {
           </div>
 
           {fundedAccounts.length > 1 ? (
-            <BrebSourceAccountSelect
+            <AccountCarousel
               accounts={fundedAccounts}
+              asset={FROM_ASSET}
               precision={FROM_PRECISION}
-              value={selectedSourceUrn}
-              onChange={setSelectedSourceUrn}
+              unit="COP"
+              value={selectedLedgerId}
+              onChange={setSelectedLedgerId}
+              label="Enviar desde"
             />
           ) : null}
 
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="breb-amount">Monto</Label>
-              {selectedSourceAccount ? (
+              {selectedBalance ? (
                 <span className="text-xs text-muted-foreground">
                   Disponible:{' '}
                   {formatCOP(
-                    Number.parseInt(selectedSourceAccount.balance, 10) /
+                    Number.parseInt(selectedBalance.current, 10) /
                       10 ** FROM_PRECISION,
                   )}
                 </span>
@@ -435,7 +420,24 @@ function RouteComponent() {
           ) : null}
 
           <Button
-            onClick={() => previewRecipientMutation.mutate()}
+            onClick={() =>
+              previewRecipientMutation.mutate(
+                { keyType: inferredKeyType ?? 'ALPHA', key: normalizedKey },
+                {
+                  onSuccess: (result) => {
+                    setRecipientPreview(result);
+                    setConfirmOpen(true);
+                  },
+                  onError: (error) => {
+                    toast.error(
+                      error instanceof Error
+                        ? error.message
+                        : 'No se pudo validar la llave BRE-B.',
+                    );
+                  },
+                },
+              )
+            }
             disabled={!canSubmit}
             className="h-12 w-full gap-2 rounded-2xl text-sm font-medium"
           >
@@ -472,13 +474,11 @@ function RouteComponent() {
                   {recipientPreview?.key.keyValue ?? normalizedKey}
                 </span>
               </div>
-              {selectedSourceAccount ? (
+              {selectedAccount ? (
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-muted-foreground">Desde</span>
                   <span className="font-medium text-foreground">
-                    {selectedSourceAccount.key ??
-                      selectedSourceAccount.displayName ??
-                      'Llave BRE-B'}
+                    {selectedAccount.label}
                   </span>
                 </div>
               ) : null}

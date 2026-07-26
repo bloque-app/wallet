@@ -1,5 +1,5 @@
 import { BloqueAPIError } from '@bloque/sdk';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import {
   ArrowLeft,
@@ -9,8 +9,9 @@ import {
   MoreVertical,
   Smartphone,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import { AccountCarousel } from '~/components/account/account-carousel';
 import { Button } from '~/components/ui/button';
 import {
   Drawer,
@@ -20,22 +21,33 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '~/components/ui/drawer';
+import type { BrebKeyProduct } from '~/domain/accounts/types';
+import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
+import { useAccounts } from '~/hooks/accounts/use-accounts';
+import {
+  useActivateBrebKey,
+  useCreateBrebKey,
+  useDeleteBrebKey,
+  useSuspendBrebKey,
+} from '~/hooks/accounts/use-breb-keys';
 import { createBloqueSdk } from '~/lib/bloque';
+import { getAssetPrecision } from '~/lib/formatters';
 import { goBackOrFallback } from '~/lib/navigation';
 import {
-  activateBrebKey,
   BrebKeyError,
   type BrebKeyType,
-  createBrebKey,
-  deleteBrebKey,
   getBrebStatusLabel,
-  listBrebAccounts,
-  suspendBrebKey,
 } from '../-lib/breb';
 
 export const Route = createFileRoute('/_authed/breb-keys/manage-keys/')({
+  validateSearch: (search: Record<string, unknown>) => ({
+    ledgerId: search.ledgerId as string | undefined,
+  }),
   component: RouteComponent,
 });
+
+const FROM_ASSET = 'COPM/2';
+const FROM_PRECISION = getAssetPrecision(FROM_ASSET);
 
 const DRAWER_PROVIDER_CODES = new Set(['P901', 'U807']);
 
@@ -79,6 +91,7 @@ type KeyOption = {
 
 function RouteComponent() {
   const navigate = useNavigate();
+  const { ledgerId: contextLedgerId } = Route.useSearch();
   const [conflictDrawer, setConflictDrawer] = useState<{
     open: boolean;
     key: string;
@@ -89,6 +102,12 @@ function RouteComponent() {
     status: string;
     key: string;
   }>({ open: false, urn: '', status: '', key: '' });
+  const [createDrawer, setCreateDrawer] = useState<{
+    open: boolean;
+    keyType: BrebKeyType;
+    value: string;
+  } | null>(null);
+  const [selectedLedgerId, setSelectedLedgerId] = useState<string | null>(null);
 
   const profileQuery = useQuery({
     queryKey: ['me-profile'],
@@ -96,11 +115,22 @@ function RouteComponent() {
     staleTime: 5 * 60_000,
   });
 
-  const accountsQuery = useQuery({
-    queryKey: ['breb-accounts'],
-    queryFn: listBrebAccounts,
-    staleTime: 30_000,
-  });
+  const accountsQuery = useAccounts();
+  const brebProducts = useMemo(
+    () =>
+      (accountsQuery.data ?? []).flatMap((account) =>
+        account.products.filter(
+          (product): product is BrebKeyProduct => product.kind === 'breb',
+        ),
+      ),
+    [accountsQuery.data],
+  );
+
+  const accountPicker = useAccountPicker();
+  const pickerAccounts = accountPicker.accounts;
+  const selectedAccount =
+    pickerAccounts.find((account) => account.ledgerId === selectedLedgerId) ??
+    null;
 
   const profile = profileQuery.data?.profile;
   const localPhone = profile?.phone ? stripCountryCode(profile.phone) : null;
@@ -141,73 +171,18 @@ function RouteComponent() {
     });
   }
 
-  const registeredKeys = new Set(
-    (accountsQuery.data ?? []).map((a) => a.key).filter(Boolean),
-  );
-  const activeAccounts = (accountsQuery.data ?? []).filter(
-    (a) => a.status === 'active' || a.status === 'frozen',
+  const registeredKeys = new Set(brebProducts.map((p) => p.keyValue));
+  const activeAccounts = brebProducts.filter(
+    (p) => p.status === 'active' || p.status === 'frozen',
   );
   const unregisteredOptions = keyOptions.filter(
     (o) => !registeredKeys.has(o.value),
   );
 
-  const createMutation = useMutation({
-    mutationFn: async ({
-      keyType,
-      value,
-    }: {
-      keyType: BrebKeyType;
-      value: string;
-    }) =>
-      createBrebKey({
-        keyType,
-        key: value,
-        displayName,
-        metadata: { source: 'wallet', purpose: 'breb-send' },
-      }),
-    onSuccess: async () => {
-      toast.success('Llave BRE-B registrada correctamente.');
-      await accountsQuery.refetch();
-    },
-    onError: (error, variables) => {
-      const code = getProviderCode(error);
-      if (code && DRAWER_PROVIDER_CODES.has(code)) {
-        setConflictDrawer({ open: true, key: variables.value });
-        return;
-      }
-      toast.error(getBrebKeyCreationError(error));
-    },
-  });
-
-  const suspendMutation = useMutation({
-    mutationFn: suspendBrebKey,
-    onSuccess: async () => {
-      toast.success('Llave suspendida.');
-      await accountsQuery.refetch();
-      setActionsDrawer((s) => ({ ...s, open: false }));
-    },
-    onError: () => toast.error('No se pudo suspender la llave.'),
-  });
-
-  const activateMutation = useMutation({
-    mutationFn: activateBrebKey,
-    onSuccess: async () => {
-      toast.success('Llave activada.');
-      await accountsQuery.refetch();
-      setActionsDrawer((s) => ({ ...s, open: false }));
-    },
-    onError: () => toast.error('No se pudo activar la llave.'),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteBrebKey,
-    onSuccess: async () => {
-      toast.success('Llave eliminada.');
-      await accountsQuery.refetch();
-      setActionsDrawer((s) => ({ ...s, open: false }));
-    },
-    onError: () => toast.error('No se pudo eliminar la llave.'),
-  });
+  const createMutation = useCreateBrebKey();
+  const suspendMutation = useSuspendBrebKey();
+  const activateMutation = useActivateBrebKey();
+  const deleteMutation = useDeleteBrebKey();
 
   const isLoading = profileQuery.isLoading || accountsQuery.isLoading;
   const actionsPending =
@@ -219,6 +194,36 @@ function RouteComponent() {
     goBackOrFallback(() => {
       void navigate({ to: '/breb-keys' });
     });
+  };
+
+  const registerKey = (
+    option: { keyType: BrebKeyType; value: string },
+    ledgerId?: string,
+  ) => {
+    createMutation.mutate(
+      {
+        keyType: option.keyType,
+        key: option.value,
+        displayName,
+        ledgerId,
+        metadata: { source: 'wallet', purpose: 'breb-send' },
+      },
+      {
+        onSuccess: () => {
+          toast.success('Llave BRE-B registrada correctamente.');
+          setCreateDrawer(null);
+          setSelectedLedgerId(null);
+        },
+        onError: (error) => {
+          const code = getProviderCode(error);
+          if (code && DRAWER_PROVIDER_CODES.has(code)) {
+            setConflictDrawer({ open: true, key: option.value });
+            return;
+          }
+          toast.error(getBrebKeyCreationError(error));
+        },
+      },
+    );
   };
 
   return (
@@ -259,18 +264,18 @@ function RouteComponent() {
                 Llaves listas para usar
               </p>
               <div className="flex flex-col divide-y divide-border/60 rounded-2xl border border-border/75 bg-card/80 overflow-hidden">
-                {activeAccounts.map((account) => (
+                {activeAccounts.map((product) => (
                   <div
-                    key={account.urn}
+                    key={product.urn}
                     className="flex items-center gap-3 px-4 py-3.5"
                   >
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold text-foreground">
-                        {account.key ?? 'Sin valor'}
+                        {product.keyValue}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {account.displayName ||
-                          getBrebStatusLabel(account.status)}
+                        {product.displayName ||
+                          getBrebStatusLabel(product.status)}
                       </p>
                     </div>
                     <span className="shrink-0 rounded-full border border-primary/25 bg-primary/[0.06] px-2.5 py-0.5 text-[10px] font-medium text-primary">
@@ -282,9 +287,9 @@ function RouteComponent() {
                       onClick={() =>
                         setActionsDrawer({
                           open: true,
-                          urn: account.urn,
-                          status: account.status,
-                          key: account.key ?? '',
+                          urn: product.urn,
+                          status: product.status,
+                          key: product.keyValue,
                         })
                       }
                     >
@@ -306,7 +311,7 @@ function RouteComponent() {
                   const Icon = option.icon;
                   const isPending =
                     createMutation.isPending &&
-                    createMutation.variables?.value === option.value;
+                    createMutation.variables?.key === option.value;
                   return (
                     <div
                       key={option.value}
@@ -327,13 +332,25 @@ function RouteComponent() {
                         size="sm"
                         variant="outline"
                         className="h-9 shrink-0 rounded-xl px-4 text-xs font-medium"
-                        disabled={createMutation.isPending}
-                        onClick={() =>
-                          createMutation.mutate({
-                            keyType: option.keyType,
-                            value: option.value,
-                          })
+                        disabled={
+                          createMutation.isPending || accountPicker.isLoading
                         }
+                        onClick={() => {
+                          if (contextLedgerId) {
+                            registerKey(option, contextLedgerId);
+                            return;
+                          }
+                          if (pickerAccounts.length > 1) {
+                            setSelectedLedgerId(null);
+                            setCreateDrawer({
+                              open: true,
+                              keyType: option.keyType,
+                              value: option.value,
+                            });
+                            return;
+                          }
+                          registerKey(option, pickerAccounts[0]?.ledgerId);
+                        }}
                       >
                         {isPending ? 'Registrando...' : 'Registrar'}
                       </Button>
@@ -406,7 +423,16 @@ function RouteComponent() {
                 variant="outline"
                 className="h-12 w-full rounded-2xl text-sm"
                 disabled={actionsPending}
-                onClick={() => suspendMutation.mutate(actionsDrawer.urn)}
+                onClick={() =>
+                  suspendMutation.mutate(actionsDrawer.urn, {
+                    onSuccess: () => {
+                      toast.success('Llave suspendida.');
+                      setActionsDrawer((s) => ({ ...s, open: false }));
+                    },
+                    onError: () =>
+                      toast.error('No se pudo suspender la llave.'),
+                  })
+                }
               >
                 {suspendMutation.isPending
                   ? 'Suspendiendo...'
@@ -418,7 +444,15 @@ function RouteComponent() {
                 variant="outline"
                 className="h-12 w-full rounded-2xl text-sm"
                 disabled={actionsPending}
-                onClick={() => activateMutation.mutate(actionsDrawer.urn)}
+                onClick={() =>
+                  activateMutation.mutate(actionsDrawer.urn, {
+                    onSuccess: () => {
+                      toast.success('Llave activada.');
+                      setActionsDrawer((s) => ({ ...s, open: false }));
+                    },
+                    onError: () => toast.error('No se pudo activar la llave.'),
+                  })
+                }
               >
                 {activateMutation.isPending ? 'Activando...' : 'Activar llave'}
               </Button>
@@ -427,9 +461,63 @@ function RouteComponent() {
               variant="outline"
               className="h-12 w-full rounded-2xl text-sm text-destructive hover:text-destructive"
               disabled={actionsPending}
-              onClick={() => deleteMutation.mutate(actionsDrawer.urn)}
+              onClick={() =>
+                deleteMutation.mutate(actionsDrawer.urn, {
+                  onSuccess: () => {
+                    toast.success('Llave eliminada.');
+                    setActionsDrawer((s) => ({ ...s, open: false }));
+                  },
+                  onError: () => toast.error('No se pudo eliminar la llave.'),
+                })
+              }
             >
               {deleteMutation.isPending ? 'Eliminando...' : 'Eliminar llave'}
+            </Button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+
+      {/* Create-key drawer: pick which account the new key shares a balance with */}
+      <Drawer
+        open={createDrawer?.open ?? false}
+        onOpenChange={(open) =>
+          setCreateDrawer((s) => (s ? { ...s, open } : s))
+        }
+      >
+        <DrawerContent>
+          <DrawerHeader className="text-left">
+            <DrawerTitle className="text-lg font-bold tracking-[-0.025em]">
+              Elige la cuenta para tu nueva llave
+            </DrawerTitle>
+            <DrawerDescription className="mt-1 text-sm leading-relaxed">
+              La llave{' '}
+              <span className="font-medium text-foreground">
+                {createDrawer?.value}
+              </span>{' '}
+              compartirá el saldo de la cuenta que elijas.
+            </DrawerDescription>
+          </DrawerHeader>
+          <div className="px-4 pb-2">
+            <AccountCarousel
+              accounts={pickerAccounts}
+              asset={FROM_ASSET}
+              precision={FROM_PRECISION}
+              unit="COP"
+              value={selectedLedgerId}
+              onChange={setSelectedLedgerId}
+              label="Cuenta a la que se vincula"
+            />
+          </div>
+          <DrawerFooter>
+            <Button
+              className="h-12 w-full rounded-2xl text-sm font-medium"
+              disabled={!selectedAccount || createMutation.isPending}
+              onClick={() => {
+                if (!createDrawer || !selectedAccount) return;
+                registerKey(createDrawer, selectedAccount.ledgerId);
+              }}
+            >
+              {createMutation.isPending ? 'Registrando...' : 'Confirmar'}
             </Button>
           </DrawerFooter>
         </DrawerContent>

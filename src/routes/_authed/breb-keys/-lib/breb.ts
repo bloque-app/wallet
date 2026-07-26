@@ -1,5 +1,4 @@
 import type {
-  BrebDecodedQr as SdkBrebDecodedQr,
   BrebKeyType as SdkBrebKeyType,
   BrebResolvedKey as SdkBrebResolvedKey,
 } from '@bloque/sdk-accounts';
@@ -7,17 +6,6 @@ import { bloque } from '~/lib/bloque';
 
 export type BrebKeyType = SdkBrebKeyType;
 export type ResolvedRecipient = SdkBrebResolvedKey;
-export type DecodedBrebQr = SdkBrebDecodedQr;
-
-export type BrebAccountItem = {
-  urn: string;
-  medium: string;
-  status: string;
-  keyType?: string;
-  key?: string;
-  displayName?: string | null;
-  metadata?: Record<string, unknown>;
-};
 
 export class BrebKeyError extends Error {
   providerCode?: string;
@@ -78,109 +66,12 @@ export function getBrebStatusLabel(status?: string) {
   }
 }
 
-export async function listBrebAccounts() {
-  const result = await bloque.accounts.list({ medium: 'breb' } as never);
-  return ((result.accounts ?? []) as unknown as Array<BrebAccountItem>).filter(
-    (account) => account.medium === 'breb',
-  );
-}
-
-export async function createBrebKey(params: {
-  keyType: BrebKeyType;
-  key: string;
-  displayName?: string;
-  metadata?: Record<string, unknown>;
-}) {
-  const result = await (
-    bloque.accounts as typeof bloque.accounts & {
-      breb: {
-        createKey: (input: {
-          keyType: string;
-          key: string;
-          displayName?: string;
-          metadata?: Record<string, unknown>;
-        }) => Promise<{
-          data: { urn: string } | null;
-          error: Record<string, unknown> | null;
-        }>;
-      };
-    }
-  ).breb.createKey(params);
-
-  if (result.error || !result.data) {
-    const e = result.error;
-    throw new BrebKeyError(
-      (e?.message as string) ?? 'No se pudo crear la llave BRE-B.',
-      e?.code as string | undefined,
-    );
-  }
-
-  return result.data;
-}
-
-export async function resolveBrebKey(params: { keyType: string; key: string }) {
-  const result = await (
-    bloque.accounts as typeof bloque.accounts & {
-      breb: {
-        resolveKey: (input: { keyType: string; key: string }) => Promise<{
-          data: ResolvedRecipient | null;
-          error: { message: string } | null;
-        }>;
-      };
-    }
-  ).breb.resolveKey(params);
-
-  if (result.error || !result.data) {
-    throw new Error(
-      result.error?.message ?? 'No se pudo resolver la llave BRE-B.',
-    );
-  }
-
-  return result.data;
-}
-
-export async function suspendBrebKey(accountUrn: string) {
-  const result = await (
-    bloque.accounts as typeof bloque.accounts & {
-      breb: {
-        suspendKey: (input: {
-          accountUrn: string;
-        }) => Promise<{ data: unknown; error: { message: string } | null }>;
-      };
-    }
-  ).breb.suspendKey({ accountUrn });
-
-  if (result.error) throw new Error(result.error.message);
-}
-
-export async function activateBrebKey(accountUrn: string) {
-  const result = await (
-    bloque.accounts as typeof bloque.accounts & {
-      breb: {
-        activateKey: (input: {
-          accountUrn: string;
-        }) => Promise<{ data: unknown; error: { message: string } | null }>;
-      };
-    }
-  ).breb.activateKey({ accountUrn });
-
-  if (result.error) throw new Error(result.error.message);
-}
-
-export async function deleteBrebKey(accountUrn: string) {
-  const result = await (
-    bloque.accounts as typeof bloque.accounts & {
-      breb: {
-        deleteKey: (input: {
-          accountUrn: string;
-        }) => Promise<{ data: unknown; error: { message: string } | null }>;
-      };
-    }
-  ).breb.deleteKey({ accountUrn });
-
-  if (result.error) throw new Error(result.error.message);
-}
-
+/**
+ * Creates the BRE-B payout order via the swap service — a payments/swap
+ * concern, not an accounts/products one, so it stays outside
+ * `AccountsRepository` (see the Phase 6 roadmap in the approved plan for
+ * when a dedicated SwapRepository might absorb this).
+ */
 export async function createBrebOrder(params: {
   rateSig: string;
   amountSrc: string;
@@ -214,25 +105,4 @@ export async function createBrebOrder(params: {
     },
     metadata: params.metadata,
   });
-}
-
-export async function decodeBrebQr(qrCodeData: string) {
-  const result = await (
-    bloque.accounts as typeof bloque.accounts & {
-      breb: {
-        decodeQr: (input: { qrCodeData: string }) => Promise<{
-          data: DecodedBrebQr | null;
-          error: { message: string } | null;
-        }>;
-      };
-    }
-  ).breb.decodeQr({ qrCodeData });
-
-  if (result.error || !result.data) {
-    throw new Error(
-      result.error?.message ?? 'No se pudo decodificar el QR BRE-B.',
-    );
-  }
-
-  return result.data;
 }

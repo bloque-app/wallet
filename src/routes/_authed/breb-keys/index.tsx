@@ -1,3 +1,4 @@
+import type { BrebDecodedQr as DecodedBrebQr } from '@bloque/sdk-accounts';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import {
   ArrowLeft,
@@ -13,8 +14,8 @@ import {
 import { useEffect, useId, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '~/components/ui/button';
+import { bloqueAccountsRepository } from '~/infra/bloque/accounts-repository';
 import { goBackOrFallback } from '~/lib/navigation';
-import { type DecodedBrebQr, decodeBrebQr } from './-lib/breb';
 
 export const Route = createFileRoute('/_authed/breb-keys/')({
   component: RouteComponent,
@@ -113,7 +114,8 @@ function RouteComponent() {
 
     const handleDecodedQr = async () => {
       try {
-        const decoded = await decodeBrebQr(pendingQrValue);
+        const decoded =
+          await bloqueAccountsRepository.decodeBrebQr(pendingQrValue);
 
         if (cancelled) return;
 
@@ -260,7 +262,7 @@ function RouteComponent() {
           </div>
         </Link>
 
-        <Link to="/breb-keys/manage-keys">
+        <Link to="/breb-keys/manage-keys" search={{ ledgerId: undefined }}>
           <div className="flex items-center gap-3 rounded-2xl border border-border/75 bg-card/80 p-4 transition-all hover:bg-muted/70">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
               <Settings2 className="h-4 w-4 text-primary" strokeWidth={1.5} />
@@ -303,6 +305,7 @@ function RouteComponent() {
         </p>
         <Link
           to="/breb-keys/manage-keys"
+          search={{ ledgerId: undefined }}
           className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary"
         >
           <KeyRound className="h-3 w-3" />

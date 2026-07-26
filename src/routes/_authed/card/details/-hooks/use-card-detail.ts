@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
+import type { CardProduct } from '~/domain/accounts/types';
+import { useAccounts } from '~/hooks/accounts/use-accounts';
 import type { Asset } from '~/lib/formatters';
 import { useShowBalances } from '~/lib/show-balances';
-import { useCards } from '../../-hooks/use-card';
 import { useBalance, useTransactions } from './use-accounts';
 
 type MovementFilter = 'todas' | 'entrantes' | 'salientes';
@@ -19,8 +20,13 @@ export const MOVEMENT_FILTERS: { label: string; value: MovementFilter }[] = [
 ];
 
 export function useCardDetail(urn: string) {
-  const { data, isLoading: isLoadingCard } = useCards();
-  const cards = data?.accounts ?? [];
+  const { data, isLoading: isLoadingCard } = useAccounts();
+  const cards =
+    data?.flatMap((account) =>
+      account.products.filter(
+        (product): product is CardProduct => product.kind === 'card',
+      ),
+    ) ?? [];
   const showBalances = useShowBalances();
 
   const [selectedAssetKey, setSelectedAssetKey] = useState<string>('');
@@ -46,10 +52,7 @@ export function useCardDetail(urn: string) {
   const selectedCard =
     cards.find((card) => card.urn === urn) ?? cards[0] ?? null;
 
-  const cardLabel =
-    (selectedCard?.metadata?.card_name as string) ||
-    (selectedCard?.metadata?.name as string) ||
-    'Tarjeta';
+  const cardLabel = selectedCard?.label || 'Tarjeta';
 
   const { assetList, balanceByKey } = useMemo(() => {
     const raw = balanceQuery.data as
