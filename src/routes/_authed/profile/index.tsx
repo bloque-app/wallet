@@ -63,7 +63,7 @@ function RouteComponent() {
   const kycLabel =
     user?.kycStatus === 'approved'
       ? 'Verificado'
-      : user?.kycStatus === 'in_review'
+      : user?.kycStatus === 'awaiting_verification'
         ? 'En revisión'
         : user?.kycStatus === 'rejected'
           ? 'Rechazado'
