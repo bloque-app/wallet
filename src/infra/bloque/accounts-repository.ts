@@ -10,6 +10,8 @@ import type {
   CreatePolygonAccountInput,
   CreateVirtualAccountInput,
   GetMovementsParams,
+  GetTransactionsParams,
+  MovementEntry,
   MovementsPage,
 } from '~/domain/accounts/ports';
 import type { AssetBalance, Product } from '~/domain/accounts/types';
@@ -179,6 +181,7 @@ async function getMovements(
     asset: params.asset as Parameters<
       typeof bloque.accounts.movements
     >[0]['asset'],
+    direction: params.direction,
     limit: params.limit,
     next: params.next,
   });
@@ -199,6 +202,45 @@ async function getMovements(
       railName: movement.railName,
       type: movement.type,
     })),
+    hasMore: result.hasMore,
+    next: result.next,
+  };
+}
+
+/** `bloque.accounts.transactions()`'s param shape, properly typed by the
+ * installed SDK (0.2.7) — no `as never` casts needed here. */
+type TransactionsParams = NonNullable<
+  Parameters<typeof bloque.accounts.transactions>[0]
+>;
+
+async function getTransactions(
+  params: GetTransactionsParams,
+): Promise<MovementsPage> {
+  const result = await bloque.accounts.transactions({
+    asset: params.asset as TransactionsParams['asset'],
+    direction: params.direction,
+    limit: params.limit,
+    next: params.next,
+  });
+
+  return {
+    movements: result.data.map(
+      (transaction): MovementEntry => ({
+        id: transaction.reference,
+        asset: transaction.asset,
+        amount: transaction.amount,
+        direction: transaction.direction,
+        status: transaction.status,
+        createdAt: transaction.createdAt,
+        reference: transaction.reference,
+        counterparty:
+          transaction.direction === 'in'
+            ? transaction.fromAccountId
+            : transaction.toAccountId,
+        railName: transaction.railName,
+        type: transaction.type,
+      }),
+    ),
     hasMore: result.hasMore,
     next: result.next,
   };
@@ -295,6 +337,7 @@ export const bloqueAccountsRepository: AccountsRepository = {
   listProducts,
   getBalance,
   getMovements,
+  getTransactions,
   createCard,
   freezeCard,
   activateCard,
