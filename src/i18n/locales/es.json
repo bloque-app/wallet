@@ -85,7 +85,17 @@
       "defaultCardName": "Tarjeta",
       "cardCreatedToast": "Tarjeta creada exitosamente",
       "polygonCreatedToast": "Cuenta Polygon creada",
-      "createProductErrorToast": "No se pudo crear el producto. Intenta de nuevo."
+      "createProductErrorToast": "No se pudo crear el producto. Intenta de nuevo.",
+      "transferToOwnAccount": "Transferir a otra cuenta",
+      "transferDrawerTitle": "Transferir fondos",
+      "transferDestinationLabel": "Cuenta destino",
+      "transferAmountLabel": "Monto a transferir",
+      "transferAvailable": "Disponible: {{amount}}",
+      "transferInsufficientBalance": "Saldo insuficiente para esta transferencia.",
+      "transferSubmit": "Transferir",
+      "transferring": "Transfiriendo...",
+      "transferSuccessToast": "Transferencia realizada exitosamente",
+      "transferErrorToast": "No se pudo completar la transferencia. Intenta de nuevo."
     }
   },
   "brebKeys": {

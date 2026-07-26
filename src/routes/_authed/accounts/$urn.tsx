@@ -1,6 +1,8 @@
+import type { SupportedAsset } from '@bloque/sdk-accounts';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import {
   ArrowLeft,
+  ArrowRightLeft,
   ChevronRight,
   CreditCard,
   KeyRound,
@@ -28,9 +30,11 @@ import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import type { AssetBalance, Product } from '~/domain/accounts/types';
 import { useAccountMovements } from '~/hooks/accounts/use-account-movements';
+import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useAccount } from '~/hooks/accounts/use-accounts';
 import { useCreateCard } from '~/hooks/accounts/use-cards';
 import { useCreatePolygonAccount } from '~/hooks/accounts/use-polygon-account';
+import { useTransfer } from '~/hooks/accounts/use-transfer';
 import type { Asset, Movement } from '~/lib/formatters';
 import { formatCOP, formatUSD, sortBalancesForDisplay } from '~/lib/formatters';
 import { cn } from '~/lib/utils';
@@ -65,6 +69,13 @@ function getAssetLabel(rawAsset: string): Asset | null {
   return ASSET_LABELS[assetKey] ?? null;
 }
 
+function majorToMinor(amountMajor: number, rawAsset: string): string {
+  const [, precisionStr] = rawAsset.split('/');
+  const precision = Number.parseInt(precisionStr, 10);
+  if (Number.isNaN(precision)) return Math.round(amountMajor).toString();
+  return Math.round(amountMajor * 10 ** precision).toString();
+}
+
 function formatAssetBalance(balance: AssetBalance) {
   const asset = getAssetLabel(balance.asset);
   const amount = parseAmount(balance.current, balance.asset);
@@ -96,6 +107,9 @@ function RouteComponent() {
   const [addProductStep, setAddProductStep] =
     useState<AddProductStep>('closed');
   const [productName, setProductName] = useState('');
+  const [showTransferDrawer, setShowTransferDrawer] = useState(false);
+  const [transferDestinationId, setTransferDestinationId] = useState('');
+  const [transferAmount, setTransferAmount] = useState('');
 
   const accountQuery = useAccount(urn);
   const account = accountQuery.data;
@@ -103,6 +117,15 @@ function RouteComponent() {
 
   const createCardMutation = useCreateCard();
   const createPolygonMutation = useCreatePolygonAccount();
+  const transferMutation = useTransfer();
+  const { accounts: ownAccounts } = useAccountPicker();
+  const transferDestinations = ownAccounts.filter(
+    (candidate) => candidate.ledgerId !== account?.ledgerId,
+  );
+  const transferDestination =
+    transferDestinations.find(
+      (candidate) => candidate.ledgerId === transferDestinationId,
+    ) ?? null;
 
   useEffect(() => {
     if (!selectedAsset && balances[0]) {
@@ -164,6 +187,45 @@ function RouteComponent() {
 
   const isCreatingProduct =
     createCardMutation.isPending || createPolygonMutation.isPending;
+
+  const transferAssetBalance = balances.find(
+    (balance) => balance.asset === selectedAsset,
+  );
+  const transferAvailableMajor = transferAssetBalance
+    ? parseAmount(transferAssetBalance.current, transferAssetBalance.asset)
+    : 0;
+  const parsedTransferAmount = Number.parseFloat(transferAmount) || 0;
+
+  const handleOpenTransferDrawer = () => {
+    setTransferDestinationId('');
+    setTransferAmount('');
+    setShowTransferDrawer(true);
+  };
+
+  const handleSubmitTransfer = async () => {
+    if (!account || !transferDestination) return;
+    if (
+      parsedTransferAmount <= 0 ||
+      parsedTransferAmount > transferAvailableMajor
+    ) {
+      toast.error(t('accounts.detail.transferInsufficientBalance'));
+      return;
+    }
+
+    try {
+      await transferMutation.mutateAsync({
+        sourceUrn: account.primaryUrn,
+        destinationUrn: transferDestination.primaryUrn,
+        amount: majorToMinor(parsedTransferAmount, selectedAsset),
+        asset: selectedAsset as SupportedAsset,
+        metadata: { reference: `own-account-transfer-${Date.now()}` },
+      });
+      toast.success(t('accounts.detail.transferSuccessToast'));
+      setShowTransferDrawer(false);
+    } catch {
+      toast.error(t('accounts.detail.transferErrorToast'));
+    }
+  };
 
   return (
     <div className="flex flex-col gap-5">
@@ -257,6 +319,17 @@ function RouteComponent() {
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </div>
+
+                {transferDestinations.length > 0 && (
+                  <Button
+                    variant="outline"
+                    className="h-10 w-full gap-1.5 rounded-xl text-xs font-medium"
+                    onClick={handleOpenTransferDrawer}
+                  >
+                    <ArrowRightLeft className="h-3.5 w-3.5" />
+                    {t('accounts.detail.transferToOwnAccount')}
+                  </Button>
+                )}
               </>
             )}
           </section>
@@ -488,6 +561,84 @@ function RouteComponent() {
               </DrawerFooter>
             </>
           )}
+        </DrawerContent>
+      </Drawer>
+
+      <Drawer
+        open={showTransferDrawer}
+        onOpenChange={(open) => !open && setShowTransferDrawer(false)}
+      >
+        <DrawerContent>
+          <DrawerHeader className="text-left">
+            <DrawerTitle className="text-lg font-bold tracking-[-0.025em]">
+              {t('accounts.detail.transferDrawerTitle')}
+            </DrawerTitle>
+          </DrawerHeader>
+          <div className="flex flex-col gap-4 px-5 pb-2">
+            <div className="flex flex-col gap-2">
+              <Label className="text-sm font-medium">
+                {t('accounts.detail.transferDestinationLabel')}
+              </Label>
+              <div className="flex flex-col gap-2">
+                {transferDestinations.map((destination) => (
+                  <button
+                    key={destination.ledgerId}
+                    type="button"
+                    onClick={() =>
+                      setTransferDestinationId(destination.ledgerId)
+                    }
+                    className={cn(
+                      'flex items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-colors',
+                      transferDestinationId === destination.ledgerId
+                        ? 'border-foreground bg-foreground/5'
+                        : 'border-border/75 bg-background/70 hover:bg-muted/60',
+                    )}
+                  >
+                    <span className="text-sm font-medium text-foreground">
+                      {destination.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="transfer-amount" className="text-sm font-medium">
+                {t('accounts.detail.transferAmountLabel')}
+              </Label>
+              <Input
+                id="transfer-amount"
+                inputMode="decimal"
+                value={transferAmount}
+                onChange={(e) => setTransferAmount(e.target.value)}
+                placeholder="0"
+                disabled={transferMutation.isPending}
+                className="h-12 rounded-xl"
+              />
+              <p className="text-xs text-muted-foreground">
+                {t('accounts.detail.transferAvailable', {
+                  amount: transferAssetBalance
+                    ? formatAssetBalance(transferAssetBalance)
+                    : '-',
+                })}
+              </p>
+            </div>
+          </div>
+          <DrawerFooter>
+            <Button
+              onClick={handleSubmitTransfer}
+              disabled={
+                transferMutation.isPending ||
+                !transferDestination ||
+                parsedTransferAmount <= 0
+              }
+              className="h-12 w-full rounded-xl text-sm font-medium"
+            >
+              {transferMutation.isPending
+                ? t('accounts.detail.transferring')
+                : t('accounts.detail.transferSubmit')}
+            </Button>
+          </DrawerFooter>
         </DrawerContent>
       </Drawer>
     </div>

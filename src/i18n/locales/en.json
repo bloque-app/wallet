@@ -85,7 +85,17 @@
       "defaultCardName": "Card",
       "cardCreatedToast": "Card created successfully",
       "polygonCreatedToast": "Polygon account created",
-      "createProductErrorToast": "Couldn't create the product. Please try again."
+      "createProductErrorToast": "Couldn't create the product. Please try again.",
+      "transferToOwnAccount": "Transfer to another account",
+      "transferDrawerTitle": "Transfer funds",
+      "transferDestinationLabel": "Destination account",
+      "transferAmountLabel": "Amount to transfer",
+      "transferAvailable": "Available: {{amount}}",
+      "transferInsufficientBalance": "Insufficient balance for this transfer.",
+      "transferSubmit": "Transfer",
+      "transferring": "Transferring...",
+      "transferSuccessToast": "Transfer completed successfully",
+      "transferErrorToast": "Couldn't complete the transfer. Please try again."
     }
   },
   "brebKeys": {
