@@ -9,7 +9,7 @@ import {
 import { Button } from '~/components/ui/button';
 import type { Account } from '~/domain/accounts/types';
 import { useAccounts } from '~/hooks/accounts/use-accounts';
-import { formatCOP, formatKSM, formatUSD } from '~/lib/formatters';
+import { formatCOP, formatUSD, sortBalancesForDisplay } from '~/lib/formatters';
 
 export const Route = createFileRoute('/_authed/accounts/')({
   component: RouteComponent,
@@ -24,7 +24,6 @@ function formatAssetBalanceChip(asset: string, current: string): string {
     : parsed / 10 ** (Number.isNaN(precision) ? 0 : precision);
 
   if (assetKey === 'DUSD' || assetKey === 'USD') return formatUSD(amount);
-  if (assetKey === 'KSM') return formatKSM(amount);
   return formatCOP(amount);
 }
 
@@ -97,6 +96,7 @@ function RouteComponent() {
               (product) => product.urn === account.primaryUrn,
             );
             const Icon = getProductKindIcon(primary?.kind ?? 'other');
+            const displayBalances = sortBalancesForDisplay(account.balances);
 
             return (
               <Link
@@ -115,9 +115,9 @@ function RouteComponent() {
                   <p className="truncate text-xs text-muted-foreground">
                     {getCompositionLabel(account)}
                   </p>
-                  {account.balances.length > 0 ? (
+                  {displayBalances.length > 0 ? (
                     <div className="mt-1 flex flex-wrap gap-1.5">
-                      {account.balances.map((balance) => (
+                      {displayBalances.map((balance) => (
                         <span
                           key={balance.asset}
                           className="rounded-full border border-border/70 bg-background/70 px-2 py-0.5 text-[11px] font-medium text-muted-foreground"

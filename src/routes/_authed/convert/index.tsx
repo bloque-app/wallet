@@ -192,9 +192,8 @@ function RouteComponent() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="COP">COP</SelectItem>
               <SelectItem value="USD">USD</SelectItem>
-              <SelectItem value="KSM">KSM</SelectItem>
+              <SelectItem value="COP">COP</SelectItem>
             </SelectContent>
           </Select>
           <Input
@@ -230,9 +229,8 @@ function RouteComponent() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="COP">COP</SelectItem>
               <SelectItem value="USD">USD</SelectItem>
-              <SelectItem value="KSM">KSM</SelectItem>
+              <SelectItem value="COP">COP</SelectItem>
             </SelectContent>
           </Select>
           <div className="flex h-12 flex-1 items-center justify-end rounded-2xl border border-border bg-muted px-3 text-right font-bold tabular-nums text-foreground">

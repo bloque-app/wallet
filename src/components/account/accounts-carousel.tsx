@@ -1,6 +1,6 @@
 import { Plus } from 'lucide-react';
 import type { Account } from '~/domain/accounts/types';
-import { formatCOP, formatKSM, formatUSD } from '~/lib/formatters';
+import { formatCOP, formatUSD, sortBalancesForDisplay } from '~/lib/formatters';
 import { getProductKindIcon } from './product-presentation';
 
 function formatAccountBalanceChip(asset: string, current: string): string {
@@ -12,7 +12,6 @@ function formatAccountBalanceChip(asset: string, current: string): string {
     : parsed / 10 ** (Number.isNaN(precision) ? 0 : precision);
 
   if (assetKey === 'DUSD' || assetKey === 'USD') return formatUSD(amount);
-  if (assetKey === 'KSM') return formatKSM(amount);
   return formatCOP(amount);
 }
 
@@ -27,7 +26,7 @@ function AccountMiniCard({
     (product) => product.urn === account.primaryUrn,
   );
   const Icon = getProductKindIcon(primary?.kind ?? 'other');
-  const balance = account.balances[0];
+  const balance = sortBalancesForDisplay(account.balances)[0];
 
   return (
     <button

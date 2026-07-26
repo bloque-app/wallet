@@ -35,7 +35,6 @@ export const Route = createFileRoute('/_authed/card/details/$urn')({
 const ASSET_LOGO_MAP: Record<string, string> = {
   COP: '/images/assets/cop.webp',
   USD: '/images/assets/usd.webp',
-  KSM: '/images/assets/ksm.webp',
 };
 
 function RouteComponent() {

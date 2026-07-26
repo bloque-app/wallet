@@ -31,7 +31,7 @@ import { useAccount } from '~/hooks/accounts/use-accounts';
 import { useCreateCard } from '~/hooks/accounts/use-cards';
 import { useCreatePolygonAccount } from '~/hooks/accounts/use-polygon-account';
 import type { Asset, Movement } from '~/lib/formatters';
-import { formatCOP, formatKSM, formatUSD } from '~/lib/formatters';
+import { formatCOP, formatUSD, sortBalancesForDisplay } from '~/lib/formatters';
 import { cn } from '~/lib/utils';
 
 export const Route = createFileRoute('/_authed/accounts/$urn')({
@@ -69,7 +69,6 @@ function formatAssetBalance(balance: AssetBalance) {
   const amount = parseAmount(balance.current, balance.asset);
 
   if (asset === 'USD') return formatUSD(amount);
-  if (asset === 'KSM') return formatKSM(amount);
   return formatCOP(amount);
 }
 
@@ -98,7 +97,7 @@ function RouteComponent() {
 
   const accountQuery = useAccount(urn);
   const account = accountQuery.data;
-  const balances = account?.balances ?? [];
+  const balances = sortBalancesForDisplay(account?.balances ?? []);
 
   const createCardMutation = useCreateCard();
   const createPolygonMutation = useCreatePolygonAccount();
