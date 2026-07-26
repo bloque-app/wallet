@@ -155,6 +155,27 @@
       "send": "Enviar"
     }
   },
+  "kyc": {
+    "banner": {
+      "rejectedTitle": "No pudimos verificar tu identidad",
+      "defaultTitle": "Completa tu verificación",
+      "rejectedDescription": "Tu verificación no fue aprobada. Inténtalo de nuevo para activar tu tarjeta.",
+      "defaultDescription": "Falta verificar tu identidad para activar tu tarjeta.",
+      "retryCta": "Reintentar verificación",
+      "startCta": "Ir a verificar",
+      "stepRegistration": "Registro",
+      "stepVerification": "Verificación",
+      "stepActivation": "Activación"
+    },
+    "route": {
+      "noUserUrn": "No encontramos la URN del usuario para iniciar KYC.",
+      "backHome": "Volver al inicio",
+      "starting": "Iniciando verificación KYC...",
+      "alreadyVerified": "Tu identidad ya fue verificada.",
+      "startError": "No fue posible iniciar la verificación en este momento.",
+      "iframeTitle": "Verificación KYC"
+    }
+  },
   "movements": {
     "title": "Movimientos",
     "searchPlaceholder": "Buscar por referencia...",
