@@ -16,7 +16,7 @@ import {
 } from '~/components/ui/drawer';
 import type { PolygonProduct } from '~/domain/accounts/types';
 import { useAccounts } from '~/hooks/accounts/use-accounts';
-import { useGlobalTransactions } from '~/hooks/use-global-transactions';
+import { useGlobalTransactions } from '~/hooks/accounts/use-global-transactions';
 import {
   type Asset,
   formatAmount,

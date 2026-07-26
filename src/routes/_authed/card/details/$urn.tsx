@@ -1,15 +1,10 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
-import {
-  ArrowDownLeft,
-  ArrowLeft,
-  ArrowUpRight,
-  Lock,
-  Pencil,
-  Unlock,
-} from 'lucide-react';
+import { ArrowLeft, Lock, Pencil, Unlock } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { MovementDetailDrawer } from '~/components/movement-detail-drawer';
+import { MovementRow } from '~/components/movement-row';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,7 +21,7 @@ import {
   useCardToggleFreeze,
   useCardUpdateName,
 } from '~/hooks/accounts/use-cards';
-import { formatAmount, formatDate } from '~/lib/formatters';
+import { formatAmount, formatDate, type Movement } from '~/lib/formatters';
 import { cn } from '~/lib/utils';
 import { BalanceSkeleton } from './-components/balance-skeleton';
 import { CardInfoSkeleton } from './-components/card-info-skeleton';
@@ -37,61 +32,11 @@ export const Route = createFileRoute('/_authed/card/details/$urn')({
   component: RouteComponent,
 });
 
-type TxDirection = 'in' | 'out' | undefined;
-
 const ASSET_LOGO_MAP: Record<string, string> = {
   COP: '/images/assets/cop.webp',
   USD: '/images/assets/usd.webp',
   KSM: '/images/assets/ksm.webp',
 };
-
-function getMovementTitle(type: unknown) {
-  if (typeof type !== 'string' || !type.trim()) return 'Movimiento';
-  const normalizedType = type.trim().toLowerCase();
-  const translations: Record<string, string> = {
-    'pay-out': 'Retiro',
-    payout: 'Retiro',
-    'cash-in': 'Entrada',
-    'cash-out': 'Salida',
-    transfer: 'Transferencia',
-    withdrawal: 'Retiro',
-    deposit: 'Depósito',
-  };
-
-  const translated = translations[normalizedType];
-  if (translated) return translated;
-
-  return normalizedType
-    .split(/[-_]/g)
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
-}
-
-function DirectionIcon({ direction }: { direction: TxDirection }) {
-  const iconClass = 'h-4 w-4 text-primary';
-  return direction === 'out' ? (
-    <ArrowUpRight className={iconClass} />
-  ) : (
-    <ArrowDownLeft className={iconClass} />
-  );
-}
-
-function getStatusLabel(status: unknown) {
-  if (status === 'failed') return 'Fallida';
-  if (status === 'pending') return 'Pendiente';
-  return 'Exitosa';
-}
-
-function getStatusClassName(status: unknown) {
-  if (status === 'failed') {
-    return 'border-border bg-background text-foreground';
-  }
-  if (status === 'pending') {
-    return 'border-border bg-muted text-muted-foreground';
-  }
-  return 'border-transparent bg-foreground text-background';
-}
 
 function RouteComponent() {
   const { urn } = Route.useParams();
@@ -103,7 +48,6 @@ function RouteComponent() {
     isLoadingBalance,
     assetList,
     currentAssetKey,
-    currentPrecision,
     assetBalance,
     displayAsset,
     showBalances,
@@ -121,6 +65,9 @@ function RouteComponent() {
   const updateNameMutation = useCardUpdateName();
   const [showRenameDialog, setShowRenameDialog] = useState(false);
   const [newCardName, setNewCardName] = useState('');
+  const [selectedMovement, setSelectedMovement] = useState<Movement | null>(
+    null,
+  );
 
   const handleToggleFreeze = async () => {
     if (!selectedCard) return;
@@ -356,46 +303,12 @@ function RouteComponent() {
           </div>
         ) : (
           <div className="flex flex-col gap-2">
-            {filteredMovements.map((tx) => (
-              <div
-                key={`${currentAssetKey}-${tx.reference}`}
-                className="flex w-full items-center justify-between gap-3 rounded-2xl border border-border/65 bg-card/75 px-3 py-3 text-left transition-all duration-200 hover:bg-muted/75"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
-                    <DirectionIcon direction={tx.direction} />
-                  </div>
-                  <div className="flex flex-col gap-0.5">
-                    <p className="text-sm font-medium text-foreground">
-                      {getMovementTitle(tx.details?.type)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {tx.createdAt
-                        ? formatDate(tx.createdAt)
-                        : 'Fecha no disponible'}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex flex-col items-end gap-0.5">
-                  <p className="text-sm font-medium tabular-nums text-foreground">
-                    {tx.direction === 'in' ? '+' : '-'}
-                    {formatAmount(
-                      displayAsset,
-                      Number(tx.amount ?? 0) / 10 ** currentPrecision,
-                    )}
-                  </p>
-                  <div className="mt-1 flex items-center gap-1.5">
-                    <span
-                      className={cn(
-                        'rounded-full border px-2 py-0.5 text-[10px] font-medium',
-                        getStatusClassName(tx.status),
-                      )}
-                    >
-                      {getStatusLabel(tx.status)}
-                    </span>
-                  </div>
-                </div>
-              </div>
+            {filteredMovements.map((movement) => (
+              <MovementRow
+                key={movement.id}
+                movement={movement}
+                onClick={() => setSelectedMovement(movement)}
+              />
             ))}
             {hasNextPage && (
               <button
@@ -461,6 +374,12 @@ function RouteComponent() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <MovementDetailDrawer
+        movement={selectedMovement}
+        open={!!selectedMovement}
+        onClose={() => setSelectedMovement(null)}
+      />
     </div>
   );
 }
