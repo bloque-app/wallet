@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
 import type { AuthContextProps } from '~/contexts/auth/auth-context';
 import { KycStepItem } from './kyc-step-item';
 
@@ -7,19 +8,20 @@ interface KycProgressBannerProps {
 }
 
 export function KycProgressBanner({ kycStatus }: KycProgressBannerProps) {
+  const { t } = useTranslation();
   const verificationDone = kycStatus === 'approved';
   const verificationInReview = kycStatus === 'awaiting_verification';
   const verificationRejected = kycStatus === 'rejected';
 
   const title = verificationRejected
-    ? 'No pudimos verificar tu identidad'
-    : 'Completa tu verificación';
+    ? t('kyc.banner.rejectedTitle')
+    : t('kyc.banner.defaultTitle');
   const description = verificationRejected
-    ? 'Tu verificación no fue aprobada. Inténtalo de nuevo para activar tu tarjeta.'
-    : 'Falta verificar tu identidad para activar tu tarjeta.';
+    ? t('kyc.banner.rejectedDescription')
+    : t('kyc.banner.defaultDescription');
   const ctaLabel = verificationRejected
-    ? 'Reintentar verificación'
-    : 'Ir a verificar';
+    ? t('kyc.banner.retryCta')
+    : t('kyc.banner.startCta');
 
   return (
     <section className="mb-5 rounded-2xl border border-border/80 bg-card/85 p-4 shadow-[0_18px_30px_-32px_color-mix(in_oklch,var(--foreground)_45%,transparent)]">
@@ -37,10 +39,14 @@ export function KycProgressBanner({ kycStatus }: KycProgressBannerProps) {
       </div>
 
       <div className="flex items-center justify-between gap-2">
-        <KycStepItem label="Registro" state="done" stepNumber={1} />
+        <KycStepItem
+          label={t('kyc.banner.stepRegistration')}
+          state="done"
+          stepNumber={1}
+        />
         <div className="h-px flex-1 bg-border" />
         <KycStepItem
-          label="Verificación"
+          label={t('kyc.banner.stepVerification')}
           stepNumber={2}
           state={
             verificationDone
@@ -53,7 +59,11 @@ export function KycProgressBanner({ kycStatus }: KycProgressBannerProps) {
           }
         />
         <div className="h-px flex-1 bg-border" />
-        <KycStepItem label="Activación" state="pending" stepNumber={3} />
+        <KycStepItem
+          label={t('kyc.banner.stepActivation')}
+          state="pending"
+          stepNumber={3}
+        />
       </div>
     </section>
   );

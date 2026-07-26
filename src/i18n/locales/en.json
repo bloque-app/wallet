@@ -155,6 +155,27 @@
       "send": "Send"
     }
   },
+  "kyc": {
+    "banner": {
+      "rejectedTitle": "We couldn't verify your identity",
+      "defaultTitle": "Complete your verification",
+      "rejectedDescription": "Your verification wasn't approved. Try again to activate your card.",
+      "defaultDescription": "You still need to verify your identity to activate your card.",
+      "retryCta": "Retry verification",
+      "startCta": "Go verify",
+      "stepRegistration": "Registration",
+      "stepVerification": "Verification",
+      "stepActivation": "Activation"
+    },
+    "route": {
+      "noUserUrn": "We couldn't find the user's URN to start KYC.",
+      "backHome": "Back to home",
+      "starting": "Starting KYC verification...",
+      "alreadyVerified": "Your identity has already been verified.",
+      "startError": "It wasn't possible to start the verification right now.",
+      "iframeTitle": "KYC verification"
+    }
+  },
   "movements": {
     "title": "Movements",
     "searchPlaceholder": "Search by reference...",
