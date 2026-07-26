@@ -25,6 +25,25 @@
     "yes": "Yes",
     "no": "No"
   },
+  "accountCarousel": {
+    "accountAria": "{{label}} account, available {{balance}}",
+    "selected": "Selected",
+    "defaultLabel": "Account",
+    "availableAccountsAria": "Available accounts"
+  },
+  "accountsCarousel": {
+    "accountAria": "{{label}} account",
+    "noBalance": "No balance",
+    "myAccountsAria": "My accounts",
+    "createNewAria": "Create new account",
+    "newAccount": "New account"
+  },
+  "createAccountDrawer": {
+    "createdToast": "Account created successfully",
+    "createErrorToast": "Couldn't create the account. Please try again.",
+    "namePlaceholder": "Savings, Business...",
+    "createAccount": "Create account"
+  },
   "accounts": {
     "title": "Accounts",
     "loading": "Loading accounts...",
