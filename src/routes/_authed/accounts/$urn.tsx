@@ -25,7 +25,6 @@ import {
 } from '~/components/ui/drawer';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
-import type { MovementEntry } from '~/domain/accounts/ports';
 import type { AssetBalance, Product } from '~/domain/accounts/types';
 import { useAccountMovements } from '~/hooks/accounts/use-account-movements';
 import { useAccount } from '~/hooks/accounts/use-accounts';
@@ -74,74 +73,6 @@ function formatAssetBalance(balance: AssetBalance) {
   return formatCOP(amount);
 }
 
-function toMovement(entry: MovementEntry): Movement | null {
-  const asset = getAssetLabel(entry.asset);
-
-  if (!asset) return null;
-
-  const rawType = entry.type?.trim().toLowerCase() ?? '';
-  const status = entry.status.toLowerCase();
-
-  let type: Movement['type'] = 'send';
-
-  if (
-    rawType.includes('deposit') ||
-    rawType.includes('topup') ||
-    rawType.includes('pay-in')
-  ) {
-    type = 'topup';
-  } else if (
-    rawType.includes('withdraw') ||
-    rawType.includes('payout') ||
-    rawType.includes('pay-out')
-  ) {
-    type = 'withdraw';
-  } else if (
-    rawType.includes('convert') ||
-    rawType.includes('swap') ||
-    rawType.includes('exchange')
-  ) {
-    type = 'convert';
-  } else if (
-    rawType.includes('card') ||
-    rawType.includes('payment') ||
-    rawType.includes('purchase') ||
-    (entry.railName || '').toLowerCase().includes('card')
-  ) {
-    type = 'card';
-  }
-
-  let movementStatus: Movement['status'] = 'failed';
-
-  if (
-    status.includes('pending') ||
-    status.includes('queued') ||
-    status.includes('process')
-  ) {
-    movementStatus = 'pending';
-  } else if (
-    status.includes('complete') ||
-    status.includes('success') ||
-    status.includes('settled') ||
-    status.includes('confirm')
-  ) {
-    movementStatus = 'completed';
-  }
-
-  return {
-    id: entry.id,
-    type,
-    asset,
-    amount: parseAmount(entry.amount, entry.asset),
-    fee: 0,
-    status: movementStatus,
-    createdAt: entry.createdAt,
-    reference: entry.reference,
-    counterparty: entry.counterparty,
-    direction: entry.direction === 'in' ? 'incoming' : 'outgoing',
-  };
-}
-
 function getProductLink(
   product: Product,
 ): { to: string; params?: Record<string, string> } | null {
@@ -182,11 +113,7 @@ function RouteComponent() {
   const movementsQuery = useAccountMovements(urn, movementsAsset);
 
   const movements = useMemo(
-    () =>
-      (movementsQuery.data?.pages ?? [])
-        .flatMap((page) => page.movements)
-        .map((entry) => toMovement(entry))
-        .filter((movement): movement is Movement => movement !== null),
+    () => (movementsQuery.data?.pages ?? []).flatMap((page) => page.movements),
     [movementsQuery.data?.pages],
   );
 

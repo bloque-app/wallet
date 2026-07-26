@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { CardProduct } from '~/domain/accounts/types';
 import { useAccounts } from '~/hooks/accounts/use-accounts';
+import { useCardMovements } from '~/hooks/accounts/use-card-movements';
 import type { Asset } from '~/lib/formatters';
 import { useShowBalances } from '~/lib/show-balances';
-import { useBalance, useTransactions } from './use-accounts';
+import { useBalance } from './use-accounts';
 
 type MovementFilter = 'todas' | 'entrantes' | 'salientes';
 
@@ -47,7 +48,7 @@ export function useCardDetail(urn: string) {
     hasNextPage,
     isFetchingNextPage,
     isLoading: isLoadingTransactions,
-  } = useTransactions(urn, selectedAssetKey, direction);
+  } = useCardMovements(urn, selectedAssetKey, direction);
 
   const selectedCard =
     cards.find((card) => card.urn === urn) ?? cards[0] ?? null;
@@ -91,7 +92,6 @@ export function useCardDetail(urn: string) {
 
   const currentAssetKey = selectedAssetKey || assetList[0]?.sdkKey || '';
   const currentAssetMeta = assetList.find((a) => a.sdkKey === currentAssetKey);
-  const currentPrecision = currentAssetMeta?.precision ?? 0;
   const assetBalance = balanceByKey[currentAssetKey] ?? 0;
   const displayAsset = (currentAssetMeta?.code as Asset | undefined) ?? 'USD';
 
@@ -101,16 +101,15 @@ export function useCardDetail(urn: string) {
     }
   }, [selectedAssetKey, assetList]);
 
-  const transactions = useMemo(
-    () =>
-      (txPages?.pages ?? []).flatMap((page) => page.transactions ?? []) ?? [],
+  const movements = useMemo(
+    () => (txPages?.pages ?? []).flatMap((page) => page.movements),
     [txPages?.pages],
   );
 
   const filteredMovements = useMemo(() => {
     if (!currentAssetKey) return [];
-    return transactions;
-  }, [transactions, currentAssetKey]);
+    return movements;
+  }, [movements, currentAssetKey]);
 
   return {
     // Card
@@ -122,7 +121,6 @@ export function useCardDetail(urn: string) {
     isLoadingBalance: balanceQuery.isLoading,
     assetList,
     currentAssetKey,
-    currentPrecision,
     assetBalance,
     displayAsset,
     showBalances,
