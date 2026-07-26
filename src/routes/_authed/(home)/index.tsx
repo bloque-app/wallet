@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AccountsCarousel } from '~/components/account/accounts-carousel';
 import { CreateAccountDrawer } from '~/components/account/create-account-drawer';
 import { MovementRow } from '~/components/movement-row';
@@ -59,6 +60,7 @@ function parseBalances(
 }
 
 function RouteComponent() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: balancesData, isLoading: isLoadingBalances } = useBalance();
   const { data: transactionsData, isLoading: isLoadingTransactions } =
@@ -102,7 +104,7 @@ function RouteComponent() {
               >
                 <img
                   src={ASSET_LOGO_MAP[asset]}
-                  alt={`Logo ${asset}`}
+                  alt={t('home.assetLogoAlt', { asset })}
                   className="h-3.5 w-3.5 rounded-full object-cover"
                 />
                 {asset}
@@ -113,7 +115,7 @@ function RouteComponent() {
         <div className="flex flex-col gap-1">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-              Saldo disponible
+              {t('home.availableBalance')}
             </p>
             <BalanceToggle />
           </div>
@@ -135,13 +137,13 @@ function RouteComponent() {
       <section className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-            Cuentas
+            {t('home.accounts')}
           </p>
           <Link
             to="/accounts"
             className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
           >
-            Ver todas
+            {t('home.viewAll')}
           </Link>
         </div>
         <AccountsCarousel
@@ -158,26 +160,28 @@ function RouteComponent() {
       <section className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-            Movimientos recientes
+            {t('home.recentMovements')}
           </p>
           <Link
             to="/movements"
             className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
           >
-            Ver más
+            {t('home.viewMore')}
           </Link>
         </div>
         {isLoadingTransactions ? (
           <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-border py-8">
             <p className="text-sm text-muted-foreground">
-              Cargando movimientos...
+              {t('home.loadingMovements')}
             </p>
           </div>
         ) : recentMovements.length === 0 ? (
           <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-border py-8">
-            <p className="text-sm text-muted-foreground">Sin movimientos</p>
+            <p className="text-sm text-muted-foreground">
+              {t('home.noMovements')}
+            </p>
             <p className="text-xs text-muted-foreground">
-              Realiza tu primera recarga para comenzar
+              {t('home.noMovementsHint')}
             </p>
           </div>
         ) : (

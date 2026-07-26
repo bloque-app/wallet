@@ -8,6 +8,7 @@ import {
   Wallet,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import {
   getProductKindIcon,
@@ -85,6 +86,7 @@ function getProductLink(
 }
 
 function RouteComponent() {
+  const { t } = useTranslation();
   const { urn } = Route.useParams();
   const navigate = useNavigate();
   const [selectedAsset, setSelectedAsset] = useState<string>('');
@@ -143,20 +145,20 @@ function RouteComponent() {
     try {
       if (addProductStep === 'card') {
         await createCardMutation.mutateAsync({
-          name: productName.trim() || 'Tarjeta',
+          name: productName.trim() || t('accounts.detail.defaultCardName'),
           ledgerId: account.ledgerId,
         });
-        toast.success('Tarjeta creada exitosamente');
+        toast.success(t('accounts.detail.cardCreatedToast'));
       } else if (addProductStep === 'polygon') {
         await createPolygonMutation.mutateAsync({
           name: productName.trim() || undefined,
           ledgerId: account.ledgerId,
         });
-        toast.success('Cuenta Polygon creada');
+        toast.success(t('accounts.detail.polygonCreatedToast'));
       }
       setAddProductStep('closed');
     } catch {
-      toast.error('No se pudo crear el producto. Intenta de nuevo.');
+      toast.error(t('accounts.detail.createProductErrorToast'));
     }
   };
 
@@ -171,20 +173,20 @@ function RouteComponent() {
           className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Volver
+          {t('common.back')}
         </Link>
         <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
-          Detalle de cuenta
+          {t('accounts.detail.title')}
         </h1>
       </div>
 
       {accountQuery.isLoading ? (
         <div className="rounded-2xl border border-border/75 bg-card/80 p-4 text-sm text-muted-foreground">
-          Cargando cuenta...
+          {t('accounts.detail.loadingAccount')}
         </div>
       ) : !account ? (
         <div className="rounded-2xl border border-border/75 bg-card/80 p-4 text-sm text-muted-foreground">
-          No encontramos esta cuenta.
+          {t('accounts.detail.notFound')}
         </div>
       ) : (
         <>
@@ -199,7 +201,7 @@ function RouteComponent() {
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {getProductKindLabel(primaryProduct?.kind ?? 'other')} •{' '}
-                  {primaryProduct?.status ?? 'sin estado'}
+                  {primaryProduct?.status ?? t('accounts.detail.noStatus')}
                 </p>
               </div>
             </div>
@@ -208,13 +210,13 @@ function RouteComponent() {
           <section className="flex flex-col gap-3 rounded-3xl border border-border/75 bg-card/85 p-4">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-sm font-semibold text-foreground">
-                Balances
+                {t('accounts.detail.balances')}
               </h2>
             </div>
 
             {balances.length === 0 || !balances[0] ? (
               <p className="text-sm text-muted-foreground">
-                Esta cuenta no tiene balances disponibles.
+                {t('accounts.detail.noBalances')}
               </p>
             ) : (
               <>
@@ -243,7 +245,7 @@ function RouteComponent() {
                 <div className="flex items-center justify-between rounded-2xl border border-border/75 bg-background/70 px-4 py-3">
                   <div>
                     <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                      Disponible
+                      {t('accounts.detail.available')}
                     </p>
                     <p className="text-lg font-semibold text-foreground">
                       {formatAssetBalance(
@@ -262,7 +264,7 @@ function RouteComponent() {
           <section className="flex flex-col gap-3 rounded-3xl border border-border/75 bg-card/85 p-4">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-sm font-semibold text-foreground">
-                Productos asociados
+                {t('accounts.detail.associatedProducts')}
               </h2>
               <Button
                 size="sm"
@@ -271,13 +273,13 @@ function RouteComponent() {
                 onClick={() => setAddProductStep('pick')}
               >
                 <Plus className="h-3.5 w-3.5" />
-                Agregar producto
+                {t('accounts.detail.addProduct')}
               </Button>
             </div>
 
             {associatedProducts.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                Esta cuenta aún no tiene otros productos asociados.
+                {t('accounts.detail.noAssociatedProducts')}
               </p>
             ) : (
               <div className="flex flex-col divide-y divide-border/60">
@@ -332,7 +334,7 @@ function RouteComponent() {
           <section className="flex flex-col gap-3">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-sm font-semibold text-foreground">
-                Movimientos
+                {t('accounts.detail.movements')}
               </h2>
               {selectedAsset ? (
                 <span className="text-xs text-muted-foreground">
@@ -343,11 +345,11 @@ function RouteComponent() {
 
             {movementsQuery.isLoading ? (
               <div className="rounded-2xl border border-dashed border-border py-12 text-center text-sm text-muted-foreground">
-                Cargando movimientos...
+                {t('home.loadingMovements')}
               </div>
             ) : movements.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-border py-12 text-center text-sm text-muted-foreground">
-                No hay movimientos para esta cuenta.
+                {t('accounts.detail.noMovements')}
               </div>
             ) : (
               <div className="flex flex-col gap-2">
@@ -368,8 +370,8 @@ function RouteComponent() {
                     disabled={movementsQuery.isFetchingNextPage}
                   >
                     {movementsQuery.isFetchingNextPage
-                      ? 'Cargando...'
-                      : 'Ver más'}
+                      ? t('common.loading')
+                      : t('home.viewMore')}
                   </Button>
                 ) : null}
               </div>
@@ -394,18 +396,26 @@ function RouteComponent() {
             <>
               <DrawerHeader className="text-left">
                 <DrawerTitle className="text-lg font-bold tracking-[-0.025em]">
-                  Agregar producto
+                  {t('accounts.detail.addProduct')}
                 </DrawerTitle>
               </DrawerHeader>
               <div className="flex flex-col gap-3 px-5 pb-4">
                 {[
-                  { kind: 'card' as const, label: 'Tarjeta', icon: CreditCard },
+                  {
+                    kind: 'card' as const,
+                    label: t('accounts.productKind.card'),
+                    icon: CreditCard,
+                  },
                   {
                     kind: 'breb' as const,
-                    label: 'Llave BRE-B',
+                    label: t('accounts.detail.brebKeyLabel'),
                     icon: KeyRound,
                   },
-                  { kind: 'polygon' as const, label: 'Polygon', icon: Wallet },
+                  {
+                    kind: 'polygon' as const,
+                    label: t('accounts.productKind.polygon'),
+                    icon: Wallet,
+                  },
                 ].map((option) => (
                   <button
                     key={option.kind}
@@ -428,16 +438,16 @@ function RouteComponent() {
               <DrawerHeader className="text-left">
                 <DrawerTitle className="text-lg font-bold tracking-[-0.025em]">
                   {addProductStep === 'card'
-                    ? 'Nueva tarjeta'
-                    : 'Cuenta Polygon'}
+                    ? t('accounts.detail.newCard')
+                    : t('accounts.detail.polygonAccount')}
                 </DrawerTitle>
               </DrawerHeader>
               <div className="px-5 pb-2">
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="product-name" className="text-sm font-medium">
                     {addProductStep === 'card'
-                      ? 'Nombre de la tarjeta'
-                      : 'Nombre (opcional)'}
+                      ? t('accounts.detail.cardNameLabel')
+                      : t('accounts.detail.optionalNameLabel')}
                   </Label>
                   <Input
                     id="product-name"
@@ -447,14 +457,18 @@ function RouteComponent() {
                       if (e.key === 'Enter') handleCreateProduct();
                     }}
                     placeholder={
-                      addProductStep === 'card' ? 'Personal' : 'Principal'
+                      addProductStep === 'card'
+                        ? t('accounts.detail.cardNamePlaceholder')
+                        : t('accounts.detail.polygonNamePlaceholder')
                     }
                     maxLength={40}
                     disabled={isCreatingProduct}
                     className="h-12 rounded-xl"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Compartirá el saldo de {account?.label}.
+                    {t('accounts.detail.sharesBalanceOf', {
+                      label: account?.label,
+                    })}
                   </p>
                 </div>
               </div>
@@ -467,7 +481,9 @@ function RouteComponent() {
                   }
                   className="h-12 w-full rounded-xl text-sm font-medium"
                 >
-                  {isCreatingProduct ? 'Creando...' : 'Crear'}
+                  {isCreatingProduct
+                    ? t('common.creating')
+                    : t('common.create')}
                 </Button>
               </DrawerFooter>
             </>

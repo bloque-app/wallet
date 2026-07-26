@@ -1,0 +1,123 @@
+{
+  "common": {
+    "back": "Volver",
+    "loading": "Cargando...",
+    "creating": "Creando...",
+    "create": "Crear"
+  },
+  "accounts": {
+    "title": "Cuentas",
+    "loading": "Cargando cuentas...",
+    "empty": "No encontramos cuentas para este usuario.",
+    "createNew": "Crear Nueva Cuenta",
+    "noAssociatedProducts": "Sin productos asociados",
+    "productKind": {
+      "card": "Tarjeta",
+      "breb": "BRE-B",
+      "polygon": "Polygon",
+      "pocket": "Cuenta",
+      "other": "Otro"
+    },
+    "detail": {
+      "title": "Detalle de cuenta",
+      "loadingAccount": "Cargando cuenta...",
+      "notFound": "No encontramos esta cuenta.",
+      "noStatus": "sin estado",
+      "balances": "Balances",
+      "noBalances": "Esta cuenta no tiene balances disponibles.",
+      "available": "Disponible",
+      "associatedProducts": "Productos asociados",
+      "addProduct": "Agregar producto",
+      "noAssociatedProducts": "Esta cuenta aún no tiene otros productos asociados.",
+      "movements": "Movimientos",
+      "noMovements": "No hay movimientos para esta cuenta.",
+      "brebKeyLabel": "Llave BRE-B",
+      "newCard": "Nueva tarjeta",
+      "polygonAccount": "Cuenta Polygon",
+      "cardNameLabel": "Nombre de la tarjeta",
+      "optionalNameLabel": "Nombre (opcional)",
+      "cardNamePlaceholder": "Personal",
+      "polygonNamePlaceholder": "Principal",
+      "sharesBalanceOf": "Compartirá el saldo de {{label}}.",
+      "defaultCardName": "Tarjeta",
+      "cardCreatedToast": "Tarjeta creada exitosamente",
+      "polygonCreatedToast": "Cuenta Polygon creada",
+      "createProductErrorToast": "No se pudo crear el producto. Intenta de nuevo."
+    }
+  },
+  "home": {
+    "availableBalance": "Saldo disponible",
+    "accounts": "Cuentas",
+    "viewAll": "Ver todas",
+    "recentMovements": "Movimientos recientes",
+    "viewMore": "Ver más",
+    "loadingMovements": "Cargando movimientos...",
+    "noMovements": "Sin movimientos",
+    "noMovementsHint": "Realiza tu primera recarga para comenzar",
+    "assetLogoAlt": "Logo {{asset}}",
+    "viewDetails": "Ver detalles",
+    "hideBalancesAria": "Ocultar saldos",
+    "showBalancesAria": "Mostrar saldos",
+    "hide": "Ocultar",
+    "show": "Mostrar",
+    "assetLabels": {
+      "cop": "Peso Colombiano",
+      "usd": "Dólar Estadounidense",
+      "ksm": "Kusama"
+    },
+    "quickActions": {
+      "title": "Acciones rápidas",
+      "topup": "Recargar",
+      "send": "Enviar"
+    }
+  },
+  "nav": {
+    "ariaLabel": "Navegación principal",
+    "home": "Inicio",
+    "accounts": "Cuentas",
+    "movements": "Movimientos",
+    "card": "Tarjeta",
+    "profile": "Perfil"
+  },
+  "profile": {
+    "title": "Perfil",
+    "kyc": {
+      "approved": "Verificado",
+      "awaitingVerification": "En revisión",
+      "rejected": "Rechazado",
+      "notVerified": "Sin verificar"
+    },
+    "sections": {
+      "account": "Cuenta",
+      "polygonAccounts": "Cuentas Polygon",
+      "settings": "Configuración",
+      "legal": "Legal",
+      "support": "Soporte"
+    },
+    "rows": {
+      "allAccounts": "Todas las cuentas",
+      "view": "Ver",
+      "kycVerification": "Verificación KYC",
+      "devicesAndSessions": "Dispositivos y sesiones",
+      "oneActive": "1 activo",
+      "addAccount": "Agregar cuenta",
+      "language": "Idioma",
+      "pushNotifications": "Notificaciones push",
+      "pushNotificationsSublabel": "Recibe alertas de movimientos",
+      "theme": "Tema",
+      "themeSublabel": "Activa para usar dark, desactiva para light",
+      "termsAndConditions": "Términos y condiciones",
+      "privacyPolicy": "Política de privacidad",
+      "feesAndCommissions": "Tarifas y comisiones",
+      "supportChat": "Chat de soporte",
+      "helpCenter": "Centro de ayuda",
+      "contact": "Contacto"
+    },
+    "settings": {
+      "languageSpanish": "Español (CO)",
+      "languageEnglish": "English (US)"
+    },
+    "logout": "Cerrar sesión",
+    "version": "Wallet Bloque v{{version}}"
+  }
+}
