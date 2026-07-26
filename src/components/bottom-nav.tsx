@@ -8,29 +8,31 @@ import {
   Landmark,
   UserCircle,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAccounts } from '~/hooks/accounts/use-accounts';
 import { cn } from '~/lib/utils';
 
 export function BottomNav() {
+  const { t } = useTranslation();
   const { pathname } = useLocation();
   const accountsQuery = useAccounts();
   const hasMultipleAccounts = (accountsQuery.data?.length ?? 0) > 1;
 
   const secondItem = hasMultipleAccounts
-    ? { href: '/accounts', label: 'Cuentas', icon: Landmark }
-    : { href: '/movements', label: 'Movimientos', icon: ArrowLeftRight };
+    ? { href: '/accounts', label: t('nav.accounts'), icon: Landmark }
+    : { href: '/movements', label: t('nav.movements'), icon: ArrowLeftRight };
 
   const navItems = [
-    { href: '/', label: 'Inicio', icon: Home },
+    { href: '/', label: t('nav.home'), icon: Home },
     secondItem,
-    { href: '/card', label: 'Tarjeta', icon: CreditCard },
-    { href: '/profile', label: 'Perfil', icon: UserCircle },
+    { href: '/card', label: t('nav.card'), icon: CreditCard },
+    { href: '/profile', label: t('nav.profile'), icon: UserCircle },
   ];
 
   return (
     <nav
       className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[calc(env(safe-area-inset-bottom)+0.5rem)]"
-      aria-label="Navegación principal"
+      aria-label={t('nav.ariaLabel')}
     >
       <div className="mx-auto flex h-[4.4rem] max-w-lg items-center justify-around rounded-[1.7rem] border border-border/80 bg-background/90 px-2 shadow-[0_20px_45px_-30px_color-mix(in_oklch,var(--foreground)_35%,transparent)] backdrop-blur-xl">
         {navItems.map((item) => {

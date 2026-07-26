@@ -1,0 +1,123 @@
+{
+  "common": {
+    "back": "Back",
+    "loading": "Loading...",
+    "creating": "Creating...",
+    "create": "Create"
+  },
+  "accounts": {
+    "title": "Accounts",
+    "loading": "Loading accounts...",
+    "empty": "We couldn't find any accounts for this user.",
+    "createNew": "Create New Account",
+    "noAssociatedProducts": "No associated products",
+    "productKind": {
+      "card": "Card",
+      "breb": "BRE-B",
+      "polygon": "Polygon",
+      "pocket": "Account",
+      "other": "Other"
+    },
+    "detail": {
+      "title": "Account details",
+      "loadingAccount": "Loading account...",
+      "notFound": "We couldn't find this account.",
+      "noStatus": "no status",
+      "balances": "Balances",
+      "noBalances": "This account has no balances available.",
+      "available": "Available",
+      "associatedProducts": "Associated products",
+      "addProduct": "Add product",
+      "noAssociatedProducts": "This account doesn't have other associated products yet.",
+      "movements": "Movements",
+      "noMovements": "There are no movements for this account.",
+      "brebKeyLabel": "BRE-B key",
+      "newCard": "New card",
+      "polygonAccount": "Polygon account",
+      "cardNameLabel": "Card name",
+      "optionalNameLabel": "Name (optional)",
+      "cardNamePlaceholder": "Personal",
+      "polygonNamePlaceholder": "Main",
+      "sharesBalanceOf": "It will share the balance of {{label}}.",
+      "defaultCardName": "Card",
+      "cardCreatedToast": "Card created successfully",
+      "polygonCreatedToast": "Polygon account created",
+      "createProductErrorToast": "Couldn't create the product. Please try again."
+    }
+  },
+  "home": {
+    "availableBalance": "Available balance",
+    "accounts": "Accounts",
+    "viewAll": "View all",
+    "recentMovements": "Recent movements",
+    "viewMore": "View more",
+    "loadingMovements": "Loading movements...",
+    "noMovements": "No movements",
+    "noMovementsHint": "Make your first top-up to get started",
+    "assetLogoAlt": "{{asset}} logo",
+    "viewDetails": "View details",
+    "hideBalancesAria": "Hide balances",
+    "showBalancesAria": "Show balances",
+    "hide": "Hide",
+    "show": "Show",
+    "assetLabels": {
+      "cop": "Colombian Peso",
+      "usd": "US Dollar",
+      "ksm": "Kusama"
+    },
+    "quickActions": {
+      "title": "Quick actions",
+      "topup": "Top up",
+      "send": "Send"
+    }
+  },
+  "nav": {
+    "ariaLabel": "Main navigation",
+    "home": "Home",
+    "accounts": "Accounts",
+    "movements": "Movements",
+    "card": "Card",
+    "profile": "Profile"
+  },
+  "profile": {
+    "title": "Profile",
+    "kyc": {
+      "approved": "Verified",
+      "awaitingVerification": "Under review",
+      "rejected": "Rejected",
+      "notVerified": "Not verified"
+    },
+    "sections": {
+      "account": "Account",
+      "polygonAccounts": "Polygon accounts",
+      "settings": "Settings",
+      "legal": "Legal",
+      "support": "Support"
+    },
+    "rows": {
+      "allAccounts": "All accounts",
+      "view": "View",
+      "kycVerification": "KYC verification",
+      "devicesAndSessions": "Devices and sessions",
+      "oneActive": "1 active",
+      "addAccount": "Add account",
+      "language": "Language",
+      "pushNotifications": "Push notifications",
+      "pushNotificationsSublabel": "Get alerts about your movements",
+      "theme": "Theme",
+      "themeSublabel": "Turn on for dark, turn off for light",
+      "termsAndConditions": "Terms and conditions",
+      "privacyPolicy": "Privacy policy",
+      "feesAndCommissions": "Fees and commissions",
+      "supportChat": "Support chat",
+      "helpCenter": "Help center",
+      "contact": "Contact"
+    },
+    "settings": {
+      "languageSpanish": "Spanish (CO)",
+      "languageEnglish": "English (US)"
+    },
+    "logout": "Log out",
+    "version": "Wallet Bloque v{{version}}"
+  }
+}

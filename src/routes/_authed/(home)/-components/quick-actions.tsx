@@ -2,31 +2,33 @@
 
 import { Link } from '@tanstack/react-router';
 import { KeyRound, Landmark, Send } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '~/lib/utils';
 
-const actions = [
-  {
-    label: 'Recargar',
-    href: '/topup',
-    icon: Landmark,
-  },
-  {
-    label: 'Enviar',
-    href: '/send',
-    icon: Send,
-  },
-  {
-    label: 'BRE-B',
-    href: '/breb-keys',
-    icon: KeyRound,
-  },
-];
-
 export function QuickActions() {
+  const { t } = useTranslation();
+  const actions = [
+    {
+      label: t('home.quickActions.topup'),
+      href: '/topup',
+      icon: Landmark,
+    },
+    {
+      label: t('home.quickActions.send'),
+      href: '/send',
+      icon: Send,
+    },
+    {
+      label: 'BRE-B',
+      href: '/breb-keys',
+      icon: KeyRound,
+    },
+  ];
+
   return (
     <section className="flex flex-col gap-3">
       <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-        Acciones rápidas
+        {t('home.quickActions.title')}
       </p>
       <div className="grid grid-cols-3 gap-2">
         {actions.map((action) => {

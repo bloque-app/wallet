@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { ArrowLeft, ChevronRight, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CreateAccountDrawer } from '~/components/account/create-account-drawer';
 import {
   getProductKindIcon,
@@ -9,6 +10,7 @@ import {
 import { Button } from '~/components/ui/button';
 import type { Account } from '~/domain/accounts/types';
 import { useAccounts } from '~/hooks/accounts/use-accounts';
+import i18n from '~/i18n/config';
 import { formatCOP, formatUSD, sortBalancesForDisplay } from '~/lib/formatters';
 
 export const Route = createFileRoute('/_authed/accounts/')({
@@ -38,7 +40,7 @@ function getCompositionLabel(account: Account) {
     );
     return primary
       ? `${getProductKindLabel(primary.kind)} • ${primary.status}`
-      : 'Sin productos asociados';
+      : i18n.t('accounts.noAssociatedProducts');
   }
 
   return associated
@@ -47,6 +49,7 @@ function getCompositionLabel(account: Account) {
 }
 
 function RouteComponent() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const accountsQuery = useAccounts();
   const accounts = accountsQuery.data ?? [];
@@ -74,20 +77,20 @@ function RouteComponent() {
           className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Volver
+          {t('common.back')}
         </Link>
         <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
-          Cuentas
+          {t('accounts.title')}
         </h1>
       </div>
 
       {accountsQuery.isLoading ? (
         <div className="rounded-2xl border border-border/75 bg-card/80 p-4 text-sm text-muted-foreground">
-          Cargando cuentas...
+          {t('accounts.loading')}
         </div>
       ) : accounts.length === 0 ? (
         <div className="rounded-2xl border border-border/75 bg-card/80 p-4 text-sm text-muted-foreground">
-          No encontramos cuentas para este usuario.
+          {t('accounts.empty')}
         </div>
       ) : (
         <section className="flex flex-col gap-3">
@@ -144,7 +147,7 @@ function RouteComponent() {
         className="h-12 w-full gap-2 rounded-2xl text-sm font-medium"
       >
         <Plus className="h-4 w-4" />
-        Crear Nueva Cuenta
+        {t('accounts.createNew')}
       </Button>
 
       <CreateAccountDrawer
