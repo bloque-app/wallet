@@ -8,7 +8,7 @@ interface KycProgressBannerProps {
 
 export function KycProgressBanner({ kycStatus }: KycProgressBannerProps) {
   const verificationDone = kycStatus === 'approved';
-  const verificationInReview = kycStatus === 'in_review';
+  const verificationInReview = kycStatus === 'awaiting_verification';
 
   return (
     <section className="mb-5 rounded-2xl border border-border/80 bg-card/85 p-4 shadow-[0_18px_30px_-32px_color-mix(in_oklch,var(--foreground)_45%,transparent)]">

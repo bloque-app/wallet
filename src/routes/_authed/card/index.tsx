@@ -42,10 +42,7 @@ function RouteComponent() {
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
   const [showCardDetails, setShowCardDetails] = useState(false);
 
-  const kycStatus =
-    user?.kycStatus === 'not_verified' || !user?.kycStatus
-      ? 'not_started'
-      : user.kycStatus;
+  const kycStatus = user?.kycStatus ?? 'not_started';
   const activeCard = cards.find((c) => c.urn === activeCardId) ?? null;
 
   useEffect(() => {

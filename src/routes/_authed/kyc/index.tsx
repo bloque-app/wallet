@@ -1,9 +1,6 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router';
 import { ArrowLeft } from 'lucide-react';
-import { useEffect, useRef } from 'react';
-import { useAuth } from '~/contexts/auth/auth-context';
-import { bloque } from '~/lib/bloque';
+import { useVerification } from '~/hooks/kyc/use-verification';
 
 export const Route = createFileRoute('/_authed/kyc/')({
   component: RouteComponent,
@@ -11,33 +8,9 @@ export const Route = createFileRoute('/_authed/kyc/')({
 
 function RouteComponent() {
   const { history } = useRouter();
+  const { url, isBootstrapping, isError, hasUser } = useVerification();
 
-  const { user } = useAuth();
-  const startedForUrnRef = useRef<string | null>(null);
-  const verificationQuery = useQuery({
-    queryKey: ['kyc-verification', user?.urn],
-    enabled: !!user?.urn,
-    retry: false,
-    queryFn: async () =>
-      bloque.compliance.kyc.getVerification({ urn: user.urn }),
-  });
-  const startVerification = useMutation({
-    mutationFn: async (urn: string) =>
-      bloque.compliance.kyc.startVerification({ urn }),
-  });
-  const shouldStartVerification =
-    (verificationQuery.isSuccess && !verificationQuery.data?.url) ||
-    (verificationQuery.isError && isNotFoundError(verificationQuery.error));
-
-  useEffect(() => {
-    if (!user?.urn) return;
-    if (!shouldStartVerification) return;
-    if (startedForUrnRef.current === user.urn) return;
-    startedForUrnRef.current = user.urn;
-    startVerification.mutate(user.urn);
-  }, [user?.urn, shouldStartVerification, startVerification.mutate]);
-
-  if (!user?.urn) {
+  if (!hasUser) {
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center gap-4 px-6 text-center">
         <p className="text-sm text-muted-foreground">
@@ -54,16 +27,7 @@ function RouteComponent() {
     );
   }
 
-  const verificationUrl =
-    verificationQuery.data?.url ?? startVerification.data?.url ?? null;
-  const hasUnhandledGetError =
-    verificationQuery.isError && !isNotFoundError(verificationQuery.error);
-
-  if (
-    verificationQuery.isPending ||
-    (shouldStartVerification &&
-      (startVerification.isPending || !verificationUrl))
-  ) {
+  if (isBootstrapping) {
     return (
       <div className="flex min-h-dvh items-center justify-center px-6 text-center">
         <p className="text-sm text-muted-foreground">
@@ -73,7 +37,7 @@ function RouteComponent() {
     );
   }
 
-  if (hasUnhandledGetError || startVerification.isError || !verificationUrl) {
+  if (isError || !url) {
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center gap-4 px-6 text-center">
         <p className="text-sm text-muted-foreground">
@@ -93,7 +57,7 @@ function RouteComponent() {
   return (
     <div className="relative h-dvh w-full overflow-hidden bg-background">
       <iframe
-        src={verificationUrl}
+        src={url}
         title="Verificación KYC"
         className="h-full w-full border-0"
         sandbox="allow-forms allow-scripts allow-same-origin allow-popups"
@@ -110,14 +74,5 @@ function RouteComponent() {
         </button>
       </div>
     </div>
-  );
-}
-
-function isNotFoundError(error: unknown): boolean {
-  if (!error || typeof error !== 'object') return false;
-  return (
-    'status' in error &&
-    typeof (error as { status?: unknown }).status === 'number' &&
-    (error as { status: number }).status === 404
   );
 }
