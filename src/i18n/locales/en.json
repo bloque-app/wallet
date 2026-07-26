@@ -211,6 +211,15 @@
       "transferSentToast": "BRE-B transfer sent successfully.",
       "transferErrorToast": "Couldn't send the BRE-B transfer.",
       "keyValidationErrorToast": "Couldn't validate the BRE-B key."
+    },
+    "payTransferQr": {
+      "noResolution": "We couldn't find the BRE-B QR resolution.",
+      "noValidKeyInQr": "We couldn't find a valid BRE-B key in the QR.",
+      "completeAmount": "Complete the amount for the BRE-B QR",
+      "paymentStartedFromQr": "Payment started from BRE-B QR",
+      "qrReference": "QR reference",
+      "aboutToSend": "You're about to send money to {{recipient}}.",
+      "checkingRateToOpenConfirmation": "Checking the rate to open the confirmation."
     }
   },
   "card": {

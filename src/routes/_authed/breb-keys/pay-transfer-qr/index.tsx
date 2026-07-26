@@ -2,6 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { ArrowLeft, Landmark, Send } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { AccountCarousel } from '~/components/account/account-carousel';
 import {
@@ -23,6 +24,7 @@ import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useResolveBrebKey } from '~/hooks/accounts/use-breb-keys';
 import { useCreateBrebOrder } from '~/hooks/payments/use-breb-order';
 import { useRates } from '~/hooks/payments/use-rates';
+import i18n from '~/i18n/config';
 import { formatCOP, getAssetPrecision } from '~/lib/formatters';
 import { goBackOrFallback } from '~/lib/navigation';
 import { TopUpErrorStep } from '../../topup/-components/error-step';
@@ -125,7 +127,10 @@ function getRecipientDisplayName(params: {
   if (params.recipientPreview) {
     const resolvedName = getRecipientName(params.recipientPreview);
 
-    if (resolvedName && resolvedName !== 'Destinatario BRE-B') {
+    if (
+      resolvedName &&
+      resolvedName !== i18n.t('brebKeys.defaultRecipientName')
+    ) {
       return resolvedName;
     }
   }
@@ -135,11 +140,12 @@ function getRecipientDisplayName(params: {
     params.recipientName ||
     params.merchantName ||
     params.key ||
-    'Destinatario BRE-B'
+    i18n.t('brebKeys.defaultRecipientName')
   );
 }
 
 function RouteComponent() {
+  const { t } = useTranslation();
   const search = Route.useSearch();
   const navigate = useNavigate();
   const [view, setView] = useState<ViewState>('loading');
@@ -252,23 +258,23 @@ function RouteComponent() {
   const selectedRate = ratesQuery.data?.[0] ?? null;
   const formError = useMemo(() => {
     if (!isLoadingFundedAccounts && fundedAccounts.length === 0) {
-      return 'No tienes saldo disponible en ninguna llave BRE-B activa.';
+      return t('brebKeys.payTransfer.noFundedAccounts');
     }
     if (isStaticQr && !recipientPreview?.resolutionId) {
-      return 'No encontramos la resolución del QR BRE-B.';
+      return t('brebKeys.payTransferQr.noResolution');
     }
     if (parsedAmount > 0 && parsedAmount < MIN_TRANSFER_AMOUNT) {
-      return 'El monto mínimo es $10 COP.';
+      return t('brebKeys.payTransfer.minAmount');
     }
     if (ratesQuery.isError) {
-      return 'No pudimos consultar la tasa. Intenta de nuevo.';
+      return t('convert.rateFetchError');
     }
     if (
       parsedAmount >= MIN_TRANSFER_AMOUNT &&
       ratesQuery.isSuccess &&
       !selectedRate
     ) {
-      return 'No hay tasas disponibles para este monto.';
+      return t('convert.noRatesAvailable');
     }
     return null;
   }, [
@@ -280,6 +286,7 @@ function RouteComponent() {
     ratesQuery.isSuccess,
     recipientPreview,
     selectedRate,
+    t,
   ]);
 
   useEffect(() => {
@@ -315,15 +322,15 @@ function RouteComponent() {
 
   const submitOrder = useCallback(() => {
     if (!recipientPreview?.resolutionId) {
-      toast.error('No hay destinatario confirmado.');
+      toast.error(t('brebKeys.payTransfer.noRecipientConfirmed'));
       return;
     }
     if (!selectedRate?.sig) {
-      toast.error('No hay tasa disponible para enviar.');
+      toast.error(t('brebKeys.payTransfer.noRateToSend'));
       return;
     }
     if (!selectedSourceBrebUrn) {
-      toast.error('Selecciona la cuenta BRE-B desde la que quieres enviar.');
+      toast.error(t('brebKeys.payTransfer.selectSourceAccount'));
       return;
     }
 
@@ -345,18 +352,18 @@ function RouteComponent() {
             execution: result.execution ?? { kind: 'none' },
           });
           setView('pending');
-          toast.success('Transferencia BRE-B enviada correctamente.');
+          toast.success(t('brebKeys.payTransfer.transferSentToast'));
         },
         onError: (error) => {
           const msg = error instanceof Error ? error.message : '';
           if (msg.includes('E_RATE_EXPIRED')) {
-            toast.info('La tasa expiró. Recalculando...');
+            toast.info(t('topup.rateExpiredToast'));
             setConfirmOpen(false);
             setAutoRetry(true);
             void ratesQuery.refetch();
             return;
           }
-          toast.error(msg || 'No se pudo enviar la transferencia BRE-B.');
+          toast.error(msg || t('brebKeys.payTransfer.transferErrorToast'));
           setView('error');
         },
       },
@@ -369,6 +376,7 @@ function RouteComponent() {
     message,
     createOrderMutation,
     ratesQuery,
+    t,
   ]);
 
   useEffect(() => {
@@ -377,9 +385,9 @@ function RouteComponent() {
     if (selectedRate) {
       submitOrder();
     } else {
-      toast.error('No hay tasa disponible. Intenta de nuevo.');
+      toast.error(t('topup.noRateRetryToast'));
     }
-  }, [autoRetry, ratesQuery.isFetching, selectedRate, submitOrder]);
+  }, [autoRetry, ratesQuery.isFetching, selectedRate, submitOrder, t]);
 
   const resolveBrebKeyMutation = useResolveBrebKey();
   const previewRecipientMutation = useMutation({
@@ -390,7 +398,7 @@ function RouteComponent() {
 
       const inferredKeyType = inferBrebKeyType(normalizedKey);
       if (!inferredKeyType || !normalizedKey) {
-        throw new Error('No encontramos una llave BRE-B válida en el QR.');
+        throw new Error(t('brebKeys.payTransferQr.noValidKeyInQr'));
       }
 
       return await resolveBrebKeyMutation.mutateAsync({
@@ -406,7 +414,7 @@ function RouteComponent() {
       toast.error(
         error instanceof Error
           ? error.message
-          : 'No se pudo validar la llave BRE-B.',
+          : t('brebKeys.payTransfer.keyValidationErrorToast'),
       );
     },
   });
@@ -427,10 +435,10 @@ function RouteComponent() {
             className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            Volver
+            {t('common.back')}
           </button>
           <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
-            Pagar o transferir
+            {t('brebKeys.payTransfer.title')}
           </h1>
         </div>
 
@@ -454,10 +462,10 @@ function RouteComponent() {
             className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            Volver
+            {t('common.back')}
           </button>
           <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
-            Pagar o transferir
+            {t('brebKeys.payTransfer.title')}
           </h1>
         </div>
         <TopUpErrorStep onRetry={() => setView('loading')} />
@@ -475,14 +483,14 @@ function RouteComponent() {
             className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            Volver
+            {t('common.back')}
           </button>
           <div>
             <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
-              Pagar o transferir
+              {t('brebKeys.payTransfer.title')}
             </h1>
             <p className="text-xs text-muted-foreground">
-              Completa el monto para el QR BRE-B
+              {t('brebKeys.payTransferQr.completeAmount')}
             </p>
           </div>
         </div>
@@ -495,13 +503,15 @@ function RouteComponent() {
               </div>
               <div className="flex flex-col">
                 <p className="text-sm font-medium text-foreground">
-                  Pago iniciado desde QR BRE-B
+                  {t('brebKeys.payTransferQr.paymentStartedFromQr')}
                 </p>
               </div>
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="breb-qr-key">Llave BRE-B</Label>
+              <Label htmlFor="breb-qr-key">
+                {t('brebKeys.payTransfer.keyLabel')}
+              </Label>
               <Input
                 id="breb-qr-key"
                 value={normalizedKey}
@@ -518,20 +528,23 @@ function RouteComponent() {
                 unit="COP"
                 value={selectedLedgerId}
                 onChange={setSelectedLedgerId}
-                label="Enviar desde"
+                label={t('brebKeys.payTransfer.sendFrom')}
               />
             ) : null}
 
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="breb-qr-amount">Monto</Label>
+                <Label htmlFor="breb-qr-amount">
+                  {t('brebKeys.payTransfer.amount')}
+                </Label>
                 {selectedBalance ? (
                   <span className="text-xs text-muted-foreground">
-                    Disponible:{' '}
-                    {formatCOP(
-                      Number.parseInt(selectedBalance.current, 10) /
-                        10 ** FROM_PRECISION,
-                    )}
+                    {t('brebKeys.payTransfer.available', {
+                      amount: formatCOP(
+                        Number.parseInt(selectedBalance.current, 10) /
+                          10 ** FROM_PRECISION,
+                      ),
+                    })}
                   </span>
                 ) : null}
               </div>
@@ -549,10 +562,12 @@ function RouteComponent() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="breb-qr-message">Mensaje</Label>
+              <Label htmlFor="breb-qr-message">
+                {t('brebKeys.payTransfer.message')}
+              </Label>
               <Textarea
                 id="breb-qr-message"
-                placeholder="¿Para qué es este envio?"
+                placeholder={t('brebKeys.payTransfer.messagePlaceholder')}
                 value={message}
                 onChange={(event) => setMessage(event.target.value)}
                 className="min-h-24 resize-none rounded-2xl"
@@ -563,14 +578,18 @@ function RouteComponent() {
             <div className="rounded-2xl border border-border/85 bg-background/70 p-4">
               <div className="flex flex-col gap-2 text-sm">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-muted-foreground">Destinatario</span>
+                  <span className="text-muted-foreground">
+                    {t('brebKeys.payTransfer.recipient')}
+                  </span>
                   <span className="max-w-[60%] text-right font-semibold text-foreground">
                     {recipientDisplayName}
                   </span>
                 </div>
                 {search.qrCodeReference ? (
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-muted-foreground">Referencia QR</span>
+                    <span className="text-muted-foreground">
+                      {t('brebKeys.payTransferQr.qrReference')}
+                    </span>
                     <span className="max-w-[60%] break-all text-right font-medium text-foreground">
                       {search.qrCodeReference}
                     </span>
@@ -586,7 +605,9 @@ function RouteComponent() {
             {parsedAmount >= MIN_TRANSFER_AMOUNT ? (
               <div className="rounded-2xl border border-border/85 bg-background/70 p-4">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Envias</span>
+                  <span className="text-muted-foreground">
+                    {t('brebKeys.payTransfer.youSend')}
+                  </span>
                   <span className="font-medium text-foreground">
                     {formatCOP(parsedAmount)}
                   </span>
@@ -609,8 +630,8 @@ function RouteComponent() {
             >
               <Send className="h-4 w-4" />
               {previewRecipientMutation.isPending
-                ? 'Validando llave...'
-                : 'Continuar'}
+                ? t('brebKeys.payTransfer.validatingKey')
+                : t('common.continue')}
             </Button>
           </div>
         </section>
@@ -618,43 +639,57 @@ function RouteComponent() {
         <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
           <AlertDialogContent size="sm">
             <AlertDialogHeader className="items-start text-left">
-              <AlertDialogTitle>Confirmar envio</AlertDialogTitle>
+              <AlertDialogTitle>
+                {t('brebKeys.payTransfer.confirmSend')}
+              </AlertDialogTitle>
               <AlertDialogDescription>
-                {`Vas a enviar dinero a ${recipientDisplayName}.`}
+                {t('brebKeys.payTransferQr.aboutToSend', {
+                  recipient: recipientDisplayName,
+                })}
               </AlertDialogDescription>
             </AlertDialogHeader>
 
             <div className="rounded-2xl border border-border/85 bg-background/70 p-4">
               <div className="flex flex-col gap-2 text-sm">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-muted-foreground">Destinatario</span>
+                  <span className="text-muted-foreground">
+                    {t('brebKeys.payTransfer.recipient')}
+                  </span>
                   <span className="max-w-[60%] text-right font-semibold text-foreground">
                     {recipientDisplayName}
                   </span>
                 </div>
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-muted-foreground">Llave</span>
+                  <span className="text-muted-foreground">
+                    {t('brebKeys.payTransfer.key')}
+                  </span>
                   <span className="font-medium text-foreground">
                     {normalizedKey}
                   </span>
                 </div>
                 {selectedAccount ? (
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-muted-foreground">Desde</span>
+                    <span className="text-muted-foreground">
+                      {t('brebKeys.payTransfer.from')}
+                    </span>
                     <span className="font-medium text-foreground">
                       {selectedAccount.label}
                     </span>
                   </div>
                 ) : null}
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-muted-foreground">Monto</span>
+                  <span className="text-muted-foreground">
+                    {t('brebKeys.payTransfer.amount')}
+                  </span>
                   <span className="font-medium text-foreground">
                     {formatCOP(parsedAmount)}
                   </span>
                 </div>
                 {message.trim() ? (
                   <div className="flex flex-col gap-1 pt-2">
-                    <span className="text-muted-foreground">Mensaje</span>
+                    <span className="text-muted-foreground">
+                      {t('brebKeys.payTransfer.message')}
+                    </span>
                     <p className="text-foreground">{message.trim()}</p>
                   </div>
                 ) : null}
@@ -663,7 +698,7 @@ function RouteComponent() {
 
             <AlertDialogFooter>
               <AlertDialogCancel disabled={createOrderMutation.isPending}>
-                Cancelar
+                {t('common.cancel')}
               </AlertDialogCancel>
               <AlertDialogAction
                 disabled={createOrderMutation.isPending}
@@ -673,8 +708,8 @@ function RouteComponent() {
                 }}
               >
                 {createOrderMutation.isPending
-                  ? 'Enviando...'
-                  : 'Confirmar envio'}
+                  ? t('brebKeys.payTransfer.sending')
+                  : t('brebKeys.payTransfer.confirmSend')}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -692,13 +727,15 @@ function RouteComponent() {
           className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Volver
+          {t('common.back')}
         </button>
         <div>
           <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
-            Pagar o transferir
+            {t('brebKeys.payTransfer.title')}
           </h1>
-          <p className="text-xs text-muted-foreground">Procesando QR BRE-B</p>
+          <p className="text-xs text-muted-foreground">
+            {t('brebKeys.decoding.title')}
+          </p>
         </div>
       </div>
 
@@ -710,10 +747,10 @@ function RouteComponent() {
             </div>
             <div className="flex flex-col">
               <p className="text-sm font-medium text-foreground">
-                Pago iniciado desde QR BRE-B
+                {t('brebKeys.payTransferQr.paymentStartedFromQr')}
               </p>
               <p className="text-xs text-muted-foreground">
-                Consultando la tasa para abrir la confirmación.
+                {t('brebKeys.payTransferQr.checkingRateToOpenConfirmation')}
               </p>
             </div>
           </div>
@@ -721,19 +758,25 @@ function RouteComponent() {
           <div className="rounded-2xl border border-border/85 bg-background/70 p-4">
             <div className="flex flex-col gap-2 text-sm">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-muted-foreground">Destinatario</span>
+                <span className="text-muted-foreground">
+                  {t('brebKeys.payTransfer.recipient')}
+                </span>
                 <span className="max-w-[60%] text-right font-semibold text-foreground">
                   {recipientDisplayName}
                 </span>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <span className="text-muted-foreground">Llave</span>
+                <span className="text-muted-foreground">
+                  {t('brebKeys.payTransfer.key')}
+                </span>
                 <span className="font-medium text-foreground">
                   {normalizedKey}
                 </span>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <span className="text-muted-foreground">Monto</span>
+                <span className="text-muted-foreground">
+                  {t('brebKeys.payTransfer.amount')}
+                </span>
                 <span className="font-medium text-foreground">
                   {formatCOP(parsedAmount)}
                 </span>
@@ -746,28 +789,38 @@ function RouteComponent() {
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent size="sm">
           <AlertDialogHeader className="items-start text-left">
-            <AlertDialogTitle>Confirmar envio</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t('brebKeys.payTransfer.confirmSend')}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              {`Vas a enviar dinero a ${recipientDisplayName}.`}
+              {t('brebKeys.payTransferQr.aboutToSend', {
+                recipient: recipientDisplayName,
+              })}
             </AlertDialogDescription>
           </AlertDialogHeader>
 
           <div className="rounded-2xl border border-border/85 bg-background/70 p-4">
             <div className="flex flex-col gap-2 text-sm">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-muted-foreground">Destinatario</span>
+                <span className="text-muted-foreground">
+                  {t('brebKeys.payTransfer.recipient')}
+                </span>
                 <span className="max-w-[60%] text-right font-semibold text-foreground">
                   {recipientDisplayName}
                 </span>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <span className="text-muted-foreground">Llave</span>
+                <span className="text-muted-foreground">
+                  {t('brebKeys.payTransfer.key')}
+                </span>
                 <span className="font-medium text-foreground">
                   {normalizedKey}
                 </span>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <span className="text-muted-foreground">Monto</span>
+                <span className="text-muted-foreground">
+                  {t('brebKeys.payTransfer.amount')}
+                </span>
                 <span className="font-medium text-foreground">
                   {formatCOP(parsedAmount)}
                 </span>
@@ -783,7 +836,7 @@ function RouteComponent() {
               unit="COP"
               value={selectedLedgerId}
               onChange={setSelectedLedgerId}
-              label="Enviar desde"
+              label={t('brebKeys.payTransfer.sendFrom')}
             />
           ) : null}
 
@@ -795,7 +848,7 @@ function RouteComponent() {
                 void navigate({ to: '/breb-keys' });
               }}
             >
-              Cancelar
+              {t('common.cancel')}
             </AlertDialogCancel>
             <AlertDialogAction
               disabled={createOrderMutation.isPending || !selectedSourceBrebUrn}
@@ -805,8 +858,8 @@ function RouteComponent() {
               }}
             >
               {createOrderMutation.isPending
-                ? 'Enviando...'
-                : 'Confirmar envio'}
+                ? t('brebKeys.payTransfer.sending')
+                : t('brebKeys.payTransfer.confirmSend')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
