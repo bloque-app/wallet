@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from 'react-i18next';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
@@ -29,6 +30,7 @@ export function TopUpAmountStep({
   onAmountChange,
   onNext,
 }: AmountStepProps) {
+  const { t } = useTranslation();
   const parsed = Number.parseInt(amount.replace(/\D/g, ''), 10) || 0;
   const isValid = parsed >= 5_000;
 
@@ -39,7 +41,7 @@ export function TopUpAmountStep({
           htmlFor="topup-amount"
           className="text-sm font-medium text-foreground"
         >
-          Monto a recargar (COP)
+          {t('topup.amountStep.label')}
         </Label>
         <Input
           id="topup-amount"
@@ -52,7 +54,9 @@ export function TopUpAmountStep({
           autoFocus
         />
         {parsed > 0 && parsed < 5_000 && (
-          <p className="text-xs text-destructive">Monto mínimo: $5,000 COP</p>
+          <p className="text-xs text-destructive">
+            {t('topup.amountStep.minAmount')}
+          </p>
         )}
       </div>
 
@@ -75,13 +79,17 @@ export function TopUpAmountStep({
         <div className="rounded-2xl border border-border/85 bg-card/85 p-4">
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Monto</span>
+              <span className="text-muted-foreground">
+                {t('topup.amountStep.amount')}
+              </span>
               <span className="font-medium text-foreground">
                 {formatCOP(parsed)}
               </span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Comisión PSE</span>
+              <span className="text-muted-foreground">
+                {t('topup.amountStep.pseFee')}
+              </span>
               <span className="font-medium text-foreground">
                 {formatCOP(fee)}
               </span>
@@ -89,14 +97,14 @@ export function TopUpAmountStep({
             <div className="my-1 h-px bg-border" />
             <div className="flex items-center justify-between text-sm">
               <span className="font-medium text-foreground">
-                Total a debitar
+                {t('topup.amountStep.totalToDebit')}
               </span>
               <span className="font-bold text-foreground">
                 {formatCOP(parsed + fee)}
               </span>
             </div>
             <p className="mt-1 text-[11px] text-muted-foreground">
-              Tiempo estimado de llegada: 5-15 minutos
+              {t('topup.amountStep.estimatedArrival')}
             </p>
           </div>
         </div>
@@ -105,23 +113,29 @@ export function TopUpAmountStep({
       {isValid && (
         <div className="rounded-2xl border border-border/85 bg-card/85 p-4">
           <div className="flex flex-col gap-2">
-            <p className="text-sm font-medium text-foreground">Tasa aplicada</p>
+            <p className="text-sm font-medium text-foreground">
+              {t('topup.amountStep.appliedRate')}
+            </p>
             {isLoadingRate ? (
               <p className="text-xs text-muted-foreground">
-                Consultando tasa disponible...
+                {t('topup.amountStep.checkingRate')}
               </p>
             ) : rateError ? (
               <p className="text-xs text-destructive">{rateError}</p>
             ) : rateSummary ? (
               <>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Tasa</span>
+                  <span className="text-muted-foreground">
+                    {t('convert.rate')}
+                  </span>
                   <span className="font-medium text-foreground">
                     1 COPM = {rateSummary.ratio.toFixed(4)} COP
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Recibirás</span>
+                  <span className="text-muted-foreground">
+                    {t('topup.amountStep.youWillReceive')}
+                  </span>
                   <span className="font-semibold text-foreground">
                     {formatCOP(rateSummary.amountDst)}
                   </span>
@@ -129,7 +143,7 @@ export function TopUpAmountStep({
               </>
             ) : (
               <p className="text-xs text-muted-foreground">
-                Ingresa un monto para consultar la tasa.
+                {t('topup.amountStep.enterAmountToQuery')}
               </p>
             )}
           </div>
@@ -141,12 +155,11 @@ export function TopUpAmountStep({
         disabled={!isValid || !rateSummary || isLoadingRate}
         className="h-12 w-full rounded-2xl text-sm font-medium"
       >
-        {isLoadingRate ? 'Consultando tasa...' : 'Continuar'}
+        {isLoadingRate ? t('convert.queryingRate') : t('common.continue')}
       </Button>
 
       <p className="text-[10px] leading-relaxed text-muted-foreground text-center">
-        Transacción procesada mediante PSE (Pagos Seguros en Línea). Regulado
-        por la Superintendencia Financiera de Colombia.
+        {t('topup.amountStep.pseDisclaimer')}
       </p>
     </div>
   );

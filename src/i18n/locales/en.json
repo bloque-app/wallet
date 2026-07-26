@@ -155,6 +155,125 @@
       "send": "Send"
     }
   },
+  "topup": {
+    "title": "Top up balance",
+    "stepAmount": "Amount",
+    "stepDetails": "Details",
+    "stepConfirm": "Confirm",
+    "bankFallback": "Bank",
+    "noDestinationAccount": "We couldn't find an available destination account.",
+    "noDestinationAccountShort": "No destination account available.",
+    "noRateForOrder": "No rate is available to create the order.",
+    "pseStartedToast": "PSE top-up started successfully.",
+    "rateExpiredToast": "The rate expired. Recalculating...",
+    "startErrorToast": "Couldn't start the top-up.",
+    "noRateRetryToast": "No rate available. Please try again.",
+    "methods": {
+      "colombianBanks": {
+        "title": "Colombian banks",
+        "subtitle": "PSE"
+      },
+      "brebKeys": {
+        "title": "BRE-B keys",
+        "subtitle": "Register and manage your keys"
+      },
+      "usBanks": {
+        "title": "From US banks",
+        "subtitle": "ACH / Wire",
+        "comingSoon": "Top-up from US banks coming soon."
+      },
+      "blockchain": {
+        "title": "From blockchain addresses",
+        "subtitle": "External wallets",
+        "comingSoon": "Top-up from blockchain coming soon."
+      },
+      "card": {
+        "title": "With card",
+        "subtitle": "Visa, Mastercard, etc",
+        "comingSoon": "Top-up with card coming soon."
+      }
+    },
+    "iWantToReceive": "I want to receive",
+    "pseAmountLabel": "Amount to pay via PSE (COP)",
+    "minAmount": "Minimum amount: $5,000 COP",
+    "youPay": "You pay",
+    "youReceive": "You receive",
+    "pseBank": "PSE bank",
+    "selectYourBank": "Select your bank",
+    "userType": "User type",
+    "userTypeNatural": "Individual",
+    "userTypeLegal": "Business",
+    "documentType": "Document type",
+    "idTypeCc": "Citizenship ID (CC)",
+    "idTypeCe": "Foreigner ID (CE)",
+    "documentNumber": "Document number",
+    "fullName": "Full name",
+    "email": "Email",
+    "phone": "Phone",
+    "bank": "Bank",
+    "accountHolder": "Account holder",
+    "document": "Document",
+    "redirectDisclaimer": "You'll be redirected to PSE to complete the payment.",
+    "startingPayment": "Starting payment...",
+    "goToPse": "Go to PSE",
+    "amountStep": {
+      "label": "Amount to top up (COP)",
+      "minAmount": "Minimum amount: $5,000 COP",
+      "amount": "Amount",
+      "pseFee": "PSE fee",
+      "totalToDebit": "Total to debit",
+      "estimatedArrival": "Estimated arrival time: 5-15 minutes",
+      "appliedRate": "Applied rate",
+      "checkingRate": "Checking available rate...",
+      "youWillReceive": "You will receive",
+      "enterAmountToQuery": "Enter an amount to check the rate.",
+      "pseDisclaimer": "Transaction processed through PSE (Pagos Seguros en Línea). Regulated by Colombia's Superintendencia Financiera."
+    },
+    "bankStep": {
+      "destinationBank": "Destination bank",
+      "selectABank": "Select a bank",
+      "accountType": "Account type",
+      "savings": "Savings",
+      "checking": "Checking",
+      "accountNumber": "Account number",
+      "accountNumberPlaceholder": "E.g.: 5740088718",
+      "accountHolder": "Account holder",
+      "idTypePp": "Passport (PP)",
+      "documentNumberPlaceholder": "E.g.: 123456789"
+    },
+    "confirmStep": {
+      "summary": "Top-up summary",
+      "sending": "Sending...",
+      "sendWithdrawal": "Send withdrawal",
+      "verifyDisclaimer": "Verify that the bank details are correct before sending."
+    },
+    "errorStep": {
+      "title": "Payment failed",
+      "description": "We couldn't process your payment. This can happen due to insufficient funds, an expired session, or a temporary bank error.",
+      "tryAgain": "Try again",
+      "contactSupport": "Contact support"
+    },
+    "executionOutcome": {
+      "brebTitle": "Complete the BRE-B payment",
+      "brebDescription": "Send {{amount}} from your banking app to this BRE-B key to complete the order.",
+      "status": "Status",
+      "partialPayment": "Partial payment received",
+      "waitingPayment": "Waiting for payment",
+      "order": "Order",
+      "keyCopiedToast": "BRE-B key copied.",
+      "copyKey": "Copy key",
+      "reportProblem": "Report a problem",
+      "openLink": "Open link",
+      "checkMovementsToast": "Check the status in movements."
+    },
+    "pendingStep": {
+      "title": "Order created",
+      "description": "Your order is being processed. It may complete, remain pending, or be rejected.",
+      "orderId": "Order: {{orderId}}",
+      "checkStatus": "Check status",
+      "contactSupportDisclaimer": "If you have questions about your order status, contact support."
+    }
+  },
   "convert": {
     "title": "Convert",
     "from": "From",
