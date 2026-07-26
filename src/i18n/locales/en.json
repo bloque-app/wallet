@@ -208,6 +208,18 @@
       "confirmSend": "Confirm send",
       "confirmSendDescription": "Verify the person before sending the money.",
       "recipient": "Recipient"
+    },
+    "colombianBanks": {
+      "title": "Send to Colombian banks",
+      "stepAccount": "Account",
+      "noCardToSend": "We couldn't find a card to send from.",
+      "noRateForOrder": "No rate selected to create the order.",
+      "invalidAmountForOrder": "Invalid amount to create the order.",
+      "noSourceAccount": "No source account available.",
+      "selectDestinationBank": "Select a destination bank.",
+      "unsupportedBank": "The selected bank isn't valid for this transfer.",
+      "minAmountToast": "The minimum amount is $5,000 COP.",
+      "noRateToContinue": "No rate available to continue."
     }
   },
   "topup": {
