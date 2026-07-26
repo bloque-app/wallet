@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { CardActive } from '~/components/card/card-active';
 import { CardList } from '~/components/card/card-list';
@@ -22,6 +23,7 @@ export const Route = createFileRoute('/_authed/card/')({
 });
 
 function RouteComponent() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const accountsQuery = useAccounts();
   const cards =
@@ -86,7 +88,6 @@ function RouteComponent() {
     if (!card) return;
 
     const isFrozen = card.status === 'frozen';
-    const action = isFrozen ? 'activar' : 'congelar';
 
     try {
       await toggleFreezeMutation.mutateAsync({
@@ -95,10 +96,16 @@ function RouteComponent() {
       });
 
       toast.success(
-        `Tarjeta ${isFrozen ? 'activada' : 'congelada'} exitosamente`,
+        isFrozen
+          ? t('card.freeze.activatedToast')
+          : t('card.freeze.frozenToast'),
       );
     } catch (error) {
-      toast.error(`Error al ${action} la tarjeta`);
+      toast.error(
+        isFrozen
+          ? t('card.freeze.activateErrorToast')
+          : t('card.freeze.freezeErrorToast'),
+      );
       console.error('Error toggling freeze:', error);
     }
   };
@@ -106,7 +113,7 @@ function RouteComponent() {
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-bold tracking-[-0.025em] text-foreground">
-        Tarjetas
+        {t('card.title')}
       </h1>
 
       {accountsQuery.isLoading ? (
@@ -143,20 +150,20 @@ function RouteComponent() {
       <Drawer open={showCardDetails} onOpenChange={setShowCardDetails}>
         <DrawerContent className="h-[85vh]">
           <DrawerHeader>
-            <DrawerTitle>Detalles de la tarjeta</DrawerTitle>
+            <DrawerTitle>{t('card.detailsDrawerTitle')}</DrawerTitle>
           </DrawerHeader>
           <div className="flex-1 px-4 pb-6">
             {cardDetailsUrl ? (
               <iframe
                 src={cardDetailsUrl}
-                title="Detalles de la tarjeta"
+                title={t('card.detailsDrawerTitle')}
                 className="h-full w-full rounded-xl border-0"
                 sandbox="allow-scripts allow-same-origin"
               />
             ) : (
               <div className="flex h-full items-center justify-center">
                 <p className="text-sm text-muted-foreground">
-                  No se pudieron cargar los detalles de la tarjeta
+                  {t('card.detailsLoadError')}
                 </p>
               </div>
             )}

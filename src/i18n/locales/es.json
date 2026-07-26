@@ -3,7 +3,27 @@
     "back": "Volver",
     "loading": "Cargando...",
     "creating": "Creando...",
-    "create": "Crear"
+    "create": "Crear",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "saving": "Guardando...",
+    "confirm": "Confirmar",
+    "close": "Cerrar",
+    "continue": "Continuar",
+    "retry": "Reintentar",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "share": "Compartir",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "next": "Siguiente",
+    "done": "Listo",
+    "error": "Error",
+    "success": "Éxito",
+    "search": "Buscar",
+    "optional": "Opcional",
+    "yes": "Sí",
+    "no": "No"
   },
   "accounts": {
     "title": "Cuentas",
@@ -43,6 +63,70 @@
       "cardCreatedToast": "Tarjeta creada exitosamente",
       "polygonCreatedToast": "Cuenta Polygon creada",
       "createProductErrorToast": "No se pudo crear el producto. Intenta de nuevo."
+    }
+  },
+  "card": {
+    "title": "Tarjetas",
+    "detailsDrawerTitle": "Detalles de la tarjeta",
+    "detailsLoadError": "No se pudieron cargar los detalles de la tarjeta",
+    "designAlt": "Diseño de la tarjeta",
+    "exp": "Exp",
+    "frozenOverlay": "Tarjeta congelada",
+    "viewCardData": "Ver datos de la tarjeta",
+    "manage": "Gestionar",
+    "processing": "Procesando...",
+    "unfreeze": "Descongelar",
+    "freeze": {
+      "action": "Congelar",
+      "activatedToast": "Tarjeta activada exitosamente",
+      "frozenToast": "Tarjeta congelada exitosamente",
+      "activateErrorToast": "Error al activar la tarjeta",
+      "freezeErrorToast": "Error al congelar la tarjeta"
+    },
+    "noCard": {
+      "empty": "Aún no tienes tarjetas",
+      "title": "Crea tu primera tarjeta virtual",
+      "description": "Paga en cualquier comercio online con tus saldos en USD. Sin costos de emisión.",
+      "createCard": "Crear tarjeta",
+      "identityVerified": "Tu identidad ya fue verificada.",
+      "requiresKyc": "Requiere verificacion de identidad (KYC)"
+    },
+    "list": {
+      "cardAria": "Tarjeta {{label}}, terminada en {{lastFour}}",
+      "selected": "Seleccionada",
+      "frozenBadge": "Frozen",
+      "myCardsAria": "Mis tarjetas",
+      "createNewAria": "Crear nueva tarjeta",
+      "newCard": "+ Nueva tarjeta"
+    },
+    "detail": {
+      "defaultLabel": "Tarjeta",
+      "title": "Detalle de tarjeta",
+      "notFound": "No encontramos una tarjeta para mostrar.",
+      "backToCards": "Volver a tarjetas",
+      "editNameTitle": "Editar nombre",
+      "statusFrozen": "Congelada",
+      "statusActive": "Activa",
+      "activate": "Activar",
+      "topupCurrencies": "Monedas de recarga",
+      "availableToTopup": "Saldo disponible para recargar en {{asset}}",
+      "movements": "Movimientos",
+      "recordsCount": "{{count}} registros",
+      "noMovementsForFilter": "Sin movimientos para este filtro",
+      "lastActivity": "Ultima actividad",
+      "noRecentActivity": "Sin actividad reciente",
+      "renameTitle": "Cambiar nombre de tarjeta",
+      "renameDescription": "Ingresa el nuevo nombre para tu tarjeta",
+      "renamePlaceholder": "Ej: Personal, Negocios...",
+      "nameUpdatedToast": "Nombre de tarjeta actualizado exitosamente",
+      "nameUpdateErrorToast": "Error al actualizar el nombre de la tarjeta"
+    },
+    "details": {
+      "filters": {
+        "all": "Todas",
+        "incoming": "Entrantes",
+        "outgoing": "Salientes"
+      }
     }
   },
   "home": {
