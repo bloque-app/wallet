@@ -13,6 +13,8 @@ import type {
   GetTransactionsParams,
   MovementEntry,
   MovementsPage,
+  TransferInput,
+  TransferOutcome,
 } from '~/domain/accounts/ports';
 import type { AssetBalance, Product } from '~/domain/accounts/types';
 import { bloque } from '~/lib/bloque';
@@ -325,6 +327,21 @@ async function createPolygonAccount(
   return mapToProduct(account as ListedAccount);
 }
 
+async function transfer(input: TransferInput): Promise<TransferOutcome> {
+  const result = await bloque.accounts.transfer({
+    sourceUrn: input.sourceUrn,
+    destinationUrn: input.destinationUrn,
+    amount: input.amount,
+    asset: input.asset,
+    metadata: input.metadata,
+  });
+  return {
+    queueId: result.queueId,
+    status: result.status,
+    message: result.message,
+  };
+}
+
 async function createVirtualAccount(
   input: CreateVirtualAccountInput,
 ): Promise<Product> {
@@ -339,6 +356,7 @@ export const bloqueAccountsRepository: AccountsRepository = {
   getBalance,
   getMovements,
   getTransactions,
+  transfer,
   createCard,
   freezeCard,
   activateCard,
