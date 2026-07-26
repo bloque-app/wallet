@@ -2,7 +2,6 @@ import type {
   BrebKeyType as SdkBrebKeyType,
   BrebResolvedKey as SdkBrebResolvedKey,
 } from '@bloque/sdk-accounts';
-import { bloque } from '~/lib/bloque';
 
 export type BrebKeyType = SdkBrebKeyType;
 export type ResolvedRecipient = SdkBrebResolvedKey;
@@ -64,45 +63,4 @@ export function getBrebStatusLabel(status?: string) {
     default:
       return status ?? 'Sin estado';
   }
-}
-
-/**
- * Creates the BRE-B payout order via the swap service — a payments/swap
- * concern, not an accounts/products one, so it stays outside
- * `AccountsRepository` (see the Phase 6 roadmap in the approved plan for
- * when a dedicated SwapRepository might absorb this).
- */
-export async function createBrebOrder(params: {
-  rateSig: string;
-  amountSrc: string;
-  resolutionId: string;
-  sourceAccountUrn: string;
-  metadata?: Record<string, unknown>;
-}) {
-  return await (
-    bloque.swap as typeof bloque.swap & {
-      breb: {
-        create: (input: {
-          rateSig: string;
-          amountSrc: string;
-          depositInformation: { resolutionId: string };
-          args: { sourceAccountUrn: string };
-          metadata?: Record<string, unknown>;
-        }) => Promise<{
-          order: { id: string };
-          execution?: { result: { how?: { url?: string } } };
-        }>;
-      };
-    }
-  ).breb.create({
-    rateSig: params.rateSig,
-    amountSrc: params.amountSrc,
-    depositInformation: {
-      resolutionId: params.resolutionId,
-    },
-    args: {
-      sourceAccountUrn: params.sourceAccountUrn,
-    },
-    metadata: params.metadata,
-  });
 }
