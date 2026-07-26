@@ -27,6 +27,19 @@ export type MovementsPage = {
 export type GetMovementsParams = {
   urn: string;
   asset: string;
+  direction?: 'in' | 'out';
+  limit?: number;
+  next?: string;
+};
+
+/**
+ * Params for the medium-agnostic global transactions feed — the
+ * cross-account equivalent of `GetMovementsParams`/`getMovements`. No
+ * `urn`: this endpoint spans every account the user holds.
+ */
+export type GetTransactionsParams = {
+  asset?: string;
+  direction?: 'in' | 'out';
   limit?: number;
   next?: string;
 };
@@ -62,6 +75,7 @@ export type AccountsRepository = {
   listProducts(): Promise<Product[]>;
   getBalance(urn: string): Promise<AssetBalance[]>;
   getMovements(params: GetMovementsParams): Promise<MovementsPage>;
+  getTransactions(params: GetTransactionsParams): Promise<MovementsPage>;
 
   createCard(input: CreateCardInput): Promise<Product>;
   freezeCard(urn: string): Promise<void>;

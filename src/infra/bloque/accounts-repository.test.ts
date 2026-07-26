@@ -1,11 +1,15 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test';
 
 const listMock = mock(() => Promise.resolve({ accounts: [] as unknown[] }));
+const transactionsMock = mock(() =>
+  Promise.resolve({ data: [] as unknown[], pageSize: 0, hasMore: false }),
+);
 
 mock.module('~/lib/bloque', () => ({
   bloque: {
     accounts: {
       list: listMock,
+      transactions: transactionsMock,
     },
   },
 }));
@@ -187,5 +191,100 @@ describe('bloqueAccountsRepository.listProducts — medium duck-typing', () => {
     const products = await bloqueAccountsRepository.listProducts();
 
     expect(products.map((p) => p.urn)).toEqual(['urn-1', 'urn-2']);
+  });
+});
+
+describe('bloqueAccountsRepository.getTransactions — global feed adapter', () => {
+  beforeEach(() => {
+    transactionsMock.mockClear();
+  });
+
+  test('maps GlobalTransaction[] into MovementEntry[], deriving counterparty from direction', async () => {
+    transactionsMock.mockImplementationOnce(() =>
+      Promise.resolve({
+        data: [
+          {
+            status: 'confirmed',
+            amount: '500000',
+            asset: 'COPM/2',
+            fromAccountId: 'urn:from',
+            toAccountId: 'urn:to',
+            direction: 'in',
+            reference: 'ref-1',
+            railName: 'ach',
+            details: {},
+            createdAt: '2026-01-01T00:00:00.000Z',
+            type: 'deposit',
+          },
+        ],
+        pageSize: 1,
+        hasMore: true,
+        next: 'cursor-2',
+      }),
+    );
+
+    const page = await bloqueAccountsRepository.getTransactions({
+      limit: 10,
+      asset: 'COPM/2',
+    });
+
+    expect(page.movements).toHaveLength(1);
+    expect(page.movements[0]).toMatchObject({
+      id: 'ref-1',
+      asset: 'COPM/2',
+      amount: '500000',
+      direction: 'in',
+      status: 'confirmed',
+      reference: 'ref-1',
+      counterparty: 'urn:from',
+      railName: 'ach',
+      type: 'deposit',
+    });
+    expect(page.hasMore).toBe(true);
+    expect(page.next).toBe('cursor-2');
+  });
+
+  test('derives counterparty from toAccountId for outbound transactions', async () => {
+    transactionsMock.mockImplementationOnce(() =>
+      Promise.resolve({
+        data: [
+          {
+            status: 'settled',
+            amount: '10000',
+            asset: 'DUSD/6',
+            fromAccountId: 'urn:from',
+            toAccountId: 'urn:to',
+            direction: 'out',
+            reference: 'ref-2',
+            railName: 'wire',
+            details: {},
+            createdAt: '2026-01-02T00:00:00.000Z',
+          },
+        ],
+        pageSize: 1,
+        hasMore: false,
+      }),
+    );
+
+    const page = await bloqueAccountsRepository.getTransactions({});
+
+    expect(page.movements[0]?.counterparty).toBe('urn:to');
+    expect(page.hasMore).toBe(false);
+  });
+
+  test('passes asset/limit/direction/next through to the SDK call', async () => {
+    await bloqueAccountsRepository.getTransactions({
+      asset: 'KSM/12',
+      limit: 25,
+      direction: 'out',
+      next: 'cursor-1',
+    });
+
+    expect(transactionsMock).toHaveBeenCalledWith({
+      asset: 'KSM/12',
+      direction: 'out',
+      limit: 25,
+      next: 'cursor-1',
+    });
   });
 });
