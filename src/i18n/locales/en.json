@@ -155,6 +155,61 @@
       "send": "Send"
     }
   },
+  "send": {
+    "title": "Send",
+    "options": {
+      "brebKeys": {
+        "title": "BRE-B keys",
+        "description": "Send to any Colombian bank instantly."
+      },
+      "colombianBanks": {
+        "title": "Colombian banks",
+        "description": "Transfer to bank accounts in Colombia."
+      },
+      "bloqueFriends": {
+        "title": "Friends on Bloque",
+        "description": "Send to contacts within Bloque."
+      },
+      "usBanks": {
+        "title": "US banks/wallets",
+        "description": "Send USD to banks and wallets in the United States.",
+        "comingSoon": "Sending to the US coming soon."
+      },
+      "blockchain": {
+        "title": "Blockchain addresses",
+        "description": "Send funds to external wallets.",
+        "comingSoon": "Sending to blockchain coming soon."
+      }
+    },
+    "bloqueFriends": {
+      "noSourceAccount": "We couldn't find an available source account.",
+      "invalidAlias": "Enter a valid alias.",
+      "invalidAmount": "Enter a valid amount.",
+      "aliasNotFound": "We couldn't find that alias.",
+      "aliasValidationError": "Couldn't validate the alias.",
+      "noConfirmedRecipient": "There's no confirmed recipient.",
+      "invalidTransferAmount": "Invalid amount to transfer.",
+      "transferSentToast": "Transfer sent successfully.",
+      "transferErrorToast": "Couldn't send the transfer.",
+      "transferSentTitle": "Transfer sent",
+      "transferSentDescription": "We sent {{amount}} to your Bloque contact.",
+      "transferFailedTitle": "Couldn't send the transfer",
+      "subtitle": "Send money to a Bloque alias",
+      "transferBetweenUsers": "Transfer between Bloque users",
+      "currency": "Currency",
+      "alias": "Alias",
+      "amount": "Amount",
+      "message": "Message",
+      "messagePlaceholder": "What's this transfer for?",
+      "youSend": "You send",
+      "validatingAlias": "Validating alias...",
+      "sending": "Sending...",
+      "sendMoney": "Send money",
+      "confirmSend": "Confirm send",
+      "confirmSendDescription": "Verify the person before sending the money.",
+      "recipient": "Recipient"
+    }
+  },
   "topup": {
     "title": "Top up balance",
     "stepAmount": "Amount",

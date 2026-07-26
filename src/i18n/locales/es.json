@@ -155,6 +155,61 @@
       "send": "Enviar"
     }
   },
+  "send": {
+    "title": "Enviar",
+    "options": {
+      "brebKeys": {
+        "title": "Llaves BRE-B",
+        "description": "Envia a cualquier banco colombiano al instante."
+      },
+      "colombianBanks": {
+        "title": "Bancos colombianos",
+        "description": "Transfiere a cuentas bancarias en Colombia."
+      },
+      "bloqueFriends": {
+        "title": "Amigos en bloque",
+        "description": "Envia a contactos dentro de Bloque."
+      },
+      "usBanks": {
+        "title": "Bancos/billeteras en EE.UU.",
+        "description": "Envia USD a bancos y wallets en Estados Unidos.",
+        "comingSoon": "Envío a EE.UU. disponible próximamente."
+      },
+      "blockchain": {
+        "title": "Direcciones blockchain",
+        "description": "Envia fondos a wallets externas.",
+        "comingSoon": "Envío a blockchain disponible próximamente."
+      }
+    },
+    "bloqueFriends": {
+      "noSourceAccount": "No encontramos una cuenta origen disponible.",
+      "invalidAlias": "Ingresa un alias valido.",
+      "invalidAmount": "Ingresa un monto valido.",
+      "aliasNotFound": "No encontramos ese alias.",
+      "aliasValidationError": "No se pudo validar el alias.",
+      "noConfirmedRecipient": "No hay destinatario confirmado.",
+      "invalidTransferAmount": "Monto invalido para transferir.",
+      "transferSentToast": "Transferencia enviada correctamente.",
+      "transferErrorToast": "No se pudo enviar la transferencia.",
+      "transferSentTitle": "Transferencia enviada",
+      "transferSentDescription": "Enviamos {{amount}} a tu contacto de Bloque.",
+      "transferFailedTitle": "No se pudo enviar la transferencia",
+      "subtitle": "Envia dinero a un alias de Bloque",
+      "transferBetweenUsers": "Transferencia entre usuarios Bloque",
+      "currency": "Moneda",
+      "alias": "Alias",
+      "amount": "Monto",
+      "message": "Mensaje",
+      "messagePlaceholder": "¿Para qué es este envio?",
+      "youSend": "Envias",
+      "validatingAlias": "Validando alias...",
+      "sending": "Enviando...",
+      "sendMoney": "Enviar dinero",
+      "confirmSend": "Confirmar envio",
+      "confirmSendDescription": "Verifica la persona antes de enviar el dinero.",
+      "recipient": "Destinatario"
+    }
+  },
   "topup": {
     "title": "Recargar saldo",
     "stepAmount": "Monto",
