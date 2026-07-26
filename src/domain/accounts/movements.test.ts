@@ -164,4 +164,55 @@ describe('toDomainMovement', () => {
     expect(incoming?.type).toBe('topup');
     expect(outgoing?.type).toBe('withdraw');
   });
+
+  describe('the details.type fallback (global feed only — GlobalTransaction.type is optional)', () => {
+    test('falls back to details.type when the top-level type is missing', () => {
+      const movement = toDomainMovement(
+        raw({
+          type: undefined,
+          direction: 'out',
+          details: { type: 'cash-out' },
+        }),
+      );
+
+      // Without the fallback this would silently degrade to the
+      // direction-based default ('withdraw', coincidentally the same here —
+      // the next case makes the regression actually observable).
+      expect(movement?.type).toBe('withdraw');
+    });
+
+    test('a details.type fallback that would NOT match the direction default proves the fallback is real', () => {
+      const movement = toDomainMovement(
+        raw({
+          type: undefined,
+          direction: 'out',
+          details: { type: 'convert' },
+        }),
+      );
+
+      // The direction-based default for an outbound movement is 'withdraw',
+      // not 'convert' — this only passes if details.type was actually read.
+      expect(movement?.type).toBe('convert');
+    });
+
+    test('the top-level type wins when both are present', () => {
+      const movement = toDomainMovement(
+        raw({ type: 'deposit', details: { type: 'convert' } }),
+      );
+
+      expect(movement?.type).toBe('topup');
+    });
+
+    test('a non-string details.type is ignored, not thrown on', () => {
+      const movement = toDomainMovement(
+        raw({
+          type: undefined,
+          direction: 'in',
+          details: { type: 12345 },
+        }),
+      );
+
+      expect(movement?.type).toBe('topup');
+    });
+  });
 });

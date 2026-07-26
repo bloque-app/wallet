@@ -36,6 +36,12 @@ export type RawMovementFields = {
   reference: string;
   createdAt: string;
   counterparty?: string;
+  /** The SDK's free-form per-transaction payload. Only ever consulted as a
+   * `type` fallback (see `toType`) — the global feed's `type` field is
+   * optional and this is where a real type can still be recovered from
+   * when it's missing; the per-account feed's `type` is always present, so
+   * this stays unused there. */
+  details?: Record<string, unknown>;
 };
 
 const ASSET_KEY_MAP: Record<string, Asset> = {
@@ -91,10 +97,27 @@ function toStatus(rawStatus: string): MovementStatus {
   return 'failed';
 }
 
+/** Reads `details.type` defensively — it's an SDK free-form
+ * `Record<string, unknown>` bag, not a typed field. */
+function detailsTypeString(
+  details: Record<string, unknown> | undefined,
+): string {
+  const value = details?.type;
+  return typeof value === 'string' ? value : '';
+}
+
 function toType(
-  raw: Pick<RawMovementFields, 'type' | 'railName' | 'direction'>,
+  raw: Pick<RawMovementFields, 'type' | 'railName' | 'direction' | 'details'>,
 ): MovementType {
-  const rawType = (raw.type ?? '').trim().toLowerCase();
+  // Mirrors the deleted transaction-mapper.ts's `transaction.type ||
+  // details?.type` fallback: the global feed's `type` is optional and
+  // `details` is where a real type can still be recovered from when it's
+  // absent — without this, every transaction missing `type` silently
+  // degrades straight to the direction-based fallback below instead of
+  // whatever richer classification `details` actually carries.
+  const rawType = (raw.type || detailsTypeString(raw.details))
+    .trim()
+    .toLowerCase();
   const rawRail = (raw.railName ?? '').trim().toLowerCase();
 
   if (
