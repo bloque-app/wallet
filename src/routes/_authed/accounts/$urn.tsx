@@ -1,38 +1,43 @@
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import {
   ArrowLeft,
   ChevronRight,
   CreditCard,
-  Landmark,
+  KeyRound,
+  Plus,
   Wallet,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
+import {
+  getProductKindIcon,
+  getProductKindLabel,
+} from '~/components/account/product-presentation';
 import { MovementDetailDrawer } from '~/components/movement-detail-drawer';
 import { MovementRow } from '~/components/movement-row';
 import { Button } from '~/components/ui/button';
-import { bloque } from '~/lib/bloque';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from '~/components/ui/drawer';
+import { Input } from '~/components/ui/input';
+import { Label } from '~/components/ui/label';
+import type { MovementEntry } from '~/domain/accounts/ports';
+import type { AssetBalance, Product } from '~/domain/accounts/types';
+import { useAccountMovements } from '~/hooks/accounts/use-account-movements';
+import { useAccount } from '~/hooks/accounts/use-accounts';
+import { useCreateCard } from '~/hooks/accounts/use-cards';
+import { useCreatePolygonAccount } from '~/hooks/accounts/use-polygon-account';
 import type { Asset, Movement } from '~/lib/formatters';
+import { formatCOP, formatKSM, formatUSD } from '~/lib/formatters';
 import { cn } from '~/lib/utils';
 
 export const Route = createFileRoute('/_authed/accounts/$urn')({
   component: RouteComponent,
 });
-
-type AccountDetails = Awaited<ReturnType<typeof bloque.accounts.get>> & {
-  metadata?: Record<string, unknown>;
-  medium?: string;
-  status?: string;
-  ledgerId?: string;
-  urn: string;
-};
-
-type MovementParams = Parameters<typeof bloque.accounts.movements>[0];
-
-type BalanceEntry = {
-  asset: string;
-  available: string;
-};
 
 const ASSET_LABELS: Record<string, Asset> = {
   COP: 'COP',
@@ -42,35 +47,7 @@ const ASSET_LABELS: Record<string, Asset> = {
   KSM: 'KSM',
 };
 
-function getMediumLabel(medium?: string) {
-  switch (medium) {
-    case 'card':
-      return 'Tarjeta';
-    case 'virtual':
-      return 'Virtual';
-    case 'breb':
-      return 'BRE-B';
-    case 'polygon':
-      return 'Polygon';
-    case 'bancolombia':
-      return 'Bancolombia';
-    case 'us-account':
-      return 'US Account';
-    default:
-      return medium ?? 'Cuenta';
-  }
-}
-
-function getMediumIcon(medium?: string) {
-  switch (medium) {
-    case 'card':
-      return CreditCard;
-    case 'polygon':
-      return Wallet;
-    default:
-      return Landmark;
-  }
-}
+type AddProductStep = 'closed' | 'pick' | 'card' | 'polygon';
 
 function parseAmount(rawAmount: string, rawAsset: string) {
   const [, precisionStr] = rawAsset.split('/');
@@ -88,82 +65,22 @@ function getAssetLabel(rawAsset: string): Asset | null {
   return ASSET_LABELS[assetKey] ?? null;
 }
 
-function formatBalance(balance: BalanceEntry) {
+function formatAssetBalance(balance: AssetBalance) {
   const asset = getAssetLabel(balance.asset);
-  const amount = parseAmount(balance.available, balance.asset);
+  const amount = parseAmount(balance.current, balance.asset);
 
-  if (asset === 'COP') {
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: 'COP',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  }
-
-  if (asset === 'USD') {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount);
-  }
-
-  return `${amount.toFixed(4)} KSM`;
+  if (asset === 'USD') return formatUSD(amount);
+  if (asset === 'KSM') return formatKSM(amount);
+  return formatCOP(amount);
 }
 
-function normalizeBalances(rawBalance: unknown): BalanceEntry[] {
-  if (!rawBalance || typeof rawBalance !== 'object') {
-    return [];
-  }
-
-  const entries = Object.entries(rawBalance as Record<string, unknown>);
-
-  return entries.flatMap(([asset, value]) => {
-    if (typeof value === 'string') {
-      return [{ asset, available: value }];
-    }
-
-    if (!value || typeof value !== 'object') {
-      return [];
-    }
-
-    const candidate = value as Record<string, unknown>;
-    const available =
-      typeof candidate.available === 'string'
-        ? candidate.available
-        : typeof candidate.free === 'string'
-          ? candidate.free
-          : typeof candidate.total === 'string'
-            ? candidate.total
-            : null;
-
-    return available ? [{ asset, available }] : [];
-  });
-}
-
-function toMovement(transaction: {
-  reference: string;
-  createdAt: string;
-  amount: string;
-  asset: string;
-  status: string;
-  direction?: string;
-  type?: string;
-  railName?: string;
-  fromAccountId?: string;
-  toAccountId?: string;
-  details?: { type?: string };
-}): Movement | null {
-  const asset = getAssetLabel(transaction.asset);
+function toMovement(entry: MovementEntry): Movement | null {
+  const asset = getAssetLabel(entry.asset);
 
   if (!asset) return null;
 
-  const rawType = (transaction.type || transaction.details?.type || '')
-    .trim()
-    .toLowerCase();
-  const status = transaction.status.toLowerCase();
+  const rawType = entry.type?.trim().toLowerCase() ?? '';
+  const status = entry.status.toLowerCase();
 
   let type: Movement['type'] = 'send';
 
@@ -189,7 +106,7 @@ function toMovement(transaction: {
     rawType.includes('card') ||
     rawType.includes('payment') ||
     rawType.includes('purchase') ||
-    (transaction.railName || '').toLowerCase().includes('card')
+    (entry.railName || '').toLowerCase().includes('card')
   ) {
     type = 'card';
   }
@@ -212,105 +129,113 @@ function toMovement(transaction: {
   }
 
   return {
-    id: [transaction.reference, transaction.createdAt, transaction.amount].join(
-      '-',
-    ),
+    id: entry.id,
     type,
     asset,
-    amount: parseAmount(transaction.amount, transaction.asset),
+    amount: parseAmount(entry.amount, entry.asset),
     fee: 0,
     status: movementStatus,
-    createdAt: transaction.createdAt,
-    reference: transaction.reference,
-    counterparty:
-      transaction.direction === 'in'
-        ? transaction.fromAccountId
-        : transaction.toAccountId,
-    direction: transaction.direction === 'in' ? 'incoming' : 'outgoing',
+    createdAt: entry.createdAt,
+    reference: entry.reference,
+    counterparty: entry.counterparty,
+    direction: entry.direction === 'in' ? 'incoming' : 'outgoing',
   };
+}
+
+function getProductLink(
+  product: Product,
+): { to: string; params?: Record<string, string> } | null {
+  if (product.kind === 'card') {
+    return { to: '/card/details/$urn', params: { urn: product.urn } };
+  }
+  if (product.kind === 'breb') {
+    return { to: '/breb-keys/manage-keys' };
+  }
+  return null;
 }
 
 function RouteComponent() {
   const { urn } = Route.useParams();
+  const navigate = useNavigate();
   const [selectedAsset, setSelectedAsset] = useState<string>('');
   const [selectedMovement, setSelectedMovement] = useState<Movement | null>(
     null,
   );
+  const [addProductStep, setAddProductStep] =
+    useState<AddProductStep>('closed');
+  const [productName, setProductName] = useState('');
 
-  const accountQuery = useQuery({
-    queryKey: ['account', urn],
-    queryFn: async () => bloque.accounts.get(urn) as Promise<AccountDetails>,
-    enabled: !!urn,
-  });
+  const accountQuery = useAccount(urn);
+  const account = accountQuery.data;
+  const balances = account?.balances ?? [];
 
-  const balanceQuery = useQuery({
-    queryKey: ['account-balance', urn],
-    queryFn: async () => bloque.accounts.balance(urn),
-    enabled: !!urn,
-  });
-
-  const balances = useMemo(
-    () => normalizeBalances(balanceQuery.data),
-    [balanceQuery.data],
-  );
+  const createCardMutation = useCreateCard();
+  const createPolygonMutation = useCreatePolygonAccount();
 
   useEffect(() => {
-    if (!selectedAsset && balances.length > 0) {
-      setSelectedAsset(balances[0]!.asset);
+    if (!selectedAsset && balances[0]) {
+      setSelectedAsset(balances[0].asset);
     }
   }, [balances, selectedAsset]);
 
-  const movementsQuery = useInfiniteQuery({
-    queryKey: ['account-movements', urn, selectedAsset],
-    initialPageParam: undefined as string | undefined,
-    queryFn: async ({ pageParam }) => {
-      const result = await bloque.accounts.movements({
-        urn,
-        asset: (selectedAsset ||
-          balances[0]?.asset ||
-          'COPM/2') as MovementParams['asset'],
-        limit: 10,
-        next: pageParam,
-      });
-
-      return {
-        transactions: (result.data ?? []) as Array<{
-          reference: string;
-          createdAt: string;
-          amount: string;
-          asset: string;
-          status: string;
-          direction?: string;
-          type?: string;
-          railName?: string;
-          fromAccountId?: string;
-          toAccountId?: string;
-          details?: { type?: string };
-        }>,
-        hasMore: result.hasMore,
-        next: result.next,
-      };
-    },
-    getNextPageParam: (lastPage) =>
-      lastPage.hasMore ? lastPage.next || undefined : undefined,
-    enabled: !!urn && (!!selectedAsset || balances.length > 0),
-  });
+  const movementsAsset = selectedAsset || balances[0]?.asset || 'COPM/2';
+  const movementsQuery = useAccountMovements(urn, movementsAsset);
 
   const movements = useMemo(
     () =>
       (movementsQuery.data?.pages ?? [])
-        .flatMap((page) => page.transactions)
-        .map((transaction) => toMovement(transaction))
+        .flatMap((page) => page.movements)
+        .map((entry) => toMovement(entry))
         .filter((movement): movement is Movement => movement !== null),
     [movementsQuery.data?.pages],
   );
 
-  const account = accountQuery.data;
-  const Icon = getMediumIcon(account?.medium);
-  const title =
-    (account?.metadata?.card_name as string) ||
-    (account?.metadata?.name as string) ||
-    getMediumLabel(account?.medium);
+  const primaryProduct = account?.products.find(
+    (product) => product.urn === account.primaryUrn,
+  );
+  const associatedProducts =
+    account?.products.filter((product) => product.urn !== account.primaryUrn) ??
+    [];
+  const Icon = getProductKindIcon(primaryProduct?.kind ?? 'other');
+
+  const handlePickProductKind = (kind: 'card' | 'breb' | 'polygon') => {
+    if (!account) return;
+    if (kind === 'breb') {
+      setAddProductStep('closed');
+      navigate({
+        to: '/breb-keys/manage-keys',
+        search: { ledgerId: account.ledgerId },
+      });
+      return;
+    }
+    setProductName('');
+    setAddProductStep(kind);
+  };
+
+  const handleCreateProduct = async () => {
+    if (!account) return;
+    try {
+      if (addProductStep === 'card') {
+        await createCardMutation.mutateAsync({
+          name: productName.trim() || 'Tarjeta',
+          ledgerId: account.ledgerId,
+        });
+        toast.success('Tarjeta creada exitosamente');
+      } else if (addProductStep === 'polygon') {
+        await createPolygonMutation.mutateAsync({
+          name: productName.trim() || undefined,
+          ledgerId: account.ledgerId,
+        });
+        toast.success('Cuenta Polygon creada');
+      }
+      setAddProductStep('closed');
+    } catch {
+      toast.error('No se pudo crear el producto. Intenta de nuevo.');
+    }
+  };
+
+  const isCreatingProduct =
+    createCardMutation.isPending || createPolygonMutation.isPending;
 
   return (
     <div className="flex flex-col gap-5">
@@ -344,20 +269,12 @@ function RouteComponent() {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-base font-semibold text-foreground">
-                  {title}
+                  {account.label}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {getMediumLabel(account.medium)} •{' '}
-                  {account.status ?? 'sin estado'}
+                  {getProductKindLabel(primaryProduct?.kind ?? 'other')} •{' '}
+                  {primaryProduct?.status ?? 'sin estado'}
                 </p>
-                <p className="mt-1 break-all text-[11px] text-muted-foreground">
-                  {account.urn}
-                </p>
-                {account.ledgerId ? (
-                  <p className="mt-1 break-all text-[11px] text-muted-foreground">
-                    Ledger: {account.ledgerId}
-                  </p>
-                ) : null}
               </div>
             </div>
           </section>
@@ -367,14 +284,9 @@ function RouteComponent() {
               <h2 className="text-sm font-semibold text-foreground">
                 Balances
               </h2>
-              {balanceQuery.isLoading ? (
-                <span className="text-xs text-muted-foreground">
-                  Cargando...
-                </span>
-              ) : null}
             </div>
 
-            {balances.length === 0 ? (
+            {balances.length === 0 || !balances[0] ? (
               <p className="text-sm text-muted-foreground">
                 Esta cuenta no tiene balances disponibles.
               </p>
@@ -408,16 +320,86 @@ function RouteComponent() {
                       Disponible
                     </p>
                     <p className="text-lg font-semibold text-foreground">
-                      {formatBalance(
+                      {formatAssetBalance(
                         balances.find(
                           (balance) => balance.asset === selectedAsset,
-                        ) ?? balances[0]!,
+                        ) ?? balances[0],
                       )}
                     </p>
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </div>
               </>
+            )}
+          </section>
+
+          <section className="flex flex-col gap-3 rounded-3xl border border-border/75 bg-card/85 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-sm font-semibold text-foreground">
+                Productos asociados
+              </h2>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 gap-1.5 rounded-xl px-3 text-xs font-medium"
+                onClick={() => setAddProductStep('pick')}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Agregar producto
+              </Button>
+            </div>
+
+            {associatedProducts.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Esta cuenta aún no tiene otros productos asociados.
+              </p>
+            ) : (
+              <div className="flex flex-col divide-y divide-border/60">
+                {associatedProducts.map((product) => {
+                  const ProductIcon = getProductKindIcon(product.kind);
+                  const link = getProductLink(product);
+                  const content = (
+                    <>
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
+                        <ProductIcon className="h-4 w-4 text-primary" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-foreground">
+                          {product.label}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {getProductKindLabel(product.kind)} • {product.status}
+                        </p>
+                      </div>
+                      {link ? (
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                      ) : null}
+                    </>
+                  );
+
+                  if (link) {
+                    return (
+                      <Link
+                        key={product.urn}
+                        to={link.to}
+                        params={link.params}
+                        className="flex items-center gap-3 py-3 transition-colors first:pt-0 last:pb-0 hover:bg-muted/40"
+                      >
+                        {content}
+                      </Link>
+                    );
+                  }
+
+                  return (
+                    <div
+                      key={product.urn}
+                      className="flex items-center gap-3 py-3 first:pt-0 last:pb-0"
+                    >
+                      {content}
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </section>
 
@@ -475,6 +457,97 @@ function RouteComponent() {
         open={!!selectedMovement}
         onClose={() => setSelectedMovement(null)}
       />
+
+      {/* Add-product drawer: type picker, then (for card/polygon) a name step. Ledger is already known here, so no account picker. */}
+      <Drawer
+        open={addProductStep !== 'closed'}
+        onOpenChange={(open) => !open && setAddProductStep('closed')}
+      >
+        <DrawerContent>
+          {addProductStep === 'pick' ? (
+            <>
+              <DrawerHeader className="text-left">
+                <DrawerTitle className="text-lg font-bold tracking-[-0.025em]">
+                  Agregar producto
+                </DrawerTitle>
+              </DrawerHeader>
+              <div className="flex flex-col gap-3 px-5 pb-4">
+                {[
+                  { kind: 'card' as const, label: 'Tarjeta', icon: CreditCard },
+                  {
+                    kind: 'breb' as const,
+                    label: 'Llave BRE-B',
+                    icon: KeyRound,
+                  },
+                  { kind: 'polygon' as const, label: 'Polygon', icon: Wallet },
+                ].map((option) => (
+                  <button
+                    key={option.kind}
+                    type="button"
+                    onClick={() => handlePickProductKind(option.kind)}
+                    className="flex items-center gap-3 rounded-2xl border border-border/75 bg-background/70 px-4 py-3.5 text-left transition-colors hover:bg-muted/60"
+                  >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
+                      <option.icon className="h-4 w-4 text-primary" />
+                    </div>
+                    <span className="text-sm font-medium text-foreground">
+                      {option.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : (
+            <>
+              <DrawerHeader className="text-left">
+                <DrawerTitle className="text-lg font-bold tracking-[-0.025em]">
+                  {addProductStep === 'card'
+                    ? 'Nueva tarjeta'
+                    : 'Cuenta Polygon'}
+                </DrawerTitle>
+              </DrawerHeader>
+              <div className="px-5 pb-2">
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="product-name" className="text-sm font-medium">
+                    {addProductStep === 'card'
+                      ? 'Nombre de la tarjeta'
+                      : 'Nombre (opcional)'}
+                  </Label>
+                  <Input
+                    id="product-name"
+                    value={productName}
+                    onChange={(e) => setProductName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleCreateProduct();
+                    }}
+                    placeholder={
+                      addProductStep === 'card' ? 'Personal' : 'Principal'
+                    }
+                    maxLength={40}
+                    disabled={isCreatingProduct}
+                    className="h-12 rounded-xl"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Compartirá el saldo de {account?.label}.
+                  </p>
+                </div>
+              </div>
+              <DrawerFooter>
+                <Button
+                  onClick={handleCreateProduct}
+                  disabled={
+                    isCreatingProduct ||
+                    (addProductStep === 'card' && !productName.trim())
+                  }
+                  className="h-12 w-full rounded-xl text-sm font-medium"
+                >
+                  {isCreatingProduct ? 'Creando...' : 'Crear'}
+                </Button>
+              </DrawerFooter>
+            </>
+          )}
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 }
