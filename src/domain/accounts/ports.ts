@@ -16,6 +16,11 @@ export type MovementEntry = {
   counterparty?: string;
   railName?: string;
   type?: string;
+  /** Only ever populated on the global feed — the SDK's `GlobalTransaction.type`
+   * is optional and `details` is where a real type can still be recovered
+   * from when it's missing. Per-account `Movement.type` is always present,
+   * so this stays unset there. */
+  details?: Record<string, unknown>;
 };
 
 export type MovementsPage = {

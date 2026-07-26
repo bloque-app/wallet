@@ -244,6 +244,35 @@ describe('bloqueAccountsRepository.getTransactions — global feed adapter', () 
     expect(page.next).toBe('cursor-2');
   });
 
+  test('forwards details onto the MovementEntry so toDomainMovement can fall back to details.type', async () => {
+    transactionsMock.mockImplementationOnce(() =>
+      Promise.resolve({
+        data: [
+          {
+            status: 'confirmed',
+            amount: '500000',
+            asset: 'COPM/2',
+            fromAccountId: 'urn:from',
+            toAccountId: 'urn:to',
+            direction: 'out',
+            reference: 'ref-3',
+            railName: 'ach',
+            details: { type: 'cash-out' },
+            createdAt: '2026-01-03T00:00:00.000Z',
+            // type deliberately omitted — GlobalTransaction.type is optional
+          },
+        ],
+        pageSize: 1,
+        hasMore: false,
+      }),
+    );
+
+    const page = await bloqueAccountsRepository.getTransactions({});
+
+    expect(page.movements[0]?.type).toBeUndefined();
+    expect(page.movements[0]?.details).toEqual({ type: 'cash-out' });
+  });
+
   test('derives counterparty from toAccountId for outbound transactions', async () => {
     transactionsMock.mockImplementationOnce(() =>
       Promise.resolve({

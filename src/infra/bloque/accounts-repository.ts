@@ -239,6 +239,7 @@ async function getTransactions(
             : transaction.toAccountId,
         railName: transaction.railName,
         type: transaction.type,
+        details: transaction.details,
       }),
     ),
     hasMore: result.hasMore,
