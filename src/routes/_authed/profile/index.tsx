@@ -24,24 +24,11 @@ import { useTheme } from '~/components/ui/theme-provider';
 import { useAuth } from '~/contexts/auth/auth-context';
 import type { PolygonProduct } from '~/domain/accounts/types';
 import { useAccounts } from '~/hooks/accounts/use-accounts';
-import { formatKSM, formatPolygonAddress } from '~/lib/formatters';
+import { formatPolygonAddress } from '~/lib/formatters';
 
 export const Route = createFileRoute('/_authed/profile/')({
   component: RouteComponent,
 });
-
-function getKsmBalance(product: PolygonProduct): number {
-  const entry = product.balances.find((balance) =>
-    balance.asset.startsWith('KSM'),
-  );
-  if (!entry) return 0;
-  const [, precisionStr] = entry.asset.split('/');
-  const precision = Number.parseInt(precisionStr, 10);
-  return (
-    Number.parseInt(entry.current, 10) /
-    10 ** (Number.isNaN(precision) ? 0 : precision)
-  );
-}
 
 function RouteComponent() {
   const { user, logout } = useAuth();
@@ -134,9 +121,7 @@ function RouteComponent() {
                 <ProfileRow
                   icon={Landmark}
                   label={account.label}
-                  value={`${formatPolygonAddress(account.address)} · ${formatKSM(
-                    getKsmBalance(account),
-                  )}`}
+                  value={formatPolygonAddress(account.address)}
                   chevron
                 />
                 {index < polygonAccounts.length - 1 && <Separator />}

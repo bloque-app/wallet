@@ -75,6 +75,9 @@ export function useCardDetail(urn: string) {
 
     for (const [key, value] of Object.entries(raw)) {
       const [assetKey, precisionStr] = key.split('/');
+      // KSM isn't a balance this app surfaces to users — skip it entirely
+      // rather than list it as a selectable asset chip.
+      if (assetKey === 'KSM') continue;
       const precision = Number.parseInt(precisionStr, 10);
       const code = DISPLAY_ASSET_MAP[assetKey] ?? assetKey;
       balance[key] =
@@ -86,6 +89,14 @@ export function useCardDetail(urn: string) {
         precision: Number.isNaN(precision) ? 0 : precision,
       });
     }
+
+    // USD first among whatever remains, stable otherwise.
+    list.sort((a, b) => {
+      const aIsUsd = a.code === 'USD';
+      const bIsUsd = b.code === 'USD';
+      if (aIsUsd === bIsUsd) return 0;
+      return aIsUsd ? -1 : 1;
+    });
 
     return { assetList: list, balanceByKey: balance };
   }, [balanceQuery.data]);

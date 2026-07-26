@@ -28,17 +28,16 @@ export const Route = createFileRoute('/_authed/send/bloque-friends/')({
 });
 
 type ViewState = 'form' | 'pending' | 'error';
-type AssetOption = 'COP' | 'USD' | 'KSM';
-type TransferAsset = 'COPM/2' | 'DUSD/6' | 'KSM/12';
+type AssetOption = 'USD' | 'COP';
+type TransferAsset = 'DUSD/6' | 'COPM/2';
 
 const ASSET_OPTIONS: Array<{
   value: AssetOption;
   sdkAsset: TransferAsset;
   precision: number;
 }> = [
-  { value: 'COP', sdkAsset: 'COPM/2', precision: 2 },
   { value: 'USD', sdkAsset: 'DUSD/6', precision: 6 },
-  { value: 'KSM', sdkAsset: 'KSM/12', precision: 12 },
+  { value: 'COP', sdkAsset: 'COPM/2', precision: 2 },
 ];
 
 function majorToMinor(amountMajor: number, precision: number) {
@@ -56,7 +55,7 @@ function getAliasDisplayName(aliasResult: Alias) {
 
 function RouteComponent() {
   const [view, setView] = useState<ViewState>('form');
-  const [selectedAsset, setSelectedAsset] = useState<AssetOption>('COP');
+  const [selectedAsset, setSelectedAsset] = useState<AssetOption>('USD');
   const [alias, setAlias] = useState('');
   const [amount, setAmount] = useState('');
   const [message, setMessage] = useState('');

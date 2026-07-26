@@ -7,6 +7,7 @@ import {
   formatUSD,
   getAssetPrecision,
   getMovementLabel,
+  sortBalancesForDisplay,
 } from './formatters';
 
 describe('formatCOP', () => {
@@ -80,5 +81,43 @@ describe('getMovementLabel', () => {
     expect(getMovementLabel('withdraw')).toBe('Retiro');
     expect(getMovementLabel('convert')).toBe('Conversión');
     expect(getMovementLabel('card')).toBe('Pago con tarjeta');
+  });
+});
+
+describe('sortBalancesForDisplay', () => {
+  test('hides KSM entirely — not a balance this app surfaces to users', () => {
+    const result = sortBalancesForDisplay([
+      { asset: 'COPM/2', current: '500000', pending: '0' },
+      { asset: 'KSM/12', current: '1500000000000', pending: '0' },
+      { asset: 'DUSD/6', current: '10000000', pending: '0' },
+    ]);
+
+    expect(result.map((b) => b.asset)).not.toContain('KSM/12');
+  });
+
+  test('puts USD first, keeping the rest in their original relative order', () => {
+    const result = sortBalancesForDisplay([
+      { asset: 'COPM/2', current: '500000', pending: '0' },
+      { asset: 'DUSD/6', current: '10000000', pending: '0' },
+    ]);
+
+    expect(result.map((b) => b.asset)).toEqual(['DUSD/6', 'COPM/2']);
+  });
+
+  test('an all-KSM balance list collapses to empty', () => {
+    const result = sortBalancesForDisplay([
+      { asset: 'KSM/12', current: '1', pending: '0' },
+    ]);
+
+    expect(result).toEqual([]);
+  });
+
+  test('a list with no USD keeps its original order (stable sort)', () => {
+    const result = sortBalancesForDisplay([
+      { asset: 'COPM/2', current: '1', pending: '0' },
+      { asset: 'KSM/12', current: '2', pending: '0' },
+    ]);
+
+    expect(result.map((b) => b.asset)).toEqual(['COPM/2']);
   });
 });
