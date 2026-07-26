@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Button } from '~/components/ui/button';
 import {
@@ -19,6 +20,7 @@ export function CreateAccountDrawer({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const createMutation = useCreateVirtualAccount();
 
@@ -29,9 +31,9 @@ export function CreateAccountDrawer({
       );
       onOpenChange(false);
       setName('');
-      toast.success('Cuenta creada correctamente');
+      toast.success(t('createAccountDrawer.createdToast'));
     } catch {
-      toast.error('No se pudo crear la cuenta. Intenta de nuevo.');
+      toast.error(t('createAccountDrawer.createErrorToast'));
     }
   };
 
@@ -45,7 +47,7 @@ export function CreateAccountDrawer({
       <DrawerContent>
         <DrawerHeader className="text-left">
           <DrawerTitle className="text-lg font-bold tracking-[-0.02em]">
-            Crear Nueva Cuenta
+            {t('accounts.createNew')}
           </DrawerTitle>
         </DrawerHeader>
         <div className="px-5 pb-2">
@@ -54,7 +56,7 @@ export function CreateAccountDrawer({
               htmlFor="new-account-name"
               className="text-sm font-medium text-foreground"
             >
-              Nombre (opcional)
+              {t('accounts.detail.optionalNameLabel')}
             </Label>
             <Input
               id="new-account-name"
@@ -63,7 +65,7 @@ export function CreateAccountDrawer({
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleCreate();
               }}
-              placeholder="Ahorros, Negocio..."
+              placeholder={t('createAccountDrawer.namePlaceholder')}
               maxLength={40}
               disabled={createMutation.isPending}
               className="h-12 rounded-xl"
@@ -76,7 +78,9 @@ export function CreateAccountDrawer({
             disabled={createMutation.isPending}
             className="h-12 w-full rounded-xl text-sm font-medium"
           >
-            {createMutation.isPending ? 'Creando...' : 'Crear cuenta'}
+            {createMutation.isPending
+              ? t('common.creating')
+              : t('createAccountDrawer.createAccount')}
           </Button>
         </DrawerFooter>
       </DrawerContent>
