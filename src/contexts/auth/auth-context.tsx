@@ -44,6 +44,8 @@ export type AuthContextProps = {
   ) => Promise<void>;
   resetOnboardingState: () => void;
   logout: () => Promise<void>;
+  /** Silently re-fetches the current profile without affecting `loading` or signing the user out on failure. */
+  refreshUser: () => Promise<void>;
   user: User;
 };
 
@@ -217,6 +219,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     pendingProfileOnboardingRef.current = null;
   }, []);
 
+  /**
+   * Screens whose data can go stale between the once-per-session `checkAuth`
+   * fetch and a later visit (e.g. completing KYC updates `phone`/personal ID
+   * fields) can call this to pick up fresh values. Deliberately silent on
+   * failure — a background refresh hiccup shouldn't sign the user out.
+   */
+  const refreshUser = useCallback(async () => {
+    try {
+      const sdk = createBloqueSdk();
+      const me = await sdk.me();
+      if (me) {
+        setAuthenticatedUser(me);
+      }
+    } catch {
+      console.error('Error refreshing user profile');
+    }
+  }, [setAuthenticatedUser]);
+
   const logout = useCallback(async () => {
     setLoading(true);
     try {
@@ -263,6 +283,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         completeOnboarding,
         resetOnboardingState,
         logout,
+        refreshUser,
         user: currentUser as User,
       }}
     >

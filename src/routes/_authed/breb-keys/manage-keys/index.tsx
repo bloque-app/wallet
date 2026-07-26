@@ -8,7 +8,7 @@ import {
   MoreVertical,
   Smartphone,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { AccountCarousel } from '~/components/account/account-carousel';
 import { Button } from '~/components/ui/button';
@@ -108,7 +108,14 @@ function RouteComponent() {
   } | null>(null);
   const [selectedLedgerId, setSelectedLedgerId] = useState<string | null>(null);
 
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
+
+  // Phone/personal-ID suggestions come from a once-per-session profile
+  // snapshot, which can go stale if the user completes KYC (or otherwise
+  // updates their profile) elsewhere before visiting this screen.
+  useEffect(() => {
+    void refreshUser();
+  }, [refreshUser]);
 
   const accountsQuery = useAccounts();
   const brebProducts = useMemo(
