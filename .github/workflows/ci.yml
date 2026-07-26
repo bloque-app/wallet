@@ -32,7 +32,7 @@ jobs:
 
       - name: Lint (scoped to this PR's diff)
         if: github.event_name == 'pull_request'
-        run: bunx biome check --changed --since=origin/${{ github.base_ref }}
+        run: bunx biome check --changed --no-errors-on-unmatched --since=origin/${{ github.base_ref }}
 
       - name: Unit tests (bun test)
         run: bun run test:unit
