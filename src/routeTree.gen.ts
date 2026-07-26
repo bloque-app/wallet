@@ -25,7 +25,6 @@ import { Route as AuthedhomeIndexRouteImport } from './routes/_authed/(home)/ind
 import { Route as AuthedAccountsUrnRouteImport } from './routes/_authed/accounts/$urn'
 import { Route as AuthedSendColombianBanksIndexRouteImport } from './routes/_authed/send/colombian-banks/index'
 import { Route as AuthedSendBloqueFriendsIndexRouteImport } from './routes/_authed/send/bloque-friends/index'
-import { Route as AuthedBrebKeysRegisterKeyIndexRouteImport } from './routes/_authed/breb-keys/register-key/index'
 import { Route as AuthedBrebKeysPayTransferIndexRouteImport } from './routes/_authed/breb-keys/pay-transfer/index'
 import { Route as AuthedBrebKeysPayTransferQrIndexRouteImport } from './routes/_authed/breb-keys/pay-transfer-qr/index'
 import { Route as AuthedBrebKeysManageKeysIndexRouteImport } from './routes/_authed/breb-keys/manage-keys/index'
@@ -112,12 +111,6 @@ const AuthedSendBloqueFriendsIndexRoute =
     path: '/send/bloque-friends/',
     getParentRoute: () => AuthedRoute,
   } as any)
-const AuthedBrebKeysRegisterKeyIndexRoute =
-  AuthedBrebKeysRegisterKeyIndexRouteImport.update({
-    id: '/breb-keys/register-key/',
-    path: '/breb-keys/register-key/',
-    getParentRoute: () => AuthedRoute,
-  } as any)
 const AuthedBrebKeysPayTransferIndexRoute =
   AuthedBrebKeysPayTransferIndexRouteImport.update({
     id: '/breb-keys/pay-transfer/',
@@ -166,7 +159,6 @@ export interface FileRoutesByFullPath {
   '/breb-keys/manage-keys/': typeof AuthedBrebKeysManageKeysIndexRoute
   '/breb-keys/pay-transfer-qr/': typeof AuthedBrebKeysPayTransferQrIndexRoute
   '/breb-keys/pay-transfer/': typeof AuthedBrebKeysPayTransferIndexRoute
-  '/breb-keys/register-key/': typeof AuthedBrebKeysRegisterKeyIndexRoute
   '/send/bloque-friends/': typeof AuthedSendBloqueFriendsIndexRoute
   '/send/colombian-banks/': typeof AuthedSendColombianBanksIndexRoute
 }
@@ -188,7 +180,6 @@ export interface FileRoutesByTo {
   '/breb-keys/manage-keys': typeof AuthedBrebKeysManageKeysIndexRoute
   '/breb-keys/pay-transfer-qr': typeof AuthedBrebKeysPayTransferQrIndexRoute
   '/breb-keys/pay-transfer': typeof AuthedBrebKeysPayTransferIndexRoute
-  '/breb-keys/register-key': typeof AuthedBrebKeysRegisterKeyIndexRoute
   '/send/bloque-friends': typeof AuthedSendBloqueFriendsIndexRoute
   '/send/colombian-banks': typeof AuthedSendColombianBanksIndexRoute
 }
@@ -213,7 +204,6 @@ export interface FileRoutesById {
   '/_authed/breb-keys/manage-keys/': typeof AuthedBrebKeysManageKeysIndexRoute
   '/_authed/breb-keys/pay-transfer-qr/': typeof AuthedBrebKeysPayTransferQrIndexRoute
   '/_authed/breb-keys/pay-transfer/': typeof AuthedBrebKeysPayTransferIndexRoute
-  '/_authed/breb-keys/register-key/': typeof AuthedBrebKeysRegisterKeyIndexRoute
   '/_authed/send/bloque-friends/': typeof AuthedSendBloqueFriendsIndexRoute
   '/_authed/send/colombian-banks/': typeof AuthedSendColombianBanksIndexRoute
 }
@@ -237,7 +227,6 @@ export interface FileRouteTypes {
     | '/breb-keys/manage-keys/'
     | '/breb-keys/pay-transfer-qr/'
     | '/breb-keys/pay-transfer/'
-    | '/breb-keys/register-key/'
     | '/send/bloque-friends/'
     | '/send/colombian-banks/'
   fileRoutesByTo: FileRoutesByTo
@@ -259,7 +248,6 @@ export interface FileRouteTypes {
     | '/breb-keys/manage-keys'
     | '/breb-keys/pay-transfer-qr'
     | '/breb-keys/pay-transfer'
-    | '/breb-keys/register-key'
     | '/send/bloque-friends'
     | '/send/colombian-banks'
   id:
@@ -283,7 +271,6 @@ export interface FileRouteTypes {
     | '/_authed/breb-keys/manage-keys/'
     | '/_authed/breb-keys/pay-transfer-qr/'
     | '/_authed/breb-keys/pay-transfer/'
-    | '/_authed/breb-keys/register-key/'
     | '/_authed/send/bloque-friends/'
     | '/_authed/send/colombian-banks/'
   fileRoutesById: FileRoutesById
@@ -407,13 +394,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedSendBloqueFriendsIndexRouteImport
       parentRoute: typeof AuthedRoute
     }
-    '/_authed/breb-keys/register-key/': {
-      id: '/_authed/breb-keys/register-key/'
-      path: '/breb-keys/register-key'
-      fullPath: '/breb-keys/register-key/'
-      preLoaderRoute: typeof AuthedBrebKeysRegisterKeyIndexRouteImport
-      parentRoute: typeof AuthedRoute
-    }
     '/_authed/breb-keys/pay-transfer/': {
       id: '/_authed/breb-keys/pay-transfer/'
       path: '/breb-keys/pay-transfer'
@@ -469,7 +449,6 @@ interface AuthedRouteChildren {
   AuthedBrebKeysManageKeysIndexRoute: typeof AuthedBrebKeysManageKeysIndexRoute
   AuthedBrebKeysPayTransferQrIndexRoute: typeof AuthedBrebKeysPayTransferQrIndexRoute
   AuthedBrebKeysPayTransferIndexRoute: typeof AuthedBrebKeysPayTransferIndexRoute
-  AuthedBrebKeysRegisterKeyIndexRoute: typeof AuthedBrebKeysRegisterKeyIndexRoute
   AuthedSendBloqueFriendsIndexRoute: typeof AuthedSendBloqueFriendsIndexRoute
   AuthedSendColombianBanksIndexRoute: typeof AuthedSendColombianBanksIndexRoute
 }
@@ -491,7 +470,6 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedBrebKeysManageKeysIndexRoute: AuthedBrebKeysManageKeysIndexRoute,
   AuthedBrebKeysPayTransferQrIndexRoute: AuthedBrebKeysPayTransferQrIndexRoute,
   AuthedBrebKeysPayTransferIndexRoute: AuthedBrebKeysPayTransferIndexRoute,
-  AuthedBrebKeysRegisterKeyIndexRoute: AuthedBrebKeysRegisterKeyIndexRoute,
   AuthedSendBloqueFriendsIndexRoute: AuthedSendBloqueFriendsIndexRoute,
   AuthedSendColombianBanksIndexRoute: AuthedSendColombianBanksIndexRoute,
 }

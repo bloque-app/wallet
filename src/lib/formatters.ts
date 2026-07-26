@@ -1,4 +1,3 @@
-export type KycStatus = 'not_started' | 'in_review' | 'approved' | 'rejected';
 export type LoginMethod = 'email' | 'phone';
 export type MovementType = 'topup' | 'withdraw' | 'send' | 'convert' | 'card';
 export type MovementStatus = 'completed' | 'pending' | 'failed';
@@ -84,6 +83,12 @@ export function getMovementLabel(
     card: 'Pago con tarjeta',
   };
   return labels[type];
+}
+
+export function getAssetPrecision(assetWithPrecision: string): number {
+  const [, precisionStr] = assetWithPrecision.split('/');
+  const parsed = Number.parseInt(precisionStr ?? '0', 10);
+  return Number.isNaN(parsed) ? 0 : parsed;
 }
 
 export function formatPolygonAddress(addr: string): string {

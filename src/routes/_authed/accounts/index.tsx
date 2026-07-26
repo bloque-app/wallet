@@ -1,63 +1,71 @@
-import { useQuery } from '@tanstack/react-query';
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
+import { ArrowLeft, ChevronRight, Plus } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { CreateAccountDrawer } from '~/components/account/create-account-drawer';
 import {
-  ArrowLeft,
-  ChevronRight,
-  CreditCard,
-  Landmark,
-  Wallet,
-} from 'lucide-react';
-import { bloque } from '~/lib/bloque';
+  getProductKindIcon,
+  getProductKindLabel,
+} from '~/components/account/product-presentation';
+import { Button } from '~/components/ui/button';
+import type { Account } from '~/domain/accounts/types';
+import { useAccounts } from '~/hooks/accounts/use-accounts';
+import { formatCOP, formatKSM, formatUSD } from '~/lib/formatters';
 
 export const Route = createFileRoute('/_authed/accounts/')({
   component: RouteComponent,
 });
 
-function getMediumLabel(medium?: string) {
-  switch (medium) {
-    case 'card':
-      return 'Tarjeta';
-    case 'virtual':
-      return 'Virtual';
-    case 'breb':
-      return 'BRE-B';
-    case 'polygon':
-      return 'Polygon';
-    case 'bancolombia':
-      return 'Bancolombia';
-    case 'us-account':
-      return 'US Account';
-    default:
-      return medium ?? 'Cuenta';
-  }
+function formatAssetBalanceChip(asset: string, current: string): string {
+  const [assetKey, precisionStr] = asset.split('/');
+  const precision = Number.parseInt(precisionStr ?? '0', 10);
+  const parsed = Number.parseInt(current, 10);
+  const amount = Number.isNaN(parsed)
+    ? 0
+    : parsed / 10 ** (Number.isNaN(precision) ? 0 : precision);
+
+  if (assetKey === 'DUSD' || assetKey === 'USD') return formatUSD(amount);
+  if (assetKey === 'KSM') return formatKSM(amount);
+  return formatCOP(amount);
 }
 
-function getMediumIcon(medium?: string) {
-  switch (medium) {
-    case 'card':
-      return CreditCard;
-    case 'polygon':
-      return Wallet;
-    default:
-      return Landmark;
+function getCompositionLabel(account: Account) {
+  const associated = account.products.filter(
+    (product) => product.urn !== account.primaryUrn,
+  );
+
+  if (associated.length === 0) {
+    const primary = account.products.find(
+      (product) => product.urn === account.primaryUrn,
+    );
+    return primary
+      ? `${getProductKindLabel(primary.kind)} • ${primary.status}`
+      : 'Sin productos asociados';
   }
+
+  return associated
+    .map((product) => getProductKindLabel(product.kind))
+    .join(' • ');
 }
 
 function RouteComponent() {
-  const accountsQuery = useQuery({
-    queryKey: ['all-accounts'],
-    queryFn: async () => bloque.accounts.list(),
-    staleTime: 30_000,
-  });
+  const navigate = useNavigate();
+  const accountsQuery = useAccounts();
+  const accounts = accountsQuery.data ?? [];
+  const [showCreateDrawer, setShowCreateDrawer] = useState(false);
 
-  const accounts = (accountsQuery.data?.accounts ?? []) as Array<{
-    id: string;
-    urn: string;
-    medium?: string;
-    status?: string;
-    ledgerId?: string;
-    metadata?: Record<string, unknown>;
-  }>;
+  useEffect(() => {
+    if (accounts.length === 1 && accounts[0]) {
+      navigate({
+        to: '/accounts/$urn',
+        params: { urn: accounts[0].primaryUrn },
+        replace: true,
+      });
+    }
+  }, [accounts, navigate]);
+
+  if (accounts.length === 1) {
+    return null;
+  }
 
   return (
     <div className="flex flex-col gap-5">
@@ -85,17 +93,16 @@ function RouteComponent() {
       ) : (
         <section className="flex flex-col gap-3">
           {accounts.map((account) => {
-            const Icon = getMediumIcon(account.medium);
-            const title =
-              (account.metadata?.card_name as string) ||
-              (account.metadata?.name as string) ||
-              getMediumLabel(account.medium);
+            const primary = account.products.find(
+              (product) => product.urn === account.primaryUrn,
+            );
+            const Icon = getProductKindIcon(primary?.kind ?? 'other');
 
             return (
               <Link
-                key={account.urn}
+                key={account.ledgerId}
                 to="/accounts/$urn"
-                params={{ urn: account.urn }}
+                params={{ urn: account.primaryUrn }}
                 className="flex items-center gap-3 rounded-2xl border border-border/75 bg-card/80 p-4 transition-colors hover:bg-muted/60"
               >
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
@@ -103,19 +110,25 @@ function RouteComponent() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-foreground">
-                    {title}
+                    {account.label}
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    {getMediumLabel(account.medium)} •{' '}
-                    {account.status ?? 'sin estado'}
+                  <p className="truncate text-xs text-muted-foreground">
+                    {getCompositionLabel(account)}
                   </p>
-                  <p className="truncate text-[11px] text-muted-foreground">
-                    {account.urn}
-                  </p>
-                  {account.ledgerId ? (
-                    <p className="truncate text-[11px] text-muted-foreground">
-                      Ledger: {account.ledgerId}
-                    </p>
+                  {account.balances.length > 0 ? (
+                    <div className="mt-1 flex flex-wrap gap-1.5">
+                      {account.balances.map((balance) => (
+                        <span
+                          key={balance.asset}
+                          className="rounded-full border border-border/70 bg-background/70 px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
+                        >
+                          {formatAssetBalanceChip(
+                            balance.asset,
+                            balance.current,
+                          )}
+                        </span>
+                      ))}
+                    </div>
                   ) : null}
                 </div>
                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -124,6 +137,20 @@ function RouteComponent() {
           })}
         </section>
       )}
+
+      <Button
+        variant="outline"
+        onClick={() => setShowCreateDrawer(true)}
+        className="h-12 w-full gap-2 rounded-2xl text-sm font-medium"
+      >
+        <Plus className="h-4 w-4" />
+        Crear Nueva Cuenta
+      </Button>
+
+      <CreateAccountDrawer
+        open={showCreateDrawer}
+        onOpenChange={setShowCreateDrawer}
+      />
     </div>
   );
 }

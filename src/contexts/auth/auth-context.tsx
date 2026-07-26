@@ -8,9 +8,11 @@ import {
   useState,
 } from 'react';
 import { toast } from 'sonner';
+import type { VerificationStatus } from '~/domain/kyc/types';
 import { apiFetch } from '~/lib/api-fetch';
 import { createBloqueSdk } from '~/lib/bloque';
 import { queryClient } from '~/lib/query-client';
+import { deriveKycStatus } from './kyc-status';
 import type {
   AliasCheckResult,
   LoginData,
@@ -25,7 +27,10 @@ interface User {
   urn: string;
   name: string;
   email: string;
-  kycStatus?: 'approved' | 'in_review' | 'rejected' | 'not_verified';
+  phone: string;
+  personalIdNumber: string;
+  personalIdType: string;
+  kycStatus?: VerificationStatus;
 }
 
 export type AuthContextProps = {
@@ -41,8 +46,16 @@ export type AuthContextProps = {
   ) => Promise<void>;
   resetOnboardingState: () => void;
   logout: () => Promise<void>;
+  /** Silently re-fetches the current profile without affecting `loading` or signing the user out on failure. */
+  refreshUser: () => Promise<void>;
   user: User;
 };
+
+function originForMethod(
+  method: LoginMethod,
+): 'bloque-whatsapp' | 'bloque-email' {
+  return method === 'phone' ? 'bloque-whatsapp' : 'bloque-email';
+}
 
 export const AuthContext = createContext<AuthContextProps | null>(null);
 
@@ -57,12 +70,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isAuthenticated = currentUser !== null;
 
   const setAuthenticatedUser = useCallback(
-    (me: Awaited<ReturnType<ReturnType<typeof createBloqueSdk>['me']>>) => {
+    async (
+      me: Awaited<ReturnType<ReturnType<typeof createBloqueSdk>['me']>>,
+    ) => {
+      const kycStatus = await deriveKycStatus(me.urn);
       setCurrentUser({
         urn: me.urn,
         name: me.profile.first_name,
         email: me.profile.email,
-        kycStatus: me.metadata.kyc_verified ? 'approved' : 'not_verified',
+        phone: me.profile.phone,
+        personalIdNumber: me.profile.personal_id_number,
+        personalIdType: me.profile.personal_id_type,
+        kycStatus,
       });
     },
     [],
@@ -70,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkAlias = useCallback(
     async (method: LoginMethod, alias: string): Promise<AliasCheckResult> => {
-      const origin = method === 'phone' ? 'bloque-whatsapp' : 'bloque-email';
+      const origin = originForMethod(method);
       const sdk = createBloqueSdk(origin);
       const identitySdk = sdk as unknown as AliasLookupApi;
 
@@ -89,7 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const sendOTP = useCallback(
     async (method: 'email' | 'phone', alias: string) => {
-      const origin = method === 'phone' ? 'bloque-whatsapp' : 'bloque-email';
+      const origin = originForMethod(method);
       const sdk = createBloqueSdk(origin);
 
       const result = await sdk.assert(origin, alias);
@@ -115,8 +134,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(
     async (data: LoginData): Promise<LoginResult> => {
       const alias = 'phone' in data ? data.phone : data.email;
-      const origin = 'phone' in data ? 'bloque-whatsapp' : 'bloque-email';
       const method = 'phone' in data ? 'phone' : 'email';
+      const origin = originForMethod(method);
       const sdk = createBloqueSdk(origin);
       const registerApi = sdk as unknown as OriginRegisterApi;
 
@@ -156,7 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const me = await sdk.me();
         pendingOnboardingSessionRef.current = null;
         pendingProfileOnboardingRef.current = null;
-        setAuthenticatedUser(me);
+        await setAuthenticatedUser(me);
         return { status: 'authenticated' };
       } catch (error) {
         if (isIdentityNotFoundError(error)) {
@@ -195,7 +214,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const me = await sdk.me();
       pendingOnboardingSessionRef.current = null;
       pendingProfileOnboardingRef.current = null;
-      setAuthenticatedUser(me);
+      await setAuthenticatedUser(me);
     },
     [setAuthenticatedUser],
   );
@@ -204,6 +223,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     pendingOnboardingSessionRef.current = null;
     pendingProfileOnboardingRef.current = null;
   }, []);
+
+  /**
+   * Screens whose data can go stale between the once-per-session `checkAuth`
+   * fetch and a later visit (e.g. completing KYC updates `phone`/personal ID
+   * fields) can call this to pick up fresh values. Deliberately silent on
+   * failure — a background refresh hiccup shouldn't sign the user out.
+   */
+  const refreshUser = useCallback(async () => {
+    try {
+      const sdk = createBloqueSdk();
+      const me = await sdk.me();
+      if (me) {
+        setAuthenticatedUser(me);
+      }
+    } catch {
+      console.error('Error refreshing user profile');
+    }
+  }, [setAuthenticatedUser]);
 
   const logout = useCallback(async () => {
     setLoading(true);
@@ -226,7 +263,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const sdk = createBloqueSdk();
         const me = await sdk.me();
         if (me) {
-          setAuthenticatedUser(me);
+          await setAuthenticatedUser(me);
         }
       } catch {
         console.error('Error checking auth');
@@ -251,6 +288,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         completeOnboarding,
         resetOnboardingState,
         logout,
+        refreshUser,
         user: currentUser as User,
       }}
     >

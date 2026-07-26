@@ -8,24 +8,31 @@ interface KycProgressBannerProps {
 
 export function KycProgressBanner({ kycStatus }: KycProgressBannerProps) {
   const verificationDone = kycStatus === 'approved';
-  const verificationInReview = kycStatus === 'in_review';
+  const verificationInReview = kycStatus === 'awaiting_verification';
+  const verificationRejected = kycStatus === 'rejected';
+
+  const title = verificationRejected
+    ? 'No pudimos verificar tu identidad'
+    : 'Completa tu verificación';
+  const description = verificationRejected
+    ? 'Tu verificación no fue aprobada. Inténtalo de nuevo para activar tu tarjeta.'
+    : 'Falta verificar tu identidad para activar tu tarjeta.';
+  const ctaLabel = verificationRejected
+    ? 'Reintentar verificación'
+    : 'Ir a verificar';
 
   return (
     <section className="mb-5 rounded-2xl border border-border/80 bg-card/85 p-4 shadow-[0_18px_30px_-32px_color-mix(in_oklch,var(--foreground)_45%,transparent)]">
       <div className="mb-3 flex items-center justify-between gap-2">
         <div>
-          <p className="text-sm font-semibold text-foreground">
-            Completa tu verificación
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Falta verificar tu identidad para activar tu tarjeta.
-          </p>
+          <p className="text-sm font-semibold text-foreground">{title}</p>
+          <p className="text-xs text-muted-foreground">{description}</p>
         </div>
         <Link
           to="/kyc"
           className="shrink-0 rounded-full border border-primary/25 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
         >
-          Ir a verificar
+          {ctaLabel}
         </Link>
       </div>
 
@@ -38,9 +45,11 @@ export function KycProgressBanner({ kycStatus }: KycProgressBannerProps) {
           state={
             verificationDone
               ? 'done'
-              : verificationInReview
-                ? 'in_progress'
-                : 'pending'
+              : verificationRejected
+                ? 'error'
+                : verificationInReview
+                  ? 'in_progress'
+                  : 'pending'
           }
         />
         <div className="h-px flex-1 bg-border" />

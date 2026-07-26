@@ -1,15 +1,13 @@
 'use client';
 
 import { Plus, Snowflake } from 'lucide-react';
+import type { CardProduct } from '~/domain/accounts/types';
 import { cn } from '~/lib/utils';
-import type { CardsResponse } from '~/routes/_authed/card/-hooks/use-card';
-
-type CardAccount = CardsResponse['accounts'][number];
 
 interface CardListProps {
-  cards: CardAccount[];
+  cards: CardProduct[];
   activeCardId: string | null;
-  onSelectCard: (id: string) => void;
+  onSelectCard: (urn: string) => void;
   onAddCard: () => void;
   canAddCard?: boolean;
 }
@@ -19,14 +17,11 @@ function CardMiniVisual({
   isActive,
   onClick,
 }: {
-  card: CardAccount;
+  card: CardProduct;
   isActive: boolean;
   onClick: () => void;
 }) {
-  const label =
-    (card.metadata?.card_name as string) ||
-    (card.metadata?.name as string) ||
-    'Tarjeta';
+  const label = card.label;
   const isFrozen = card.status === 'frozen';
 
   return (
@@ -99,10 +94,10 @@ export function CardList({
     >
       {cards.map((card) => (
         <CardMiniVisual
-          key={card.id}
+          key={card.urn}
           card={card}
-          isActive={card.id === activeCardId}
-          onClick={() => onSelectCard(card.id)}
+          isActive={card.urn === activeCardId}
+          onClick={() => onSelectCard(card.urn)}
         />
       ))}
       <button

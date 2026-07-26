@@ -1,8 +1,8 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { createFileRoute, Link } from '@tanstack/react-router';
-import { LoaderCircle, Plus, X } from 'lucide-react';
-import { useMemo, useRef, useState } from 'react';
-import { toast } from 'sonner';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
+import { LoaderCircle, X } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { AccountsCarousel } from '~/components/account/accounts-carousel';
+import { CreateAccountDrawer } from '~/components/account/create-account-drawer';
 import { MovementRow } from '~/components/movement-row';
 import { Button } from '~/components/ui/button';
 import {
@@ -14,10 +14,9 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '~/components/ui/drawer';
-import { Input } from '~/components/ui/input';
-import { Label } from '~/components/ui/label';
-import { useGlobalTransactions } from '~/hooks/use-global-transactions';
-import { bloque } from '~/lib/bloque';
+import type { PolygonProduct } from '~/domain/accounts/types';
+import { useAccounts } from '~/hooks/accounts/use-accounts';
+import { useGlobalTransactions } from '~/hooks/accounts/use-global-transactions';
 import {
   type Asset,
   formatAmount,
@@ -77,41 +76,32 @@ function parseBalances(
   return parsed;
 }
 
-function getKsmBalance(
-  balance:
-    | Record<
-        string,
-        { current: string; pending: string; in: string; out: string }
-      >
-    | undefined,
-): number {
-  if (!balance) return 0;
-  for (const [key, value] of Object.entries(balance)) {
-    const [assetKey, precisionStr] = key.split('/');
-    if (assetKey === 'KSM') {
-      const precision = Number.parseInt(precisionStr, 10);
-      return (
-        Number.parseInt(value.current, 10) /
-        10 ** (Number.isNaN(precision) ? 0 : precision)
-      );
-    }
-  }
-  return 0;
+function getKsmBalance(product: PolygonProduct): number {
+  const entry = product.balances.find((balance) =>
+    balance.asset.startsWith('KSM'),
+  );
+  if (!entry) return 0;
+  const [, precisionStr] = entry.asset.split('/');
+  const precision = Number.parseInt(precisionStr, 10);
+  return (
+    Number.parseInt(entry.current, 10) /
+    10 ** (Number.isNaN(precision) ? 0 : precision)
+  );
 }
 
 function RouteComponent() {
-  const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { data: balancesData, isLoading: isLoadingBalances } = useBalance();
   const { data: transactionsData, isLoading: isLoadingTransactions } =
     useGlobalTransactions(5);
-  const { data: polygonData, isLoading: isLoadingPolygon } = useQuery({
-    queryKey: ['polygon-accounts'],
-    queryFn: () => bloque.accounts.polygon.list(),
-  });
-  const createPolygonMutation = useMutation({
-    mutationFn: (name: string) =>
-      bloque.accounts.polygon.create(name ? { name } : {}),
-  });
+  const accountsQuery = useAccounts();
+  const isLoadingPolygon = accountsQuery.isLoading;
+  const polygonAccounts =
+    accountsQuery.data?.flatMap((account) =>
+      account.products.filter(
+        (product): product is PolygonProduct => product.kind === 'polygon',
+      ),
+    ) ?? [];
 
   const parsedBalances = useMemo(
     () => parseBalances(balancesData as BalancesResponse),
@@ -124,28 +114,13 @@ function RouteComponent() {
   );
   const [selectedAsset, setSelectedAsset] = useState<Asset>('COP');
   const [showPolygonAccounts, setShowPolygonAccounts] = useState(false);
-  const [showCreatePolygon, setShowCreatePolygon] = useState(false);
-  const [polygonName, setPolygonName] = useState('');
-  const polygonNameRef = useRef<HTMLInputElement>(null);
+  const [showCreateAccount, setShowCreateAccount] = useState(false);
 
-  const polygonAccounts = polygonData?.accounts ?? [];
-
+  const accounts = accountsQuery.data ?? [];
   const assets: Asset[] = ['COP', 'USD', 'KSM'];
   const selectedBalance = parsedBalances[selectedAsset] ?? 0;
 
   const recentMovements = transactionsData?.movements ?? [];
-
-  const handleCreatePolygon = async () => {
-    try {
-      await createPolygonMutation.mutateAsync(polygonName.trim());
-      await queryClient.invalidateQueries({ queryKey: ['polygon-accounts'] });
-      setShowCreatePolygon(false);
-      setPolygonName('');
-      toast.success('Cuenta Polygon creada');
-    } catch {
-      toast.error('Error al crear la cuenta Polygon');
-    }
-  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -204,6 +179,29 @@ function RouteComponent() {
       </section>
 
       <QuickActions />
+
+      <div className="my-1 h-px w-full bg-gradient-to-r from-transparent via-border to-transparent" />
+
+      <section className="flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
+            Cuentas
+          </p>
+          <Link
+            to="/accounts"
+            className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
+          >
+            Ver todas
+          </Link>
+        </div>
+        <AccountsCarousel
+          accounts={accounts}
+          onSelectAccount={(urn) =>
+            navigate({ to: '/accounts/$urn', params: { urn } })
+          }
+          onAddAccount={() => setShowCreateAccount(true)}
+        />
+      </section>
 
       <div className="my-1 h-px w-full bg-gradient-to-r from-transparent via-border to-transparent" />
 
@@ -290,25 +288,18 @@ function RouteComponent() {
                 </div>
               ) : (
                 polygonAccounts.map((account, index) => (
-                  <div key={account.id}>
+                  <div key={account.urn}>
                     <div className="flex items-center justify-between gap-3 px-4 py-3.5">
                       <div className="flex min-w-0 flex-col gap-0.5">
                         <p className="truncate text-sm font-medium text-foreground">
-                          {account.metadata?.name ||
-                            formatPolygonAddress(account.address)}
+                          {account.label}
                         </p>
                         <p className="font-mono text-xs text-muted-foreground">
                           {formatPolygonAddress(account.address)}
                         </p>
                       </div>
                       <p className="shrink-0 text-sm font-semibold tabular-nums text-foreground">
-                        {formatKSM(
-                          getKsmBalance(
-                            account.balance as Parameters<
-                              typeof getKsmBalance
-                            >[0],
-                          ),
-                        )}
+                        {formatKSM(getKsmBalance(account))}
                       </p>
                     </div>
                     {index < polygonAccounts.length - 1 && (
@@ -323,95 +314,21 @@ function RouteComponent() {
           <DrawerFooter>
             <Button
               onClick={() => {
-                setPolygonName('');
-                setShowCreatePolygon(true);
-                setTimeout(() => polygonNameRef.current?.focus(), 150);
+                setShowPolygonAccounts(false);
+                navigate({ to: '/accounts' });
               }}
               className="h-12 w-full gap-2 rounded-2xl text-sm"
             >
-              <Plus className="h-4 w-4" />
               Agregar cuenta
             </Button>
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
 
-      {/* Create polygon account drawer */}
-      <Drawer
-        open={showCreatePolygon}
-        onOpenChange={(open) => {
-          if (!createPolygonMutation.isPending) setShowCreatePolygon(open);
-        }}
-      >
-        <DrawerContent>
-          <DrawerHeader className="text-left">
-            <div className="mb-1 flex items-center gap-2">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary" />
-              <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground/60">
-                Nueva cuenta
-              </span>
-            </div>
-            <DrawerTitle className="text-lg font-bold tracking-[-0.02em]">
-              Cuenta Polygon
-            </DrawerTitle>
-          </DrawerHeader>
-
-          <div className="px-5 pb-2">
-            <div className="flex flex-col gap-2">
-              <Label
-                htmlFor="polygon-name-input"
-                className="text-sm font-medium text-foreground"
-              >
-                Nombre (opcional)
-              </Label>
-              <Input
-                id="polygon-name-input"
-                ref={polygonNameRef}
-                value={polygonName}
-                onChange={(e) => setPolygonName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleCreatePolygon();
-                }}
-                placeholder="Principal"
-                maxLength={40}
-                disabled={createPolygonMutation.isPending}
-                className="h-12 rounded-xl"
-              />
-              <p className="text-xs text-muted-foreground">
-                Se creará una nueva wallet en la red Polygon.
-              </p>
-            </div>
-          </div>
-
-          <DrawerFooter>
-            <Button
-              onClick={handleCreatePolygon}
-              disabled={createPolygonMutation.isPending}
-              className="h-12 w-full gap-2 rounded-xl text-sm font-medium"
-            >
-              {createPolygonMutation.isPending ? (
-                <>
-                  <LoaderCircle className="h-4 w-4 animate-spin" />
-                  Creando cuenta...
-                </>
-              ) : (
-                <>
-                  <Plus className="h-4 w-4" />
-                  Crear cuenta
-                </>
-              )}
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => setShowCreatePolygon(false)}
-              disabled={createPolygonMutation.isPending}
-              className="h-10 w-full text-sm text-muted-foreground"
-            >
-              Cancelar
-            </Button>
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
+      <CreateAccountDrawer
+        open={showCreateAccount}
+        onOpenChange={setShowCreateAccount}
+      />
     </div>
   );
 }

@@ -1,9 +1,12 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { bloque } from '~/lib/bloque';
-import { useCards } from '../../card/-hooks/use-card';
+import type { CardProduct } from '~/domain/accounts/types';
+import { isSupportedBank } from '~/domain/payments/supported-bank';
+import type { ExecutionOutcome } from '~/domain/payments/types';
+import { useAccounts } from '~/hooks/accounts/use-accounts';
+import { useCreateBankTransferOrder } from '~/hooks/payments/use-bank-transfer';
+import { useRates } from '~/hooks/payments/use-rates';
 import { TopUpAmountStep } from '../../topup/-components/amount-step';
 import {
   type TopUpBankAccountData,
@@ -11,7 +14,7 @@ import {
 } from '../../topup/-components/bank-step';
 import { TopUpConfirmStep } from '../../topup/-components/confirm-step';
 import { TopUpErrorStep } from '../../topup/-components/error-step';
-import { TopUpPendingStep } from '../../topup/-components/pending-step';
+import { ExecutionOutcomeStep } from '../../topup/-components/execution-outcome-step';
 
 type TransferStep = 'amount' | 'bank' | 'confirm' | 'pending' | 'error';
 
@@ -55,11 +58,18 @@ function RouteComponent() {
     useState<TopUpBankAccountData>(DEFAULT_BANK_FORM);
   const [lastOrder, setLastOrder] = useState<{
     id: string;
-    redirectUrl?: string;
+    execution: ExecutionOutcome;
   } | null>(null);
   const [autoRetry, setAutoRetry] = useState(false);
   const [selectedBank, setSelectedBank] = useState('');
-  const { data: cardsData, isLoading: isLoadingCards } = useCards();
+  const accountsQuery = useAccounts();
+  const isLoadingCards = accountsQuery.isLoading;
+  const cards =
+    accountsQuery.data?.flatMap((account) =>
+      account.products.filter(
+        (product): product is CardProduct => product.kind === 'card',
+      ),
+    ) ?? [];
 
   const parsedAmount = Number.parseInt(amount.replace(/\D/g, ''), 10) || 0;
   const amountSrc = useMemo(() => {
@@ -67,25 +77,25 @@ function RouteComponent() {
     return majorToMinor(parsedAmount, FROM_PRECISION);
   }, [parsedAmount]);
 
-  const sourceAccountUrn = cardsData?.accounts?.[0]?.urn ?? '';
+  // TODO: silently uses the first card as the funding source when more than
+  // one exists — same class of bug fixed elsewhere in the accounts/products
+  // work this session (BRE-B send, product creation). Flagged, not fixed
+  // here — out of this pass's approved scope.
+  const sourceAccountUrn = cards[0]?.urn ?? '';
 
-  const ratesQuery = useQuery({
-    queryKey: ['transfer-rates', amountSrc],
-    enabled:
-      parsedAmount >= MIN_TRANSFER_AMOUNT && !!amountSrc && !!sourceAccountUrn,
-    queryFn: () =>
-      bloque.swap.findRates({
-        fromAsset: FROM_ASSET,
-        toAsset: TO_ASSET,
-        fromMediums: [FROM_MEDIUM],
-        toMediums: ['bancolombia'],
-        amountSrc,
-      }),
-    staleTime: 30_000,
-    retry: 1,
-  });
+  const ratesQuery = useRates(
+    parsedAmount >= MIN_TRANSFER_AMOUNT && amountSrc && sourceAccountUrn
+      ? {
+          fromAsset: FROM_ASSET,
+          toAsset: TO_ASSET,
+          fromMediums: [FROM_MEDIUM],
+          toMediums: ['bancolombia'],
+          amountSrc,
+        }
+      : undefined,
+  );
 
-  const selectedRate = ratesQuery.data?.rates?.[0] ?? null;
+  const selectedRate = ratesQuery.data?.[0] ?? null;
   const rateSummary = useMemo(() => {
     if (!selectedRate || !amountSrc) return null;
     const srcAmountMinor = Number(amountSrc);
@@ -124,70 +134,87 @@ function RouteComponent() {
     selectedRate,
   ]);
 
-  const createOrderMutation = useMutation({
-    mutationFn: async () => {
-      if (!selectedRate?.sig) {
-        throw new Error('No hay tasa seleccionada para crear la orden.');
-      }
-      if (!amountSrc) {
-        throw new Error('Monto inválido para crear la orden.');
-      }
-      if (!sourceAccountUrn) {
-        throw new Error('No hay cuenta origen disponible.');
-      }
+  const createOrderMutation = useCreateBankTransferOrder();
 
-      if (!selectedBank) {
-        throw new Error('Selecciona un banco destino.');
-      }
-
-      return bloque.swap.bankTransfer.create({
-        rateSig: selectedRate.sig,
-        amountSrc,
-        toMedium: selectedBank as Parameters<
-          typeof bloque.swap.bankTransfer.create
-        >[0]['toMedium'],
-        depositInformation: bankForm,
-        args: {
-          sourceAccountUrn,
-        },
-      });
-    },
-    onSuccess: (result) => {
-      const redirectUrl = getExecutionRedirectUrl(
-        result.execution?.result?.how,
+  const submitOrder = useCallback(() => {
+    if (!selectedRate?.sig) {
+      toast.error('No hay tasa seleccionada para crear la orden.');
+      return;
+    }
+    if (!amountSrc) {
+      toast.error('Monto inválido para crear la orden.');
+      return;
+    }
+    if (!sourceAccountUrn) {
+      toast.error('No hay cuenta origen disponible.');
+      return;
+    }
+    if (!selectedBank) {
+      toast.error('Selecciona un banco destino.');
+      return;
+    }
+    if (!isSupportedBank(selectedBank)) {
+      toast.error(
+        'El banco seleccionado no es válido para esta transferencia.',
       );
-      setLastOrder({ id: result.order.id, redirectUrl });
-      setStep('pending');
-      toast.success('Transferencia enviada correctamente.');
-      if (redirectUrl) {
-        window.open(redirectUrl, '_blank', 'noopener,noreferrer');
-      }
-    },
-    onError: (error) => {
-      const message = error instanceof Error ? error.message : '';
-      if (message.includes('E_RATE_EXPIRED')) {
-        toast.info('La tasa expiró. Recalculando...');
-        setAutoRetry(true);
-        void ratesQuery.refetch();
-        return;
-      }
-      toast.error(message || 'No se pudo enviar la transferencia.');
-      setStep('error');
-    },
-  });
+      return;
+    }
 
-  const createOrderMutate = createOrderMutation.mutate;
+    createOrderMutation.mutate(
+      {
+        params: {
+          rateSig: selectedRate.sig,
+          amountSrc,
+          toMedium: selectedBank,
+          depositInformation: bankForm,
+          args: {
+            sourceAccountUrn,
+          },
+        },
+      },
+      {
+        onSuccess: (result) => {
+          const execution = result.execution ?? { kind: 'none' as const };
+          setLastOrder({ id: result.order.id, execution });
+          setStep('pending');
+          toast.success('Transferencia enviada correctamente.');
+          if (execution.kind === 'redirect') {
+            window.open(execution.url, '_blank', 'noopener,noreferrer');
+          }
+        },
+        onError: (error) => {
+          const message = error instanceof Error ? error.message : '';
+          if (message.includes('E_RATE_EXPIRED')) {
+            toast.info('La tasa expiró. Recalculando...');
+            setAutoRetry(true);
+            void ratesQuery.refetch();
+            return;
+          }
+          toast.error(message || 'No se pudo enviar la transferencia.');
+          setStep('error');
+        },
+      },
+    );
+  }, [
+    selectedRate,
+    amountSrc,
+    sourceAccountUrn,
+    selectedBank,
+    bankForm,
+    createOrderMutation,
+    ratesQuery,
+  ]);
 
   useEffect(() => {
     if (!autoRetry || ratesQuery.isFetching) return;
     setAutoRetry(false);
     if (selectedRate) {
-      createOrderMutate();
+      submitOrder();
     } else {
       toast.error('No hay tasa disponible. Intenta de nuevo.');
       setStep('amount');
     }
-  }, [autoRetry, createOrderMutate, ratesQuery.isFetching, selectedRate]);
+  }, [autoRetry, ratesQuery.isFetching, selectedRate, submitOrder]);
 
   const handleAmountNext = () => {
     if (parsedAmount < MIN_TRANSFER_AMOUNT) {
@@ -202,7 +229,7 @@ function RouteComponent() {
   };
 
   const handleConfirm = () => {
-    createOrderMutation.mutate();
+    submitOrder();
   };
 
   return (
@@ -290,25 +317,10 @@ function RouteComponent() {
       )}
 
       {step === 'pending' && (
-        <TopUpPendingStep
+        <ExecutionOutcomeStep
           amount={parsedAmount}
           orderId={lastOrder?.id}
-          actionLabel={
-            lastOrder?.redirectUrl
-              ? 'Abrir enlace del banco'
-              : 'Verificar estado'
-          }
-          onRefresh={() => {
-            if (lastOrder?.redirectUrl) {
-              window.open(
-                lastOrder.redirectUrl,
-                '_blank',
-                'noopener,noreferrer',
-              );
-              return;
-            }
-            toast.info('Revisa el estado en movimientos.');
-          }}
+          execution={lastOrder?.execution}
           onError={() => setStep('error')}
         />
       )}
@@ -316,12 +328,4 @@ function RouteComponent() {
       {step === 'error' && <TopUpErrorStep onRetry={() => setStep('amount')} />}
     </div>
   );
-}
-
-function getExecutionRedirectUrl(how: unknown): string | undefined {
-  if (!how || typeof how !== 'object') return undefined;
-  if ('url' in how && typeof how.url === 'string') {
-    return how.url;
-  }
-  return undefined;
 }

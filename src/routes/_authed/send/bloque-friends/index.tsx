@@ -1,4 +1,5 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import type { Alias } from '@bloque/sdk-identity';
+import { useMutation } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { ArrowLeft, Send, Users } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -17,6 +18,8 @@ import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { Textarea } from '~/components/ui/textarea';
+import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
+import { useTransfer } from '~/hooks/accounts/use-transfer';
 import { bloque } from '~/lib/bloque';
 import { formatAmount } from '~/lib/formatters';
 
@@ -27,20 +30,6 @@ export const Route = createFileRoute('/_authed/send/bloque-friends/')({
 type ViewState = 'form' | 'pending' | 'error';
 type AssetOption = 'COP' | 'USD' | 'KSM';
 type TransferAsset = 'COPM/2' | 'DUSD/6' | 'KSM/12';
-type AliasResult = {
-  alias: string;
-  urn: string;
-  type: string;
-  origin: string;
-  details: {
-    phone?: string;
-  };
-  metadata: {
-    alias: string;
-    [key: string]: unknown;
-  };
-  status: 'active' | 'inactive' | 'revoked';
-};
 
 const ASSET_OPTIONS: Array<{
   value: AssetOption;
@@ -56,12 +45,13 @@ function majorToMinor(amountMajor: number, precision: number) {
   return (BigInt(amountMajor) * 10n ** BigInt(precision)).toString();
 }
 
-function getAliasDisplayName(aliasResult: AliasResult) {
-  return (
-    (aliasResult.metadata.name as string) ||
-    (aliasResult.metadata.alias as string) ||
-    aliasResult.alias
-  );
+/** `metadata` is an `{ [key: string]: unknown }` bag — validate `name` before use. */
+function getAliasDisplayName(aliasResult: Alias) {
+  const metadataName = aliasResult.metadata.name;
+  if (typeof metadataName === 'string' && metadataName.trim()) {
+    return metadataName;
+  }
+  return aliasResult.metadata.alias || aliasResult.alias;
 }
 
 function RouteComponent() {
@@ -71,19 +61,15 @@ function RouteComponent() {
   const [amount, setAmount] = useState('');
   const [message, setMessage] = useState('');
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [recipientPreview, setRecipientPreview] = useState<AliasResult | null>(
-    null,
-  );
+  const [recipientPreview, setRecipientPreview] = useState<Alias | null>(null);
   const [lastTransfer, setLastTransfer] = useState<{
     destinationUrn: string;
     amount: number;
   } | null>(null);
 
-  const accountsQuery = useQuery({
-    queryKey: ['send-bloque-friends-accounts'],
-    queryFn: async () => bloque.accounts.list(),
-    staleTime: 30_000,
-  });
+  const { accounts: sourceAccounts, isLoading: isLoadingAccounts } =
+    useAccountPicker();
+  const sourceAccount = sourceAccounts[0];
 
   const selectedAssetConfig = ASSET_OPTIONS.find(
     (asset) => asset.value === selectedAsset,
@@ -95,20 +81,8 @@ function RouteComponent() {
     return majorToMinor(parsedAmount, selectedAssetConfig.precision);
   }, [parsedAmount, selectedAssetConfig.precision]);
 
-  const sourceAccount = (
-    (accountsQuery.data?.accounts ?? []) as unknown as Array<{
-      urn: string;
-      status?: string;
-    }>
-  ).find(
-    (account) =>
-      account.status !== 'deleted' &&
-      account.status !== 'disabled' &&
-      account.status !== 'inactive',
-  );
-
   const formError = useMemo(() => {
-    if (!sourceAccount && accountsQuery.isSuccess) {
+    if (!sourceAccount && !isLoadingAccounts) {
       return 'No encontramos una cuenta origen disponible.';
     }
     if (!normalizedAlias && alias.length > 0) {
@@ -119,7 +93,7 @@ function RouteComponent() {
     }
     return null;
   }, [
-    accountsQuery.isSuccess,
+    isLoadingAccounts,
     alias.length,
     normalizedAlias,
     parsedAmount,
@@ -127,8 +101,7 @@ function RouteComponent() {
   ]);
 
   const validateAliasMutation = useMutation({
-    mutationFn: async () =>
-      (await bloque.identity.aliases.get(normalizedAlias)) as AliasResult,
+    mutationFn: async () => await bloque.identity.aliases.get(normalizedAlias),
     onSuccess: (result) => {
       if (!result?.urn) {
         toast.error('No encontramos ese alias.');
@@ -144,20 +117,25 @@ function RouteComponent() {
     },
   });
 
-  const transferMutation = useMutation({
-    mutationFn: async () => {
-      if (!sourceAccount?.urn) {
-        throw new Error('No encontramos una cuenta origen disponible.');
-      }
-      if (!recipientPreview?.urn) {
-        throw new Error('No hay destinatario confirmado.');
-      }
-      if (!amountMinor) {
-        throw new Error('Monto invalido para transferir.');
-      }
+  const transferMutation = useTransfer();
 
-      return await bloque.accounts.transfer({
-        sourceUrn: sourceAccount.urn,
+  const submitTransfer = () => {
+    if (!sourceAccount?.primaryUrn) {
+      toast.error('No encontramos una cuenta origen disponible.');
+      return;
+    }
+    if (!recipientPreview?.urn) {
+      toast.error('No hay destinatario confirmado.');
+      return;
+    }
+    if (!amountMinor) {
+      toast.error('Monto invalido para transferir.');
+      return;
+    }
+
+    transferMutation.mutate(
+      {
+        sourceUrn: sourceAccount.primaryUrn,
         destinationUrn: recipientPreview.urn,
         amount: amountMinor,
         asset: selectedAssetConfig.sdkAsset,
@@ -165,29 +143,31 @@ function RouteComponent() {
           reference: `bloque-friend-${Date.now()}`,
           note: message.trim(),
         },
-      });
-    },
-    onSuccess: () => {
-      setConfirmOpen(false);
-      setLastTransfer({
-        destinationUrn: recipientPreview?.urn ?? '',
-        amount: parsedAmount,
-      });
-      setView('pending');
-      toast.success('Transferencia enviada correctamente.');
-    },
-    onError: (error) => {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : 'No se pudo enviar la transferencia.',
-      );
-      setView('error');
-    },
-  });
+      },
+      {
+        onSuccess: () => {
+          setConfirmOpen(false);
+          setLastTransfer({
+            destinationUrn: recipientPreview.urn,
+            amount: parsedAmount,
+          });
+          setView('pending');
+          toast.success('Transferencia enviada correctamente.');
+        },
+        onError: (error) => {
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : 'No se pudo enviar la transferencia.',
+          );
+          setView('error');
+        },
+      },
+    );
+  };
 
   const canSubmit =
-    !!sourceAccount?.urn &&
+    !!sourceAccount?.primaryUrn &&
     !!normalizedAlias &&
     parsedAmount > 0 &&
     !validateAliasMutation.isPending &&
@@ -425,7 +405,7 @@ function RouteComponent() {
               disabled={transferMutation.isPending}
               onClick={(event) => {
                 event.preventDefault();
-                transferMutation.mutate();
+                submitTransfer();
               }}
             >
               {transferMutation.isPending ? 'Enviando...' : 'Confirmar envio'}

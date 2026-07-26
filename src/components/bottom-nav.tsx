@@ -1,18 +1,31 @@
 'use client';
 
 import { Link, useLocation } from '@tanstack/react-router';
-import { ArrowLeftRight, CreditCard, Home, UserCircle } from 'lucide-react';
+import {
+  ArrowLeftRight,
+  CreditCard,
+  Home,
+  Landmark,
+  UserCircle,
+} from 'lucide-react';
+import { useAccounts } from '~/hooks/accounts/use-accounts';
 import { cn } from '~/lib/utils';
-
-const navItems = [
-  { href: '/', label: 'Inicio', icon: Home },
-  { href: '/movements', label: 'Movimientos', icon: ArrowLeftRight },
-  { href: '/card', label: 'Tarjeta', icon: CreditCard },
-  { href: '/profile', label: 'Perfil', icon: UserCircle },
-];
 
 export function BottomNav() {
   const { pathname } = useLocation();
+  const accountsQuery = useAccounts();
+  const hasMultipleAccounts = (accountsQuery.data?.length ?? 0) > 1;
+
+  const secondItem = hasMultipleAccounts
+    ? { href: '/accounts', label: 'Cuentas', icon: Landmark }
+    : { href: '/movements', label: 'Movimientos', icon: ArrowLeftRight };
+
+  const navItems = [
+    { href: '/', label: 'Inicio', icon: Home },
+    secondItem,
+    { href: '/card', label: 'Tarjeta', icon: CreditCard },
+    { href: '/profile', label: 'Perfil', icon: UserCircle },
+  ];
 
   return (
     <nav

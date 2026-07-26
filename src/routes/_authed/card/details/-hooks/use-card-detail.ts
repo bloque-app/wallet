@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
+import type { CardProduct } from '~/domain/accounts/types';
+import { useAccounts } from '~/hooks/accounts/use-accounts';
+import { useCardMovements } from '~/hooks/accounts/use-card-movements';
 import type { Asset } from '~/lib/formatters';
 import { useShowBalances } from '~/lib/show-balances';
-import { useCards } from '../../-hooks/use-card';
-import { useBalance, useTransactions } from './use-accounts';
+import { useBalance } from './use-accounts';
 
 type MovementFilter = 'todas' | 'entrantes' | 'salientes';
 
@@ -19,8 +21,13 @@ export const MOVEMENT_FILTERS: { label: string; value: MovementFilter }[] = [
 ];
 
 export function useCardDetail(urn: string) {
-  const { data, isLoading: isLoadingCard } = useCards();
-  const cards = data?.accounts ?? [];
+  const { data, isLoading: isLoadingCard } = useAccounts();
+  const cards =
+    data?.flatMap((account) =>
+      account.products.filter(
+        (product): product is CardProduct => product.kind === 'card',
+      ),
+    ) ?? [];
   const showBalances = useShowBalances();
 
   const [selectedAssetKey, setSelectedAssetKey] = useState<string>('');
@@ -41,15 +48,12 @@ export function useCardDetail(urn: string) {
     hasNextPage,
     isFetchingNextPage,
     isLoading: isLoadingTransactions,
-  } = useTransactions(urn, selectedAssetKey, direction);
+  } = useCardMovements(urn, selectedAssetKey, direction);
 
   const selectedCard =
     cards.find((card) => card.urn === urn) ?? cards[0] ?? null;
 
-  const cardLabel =
-    (selectedCard?.metadata?.card_name as string) ||
-    (selectedCard?.metadata?.name as string) ||
-    'Tarjeta';
+  const cardLabel = selectedCard?.label || 'Tarjeta';
 
   const { assetList, balanceByKey } = useMemo(() => {
     const raw = balanceQuery.data as
@@ -88,7 +92,6 @@ export function useCardDetail(urn: string) {
 
   const currentAssetKey = selectedAssetKey || assetList[0]?.sdkKey || '';
   const currentAssetMeta = assetList.find((a) => a.sdkKey === currentAssetKey);
-  const currentPrecision = currentAssetMeta?.precision ?? 0;
   const assetBalance = balanceByKey[currentAssetKey] ?? 0;
   const displayAsset = (currentAssetMeta?.code as Asset | undefined) ?? 'USD';
 
@@ -98,16 +101,15 @@ export function useCardDetail(urn: string) {
     }
   }, [selectedAssetKey, assetList]);
 
-  const transactions = useMemo(
-    () =>
-      (txPages?.pages ?? []).flatMap((page) => page.transactions ?? []) ?? [],
+  const movements = useMemo(
+    () => (txPages?.pages ?? []).flatMap((page) => page.movements),
     [txPages?.pages],
   );
 
   const filteredMovements = useMemo(() => {
     if (!currentAssetKey) return [];
-    return transactions;
-  }, [transactions, currentAssetKey]);
+    return movements;
+  }, [movements, currentAssetKey]);
 
   return {
     // Card
@@ -119,7 +121,6 @@ export function useCardDetail(urn: string) {
     isLoadingBalance: balanceQuery.isLoading,
     assetList,
     currentAssetKey,
-    currentPrecision,
     assetBalance,
     displayAsset,
     showBalances,

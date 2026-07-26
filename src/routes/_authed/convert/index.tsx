@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { ArrowDownUp } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
@@ -13,6 +14,7 @@ import {
   SelectValue,
 } from '~/components/ui/select';
 import { Separator } from '~/components/ui/separator';
+import { useRates } from '~/hooks/payments/use-rates';
 import { bloque } from '~/lib/bloque';
 import { type Asset, formatAmount } from '~/lib/formatters';
 
@@ -21,6 +23,21 @@ const ASSET_KEY_MAP: Record<string, Asset> = {
   DUSD: 'USD',
   KSM: 'KSM',
 };
+
+/**
+ * SDK asset id (with precision) for each app-facing currency. Every leg of
+ * a conversion here stays inside Bloque's own custody on the `'kusama'`
+ * medium — the same internal medium string used as the Kusama-side of
+ * topup (`TO_MEDIUM` in `topup/index.tsx`) and cash-out (`FROM_MEDIUM` in
+ * `send/colombian-banks/index.tsx`), just on both sides of the rate query
+ * instead of one.
+ */
+const ASSET_SDK: Record<Asset, { sdkAsset: string; precision: number }> = {
+  COP: { sdkAsset: 'COPM/2', precision: 2 },
+  USD: { sdkAsset: 'DUSD/6', precision: 6 },
+  KSM: { sdkAsset: 'KSM/12', precision: 12 },
+};
+const INTERNAL_MEDIUM = 'kusama';
 
 type BalancesData = Record<string, { current: string; pending: string }>;
 
@@ -38,16 +55,14 @@ function parseBalances(data: BalancesData | undefined): Record<Asset, number> {
   return out;
 }
 
-const rates: Record<string, number> = {
-  'COP-USD': 1 / 4150,
-  'USD-COP': 4150,
-  'COP-KSM': 1 / 120_000,
-  'KSM-COP': 120_000,
-  'USD-KSM': 1 / 28.92,
-  'KSM-USD': 28.92,
-};
+function majorToMinor(amountMajor: number, precision: number): string {
+  if (!Number.isFinite(amountMajor) || amountMajor <= 0) return '';
+  return Math.round(amountMajor * 10 ** precision).toString();
+}
 
-const feeRate = 0.006;
+function minorToMajor(amountMinor: number, precision: number) {
+  return amountMinor / 10 ** precision;
+}
 
 export const Route = createFileRoute('/_authed/convert/')({
   component: RouteComponent,
@@ -69,18 +84,96 @@ function RouteComponent() {
   const [amount, setAmount] = useState('');
 
   const parsed = Number.parseFloat(amount) || 0;
-  const rateKey = `${fromAsset}-${toAsset}`;
-  const rate = rates[rateKey] ?? 1;
-  const fee = parsed * feeRate;
-  const received = (parsed - fee) * rate;
+  const fromConfig = ASSET_SDK[fromAsset];
+  const toConfig = ASSET_SDK[toAsset];
   const available = balances[fromAsset];
-  const isValid = parsed > 0 && parsed <= available && fromAsset !== toAsset;
+
+  const amountSrc = useMemo(
+    () => majorToMinor(parsed, fromConfig.precision),
+    [parsed, fromConfig.precision],
+  );
+
+  const ratesQuery = useRates(
+    parsed > 0 && fromAsset !== toAsset && amountSrc
+      ? {
+          fromAsset: fromConfig.sdkAsset,
+          toAsset: toConfig.sdkAsset,
+          fromMediums: [INTERNAL_MEDIUM],
+          toMediums: [INTERNAL_MEDIUM],
+          amountSrc,
+        }
+      : undefined,
+  );
+
+  const selectedRate = ratesQuery.data?.[0] ?? null;
+
+  const received = useMemo(() => {
+    if (!selectedRate || parsed <= 0) return 0;
+    if (
+      typeof selectedRate.ratio === 'number' &&
+      Number.isFinite(selectedRate.ratio)
+    ) {
+      return parsed * selectedRate.ratio;
+    }
+    const dstAmountMinor = selectedRate.rate?.[1] ?? 0;
+    return minorToMajor(dstAmountMinor, toConfig.precision);
+  }, [selectedRate, parsed, toConfig.precision]);
+
+  const rateError = useMemo(() => {
+    if (parsed <= 0 || fromAsset === toAsset) return null;
+    if (ratesQuery.isError) {
+      return 'No pudimos consultar la tasa. Intenta de nuevo.';
+    }
+    if (ratesQuery.isSuccess && !selectedRate) {
+      return 'No hay tasas disponibles para este monto.';
+    }
+    return null;
+  }, [
+    parsed,
+    fromAsset,
+    toAsset,
+    ratesQuery.isError,
+    ratesQuery.isSuccess,
+    selectedRate,
+  ]);
+
+  const isValid =
+    parsed > 0 &&
+    parsed <= available &&
+    fromAsset !== toAsset &&
+    !!selectedRate?.sig &&
+    !ratesQuery.isFetching;
 
   function handleSwap() {
     setFromAsset(toAsset);
     setToAsset(fromAsset);
     setAmount('');
   }
+
+  const submitConversion = useCallback(() => {
+    if (!selectedRate?.sig) {
+      toast.error('No hay una tasa vigente para confirmar la conversión.');
+      return;
+    }
+
+    // NOTE for reviewers: as of @bloque/sdk-swap 0.2.7, `bloque.swap` has no
+    // order-creation endpoint for a pure Kusama-internal conversion (both
+    // fromMedium and toMedium === 'kusama'). Every typed client —
+    // pse.create, bankTransfer.create, breb.create, rtp.create,
+    // externalUsBank.create — pins one leg of the swap to an EXTERNAL rail
+    // and mandates real third-party deposit info for that leg (a PSE bank +
+    // legal ID, a Colombian bank account, a resolved BRE-B key, or a US
+    // bank account) that a same-custody COP<->USD<->KSM conversion has no
+    // legitimate value to fill in. Fabricating placeholder values for those
+    // mandatory fields just to force a call through would risk misrouting
+    // real funds to an unintended external destination, so this handler
+    // stops short of creating an order rather than guessing. Flagged in the
+    // PR description for a human to confirm, and to point at the right
+    // endpoint if/when the backend exposes one.
+    toast.error(
+      'La conversión directa entre saldos aún no está disponible desde la app. Usa Recargar o Enviar mientras tanto.',
+    );
+  }, [selectedRate]);
 
   return (
     <div className="flex flex-col gap-5">
@@ -143,25 +236,26 @@ function RouteComponent() {
             </SelectContent>
           </Select>
           <div className="flex h-12 flex-1 items-center justify-end rounded-2xl border border-border bg-muted px-3 text-right font-bold tabular-nums text-foreground">
-            {parsed > 0 ? formatAmount(toAsset, received) : '0'}
+            {parsed > 0 && selectedRate
+              ? formatAmount(toAsset, received)
+              : parsed > 0 && ratesQuery.isFetching
+                ? 'Consultando...'
+                : '0'}
           </div>
         </div>
       </div>
 
-      {parsed > 0 && fromAsset !== toAsset && (
+      {parsed > 0 && fromAsset !== toAsset && selectedRate && (
         <div className="rounded-2xl border border-border/85 bg-card/85 p-4">
           <div className="flex flex-col gap-2">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Tasa</span>
               <span className="font-medium text-foreground tabular-nums">
                 1 {fromAsset} ={' '}
-                {rate < 0.01 ? rate.toFixed(6) : rate.toFixed(2)} {toAsset}
-              </span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Comisión (0.6%)</span>
-              <span className="font-medium text-foreground">
-                {formatAmount(fromAsset, fee)}
+                {selectedRate.ratio < 0.01
+                  ? selectedRate.ratio.toFixed(6)
+                  : selectedRate.ratio.toFixed(2)}{' '}
+                {toAsset}
               </span>
             </div>
             <Separator />
@@ -175,16 +269,29 @@ function RouteComponent() {
         </div>
       )}
 
+      {rateError ? (
+        <p className="text-xs text-destructive">{rateError}</p>
+      ) : null}
+
       <Button
         disabled={!isValid}
+        onClick={submitConversion}
         className="h-12 w-full rounded-2xl text-sm font-medium"
       >
-        Confirmar conversión
+        {ratesQuery.isFetching ? 'Consultando tasa...' : 'Confirmar conversión'}
       </Button>
 
       <p className="text-center text-[10px] text-muted-foreground leading-relaxed">
         Las tasas de cambio son indicativas y pueden variar al momento de
-        ejecutar la operación.
+        ejecutar la operación.{' '}
+        <Link to="/send" className="underline">
+          Enviar
+        </Link>{' '}
+        y{' '}
+        <Link to="/topup" className="underline">
+          Recargar
+        </Link>{' '}
+        siguen disponibles mientras tanto.
       </p>
     </div>
   );

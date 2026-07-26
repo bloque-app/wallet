@@ -4,7 +4,7 @@ on:
   workflow_dispatch: # Manual trigger
   push:
     branches:
-      - main
+      - develop
 
 env:
   CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

@@ -1,31 +1,35 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { bloque } from '~/lib/bloque';
+import { toDomainMovement } from '~/domain/accounts/movements';
+import { bloqueAccountsRepository } from '~/infra/bloque/accounts-repository';
 import type { Movement } from '~/lib/formatters';
-import { mapGlobalTransactionToMovement } from '~/lib/transaction-mapper';
 
+/**
+ * The dedicated `/movements` route's infinite global feed. Shares the
+ * `['movements', ...]` query-key namespace with `useGlobalTransactions`/
+ * `useAccountMovements`/`useCardMovements`.
+ */
 export function useGlobalTransactionsInfinite(
   limit = 10,
   direction?: 'in' | 'out',
   asset?: string,
 ) {
   return useInfiniteQuery({
-    queryKey: ['global-transactions-infinite', limit, direction, asset],
+    queryKey: ['movements', 'global-infinite', limit, direction, asset],
     initialPageParam: undefined as string | undefined,
     queryFn: async ({ pageParam }) => {
-      const result = await bloque.accounts.transactions({
+      const page = await bloqueAccountsRepository.getTransactions({
         limit,
         direction,
         asset,
         next: pageParam,
-      } as never);
+      });
 
       return {
-        movements: (result.data ?? [])
-          .map(mapGlobalTransactionToMovement)
+        movements: page.movements
+          .map(toDomainMovement)
           .filter((movement): movement is Movement => movement !== null),
-        pageSize: result.pageSize,
-        hasMore: result.hasMore,
-        next: result.next,
+        hasMore: page.hasMore,
+        next: page.next,
       };
     },
     getNextPageParam: (lastPage) =>

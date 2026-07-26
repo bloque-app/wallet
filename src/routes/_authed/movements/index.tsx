@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { MovementDetailDrawer } from '~/components/movement-detail-drawer';
 import { MovementRow } from '~/components/movement-row';
 import { Input } from '~/components/ui/input';
-import { useGlobalTransactionsInfinite } from '~/hooks/use-global-transactions-infinite';
+import { useGlobalTransactionsInfinite } from '~/hooks/accounts/use-global-transactions-infinite';
 import type { Asset, Movement } from '~/lib/formatters';
 import { cn } from '~/lib/utils';
 
@@ -54,14 +54,9 @@ function RouteComponent() {
   const filtered = useMemo(() => {
     let result = allMovements;
 
-    if (
-      activeFilter !== 'all' &&
-      activeFilter !== 'incoming' &&
-      activeFilter !== 'outgoing'
-    ) {
-      result = result.filter((m) => m.asset === activeFilter);
-    }
-
+    // Asset filtering already happens server-side via the `asset` param
+    // passed to useGlobalTransactionsInfinite above — no client-side
+    // re-filter needed here.
     if (search.trim()) {
       const q = search.toLowerCase();
       result = result.filter(
@@ -72,7 +67,7 @@ function RouteComponent() {
     }
 
     return result;
-  }, [allMovements, activeFilter, search]);
+  }, [allMovements, search]);
 
   return (
     <div className="flex flex-col gap-5">
