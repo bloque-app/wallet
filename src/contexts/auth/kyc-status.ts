@@ -1,4 +1,4 @@
-import type { VerificationStatus } from '~/domain/kyc/types';
+import type { Verification, VerificationStatus } from '~/domain/kyc/types';
 import { bloqueComplianceRepository } from '~/infra/bloque/compliance-repository';
 
 /** Mirrors the same check in `auth-context.tsx`/`use-verification.ts` — kept
@@ -49,13 +49,24 @@ export function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
  * already treats non-`'approved'` as not-yet-verified, so this fails safe
  * (still gates verification-required features) without asserting a
  * specific, possibly-wrong status.
+ *
+ * `getVerification` is an injectable parameter (defaulting to the real
+ * repository call) purely so tests can control it directly, without
+ * `mock.module()` — that API is process-global in bun:test, and this
+ * exact module path is also mocked for real by
+ * `compliance-repository.test.ts` to test the adapter itself; two
+ * competing global mocks of the same path is what a dependency-injected
+ * default avoids entirely.
  */
 export async function deriveKycStatus(
   urn: string,
+  getVerification: (
+    urn: string,
+  ) => Promise<Verification> = bloqueComplianceRepository.getVerification,
 ): Promise<VerificationStatus | undefined> {
   try {
     const verification = await withTimeout(
-      bloqueComplianceRepository.getVerification(urn),
+      getVerification(urn),
       KYC_STATUS_FETCH_TIMEOUT_MS,
     );
     return verification.status;
