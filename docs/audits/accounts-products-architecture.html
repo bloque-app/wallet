@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Architecture Audit — Accounts/Products Domain Revamp</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --fg: #1a1d23;
+    --muted: #5b6270;
+    --border: #dfe3e8;
+    --bg-soft: #f6f7f9;
+    --accent: #4f46e5;
+    --accent-soft: #eef0fe;
+    --code-bg: #f2f3f7;
+    --ok: #0f7a4d;
+    --warn: #a15c00;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif;
+    color: var(--fg);
+    line-height: 1.55;
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 48px 32px 96px;
+    background: #ffffff;
+    font-size: 15.5px;
+  }
+  header.doc-header {
+    border-bottom: 3px solid var(--accent);
+    padding-bottom: 20px;
+    margin-bottom: 36px;
+  }
+  header.doc-header h1 {
+    font-size: 28px;
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+  }
+  header.doc-header p.subtitle {
+    color: var(--muted);
+    margin: 0 0 14px;
+    font-size: 15px;
+  }
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 12.5px;
+  }
+  .meta-chip {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-weight: 600;
+  }
+  h2 {
+    font-size: 21px;
+    margin-top: 46px;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: -0.01em;
+  }
+  h3 {
+    font-size: 16.5px;
+    margin-top: 28px;
+    margin-bottom: 10px;
+  }
+  p { margin: 0 0 14px; }
+  ul, ol { margin: 0 0 16px; padding-left: 22px; }
+  li { margin-bottom: 6px; }
+  code {
+    background: var(--code-bg);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.88em;
+  }
+  pre.codeblock {
+    background: var(--code-bg);
+    border-radius: 8px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .callout {
+    border-left: 4px solid var(--accent);
+    background: var(--bg-soft);
+    padding: 12px 18px;
+    border-radius: 0 8px 8px 0;
+    margin: 18px 0;
+  }
+  .callout.warn { border-left-color: var(--warn); }
+  .callout.ok { border-left-color: var(--ok); }
+  .callout p:last-child { margin-bottom: 0; }
+  .diagram-wrap {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    margin: 18px 0 26px;
+    background: #fdfdfe;
+    overflow-x: auto;
+  }
+  .diagram-caption {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 10px;
+    font-style: italic;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0 24px;
+    font-size: 14px;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: var(--bg-soft);
+    font-weight: 600;
+  }
+  tr:nth-child(even) td { background: #fbfbfc; }
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .badge.done { background: #e6f6ee; color: var(--ok); }
+  .badge.deferred { background: #fdf1e0; color: var(--warn); }
+  .toc {
+    background: var(--bg-soft);
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin-bottom: 8px;
+  }
+  .toc ol { margin-bottom: 0; }
+  .toc a { color: var(--fg); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .print-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(79,70,229,0.35);
+  }
+  footer {
+    margin-top: 60px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 12.5px;
+  }
+  @media print {
+    .print-btn { display: none; }
+    body { padding: 0 24px; max-width: none; }
+    h2 { page-break-after: avoid; }
+    .diagram-wrap { page-break-inside: avoid; }
+    a { color: inherit; text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+
+<button class="print-btn" onclick="window.print()">Save as PDF</button>
+
+<header class="doc-header">
+  <h1>Architecture Audit: Accounts/Products Domain Revamp</h1>
+  <p class="subtitle">Wallet app — hexagonal ports/adapters layer for accounts, cards, BRE-B keys, Polygon addresses, and virtual pockets, plus the ledger-grouped UI built on top of it.</p>
+  <div class="meta-row">
+    <span class="meta-chip">Branch: feat/accounts-domain-architecture</span>
+    <span class="meta-chip">4 commits</span>
+    <span class="meta-chip">Net: +885 / −1603 lines</span>
+  </div>
+</header>
+
+<div class="toc">
+  <strong>Contents</strong>
+  <ol>
+    <li><a href="#motivation">Motivation</a></li>
+    <li><a href="#architecture">Architecture overview</a></li>
+    <li><a href="#domain-model">Domain model</a></li>
+    <li><a href="#request-flow">Request flow</a></li>
+    <li><a href="#grouping-example">Ledger grouping in practice (real data)</a></li>
+    <li><a href="#before-after">Before / after</a></li>
+    <li><a href="#phases">Migration phases &amp; scope</a></li>
+    <li><a href="#gaps">Known gaps &amp; deliberate scope cuts</a></li>
+    <li><a href="#verification">Verification</a></li>
+    <li><a href="#roadmap">Roadmap (Phase 6)</a></li>
+  </ol>
+</div>
+
+<h2 id="motivation">1. Motivation</h2>
+<p>
+  The wallet app had no domain/service layer: every route called the <code>bloque</code> SDK client
+  directly inline inside <code>useQuery</code>/<code>useMutation</code>, and SDK response shapes
+  <em>were</em> the app's own types, scattered across dozens of files with local
+  <code>as unknown as X</code> casts. Two real bugs shipped from exactly that pattern before this
+  revamp started:
+</p>
+<ul>
+  <li>A BRE-B send flow silently debited whichever BRE-B key happened to sort first in the list, regardless of user intent.</li>
+  <li>Accounts sharing the same underlying ledger were iterated naively, double- and triple-counting the same balance.</li>
+</ul>
+<p>Two things converged to turn "fix these bugs" into "fix the pattern that produces them":</p>
+<ol>
+  <li>
+    <strong><code>@bloque/sdk-accounts</code> shipped 0.2.5/0.2.6/0.2.7</strong> the same day this work
+    started. Diffed against the previously pinned 0.2.4: it adds a <code>program</code> field to cards
+    (multi-program support) but does <strong>not</strong> fix a separate, confirmed gap —
+    <code>bloque.accounts.list()</code> only tags an explicit <code>medium</code> field on BRE-B
+    accounts; every other type (card, virtual, Polygon, Bancolombia…) omits it.
+  </li>
+  <li>
+    A future SDK version (v0.3 or v1.0, not yet published) is expected to formalize a
+    <code>User 1—* Account 1—* Product</code> model server-side, which should fix that gap at the
+    source. Rather than build more UI on top of the leaky, cast-heavy access pattern, this work
+    introduces a lightweight hexagonal seam now — so when the real model lands, only one adapter
+    needs to change.
+  </li>
+</ol>
+<div class="callout">
+  <p>
+    <strong>Design constraint:</strong> plain TypeScript domain types + a repository "port" (a
+    function-signature type, not a class/interface-with-implements) + one adapter implementing it
+    against <code>bloque</code> — no DI container, no classes. This matches the codebase's existing
+    100%-functional style; the goal was a seam, not a framework.
+  </p>
+</div>
+
+<h2 id="architecture">2. Architecture overview</h2>
+<p>
+  Routes never import <code>bloque</code> directly for accounts/cards/BRE-B/Polygon/pockets anymore.
+  They call React Query hooks, which call a plain-function port, implemented by exactly one adapter
+  that talks to the SDK and maps its (occasionally unreliable) shapes into clean domain types.
+</p>
+<div class="diagram-wrap">
+<pre class="mermaid">
+graph TD
+    Routes["Routes&lt;br/&gt;(accounts, card, breb-keys, home, profile)"]
+
+    subgraph Hooks["src/hooks/accounts — driving adapters"]
+        H1["useAccounts / useAccount"]
+        H2["useAccountPicker"]
+        H3["useCreateCard, useCardToggleFreeze, ..."]
+        H4["useCreateBrebKey, useSuspendBrebKey, ..."]
+        H5["useCreatePolygonAccount"]
+        H6["useCreateVirtualAccount"]
+    end
+
+    subgraph Domain["src/domain/accounts — pure, no SDK/React imports"]
+        Types["types.ts&lt;br/&gt;Product, Account, AssetBalance"]
+        Grouping["grouping.ts&lt;br/&gt;groupIntoAccounts, dedupeByLedger"]
+        Ports["ports.ts&lt;br/&gt;AccountsRepository (plain function type)"]
+    end
+
+    subgraph Infra["src/infra/bloque — the one adapter"]
+        Repo["bloqueAccountsRepository&lt;br/&gt;implements AccountsRepository"]
+        Shim["medium duck-typing shim&lt;br/&gt;(temporary, tracked)"]
+    end
+
+    SDK[("@bloque/sdk-accounts")]
+
+    Routes --> Hooks
+    H1 --> Ports
+    H2 --> Ports
+    H3 --> Ports
+    H4 --> Ports
+    H5 --> Ports
+    H6 --> Ports
+    H1 --> Grouping
+    Ports -.implemented by.-> Repo
+    Repo --> Shim
+    Repo --> SDK
+    Repo --> Types
+    Grouping --> Types
+</pre>
+<p class="diagram-caption">Fig. 1 — Layered dependency direction: UI depends on hooks, hooks depend on the port, only the adapter depends on the SDK.</p>
+</div>
+
+<h2 id="domain-model">3. Domain model</h2>
+<p>
+  <code>Product</code> is a discriminated union tagged by <code>kind</code>. A virtual pocket is just
+  another tagged member of that union (<code>kind: 'pocket'</code>) rather than a separate field on
+  <code>Account</code> — this was a deliberate call after review: splitting it out would force every
+  consumer (the associated-products list, "N products" counts, the create-product flow) to
+  special-case "is there a pocket" and then merge it back in wherever the full membership is needed.
+</p>
+<div class="diagram-wrap">
+<pre class="mermaid">
+classDiagram
+    class User {
+      +urn: string
+      +name: string
+      +email?: string
+    }
+    class Account {
+      +ledgerId: string
+      +label: string
+      +primaryUrn: string
+      +products: Product[]
+      +balances: AssetBalance[]
+    }
+    class Product {
+      &lt;&lt;discriminated union&gt;&gt;
+      +kind: "card"|"breb"|"polygon"|"pocket"|"other"
+      +urn: string
+      +ledgerId?: string
+      +status: string
+      +label: string
+      +balances: AssetBalance[]
+    }
+    class CardProduct {
+      +lastFour: string
+      +cardType?: string
+    }
+    class BrebKeyProduct {
+      +keyType: string
+      +keyValue: string
+      +displayName?: string
+    }
+    class PolygonProduct {
+      +address: string
+      +network?: string
+    }
+    class PocketProduct {
+      +firstName?: string
+      +lastName?: string
+    }
+    class OtherProduct {
+      +medium?: string
+    }
+
+    User "1" --> "*" Account : owns (implicit, single-user app)
+    Account "1" --> "*" Product : groups by ledgerId
+    Product <|-- CardProduct
+    Product <|-- BrebKeyProduct
+    Product <|-- PolygonProduct
+    Product <|-- PocketProduct
+    Product <|-- OtherProduct
+</pre>
+<p class="diagram-caption">Fig. 2 — Domain model. <code>Account.primaryUrn</code> points at whichever member anchors the label (the pocket, if present; otherwise the earliest-created product).</p>
+</div>
+
+<h2 id="request-flow">4. Request flow</h2>
+<p>Concrete trace of what happens when a route calls <code>useAccounts()</code>:</p>
+<div class="diagram-wrap">
+<pre class="mermaid">
+sequenceDiagram
+    participant Route as Route component
+    participant Hook as useAccounts()
+    participant Repo as bloqueAccountsRepository
+    participant SDK as bloque SDK
+    participant Grouping as groupIntoAccounts()
+
+    Route->>Hook: render
+    Hook->>Repo: listProducts()
+    Repo->>SDK: bloque.accounts.list()
+    SDK-->>Repo: mixed-medium accounts (medium only tagged for BRE-B)
+    loop each account
+      Repo->>Repo: mapToProduct() — duck-type kind from shape
+    end
+    Repo-->>Hook: Product[]
+    Hook->>Grouping: groupIntoAccounts(products)
+    Grouping->>Grouping: bucket by ledgerId, pick primary, dedupe
+    Grouping-->>Hook: Account[]
+    Hook-->>Route: { data: Account[], isLoading, ... }
+</pre>
+<p class="diagram-caption">Fig. 3 — <code>useAccount(urn)</code> derives from this same cached list — no second network call.</p>
+</div>
+
+<h2 id="grouping-example">5. Ledger grouping in practice (real data)</h2>
+<p>
+  The grouping logic was validated against real production data pulled during this work. A user with
+  4 distinct ledgers — <em>not</em> the 3 initially assumed — turned out to include a "dangling" card
+  that was actually tied to a forgotten pocket, plus a truly empty pocket with zero other products:
+</p>
+<div class="diagram-wrap">
+<pre class="mermaid">
+graph TD
+    L1["Ledger 0x3f39…cbc6&lt;br/&gt;&lt;b&gt;Main&lt;/b&gt;"] --> P1["Pocket: Main"]
+    L1 --> P2["Card: Debit Card"]
+    L1 --> P3["BRE-B: @bl3058131242"]
+    L1 --> P4["BRE-B: bloque@pablodorado.com"]
+    L1 --> P5["Polygon: 0xd5e4…1eCc"]
+
+    L2["Ledger 0x0ce9…05f4c&lt;br/&gt;&lt;b&gt;PawHaus&lt;/b&gt;"] --> P6["Pocket: PawHaus"]
+    L2 --> P7["Card: PawHaus ••0461"]
+    L2 --> P8["Card: PawHaus ••9730"]
+    L2 --> P9["BRE-B: @pawhaus"]
+
+    L3["Ledger 0x8dc2…164af&lt;br/&gt;&lt;b&gt;Bloque&lt;/b&gt;"] --> P10["Pocket: Bloque"]
+    L3 --> P11["Card: Bloque Subscriptions"]
+
+    L4["Ledger 0xd97e…b26e8&lt;br/&gt;&lt;b&gt;PawHaus (empty)&lt;/b&gt;"] --> P12["Pocket: PawHaus"]
+</pre>
+<p class="diagram-caption">Fig. 4 — 4 groups, confirmed by re-running <code>groupIntoAccounts()</code> against this exact shape before trusting it against any other route.</p>
+</div>
+<div class="callout ok">
+  <p>
+    <strong>Also confirmed live:</strong> every product sharing a ledger returns an <em>identical</em>
+    balance array regardless of which member's URN is queried — balance (and very likely movement
+    history) is a ledger-level property, not a per-medium one. This is why <code>Account.balances</code>
+    is simply its primary product's balances, with no summing required.
+  </p>
+</div>
+
+<h2 id="before-after">6. Before / after</h2>
+<div class="diagram-wrap">
+<pre class="mermaid">
+graph LR
+    subgraph Before["Before"]
+        direction TB
+        R1["Route"] --> B1["bloque.accounts.card.list()&lt;br/&gt;bloque.accounts.breb.createKey()&lt;br/&gt;bloque.accounts.polygon.create()&lt;br/&gt;... called ad hoc, per route"]
+        B1 --> S1[("SDK")]
+        B1 -.-> D1["Duplicated dedup/medium logic&lt;br/&gt;reinvented per route"]
+    end
+    subgraph After["After"]
+        direction TB
+        R2["Route"] --> H2["Hook&lt;br/&gt;(useAccounts, useCreateCard, ...)"]
+        H2 --> P2["AccountsRepository&lt;br/&gt;(port)"]
+        P2 -.-> A2["bloqueAccountsRepository&lt;br/&gt;(one adapter)"]
+        A2 --> S2[("SDK")]
+    end
+</pre>
+<p class="diagram-caption">Fig. 5 — Same external behavior, one seam to update when the SDK's real model ships.</p>
+</div>
+
+<h2 id="phases">7. Migration phases &amp; scope</h2>
+<div class="diagram-wrap">
+<pre class="mermaid">
+flowchart LR
+    P1["Phase 1&lt;br/&gt;SDK upgrade to 0.2.7"] --> P2["Phase 2&lt;br/&gt;Domain types + grouping"]
+    P2 --> P3["Phase 3&lt;br/&gt;Port + adapter + pilot on /accounts"]
+    P3 --> P4["Phase 4&lt;br/&gt;Migrate BRE-B / card / Polygon / virtual"]
+    P4 --> P5["Phase 5&lt;br/&gt;Ledger-grouped UI + nav"]
+    P5 --> P6["Phase 6&lt;br/&gt;Roadmap: other domains (not built)"]
+</pre>
+</div>
+<table>
+  <thead><tr><th>Phase</th><th>Scope</th><th>Status</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Bump <code>@bloque/sdk</code>/<code>sdk-accounts</code>/<code>sdk-core</code>/<code>sdk-compliance</code> to 0.2.7, with <code>overrides</code> to force every transitive copy to match</td><td><span class="badge done">Done</span></td></tr>
+    <tr><td>2</td><td><code>src/domain/accounts/{types,grouping}.ts</code> — pure, framework-free</td><td><span class="badge done">Done</span></td></tr>
+    <tr><td>3</td><td><code>ports.ts</code> + <code>infra/bloque/accounts-repository.ts</code> + first hooks; piloted on <code>/accounts</code> and validated against real production data</td><td><span class="badge done">Done</span></td></tr>
+    <tr><td>4</td><td>Migrated BRE-B (manage-keys, pay-transfer, pay-transfer-qr, deposit, QR menu), cards (list/detail/freeze/rename), Polygon (home + profile), virtual-account creation (new capability). Deleted a dead orphaned route with the original bug still in it.</td><td><span class="badge done">Done</span></td></tr>
+    <tr><td>5</td><td>Ledger-grouped <code>/accounts</code> index + detail, conditional bottom-nav slot, Home "Cuentas" carousel, centralized "Agregar producto" flow, removed scattered creation drawers</td><td><span class="badge done">Done</span></td></tr>
+    <tr><td>6</td><td>Extend the same port/adapter/hooks pattern to payments/topup/swap, KYC/compliance, movements, auth — in future sessions</td><td><span class="badge deferred">Roadmap only</span></td></tr>
+  </tbody>
+</table>
+
+<h2 id="gaps">8. Known gaps &amp; deliberate scope cuts</h2>
+<p>Called out explicitly rather than left silent:</p>
+<ul>
+  <li>
+    <strong>Medium duck-typing shim</strong> (<code>src/infra/bloque/accounts-repository.ts</code>) —
+    works around the SDK only tagging <code>medium</code> on BRE-B accounts. Clearly commented as
+    temporary; delete once a future SDK version tags every type properly.
+  </li>
+  <li>
+    <strong><code>send/colombian-banks/index.tsx</code></strong> — migrated its data source only. It
+    still silently funds bank transfers from whichever card sorts first — the exact same class of bug
+    fixed everywhere else in this work, found but intentionally <em>not</em> fixed here to keep this
+    pass's scope contained. Flagged for a follow-up.
+  </li>
+  <li>
+    <strong><code>card/details/-hooks/use-accounts.ts</code></strong> (per-card balance/movements) and
+    <strong><code>(home)/-hooks/use-balance.tsx</code></strong> (aggregate home balance) — left calling
+    <code>bloque</code> directly. Neither has a known bug and both are tangential to the
+    ledger-grouping/medium-detection problem this work targets; migrating them was judged not worth
+    the added diff size this pass.
+  </li>
+  <li>
+    <strong>Payments/swap/topup/KYC</strong> — entirely out of scope, per the Phase 6 roadmap below.
+  </li>
+</ul>
+
+<h2 id="verification">9. Verification</h2>
+<ul>
+  <li><code>bun run typecheck</code> — clean after every phase and every commit (enforced by the pre-commit hook too).</li>
+  <li><code>biome check</code> — zero new lint issues across all touched/new files.</li>
+  <li><code>bun run build</code> — full production build succeeds twice (after the dead-route deletion, and again at the end).</li>
+  <li>
+    <code>groupIntoAccounts()</code> exercised against a hand-built <code>Product[]</code> mirroring
+    the real production data pulled via <code>mcp__bloque__list_accounts</code> — reproduces the
+    confirmed 4-group shape (Fig. 4) exactly, including the "dangling card is actually tied to a
+    pocket" and "empty pocket, zero products" edge cases.
+  </li>
+  <li>
+    <strong>Not done:</strong> live-browser QA — no authenticated session was available in this
+    environment. Recommended before shipping: manually click through <code>/accounts</code>,
+    <code>/accounts/$urn</code>, card creation from Account Detail, and the BRE-B
+    <code>manage-keys?ledgerId=</code> bypass.
+  </li>
+</ul>
+
+<h2 id="roadmap">10. Roadmap (Phase 6, not built this pass)</h2>
+<p>Once this pattern proves out, the same shape should extend to:</p>
+<ul>
+  <li><strong>Payments/transfers</strong> (topup, convert, send, swap rates) → a <code>SwapRepository</code> wrapping <code>bloque.swap.*</code>.</li>
+  <li><strong>KYC/compliance</strong> → a <code>ComplianceRepository</code> wrapping <code>bloque.compliance.*</code>.</li>
+  <li><strong>Movements/transactions</strong> → partially overlaps this domain already; needs its own scoping pass once Accounts/Products is stable.</li>
+  <li><strong>Auth/session</strong> → lowest priority; already has its own differently-shaped context.</li>
+</ul>
+<p>Same rule each time: plain function-signature ports, no classes/DI, one adapter per domain, migrated route-by-route rather than all at once.</p>
+
+<footer>
+  Generated for the <code>feat/accounts-domain-architecture</code> branch. Open this file in a browser and use "Save as PDF" (top right) or your browser's print dialog to export.
+</footer>
+
+<script>
+  mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+</script>
+
+</body>
+</html>
