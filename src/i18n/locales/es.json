@@ -25,6 +25,10 @@
     "yes": "Sí",
     "no": "No"
   },
+  "appHeader": {
+    "logoAlt": "Logo",
+    "notifications": "Notificaciones"
+  },
   "accountCarousel": {
     "accountAria": "Cuenta {{label}}, disponible {{balance}}",
     "selected": "Seleccionada",
