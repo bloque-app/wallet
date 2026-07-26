@@ -9,10 +9,10 @@ import {
 } from 'react';
 import { toast } from 'sonner';
 import type { VerificationStatus } from '~/domain/kyc/types';
-import { bloqueComplianceRepository } from '~/infra/bloque/compliance-repository';
 import { apiFetch } from '~/lib/api-fetch';
 import { createBloqueSdk } from '~/lib/bloque';
 import { queryClient } from '~/lib/query-client';
+import { deriveKycStatus } from './kyc-status';
 import type {
   AliasCheckResult,
   LoginData,
@@ -321,28 +321,6 @@ function isIdentityNotFoundError(error: unknown): boolean {
 function isNotFoundError(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false;
   return 'status' in error && (error as { status?: unknown }).status === 404;
-}
-
-/**
- * The real fix for the KYC status bug: this used to be
- * `me.metadata.kyc_verified ? 'approved' : 'not_verified'`, a truthy check
- * on an unvalidated boolean that could never distinguish "rejected by the
- * compliance provider" from "never started" — both showed as
- * `not_verified`/`not_started`. `getVerification` is the one SDK call that
- * reports the real wire status, so it's the source of truth here. A 404
- * means no verification has been started yet; any other failure fails safe
- * to `not_started` rather than blocking login.
- */
-async function deriveKycStatus(urn: string): Promise<VerificationStatus> {
-  try {
-    const verification = await bloqueComplianceRepository.getVerification(urn);
-    return verification.status;
-  } catch (error) {
-    if (!isNotFoundError(error)) {
-      console.error('Error fetching KYC verification status', error);
-    }
-    return 'not_started';
-  }
 }
 
 type OnboardingSession = {
