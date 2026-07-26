@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { MovementDetailDrawer } from '~/components/movement-detail-drawer';
 import { MovementRow } from '~/components/movement-row';
 import { Input } from '~/components/ui/input';
+import { dedupeGlobalMovements } from '~/domain/accounts/movements';
 import { useGlobalTransactionsInfinite } from '~/hooks/accounts/use-global-transactions-infinite';
 import type { Asset, Movement } from '~/lib/formatters';
 import { cn } from '~/lib/utils';
@@ -47,7 +48,13 @@ function RouteComponent() {
     useGlobalTransactionsInfinite(10, direction, assetFilter);
 
   const allMovements = useMemo(
-    () => (data?.pages ?? []).flatMap((page) => page.movements ?? []) ?? [],
+    () =>
+      // Deduped across ALL accumulated pages, not per-page — a ledger
+      // with N linked accounts reports the same transfer N times, and
+      // those duplicate rows aren't guaranteed to land on the same page.
+      dedupeGlobalMovements(
+        (data?.pages ?? []).flatMap((page) => page.movements ?? []),
+      ),
     [data?.pages],
   );
 

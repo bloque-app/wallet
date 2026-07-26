@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
+import type { Movement } from '~/lib/formatters';
 import type { RawMovementFields } from './movements';
-import { toDomainMovement } from './movements';
+import { dedupeGlobalMovements, toDomainMovement } from './movements';
 
 function raw(overrides: Partial<RawMovementFields>): RawMovementFields {
   return {
@@ -214,5 +215,71 @@ describe('toDomainMovement', () => {
 
       expect(movement?.type).toBe('topup');
     });
+  });
+});
+
+describe('dedupeGlobalMovements', () => {
+  function movement(
+    reference: string,
+    overrides: Partial<Movement> = {},
+  ): Movement {
+    return {
+      id: `${reference}-id`,
+      type: 'topup' as const,
+      asset: 'COP' as const,
+      amount: 94.65,
+      fee: 0,
+      status: 'completed' as const,
+      createdAt: '2026-07-26T16:51:00.000Z',
+      reference,
+      counterparty: undefined,
+      direction: 'incoming' as const,
+      ...overrides,
+    };
+  }
+
+  test('collapses N rows sharing a reference (one ledger with N linked accounts) to one', () => {
+    const movements = [
+      movement('ref-1'),
+      movement('ref-1'),
+      movement('ref-1'),
+      movement('ref-1'),
+      movement('ref-1'),
+    ];
+
+    const result = dedupeGlobalMovements(movements);
+
+    expect(result).toHaveLength(1);
+    expect(result[0]?.reference).toBe('ref-1');
+  });
+
+  test('keeps the first occurrence and preserves the original order', () => {
+    const first = movement('ref-1', { amount: 94.65 });
+    const duplicate = movement('ref-1', { amount: 999 });
+    const second = movement('ref-2', { amount: 99.66 });
+
+    const result = dedupeGlobalMovements([first, duplicate, second]);
+
+    expect(result.map((m) => m.reference)).toEqual(['ref-1', 'ref-2']);
+    expect(result[0]?.amount).toBe(94.65);
+  });
+
+  test('two genuinely distinct events, each duplicated across the same 5-member ledger, stay as two', () => {
+    const eventA = Array.from({ length: 5 }, () => movement('ref-topup-1'));
+    const eventB = Array.from({ length: 5 }, () =>
+      movement('ref-topup-2', { amount: 99.66 }),
+    );
+
+    const result = dedupeGlobalMovements([...eventA, ...eventB]);
+
+    expect(result).toHaveLength(2);
+    expect(result.map((m) => m.reference)).toEqual([
+      'ref-topup-1',
+      'ref-topup-2',
+    ]);
+  });
+
+  test('an empty list stays empty', () => {
+    expect(dedupeGlobalMovements([])).toEqual([]);
   });
 });
