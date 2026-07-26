@@ -1,4 +1,3 @@
-export type KycStatus = 'not_started' | 'in_review' | 'approved' | 'rejected';
 export type LoginMethod = 'email' | 'phone';
 export type MovementType = 'topup' | 'withdraw' | 'send' | 'convert' | 'card';
 export type MovementStatus = 'completed' | 'pending' | 'failed';
