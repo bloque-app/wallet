@@ -3,7 +3,27 @@
     "back": "Back",
     "loading": "Loading...",
     "creating": "Creating...",
-    "create": "Create"
+    "create": "Create",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving...",
+    "confirm": "Confirm",
+    "close": "Close",
+    "continue": "Continue",
+    "retry": "Retry",
+    "copy": "Copy",
+    "copied": "Copied",
+    "share": "Share",
+    "delete": "Delete",
+    "edit": "Edit",
+    "next": "Next",
+    "done": "Done",
+    "error": "Error",
+    "success": "Success",
+    "search": "Search",
+    "optional": "Optional",
+    "yes": "Yes",
+    "no": "No"
   },
   "accounts": {
     "title": "Accounts",
@@ -43,6 +63,70 @@
       "cardCreatedToast": "Card created successfully",
       "polygonCreatedToast": "Polygon account created",
       "createProductErrorToast": "Couldn't create the product. Please try again."
+    }
+  },
+  "card": {
+    "title": "Cards",
+    "detailsDrawerTitle": "Card details",
+    "detailsLoadError": "We couldn't load the card details",
+    "designAlt": "Card design",
+    "exp": "Exp",
+    "frozenOverlay": "Card frozen",
+    "viewCardData": "View card data",
+    "manage": "Manage",
+    "processing": "Processing...",
+    "unfreeze": "Unfreeze",
+    "freeze": {
+      "action": "Freeze",
+      "activatedToast": "Card activated successfully",
+      "frozenToast": "Card frozen successfully",
+      "activateErrorToast": "Error activating the card",
+      "freezeErrorToast": "Error freezing the card"
+    },
+    "noCard": {
+      "empty": "You don't have any cards yet",
+      "title": "Create your first virtual card",
+      "description": "Pay at any online merchant with your USD balances. No issuance fees.",
+      "createCard": "Create card",
+      "identityVerified": "Your identity has already been verified.",
+      "requiresKyc": "Requires identity verification (KYC)"
+    },
+    "list": {
+      "cardAria": "{{label}} card, ending in {{lastFour}}",
+      "selected": "Selected",
+      "frozenBadge": "Frozen",
+      "myCardsAria": "My cards",
+      "createNewAria": "Create new card",
+      "newCard": "+ New card"
+    },
+    "detail": {
+      "defaultLabel": "Card",
+      "title": "Card details",
+      "notFound": "We couldn't find a card to show.",
+      "backToCards": "Back to cards",
+      "editNameTitle": "Edit name",
+      "statusFrozen": "Frozen",
+      "statusActive": "Active",
+      "activate": "Activate",
+      "topupCurrencies": "Top-up currencies",
+      "availableToTopup": "Balance available to top up in {{asset}}",
+      "movements": "Movements",
+      "recordsCount": "{{count}} records",
+      "noMovementsForFilter": "No movements for this filter",
+      "lastActivity": "Last activity",
+      "noRecentActivity": "No recent activity",
+      "renameTitle": "Change card name",
+      "renameDescription": "Enter the new name for your card",
+      "renamePlaceholder": "E.g.: Personal, Business...",
+      "nameUpdatedToast": "Card name updated successfully",
+      "nameUpdateErrorToast": "Error updating the card name"
+    },
+    "details": {
+      "filters": {
+        "all": "All",
+        "incoming": "Incoming",
+        "outgoing": "Outgoing"
+      }
     }
   },
   "home": {
