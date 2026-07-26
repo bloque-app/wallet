@@ -13,8 +13,6 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    env:
-      BASE_REF: ${{ github.base_ref || 'develop' }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -32,8 +30,9 @@ jobs:
       - name: Typecheck
         run: bun run typecheck
 
-      - name: Lint (scoped to this branch's diff)
-        run: bunx biome check --changed --since=origin/$BASE_REF
+      - name: Lint (scoped to this PR's diff)
+        if: github.event_name == 'pull_request'
+        run: bunx biome check --changed --since=origin/${{ github.base_ref }}
 
       - name: Unit tests (bun test)
         run: bun run test:unit
