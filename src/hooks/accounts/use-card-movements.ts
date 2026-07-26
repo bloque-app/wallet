@@ -4,19 +4,28 @@ import { bloqueAccountsRepository } from '~/infra/bloque/accounts-repository';
 import type { Movement } from '~/lib/formatters';
 
 /**
- * Shares the `['movements', ...]` query-key namespace with
+ * Card-details movements list — same `getMovements()` port method the
+ * per-account detail page already uses (a card is just another account
+ * URN), with optional direction filtering for the card-details filter
+ * chips. Shares the `['movements', ...]` query-key namespace with
  * `useGlobalTransactions`/`useGlobalTransactionsInfinite`/
- * `useCardMovements`.
+ * `useAccountMovements`.
  */
-export function useAccountMovements(urn: string, asset: string) {
+export function useCardMovements(
+  urn: string,
+  asset: string,
+  direction?: 'in' | 'out',
+  limit = 10,
+) {
   return useInfiniteQuery({
-    queryKey: ['movements', 'account', urn, asset],
+    queryKey: ['movements', 'card', urn, asset, direction],
     initialPageParam: undefined as string | undefined,
     queryFn: async ({ pageParam }) => {
       const page = await bloqueAccountsRepository.getMovements({
         urn,
         asset,
-        limit: 10,
+        direction,
+        limit,
         next: pageParam,
       });
 
@@ -29,7 +38,7 @@ export function useAccountMovements(urn: string, asset: string) {
       };
     },
     getNextPageParam: (lastPage) =>
-      lastPage.hasMore ? lastPage.next : undefined,
+      lastPage.hasMore ? lastPage.next || undefined : undefined,
     enabled: !!urn && !!asset,
   });
 }
