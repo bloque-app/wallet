@@ -65,6 +65,43 @@
       "createProductErrorToast": "No se pudo crear el producto. Intenta de nuevo."
     }
   },
+  "brebKeys": {
+    "subtitle": "Envía y recibe al instante desde cualquier banco",
+    "cameraOpenError": "No se pudo abrir la cámara.",
+    "qrReadError": "No se pudo leer el QR BRE-B.",
+    "menu": {
+      "sendWithKeys": {
+        "title": "Enviar con llaves",
+        "description": "Transfiere usando una llave BRE-B"
+      },
+      "deposit": {
+        "title": "Depositar",
+        "description": "Trae tu dinero desde otro banco"
+      },
+      "yourKeys": {
+        "title": "Tus llaves",
+        "description": "Gestiona tus llaves registradas"
+      },
+      "qrCode": {
+        "title": "Código QR",
+        "description": "Escanea un QR BRE-B para transferir"
+      }
+    },
+    "discoverZone": {
+      "title": "Descubre tu zona BRE-B",
+      "description": "Registra y gestiona tus llaves. Envía dinero gratis de forma instantánea. Todo desde un solo lugar.",
+      "cta": "Ir a tus llaves"
+    },
+    "scanner": {
+      "title": "Escanear codigo QR",
+      "description": "Alinea el QR BRE-B dentro del recuadro.",
+      "permissionHint": "Si la cámara tarda en abrir, revisa los permisos del navegador."
+    },
+    "decoding": {
+      "title": "Procesando QR BRE-B",
+      "description": "Validando la información del destinatario."
+    }
+  },
   "card": {
     "title": "Tarjetas",
     "detailsDrawerTitle": "Detalles de la tarjeta",

@@ -65,6 +65,43 @@
       "createProductErrorToast": "Couldn't create the product. Please try again."
     }
   },
+  "brebKeys": {
+    "subtitle": "Send and receive instantly from any bank",
+    "cameraOpenError": "Couldn't open the camera.",
+    "qrReadError": "Couldn't read the BRE-B QR code.",
+    "menu": {
+      "sendWithKeys": {
+        "title": "Send with keys",
+        "description": "Transfer using a BRE-B key"
+      },
+      "deposit": {
+        "title": "Deposit",
+        "description": "Bring your money from another bank"
+      },
+      "yourKeys": {
+        "title": "Your keys",
+        "description": "Manage your registered keys"
+      },
+      "qrCode": {
+        "title": "QR code",
+        "description": "Scan a BRE-B QR code to transfer"
+      }
+    },
+    "discoverZone": {
+      "title": "Discover your BRE-B zone",
+      "description": "Register and manage your keys. Send money for free, instantly. All from one place.",
+      "cta": "Go to your keys"
+    },
+    "scanner": {
+      "title": "Scan QR code",
+      "description": "Align the BRE-B QR within the frame.",
+      "permissionHint": "If the camera takes a while to open, check your browser permissions."
+    },
+    "decoding": {
+      "title": "Processing BRE-B QR",
+      "description": "Validating recipient information."
+    }
+  },
   "card": {
     "title": "Cards",
     "detailsDrawerTitle": "Card details",

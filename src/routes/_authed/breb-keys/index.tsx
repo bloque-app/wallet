@@ -12,6 +12,7 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, useId, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Button } from '~/components/ui/button';
 import { bloqueAccountsRepository } from '~/infra/bloque/accounts-repository';
@@ -24,6 +25,7 @@ export const Route = createFileRoute('/_authed/breb-keys/')({
 type ScannerView = 'menu' | 'scanner' | 'decoding';
 
 function RouteComponent() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [scannerView, setScannerView] = useState<ScannerView>('menu');
   const [pendingQrValue, setPendingQrValue] = useState('');
@@ -80,7 +82,7 @@ function RouteComponent() {
         toast.error(
           error instanceof Error
             ? error.message
-            : 'No se pudo abrir la cámara.',
+            : t('brebKeys.cameraOpenError'),
         );
         setScannerView('menu');
       }
@@ -103,7 +105,7 @@ function RouteComponent() {
           });
       }
     };
-  }, [scannerId, scannerView]);
+  }, [scannerId, scannerView, t]);
 
   useEffect(() => {
     if (scannerView !== 'decoding' || !pendingQrValue) {
@@ -183,9 +185,7 @@ function RouteComponent() {
         if (cancelled) return;
 
         toast.error(
-          error instanceof Error
-            ? error.message
-            : 'No se pudo leer el QR BRE-B.',
+          error instanceof Error ? error.message : t('brebKeys.qrReadError'),
         );
         setPendingQrValue('');
         setScannerView('scanner');
@@ -198,7 +198,7 @@ function RouteComponent() {
     return () => {
       cancelled = true;
     };
-  }, [navigate, pendingQrValue, scannerView]);
+  }, [navigate, pendingQrValue, scannerView, t]);
 
   const closeScanner = () => {
     setPendingQrValue('');
@@ -219,14 +219,14 @@ function RouteComponent() {
           className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Volver
+          {t('common.back')}
         </button>
         <div>
           <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
             BRE-B
           </h1>
           <p className="text-xs text-muted-foreground">
-            Envía y recibe al instante desde cualquier banco
+            {t('brebKeys.subtitle')}
           </p>
         </div>
       </div>
@@ -239,10 +239,10 @@ function RouteComponent() {
             </div>
             <div>
               <p className="text-sm font-medium text-foreground">
-                Enviar con llaves
+                {t('brebKeys.menu.sendWithKeys.title')}
               </p>
               <p className="text-xs text-muted-foreground">
-                Transfiere usando una llave BRE-B
+                {t('brebKeys.menu.sendWithKeys.description')}
               </p>
             </div>
           </div>
@@ -254,9 +254,11 @@ function RouteComponent() {
               <Vault className="h-4 w-4 text-primary" strokeWidth={1.5} />
             </div>
             <div>
-              <p className="text-sm font-medium text-foreground">Depositar</p>
+              <p className="text-sm font-medium text-foreground">
+                {t('brebKeys.menu.deposit.title')}
+              </p>
               <p className="text-xs text-muted-foreground">
-                Trae tu dinero desde otro banco
+                {t('brebKeys.menu.deposit.description')}
               </p>
             </div>
           </div>
@@ -268,9 +270,11 @@ function RouteComponent() {
               <Settings2 className="h-4 w-4 text-primary" strokeWidth={1.5} />
             </div>
             <div>
-              <p className="text-sm font-medium text-foreground">Tus llaves</p>
+              <p className="text-sm font-medium text-foreground">
+                {t('brebKeys.menu.yourKeys.title')}
+              </p>
               <p className="text-xs text-muted-foreground">
-                Gestiona tus llaves registradas
+                {t('brebKeys.menu.yourKeys.description')}
               </p>
             </div>
           </div>
@@ -286,9 +290,11 @@ function RouteComponent() {
               <QrCode className="h-4 w-4 text-primary" strokeWidth={1.5} />
             </div>
             <div>
-              <p className="text-sm font-medium text-foreground">Código QR</p>
+              <p className="text-sm font-medium text-foreground">
+                {t('brebKeys.menu.qrCode.title')}
+              </p>
               <p className="text-xs text-muted-foreground">
-                Escanea un QR BRE-B para transferir
+                {t('brebKeys.menu.qrCode.description')}
               </p>
             </div>
           </div>
@@ -297,11 +303,10 @@ function RouteComponent() {
 
       <div className="mt-auto rounded-2xl border border-primary/20 bg-primary/[0.06] p-4">
         <p className="text-sm font-semibold tracking-[-0.015em] text-foreground">
-          Descubre tu zona BRE-B
+          {t('brebKeys.discoverZone.title')}
         </p>
         <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-          Registra y gestiona tus llaves. Envía dinero gratis de forma
-          instantánea. Todo desde un solo lugar.
+          {t('brebKeys.discoverZone.description')}
         </p>
         <Link
           to="/breb-keys/manage-keys"
@@ -309,7 +314,7 @@ function RouteComponent() {
           className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary"
         >
           <KeyRound className="h-3 w-3" />
-          Ir a tus llaves
+          {t('brebKeys.discoverZone.cta')}
         </Link>
       </div>
 
@@ -319,10 +324,10 @@ function RouteComponent() {
             <div className="flex items-center justify-between border-b border-border/70 px-4 py-3">
               <div>
                 <p className="text-sm font-medium text-foreground">
-                  Escanear codigo QR
+                  {t('brebKeys.scanner.title')}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Alinea el QR BRE-B dentro del recuadro.
+                  {t('brebKeys.scanner.description')}
                 </p>
               </div>
               <Button
@@ -345,7 +350,7 @@ function RouteComponent() {
                 className="w-full max-w-sm overflow-hidden rounded-3xl border border-border/80 bg-card/70"
               />
               <p className="max-w-sm text-center text-xs text-muted-foreground">
-                Si la cámara tarda en abrir, revisa los permisos del navegador.
+                {t('brebKeys.scanner.permissionHint')}
               </p>
               <Button
                 type="button"
@@ -353,7 +358,7 @@ function RouteComponent() {
                 className="h-12 w-full max-w-sm rounded-2xl"
                 onClick={closeScanner}
               >
-                Cancelar
+                {t('common.cancel')}
               </Button>
             </div>
           </div>
@@ -368,10 +373,10 @@ function RouteComponent() {
             </div>
             <div className="space-y-1">
               <p className="text-sm font-medium text-foreground">
-                Procesando QR BRE-B
+                {t('brebKeys.decoding.title')}
               </p>
               <p className="text-xs text-muted-foreground">
-                Validando la información del destinatario.
+                {t('brebKeys.decoding.description')}
               </p>
             </div>
           </div>
