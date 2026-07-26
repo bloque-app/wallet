@@ -155,6 +155,125 @@
       "send": "Enviar"
     }
   },
+  "topup": {
+    "title": "Recargar saldo",
+    "stepAmount": "Monto",
+    "stepDetails": "Datos",
+    "stepConfirm": "Confirmar",
+    "bankFallback": "Banco",
+    "noDestinationAccount": "No encontramos una cuenta destino disponible.",
+    "noDestinationAccountShort": "No hay cuenta destino disponible.",
+    "noRateForOrder": "No hay tasa disponible para crear la orden.",
+    "pseStartedToast": "Recarga PSE iniciada correctamente.",
+    "rateExpiredToast": "La tasa expiró. Recalculando...",
+    "startErrorToast": "No se pudo iniciar la recarga.",
+    "noRateRetryToast": "No hay tasa disponible. Intenta de nuevo.",
+    "methods": {
+      "colombianBanks": {
+        "title": "Bancos colombianos",
+        "subtitle": "PSE"
+      },
+      "brebKeys": {
+        "title": "Llaves BRE-B",
+        "subtitle": "Registra y gestiona tus llaves"
+      },
+      "usBanks": {
+        "title": "Desde bancos en EE.UU.",
+        "subtitle": "ACH / Wire",
+        "comingSoon": "Recarga desde bancos en EE.UU. disponible próximamente."
+      },
+      "blockchain": {
+        "title": "Desde direcciones blockchain",
+        "subtitle": "Wallets externas",
+        "comingSoon": "Recarga desde blockchain disponible próximamente."
+      },
+      "card": {
+        "title": "Con tarjeta",
+        "subtitle": "Visa, Mastercard, etc",
+        "comingSoon": "Recarga con tarjeta disponible próximamente."
+      }
+    },
+    "iWantToReceive": "Quiero recibir",
+    "pseAmountLabel": "Monto a pagar por PSE (COP)",
+    "minAmount": "Monto minimo: $5,000 COP",
+    "youPay": "Pagas",
+    "youReceive": "Recibes",
+    "pseBank": "Banco PSE",
+    "selectYourBank": "Selecciona tu banco",
+    "userType": "Tipo de usuario",
+    "userTypeNatural": "Natural",
+    "userTypeLegal": "Jurídica",
+    "documentType": "Tipo de documento",
+    "idTypeCc": "Cédula de ciudadanía (CC)",
+    "idTypeCe": "Cédula de extranjería (CE)",
+    "documentNumber": "Numero de documento",
+    "fullName": "Nombre completo",
+    "email": "Email",
+    "phone": "Celular",
+    "bank": "Banco",
+    "accountHolder": "Titular",
+    "document": "Documento",
+    "redirectDisclaimer": "Serás redirigido a PSE para completar el pago.",
+    "startingPayment": "Iniciando pago...",
+    "goToPse": "Ir a PSE",
+    "amountStep": {
+      "label": "Monto a recargar (COP)",
+      "minAmount": "Monto mínimo: $5,000 COP",
+      "amount": "Monto",
+      "pseFee": "Comisión PSE",
+      "totalToDebit": "Total a debitar",
+      "estimatedArrival": "Tiempo estimado de llegada: 5-15 minutos",
+      "appliedRate": "Tasa aplicada",
+      "checkingRate": "Consultando tasa disponible...",
+      "youWillReceive": "Recibirás",
+      "enterAmountToQuery": "Ingresa un monto para consultar la tasa.",
+      "pseDisclaimer": "Transacción procesada mediante PSE (Pagos Seguros en Línea). Regulado por la Superintendencia Financiera de Colombia."
+    },
+    "bankStep": {
+      "destinationBank": "Banco destino",
+      "selectABank": "Selecciona un banco",
+      "accountType": "Tipo de cuenta",
+      "savings": "Ahorros",
+      "checking": "Corriente",
+      "accountNumber": "Número de cuenta",
+      "accountNumberPlaceholder": "Ej: 5740088718",
+      "accountHolder": "Titular de la cuenta",
+      "idTypePp": "Pasaporte (PP)",
+      "documentNumberPlaceholder": "Ej: 123456789"
+    },
+    "confirmStep": {
+      "summary": "Resumen de recarga",
+      "sending": "Enviando...",
+      "sendWithdrawal": "Enviar retiro",
+      "verifyDisclaimer": "Verifica que los datos bancarios sean correctos antes de enviar."
+    },
+    "errorStep": {
+      "title": "Pago fallido",
+      "description": "No pudimos procesar tu pago. Esto puede ocurrir por fondos insuficientes, sesión expirada o un error temporal del banco.",
+      "tryAgain": "Intentar de nuevo",
+      "contactSupport": "Contactar soporte"
+    },
+    "executionOutcome": {
+      "brebTitle": "Completa el pago por BRE-B",
+      "brebDescription": "Envía {{amount}} desde tu app bancaria a esta llave BRE-B para completar la orden.",
+      "status": "Estado",
+      "partialPayment": "Pago parcial recibido",
+      "waitingPayment": "Esperando pago",
+      "order": "Orden",
+      "keyCopiedToast": "Llave BRE-B copiada.",
+      "copyKey": "Copiar llave",
+      "reportProblem": "Reportar problema",
+      "openLink": "Abrir enlace",
+      "checkMovementsToast": "Revisa el estado en movimientos."
+    },
+    "pendingStep": {
+      "title": "Orden creada",
+      "description": "Tu orden está siendo procesada. Puede completarse, quedar pendiente o ser rechazada.",
+      "orderId": "Orden: {{orderId}}",
+      "checkStatus": "Verificar estado",
+      "contactSupportDisclaimer": "Si tienes dudas sobre el estado de tu orden, contacta soporte."
+    }
+  },
   "convert": {
     "title": "Convertir",
     "from": "De",

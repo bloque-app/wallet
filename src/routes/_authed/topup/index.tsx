@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Building2, CreditCard, KeyRound, Wallet } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
@@ -68,6 +69,7 @@ export const Route = createFileRoute('/_authed/topup/')({
 });
 
 function RouteComponent() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [step, setStep] = useState<TopUpStep>('method');
@@ -131,13 +133,13 @@ function RouteComponent() {
   const rateError = useMemo(() => {
     if (parsedAmount < MIN_TOPUP_AMOUNT) return null;
     if (!destinationAccountUrn && !isLoadingAccounts) {
-      return 'No encontramos una cuenta destino disponible.';
+      return t('topup.noDestinationAccount');
     }
     if (ratesQuery.isError) {
-      return 'No pudimos consultar la tasa. Intenta de nuevo.';
+      return t('convert.rateFetchError');
     }
     if (ratesQuery.isSuccess && !selectedRate) {
-      return 'No hay tasas disponibles para este monto.';
+      return t('convert.noRatesAvailable');
     }
     return null;
   }, [
@@ -147,6 +149,7 @@ function RouteComponent() {
     ratesQuery.isError,
     ratesQuery.isSuccess,
     selectedRate,
+    t,
   ]);
 
   const detailsValid =
@@ -161,11 +164,11 @@ function RouteComponent() {
 
   const submitOrder = useCallback(() => {
     if (!selectedRate?.sig) {
-      toast.error('No hay tasa disponible para crear la orden.');
+      toast.error(t('topup.noRateForOrder'));
       return;
     }
     if (!destinationAccountUrn) {
-      toast.error('No hay cuenta destino disponible.');
+      toast.error(t('topup.noDestinationAccountShort'));
       return;
     }
 
@@ -196,7 +199,7 @@ function RouteComponent() {
           const execution = result.execution ?? { kind: 'none' as const };
           setLastOrder({ id: result.order.id, execution });
           setStep('pending');
-          toast.success('Recarga PSE iniciada correctamente.');
+          toast.success(t('topup.pseStartedToast'));
           if (execution.kind === 'redirect') {
             window.open(execution.url, '_blank', 'noopener,noreferrer');
           }
@@ -204,12 +207,12 @@ function RouteComponent() {
         onError: (error) => {
           const message = error instanceof Error ? error.message : '';
           if (message.includes('E_RATE_EXPIRED')) {
-            toast.info('La tasa expiró. Recalculando...');
+            toast.info(t('topup.rateExpiredToast'));
             setAutoRetry(true);
             void ratesQuery.refetch();
             return;
           }
-          toast.error(message || 'No se pudo iniciar la recarga.');
+          toast.error(message || t('topup.startErrorToast'));
           setStep('error');
         },
       },
@@ -221,6 +224,7 @@ function RouteComponent() {
     form,
     createOrderMutation,
     ratesQuery,
+    t,
   ]);
 
   useEffect(() => {
@@ -229,24 +233,30 @@ function RouteComponent() {
     if (selectedRate) {
       submitOrder();
     } else {
-      toast.error('No hay tasa disponible. Intenta de nuevo.');
+      toast.error(t('topup.noRateRetryToast'));
       setStep('amount');
     }
-  }, [autoRetry, ratesQuery.isFetching, selectedRate, submitOrder]);
+  }, [autoRetry, ratesQuery.isFetching, selectedRate, submitOrder, t]);
 
   const selectedBankName =
     banksQuery.data?.find((bank) => bank.code === form.bankCode)?.name ??
-    'Banco';
+    t('topup.bankFallback');
+
+  const stepLabels = [
+    t('topup.stepAmount'),
+    t('topup.stepDetails'),
+    t('topup.stepConfirm'),
+  ];
 
   return (
     <div className="flex flex-col gap-5">
       <h1 className="text-2xl font-bold tracking-[-0.025em] text-foreground">
-        Recargar saldo
+        {t('topup.title')}
       </h1>
 
       {step !== 'method' && (
         <div className="flex items-center gap-2 rounded-2xl border border-border/75 bg-card/80 p-3">
-          {['Monto', 'Datos', 'Confirmar'].map((label, i) => {
+          {stepLabels.map((label, i) => {
             const stepIndex =
               step === 'amount'
                 ? 0
@@ -287,15 +297,15 @@ function RouteComponent() {
         <section className="flex flex-col gap-3">
           {[
             {
-              title: 'Bancos colombianos',
-              subtitle: 'PSE',
+              title: t('topup.methods.colombianBanks.title'),
+              subtitle: t('topup.methods.colombianBanks.subtitle'),
               icon: Building2,
               enabled: true,
               onClick: () => setStep('amount'),
             },
             {
-              title: 'Llaves BRE-B',
-              subtitle: 'Registra y gestiona tus llaves',
+              title: t('topup.methods.brebKeys.title'),
+              subtitle: t('topup.methods.brebKeys.subtitle'),
               icon: KeyRound,
               enabled: true,
               onClick: () =>
@@ -305,30 +315,26 @@ function RouteComponent() {
                 }),
             },
             {
-              title: 'Desde bancos en EE.UU.',
-              subtitle: 'ACH / Wire',
+              title: t('topup.methods.usBanks.title'),
+              subtitle: t('topup.methods.usBanks.subtitle'),
               icon: Building2,
               enabled: false,
-              onClick: () =>
-                toast.info(
-                  'Recarga desde bancos en EE.UU. disponible próximamente.',
-                ),
+              onClick: () => toast.info(t('topup.methods.usBanks.comingSoon')),
             },
             {
-              title: 'Desde direcciones blockchain',
-              subtitle: 'Wallets externas',
+              title: t('topup.methods.blockchain.title'),
+              subtitle: t('topup.methods.blockchain.subtitle'),
               icon: Wallet,
               enabled: false,
               onClick: () =>
-                toast.info('Recarga desde blockchain disponible próximamente.'),
+                toast.info(t('topup.methods.blockchain.comingSoon')),
             },
             {
-              title: 'Con tarjeta',
-              subtitle: 'Visa, Mastercard, etc',
+              title: t('topup.methods.card.title'),
+              subtitle: t('topup.methods.card.subtitle'),
               icon: CreditCard,
               enabled: false,
-              onClick: () =>
-                toast.info('Recarga con tarjeta disponible próximamente.'),
+              onClick: () => toast.info(t('topup.methods.card.comingSoon')),
             },
           ].map((option) => {
             const Icon = option.icon;
@@ -363,7 +369,7 @@ function RouteComponent() {
         <section className="rounded-3xl border border-border/75 bg-card/80 p-5">
           <div className="flex flex-col gap-5">
             <div className="flex flex-col gap-2">
-              <Label>Quiero recibir</Label>
+              <Label>{t('topup.iWantToReceive')}</Label>
               <div className="grid grid-cols-2 gap-2">
                 {RECEIVE_ASSETS.map((asset) => (
                   <button
@@ -383,7 +389,7 @@ function RouteComponent() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="topup-amount">Monto a pagar por PSE (COP)</Label>
+              <Label htmlFor="topup-amount">{t('topup.pseAmountLabel')}</Label>
               <Input
                 id="topup-amount"
                 inputMode="numeric"
@@ -396,7 +402,7 @@ function RouteComponent() {
               />
               {parsedAmount > 0 && parsedAmount < MIN_TOPUP_AMOUNT ? (
                 <p className="text-xs text-destructive">
-                  Monto minimo: $5,000 COP
+                  {t('topup.minAmount')}
                 </p>
               ) : null}
             </div>
@@ -405,17 +411,21 @@ function RouteComponent() {
               <div className="rounded-2xl border border-border/85 bg-background/70 p-4">
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Pagas</span>
+                    <span className="text-muted-foreground">
+                      {t('topup.youPay')}
+                    </span>
                     <span className="font-medium text-foreground">
                       {formatCOP(parsedAmount)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Recibes</span>
+                    <span className="text-muted-foreground">
+                      {t('topup.youReceive')}
+                    </span>
                     <span className="font-medium text-foreground">
                       {selectedRate
                         ? formatAmount(receiveAsset, receiveAmount)
-                        : 'Consultando...'}
+                        : t('convert.querying')}
                     </span>
                   </div>
                 </div>
@@ -432,7 +442,7 @@ function RouteComponent() {
                 onClick={() => setStep('method')}
                 className="h-12 flex-1 rounded-2xl"
               >
-                Volver
+                {t('common.back')}
               </Button>
               <Button
                 onClick={() => setStep('details')}
@@ -443,7 +453,7 @@ function RouteComponent() {
                 }
                 className="h-12 flex-1 rounded-2xl"
               >
-                Continuar
+                {t('common.continue')}
               </Button>
             </div>
           </div>
@@ -458,11 +468,11 @@ function RouteComponent() {
               onClick={() => setStep('amount')}
               className="text-left text-sm text-muted-foreground hover:text-foreground"
             >
-              Volver
+              {t('common.back')}
             </button>
 
             <div className="flex flex-col gap-2">
-              <Label>Banco PSE</Label>
+              <Label>{t('topup.pseBank')}</Label>
               <Select
                 value={form.bankCode}
                 onValueChange={(value) =>
@@ -474,7 +484,7 @@ function RouteComponent() {
                     <span>{selectedBankName}</span>
                   ) : (
                     <span className="text-muted-foreground">
-                      Selecciona tu banco
+                      {t('topup.selectYourBank')}
                     </span>
                   )}
                 </SelectTrigger>
@@ -489,12 +499,12 @@ function RouteComponent() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label>Tipo de usuario</Label>
+              <Label>{t('topup.userType')}</Label>
               <div className="grid grid-cols-2 gap-2">
                 {(
                   [
-                    ['0', 'Natural'],
-                    ['1', 'Jurídica'],
+                    ['0', t('topup.userTypeNatural')],
+                    ['1', t('topup.userTypeLegal')],
                   ] as const
                 ).map(([val, label]) => (
                   <button
@@ -515,7 +525,7 @@ function RouteComponent() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label>Tipo de documento</Label>
+              <Label>{t('topup.documentType')}</Label>
               <Select
                 value={form.userLegalIdType}
                 onValueChange={(value) =>
@@ -527,23 +537,23 @@ function RouteComponent() {
               >
                 <SelectTrigger className="h-12 rounded-2xl">
                   {form.userLegalIdType === 'CC' && (
-                    <span>Cédula de ciudadanía (CC)</span>
+                    <span>{t('topup.idTypeCc')}</span>
                   )}
                   {form.userLegalIdType === 'NIT' && <span>NIT</span>}
                   {form.userLegalIdType === 'CE' && (
-                    <span>Cédula de extranjería (CE)</span>
+                    <span>{t('topup.idTypeCe')}</span>
                   )}
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="CC">Cédula de ciudadanía (CC)</SelectItem>
+                  <SelectItem value="CC">{t('topup.idTypeCc')}</SelectItem>
                   <SelectItem value="NIT">NIT</SelectItem>
-                  <SelectItem value="CE">Cédula de extranjería (CE)</SelectItem>
+                  <SelectItem value="CE">{t('topup.idTypeCe')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="pse-id">Numero de documento</Label>
+              <Label htmlFor="pse-id">{t('topup.documentNumber')}</Label>
               <Input
                 id="pse-id"
                 inputMode="numeric"
@@ -559,7 +569,7 @@ function RouteComponent() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <Label htmlFor="pse-name">Nombre completo</Label>
+              <Label htmlFor="pse-name">{t('topup.fullName')}</Label>
               <Input
                 id="pse-name"
                 value={form.fullName}
@@ -572,7 +582,7 @@ function RouteComponent() {
 
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-2">
-                <Label htmlFor="pse-email">Email</Label>
+                <Label htmlFor="pse-email">{t('topup.email')}</Label>
                 <Input
                   id="pse-email"
                   value={form.customerEmail}
@@ -584,7 +594,7 @@ function RouteComponent() {
               </div>
 
               <div className="flex flex-col gap-2">
-                <Label htmlFor="pse-phone">Celular</Label>
+                <Label htmlFor="pse-phone">{t('topup.phone')}</Label>
                 <Input
                   id="pse-phone"
                   inputMode="numeric"
@@ -605,7 +615,7 @@ function RouteComponent() {
               disabled={!detailsValid || banksQuery.isLoading}
               className="h-12 rounded-2xl"
             >
-              Continuar
+              {t('common.continue')}
             </Button>
           </div>
         </section>
@@ -619,44 +629,54 @@ function RouteComponent() {
               onClick={() => setStep('details')}
               className="text-left text-sm text-muted-foreground hover:text-foreground"
             >
-              Volver
+              {t('common.back')}
             </button>
 
             <div className="rounded-2xl border border-border/85 bg-background/70 p-4">
               <div className="flex flex-col gap-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Pagas</span>
+                  <span className="text-muted-foreground">
+                    {t('topup.youPay')}
+                  </span>
                   <span className="font-medium text-foreground">
                     {formatCOP(parsedAmount)}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Recibes</span>
+                  <span className="text-muted-foreground">
+                    {t('topup.youReceive')}
+                  </span>
                   <span className="font-medium text-foreground">
                     {formatAmount(receiveAsset, receiveAmount)}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Banco</span>
+                  <span className="text-muted-foreground">
+                    {t('topup.bank')}
+                  </span>
                   <span className="font-medium text-foreground">
                     {selectedBankName}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Titular</span>
+                  <span className="text-muted-foreground">
+                    {t('topup.accountHolder')}
+                  </span>
                   <span className="font-medium text-foreground">
                     {form.fullName}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Documento</span>
+                  <span className="text-muted-foreground">
+                    {t('topup.document')}
+                  </span>
                   <span className="font-medium text-foreground">
                     {form.userLegalIdType} {form.userLegalId}
                   </span>
                 </div>
                 <Separator />
                 <p className="text-xs text-muted-foreground">
-                  Serás redirigido a PSE para completar el pago.
+                  {t('topup.redirectDisclaimer')}
                 </p>
               </div>
             </div>
@@ -666,7 +686,9 @@ function RouteComponent() {
               disabled={createOrderMutation.isPending}
               className="h-12 rounded-2xl"
             >
-              {createOrderMutation.isPending ? 'Iniciando pago...' : 'Ir a PSE'}
+              {createOrderMutation.isPending
+                ? t('topup.startingPayment')
+                : t('topup.goToPse')}
             </Button>
           </div>
         </section>
