@@ -108,6 +108,7 @@ export type AccountsRepository = {
   freezeCard(urn: string): Promise<void>;
   activateCard(urn: string): Promise<void>;
   updateCardName(urn: string, name: string): Promise<void>;
+  getCardDetailsUrl(urn: string): Promise<string>;
 
   createBrebKey(input: CreateBrebKeyInput): Promise<Product>;
   resolveBrebKey(input: {

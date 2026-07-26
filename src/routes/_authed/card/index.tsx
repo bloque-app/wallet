@@ -14,9 +14,11 @@ import {
 import { useAuth } from '~/contexts/auth/auth-context';
 import type { CardProduct } from '~/domain/accounts/types';
 import { useAccounts } from '~/hooks/accounts/use-accounts';
-import { useCardToggleFreeze } from '~/hooks/accounts/use-cards';
+import {
+  useCardDetailsUrl,
+  useCardToggleFreeze,
+} from '~/hooks/accounts/use-cards';
 import { CardsSkeleton } from './-components/cards-skeleton';
-import { useCardDetails } from './-hooks/use-card';
 
 export const Route = createFileRoute('/_authed/card/')({
   component: RouteComponent,
@@ -34,10 +36,9 @@ function RouteComponent() {
     ) ?? [];
   const {
     mutateAsync,
-    data: cardDetails,
+    data: cardDetailsUrl,
     isPending: isQuickViewLoading,
-  } = useCardDetails();
-  const cardDetailsUrl = cardDetails?.detailsUrl ?? null;
+  } = useCardDetailsUrl();
   const toggleFreezeMutation = useCardToggleFreeze();
 
   const { user } = useAuth();
