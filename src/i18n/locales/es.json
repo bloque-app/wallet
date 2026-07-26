@@ -25,6 +25,25 @@
     "yes": "Sí",
     "no": "No"
   },
+  "accountCarousel": {
+    "accountAria": "Cuenta {{label}}, disponible {{balance}}",
+    "selected": "Seleccionada",
+    "defaultLabel": "Cuenta",
+    "availableAccountsAria": "Cuentas disponibles"
+  },
+  "accountsCarousel": {
+    "accountAria": "Cuenta {{label}}",
+    "noBalance": "Sin saldo",
+    "myAccountsAria": "Mis cuentas",
+    "createNewAria": "Crear nueva cuenta",
+    "newAccount": "Nueva cuenta"
+  },
+  "createAccountDrawer": {
+    "createdToast": "Cuenta creada correctamente",
+    "createErrorToast": "No se pudo crear la cuenta. Intenta de nuevo.",
+    "namePlaceholder": "Ahorros, Negocio...",
+    "createAccount": "Crear cuenta"
+  },
   "accounts": {
     "title": "Cuentas",
     "loading": "Cargando cuentas...",
