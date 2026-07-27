@@ -50,6 +50,9 @@ describe('deriveKycStatus — the actual bug this refactor fixes', () => {
     expect(status).toBeUndefined();
   });
 
+  // The internal timeout being tested is itself 5s (KYC_STATUS_FETCH_TIMEOUT_MS)
+  // — bun:test's 5s default per-test timeout would race it, so this test
+  // gets an explicit longer timeout for headroom.
   test('a slow dependency times out rather than hanging login indefinitely', async () => {
     const neverSettles = new Promise<{ status: 'approved' }>(() => {});
     const start = Date.now();
@@ -58,5 +61,5 @@ describe('deriveKycStatus — the actual bug this refactor fixes', () => {
 
     expect(status).toBeUndefined();
     expect(Date.now() - start).toBeLessThan(6_000);
-  });
+  }, 10_000);
 });
