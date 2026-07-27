@@ -1,3 +1,5 @@
+import i18n from '~/i18n/config';
+
 export type LoginMethod = 'email' | 'phone';
 export type MovementType = 'topup' | 'withdraw' | 'send' | 'convert' | 'card';
 export type MovementStatus = 'completed' | 'pending' | 'failed';
@@ -49,6 +51,26 @@ export function formatAmount(asset: Asset, amount: number): string {
   }
 }
 
+/**
+ * Balance chip display order/filter for any list of `{ asset }` records
+ * (raw ledger balances, movement rows, etc.): KSM is hidden entirely — not
+ * a balance this app surfaces to users — and USD is sorted first among
+ * whatever remains. Uses a stable sort, so non-USD assets keep their
+ * original (ledger-reported) relative order.
+ */
+export function sortBalancesForDisplay<T extends { asset: string }>(
+  balances: T[],
+): T[] {
+  return balances
+    .filter((balance) => !balance.asset.startsWith('KSM'))
+    .sort((a, b) => {
+      const aIsUsd = a.asset.startsWith('DUSD') || a.asset.startsWith('USD');
+      const bIsUsd = b.asset.startsWith('DUSD') || b.asset.startsWith('USD');
+      if (aIsUsd === bIsUsd) return 0;
+      return aIsUsd ? -1 : 1;
+    });
+}
+
 export function formatDate(dateStr: string): string {
   return new Intl.DateTimeFormat('es-CO', {
     day: 'numeric',
@@ -73,14 +95,14 @@ export function getMovementLabel(
   direction?: Movement['direction'],
 ): string {
   const labels: Record<MovementType, string> = {
-    topup: 'Recarga',
-    withdraw: 'Retiro',
+    topup: i18n.t('movements.types.topup'),
+    withdraw: i18n.t('movements.types.withdraw'),
     send:
       direction === 'incoming'
-        ? 'Transferencia recibida'
-        : 'Transferencia enviada',
-    convert: 'Conversión',
-    card: 'Pago con tarjeta',
+        ? i18n.t('movements.types.sendIncoming')
+        : i18n.t('movements.types.sendOutgoing'),
+    convert: i18n.t('movements.types.convert'),
+    card: i18n.t('movements.types.card'),
   };
   return labels[type];
 }

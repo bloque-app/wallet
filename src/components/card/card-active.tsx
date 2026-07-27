@@ -1,6 +1,7 @@
 'use client';
 
 import { ExternalLink, EyeOff, Snowflake } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { CardProduct } from '~/domain/accounts/types';
 
 interface CardActiveProps {
@@ -20,6 +21,7 @@ export function CardActive({
   isLoadingQuickView = false,
   isLoadingFreeze = false,
 }: CardActiveProps) {
+  const { t } = useTranslation();
   const label = card.label;
   const isFrozen = card.status === 'frozen';
 
@@ -28,7 +30,7 @@ export function CardActive({
       <div className="relative mx-auto h-[14rem] w-full max-w-xs overflow-hidden rounded-[1.6rem] border border-border/65 shadow-[0_26px_38px_-28px_color-mix(in_oklch,var(--foreground)_95%,transparent)] dark:shadow-[0_26px_38px_-28px_rgb(0_0_0_/_0.8)]">
         <img
           src="/images/card.webp"
-          alt="Diseño de la tarjeta"
+          alt={t('card.designAlt')}
           className="absolute inset-0 h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-black/15" />
@@ -50,7 +52,9 @@ export function CardActive({
             </p>
             <div className="flex items-center gap-4">
               <div>
-                <p className="text-[9px] text-white uppercase">Exp</p>
+                <p className="text-[9px] text-white uppercase">
+                  {t('card.exp')}
+                </p>
                 <p className="font-mono text-xs text-white">••/••</p>
               </div>
               <div>
@@ -69,7 +73,7 @@ export function CardActive({
                 strokeWidth={1.5}
               />
               <p className="text-sm font-semibold text-foreground">
-                Tarjeta congelada
+                {t('card.frozenOverlay')}
               </p>
             </div>
           </div>
@@ -85,7 +89,7 @@ export function CardActive({
         >
           <EyeOff className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
           <span className="text-[10px] font-medium text-foreground">
-            {isLoadingQuickView ? 'Cargando...' : 'Ver datos de la tarjeta'}
+            {isLoadingQuickView ? t('common.loading') : t('card.viewCardData')}
           </span>
         </button>
         <button
@@ -98,7 +102,7 @@ export function CardActive({
             strokeWidth={1.5}
           />
           <span className="text-[10px] font-medium text-foreground">
-            Gestionar
+            {t('card.manage')}
           </span>
         </button>
         <button
@@ -113,10 +117,10 @@ export function CardActive({
           />
           <span className="text-[10px] font-medium text-foreground">
             {isLoadingFreeze
-              ? 'Procesando...'
+              ? t('card.processing')
               : isFrozen
-                ? 'Descongelar'
-                : 'Congelar'}
+                ? t('card.unfreeze')
+                : t('card.freeze.action')}
           </span>
         </button>
       </div>

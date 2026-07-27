@@ -30,3 +30,10 @@ export function useCardUpdateName() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['accounts'] }),
   });
 }
+
+export function useCardDetailsUrl() {
+  return useMutation({
+    mutationFn: (urn: string) =>
+      bloqueAccountsRepository.getCardDetailsUrl(urn),
+  });
+}

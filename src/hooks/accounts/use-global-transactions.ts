@@ -1,5 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
-import { toDomainMovement } from '~/domain/accounts/movements';
+import {
+  dedupeGlobalMovements,
+  toDomainMovement,
+} from '~/domain/accounts/movements';
 import { bloqueAccountsRepository } from '~/infra/bloque/accounts-repository';
 import type { Movement } from '~/lib/formatters';
 
@@ -8,6 +11,12 @@ import type { Movement } from '~/lib/formatters';
  * to a single `urn`. Shares the `['movements', ...]` query-key namespace
  * with `useGlobalTransactionsInfinite`/`useAccountMovements`/
  * `useCardMovements`.
+ *
+ * Deduped via `dedupeGlobalMovements` (a ledger with N linked accounts
+ * reports the same transfer N times) — this can mean fewer than `limit`
+ * items are shown when duplicates land in the requested page; that's
+ * still strictly correct, just potentially sparse, and preferred over
+ * showing the same movement multiple times.
  */
 export function useGlobalTransactions(limit: number, asset?: string) {
   return useQuery({
@@ -19,9 +28,11 @@ export function useGlobalTransactions(limit: number, asset?: string) {
       });
 
       return {
-        movements: page.movements
-          .map(toDomainMovement)
-          .filter((movement): movement is Movement => movement !== null),
+        movements: dedupeGlobalMovements(
+          page.movements
+            .map(toDomainMovement)
+            .filter((movement): movement is Movement => movement !== null),
+        ),
         hasMore: page.hasMore,
         next: page.next,
       };

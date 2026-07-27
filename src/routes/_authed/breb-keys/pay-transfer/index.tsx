@@ -1,6 +1,7 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router';
 import { ArrowLeft, Landmark, Send } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { AccountCarousel } from '~/components/account/account-carousel';
 import {
@@ -69,6 +70,7 @@ export const Route = createFileRoute('/_authed/breb-keys/pay-transfer/')({
 });
 
 function RouteComponent() {
+  const { t } = useTranslation();
   const { from } = Route.useSearch();
   const { history } = useRouter();
   const [view, setView] = useState<ViewState>('form');
@@ -136,26 +138,26 @@ function RouteComponent() {
 
   const formError = useMemo(() => {
     if (!isLoadingFundedAccounts && fundedAccounts.length === 0) {
-      return 'No tienes saldo disponible en ninguna llave BRE-B activa.';
+      return t('brebKeys.payTransfer.noFundedAccounts');
     }
     if (fundedAccounts.length > 1 && !selectedAccount) {
-      return 'Selecciona la cuenta BRE-B desde la que quieres enviar.';
+      return t('brebKeys.payTransfer.selectSourceAccount');
     }
     if (key.length > 0 && !hasValidKey) {
-      return 'Ingresa una llave BRE-B valida, por ejemplo un celular, email o alias como @MBP313.';
+      return t('brebKeys.payTransfer.invalidKey');
     }
     if (parsedAmount > 0 && parsedAmount < MIN_TRANSFER_AMOUNT) {
-      return 'El monto mínimo es $10 COP.';
+      return t('brebKeys.payTransfer.minAmount');
     }
     if (ratesQuery.isError) {
-      return 'No pudimos consultar la tasa. Intenta de nuevo.';
+      return t('convert.rateFetchError');
     }
     if (
       parsedAmount >= MIN_TRANSFER_AMOUNT &&
       ratesQuery.isSuccess &&
       !selectedRate
     ) {
-      return 'No hay tasas disponibles para este monto.';
+      return t('convert.noRatesAvailable');
     }
     return null;
   }, [
@@ -168,6 +170,7 @@ function RouteComponent() {
     ratesQuery.isSuccess,
     selectedRate,
     selectedAccount,
+    t,
   ]);
 
   const previewRecipientMutation = useResolveBrebKey();
@@ -176,15 +179,15 @@ function RouteComponent() {
 
   const submitOrder = useCallback(() => {
     if (!recipientPreview?.resolutionId) {
-      toast.error('No hay destinatario confirmado.');
+      toast.error(t('brebKeys.payTransfer.noRecipientConfirmed'));
       return;
     }
     if (!selectedRate?.sig) {
-      toast.error('No hay tasa disponible para enviar.');
+      toast.error(t('brebKeys.payTransfer.noRateToSend'));
       return;
     }
     if (!selectedSourceBrebUrn) {
-      toast.error('Selecciona la cuenta BRE-B desde la que quieres enviar.');
+      toast.error(t('brebKeys.payTransfer.selectSourceAccount'));
       return;
     }
 
@@ -206,18 +209,18 @@ function RouteComponent() {
             execution: result.execution ?? { kind: 'none' },
           });
           setView('pending');
-          toast.success('Transferencia BRE-B enviada correctamente.');
+          toast.success(t('brebKeys.payTransfer.transferSentToast'));
         },
         onError: (error) => {
           const msg = error instanceof Error ? error.message : '';
           if (msg.includes('E_RATE_EXPIRED')) {
-            toast.info('La tasa expiró. Recalculando...');
+            toast.info(t('topup.rateExpiredToast'));
             setConfirmOpen(false);
             setAutoRetry(true);
             void ratesQuery.refetch();
             return;
           }
-          toast.error(msg || 'No se pudo enviar la transferencia BRE-B.');
+          toast.error(msg || t('brebKeys.payTransfer.transferErrorToast'));
           setView('error');
         },
       },
@@ -230,6 +233,7 @@ function RouteComponent() {
     message,
     createOrderMutation,
     ratesQuery,
+    t,
   ]);
 
   useEffect(() => {
@@ -238,9 +242,9 @@ function RouteComponent() {
     if (selectedRate) {
       submitOrder();
     } else {
-      toast.error('No hay tasa disponible. Intenta de nuevo.');
+      toast.error(t('topup.noRateRetryToast'));
     }
-  }, [autoRetry, ratesQuery.isFetching, selectedRate, submitOrder]);
+  }, [autoRetry, ratesQuery.isFetching, selectedRate, submitOrder, t]);
 
   const canSubmit =
     !!selectedSourceBrebUrn &&
@@ -264,10 +268,10 @@ function RouteComponent() {
             className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            Volver
+            {t('common.back')}
           </button>
           <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
-            Pagar o transferir
+            {t('brebKeys.payTransfer.title')}
           </h1>
         </div>
 
@@ -291,10 +295,10 @@ function RouteComponent() {
             className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            Volver
+            {t('common.back')}
           </button>
           <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
-            Pagar o transferir
+            {t('brebKeys.payTransfer.title')}
           </h1>
         </div>
         <TopUpErrorStep onRetry={() => setView('form')} />
@@ -311,14 +315,14 @@ function RouteComponent() {
           className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Volver
+          {t('common.back')}
         </button>
         <div>
           <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
-            Pagar o transferir
+            {t('brebKeys.payTransfer.title')}
           </h1>
           <p className="text-xs text-muted-foreground">
-            Ingresa la llave o escanea el QR
+            {t('brebKeys.payTransfer.subtitle')}
           </p>
         </div>
       </div>
@@ -331,17 +335,19 @@ function RouteComponent() {
             </div>
             <div className="flex flex-col">
               <p className="text-sm font-medium text-foreground">
-                Envio inmediato por llave
+                {t('brebKeys.payTransfer.immediateByKey')}
               </p>
             </div>
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="breb-key">Llave BRE-B</Label>
+            <Label htmlFor="breb-key">
+              {t('brebKeys.payTransfer.keyLabel')}
+            </Label>
             <Input
               id="breb-key"
               inputMode="text"
-              placeholder="3001234567 o @MBP313"
+              placeholder={t('brebKeys.payTransfer.keyPlaceholder')}
               value={key}
               onChange={(event) => setKey(event.target.value)}
               className="h-12 rounded-2xl"
@@ -360,20 +366,23 @@ function RouteComponent() {
               unit="COP"
               value={selectedLedgerId}
               onChange={setSelectedLedgerId}
-              label="Enviar desde"
+              label={t('brebKeys.payTransfer.sendFrom')}
             />
           ) : null}
 
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="breb-amount">Monto</Label>
+              <Label htmlFor="breb-amount">
+                {t('brebKeys.payTransfer.amount')}
+              </Label>
               {selectedBalance ? (
                 <span className="text-xs text-muted-foreground">
-                  Disponible:{' '}
-                  {formatCOP(
-                    Number.parseInt(selectedBalance.current, 10) /
-                      10 ** FROM_PRECISION,
-                  )}
+                  {t('brebKeys.payTransfer.available', {
+                    amount: formatCOP(
+                      Number.parseInt(selectedBalance.current, 10) /
+                        10 ** FROM_PRECISION,
+                    ),
+                  })}
                 </span>
               ) : null}
             </div>
@@ -390,10 +399,12 @@ function RouteComponent() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="breb-message">Mensaje</Label>
+            <Label htmlFor="breb-message">
+              {t('brebKeys.payTransfer.message')}
+            </Label>
             <Textarea
               id="breb-message"
-              placeholder="¿Para qué es este envio?"
+              placeholder={t('brebKeys.payTransfer.messagePlaceholder')}
               value={message}
               onChange={(event) => setMessage(event.target.value)}
               className="min-h-24 resize-none rounded-2xl"
@@ -408,7 +419,9 @@ function RouteComponent() {
           {parsedAmount >= MIN_TRANSFER_AMOUNT ? (
             <div className="rounded-2xl border border-border/85 bg-background/70 p-4">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Envias</span>
+                <span className="text-muted-foreground">
+                  {t('brebKeys.payTransfer.youSend')}
+                </span>
                 <span className="font-medium text-foreground">
                   {formatCOP(parsedAmount)}
                 </span>
@@ -429,7 +442,7 @@ function RouteComponent() {
                     toast.error(
                       error instanceof Error
                         ? error.message
-                        : 'No se pudo validar la llave BRE-B.',
+                        : t('brebKeys.payTransfer.keyValidationErrorToast'),
                     );
                   },
                 },
@@ -440,10 +453,10 @@ function RouteComponent() {
           >
             <Send className="h-4 w-4" />
             {previewRecipientMutation.isPending
-              ? 'Validando llave...'
+              ? t('brebKeys.payTransfer.validatingKey')
               : createOrderMutation.isPending
-                ? 'Enviando...'
-                : 'Enviar dinero'}
+                ? t('brebKeys.payTransfer.sending')
+                : t('brebKeys.payTransfer.sendMoney')}
           </Button>
         </div>
       </section>
@@ -451,43 +464,55 @@ function RouteComponent() {
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent size="sm">
           <AlertDialogHeader className="items-start text-left">
-            <AlertDialogTitle>Confirmar envio</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t('brebKeys.payTransfer.confirmSend')}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Verifica la persona o entidad antes de enviar el dinero.
+              {t('brebKeys.payTransfer.confirmSendDescription')}
             </AlertDialogDescription>
           </AlertDialogHeader>
 
           <div className="rounded-2xl border border-border/85 bg-background/70 p-4">
             <div className="flex flex-col gap-2 text-sm">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-muted-foreground">Destinatario</span>
+                <span className="text-muted-foreground">
+                  {t('brebKeys.payTransfer.recipient')}
+                </span>
                 <span className="max-w-[60%] text-right font-semibold text-foreground">
                   {recipientPreview ? getRecipientName(recipientPreview) : '-'}
                 </span>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <span className="text-muted-foreground">Llave</span>
+                <span className="text-muted-foreground">
+                  {t('brebKeys.payTransfer.key')}
+                </span>
                 <span className="font-medium text-foreground">
                   {recipientPreview?.key.keyValue ?? normalizedKey}
                 </span>
               </div>
               {selectedAccount ? (
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-muted-foreground">Desde</span>
+                  <span className="text-muted-foreground">
+                    {t('brebKeys.payTransfer.from')}
+                  </span>
                   <span className="font-medium text-foreground">
                     {selectedAccount.label}
                   </span>
                 </div>
               ) : null}
               <div className="flex items-center justify-between gap-3">
-                <span className="text-muted-foreground">Monto</span>
+                <span className="text-muted-foreground">
+                  {t('brebKeys.payTransfer.amount')}
+                </span>
                 <span className="font-medium text-foreground">
                   {formatCOP(parsedAmount)}
                 </span>
               </div>
               {message.trim() ? (
                 <div className="flex flex-col gap-1 pt-2">
-                  <span className="text-muted-foreground">Mensaje</span>
+                  <span className="text-muted-foreground">
+                    {t('brebKeys.payTransfer.message')}
+                  </span>
                   <p className="text-foreground">{message.trim()}</p>
                 </div>
               ) : null}
@@ -499,7 +524,7 @@ function RouteComponent() {
               disabled={createOrderMutation.isPending}
               onClick={() => setRecipientPreview(null)}
             >
-              Cancelar
+              {t('common.cancel')}
             </AlertDialogCancel>
             <AlertDialogAction
               disabled={createOrderMutation.isPending}
@@ -509,8 +534,8 @@ function RouteComponent() {
               }}
             >
               {createOrderMutation.isPending
-                ? 'Enviando...'
-                : 'Confirmar envio'}
+                ? t('brebKeys.payTransfer.sending')
+                : t('brebKeys.payTransfer.confirmSend')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

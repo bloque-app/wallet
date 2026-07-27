@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import type { CardProduct } from '~/domain/accounts/types';
 import { isSupportedBank } from '~/domain/payments/supported-bank';
@@ -52,6 +53,7 @@ export const Route = createFileRoute('/_authed/send/colombian-banks/')({
 });
 
 function RouteComponent() {
+  const { t } = useTranslation();
   const [step, setStep] = useState<TransferStep>('amount');
   const [amount, setAmount] = useState('');
   const [bankForm, setBankForm] =
@@ -116,13 +118,13 @@ function RouteComponent() {
   const rateError = useMemo(() => {
     if (parsedAmount < MIN_TRANSFER_AMOUNT) return null;
     if (!sourceAccountUrn && !isLoadingCards) {
-      return 'No encontramos una tarjeta para enviar.';
+      return t('send.colombianBanks.noCardToSend');
     }
     if (ratesQuery.isError) {
-      return 'No pudimos consultar la tasa. Intenta de nuevo.';
+      return t('convert.rateFetchError');
     }
     if (ratesQuery.isSuccess && !selectedRate) {
-      return 'No hay tasas disponibles para este monto.';
+      return t('convert.noRatesAvailable');
     }
     return null;
   }, [
@@ -132,31 +134,30 @@ function RouteComponent() {
     ratesQuery.isError,
     ratesQuery.isSuccess,
     selectedRate,
+    t,
   ]);
 
   const createOrderMutation = useCreateBankTransferOrder();
 
   const submitOrder = useCallback(() => {
     if (!selectedRate?.sig) {
-      toast.error('No hay tasa seleccionada para crear la orden.');
+      toast.error(t('send.colombianBanks.noRateForOrder'));
       return;
     }
     if (!amountSrc) {
-      toast.error('Monto inválido para crear la orden.');
+      toast.error(t('send.colombianBanks.invalidAmountForOrder'));
       return;
     }
     if (!sourceAccountUrn) {
-      toast.error('No hay cuenta origen disponible.');
+      toast.error(t('send.colombianBanks.noSourceAccount'));
       return;
     }
     if (!selectedBank) {
-      toast.error('Selecciona un banco destino.');
+      toast.error(t('send.colombianBanks.selectDestinationBank'));
       return;
     }
     if (!isSupportedBank(selectedBank)) {
-      toast.error(
-        'El banco seleccionado no es válido para esta transferencia.',
-      );
+      toast.error(t('send.colombianBanks.unsupportedBank'));
       return;
     }
 
@@ -177,7 +178,7 @@ function RouteComponent() {
           const execution = result.execution ?? { kind: 'none' as const };
           setLastOrder({ id: result.order.id, execution });
           setStep('pending');
-          toast.success('Transferencia enviada correctamente.');
+          toast.success(t('send.bloqueFriends.transferSentToast'));
           if (execution.kind === 'redirect') {
             window.open(execution.url, '_blank', 'noopener,noreferrer');
           }
@@ -185,12 +186,12 @@ function RouteComponent() {
         onError: (error) => {
           const message = error instanceof Error ? error.message : '';
           if (message.includes('E_RATE_EXPIRED')) {
-            toast.info('La tasa expiró. Recalculando...');
+            toast.info(t('topup.rateExpiredToast'));
             setAutoRetry(true);
             void ratesQuery.refetch();
             return;
           }
-          toast.error(message || 'No se pudo enviar la transferencia.');
+          toast.error(message || t('send.bloqueFriends.transferErrorToast'));
           setStep('error');
         },
       },
@@ -203,6 +204,7 @@ function RouteComponent() {
     bankForm,
     createOrderMutation,
     ratesQuery,
+    t,
   ]);
 
   useEffect(() => {
@@ -211,18 +213,18 @@ function RouteComponent() {
     if (selectedRate) {
       submitOrder();
     } else {
-      toast.error('No hay tasa disponible. Intenta de nuevo.');
+      toast.error(t('topup.noRateRetryToast'));
       setStep('amount');
     }
-  }, [autoRetry, ratesQuery.isFetching, selectedRate, submitOrder]);
+  }, [autoRetry, ratesQuery.isFetching, selectedRate, submitOrder, t]);
 
   const handleAmountNext = () => {
     if (parsedAmount < MIN_TRANSFER_AMOUNT) {
-      toast.error('El monto mínimo es $5,000 COP.');
+      toast.error(t('send.colombianBanks.minAmountToast'));
       return;
     }
     if (!selectedRate) {
-      toast.error('No hay tasa disponible para continuar.');
+      toast.error(t('send.colombianBanks.noRateToContinue'));
       return;
     }
     setStep('bank');
@@ -235,11 +237,15 @@ function RouteComponent() {
   return (
     <div className="flex flex-col gap-5">
       <h1 className="text-2xl font-bold tracking-[-0.025em] text-foreground">
-        Enviar a bancos colombianos
+        {t('send.colombianBanks.title')}
       </h1>
 
       <div className="flex items-center gap-2 rounded-2xl border border-border/75 bg-card/80 p-3">
-        {['Monto', 'Cuenta', 'Confirmar'].map((label, i) => {
+        {[
+          t('topup.stepAmount'),
+          t('send.colombianBanks.stepAccount'),
+          t('topup.stepConfirm'),
+        ].map((label, i) => {
           const stepIndex =
             step === 'amount'
               ? 0

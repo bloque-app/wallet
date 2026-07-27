@@ -1,6 +1,8 @@
+import type { SupportedAsset } from '@bloque/sdk-accounts';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import {
   ArrowLeft,
+  ArrowRightLeft,
   ChevronRight,
   CreditCard,
   KeyRound,
@@ -8,6 +10,7 @@ import {
   Wallet,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import {
   getProductKindIcon,
@@ -27,11 +30,13 @@ import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import type { AssetBalance, Product } from '~/domain/accounts/types';
 import { useAccountMovements } from '~/hooks/accounts/use-account-movements';
+import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useAccount } from '~/hooks/accounts/use-accounts';
 import { useCreateCard } from '~/hooks/accounts/use-cards';
 import { useCreatePolygonAccount } from '~/hooks/accounts/use-polygon-account';
+import { useTransfer } from '~/hooks/accounts/use-transfer';
 import type { Asset, Movement } from '~/lib/formatters';
-import { formatCOP, formatKSM, formatUSD } from '~/lib/formatters';
+import { formatCOP, formatUSD, sortBalancesForDisplay } from '~/lib/formatters';
 import { cn } from '~/lib/utils';
 
 export const Route = createFileRoute('/_authed/accounts/$urn')({
@@ -64,12 +69,18 @@ function getAssetLabel(rawAsset: string): Asset | null {
   return ASSET_LABELS[assetKey] ?? null;
 }
 
+function majorToMinor(amountMajor: number, rawAsset: string): string {
+  const [, precisionStr] = rawAsset.split('/');
+  const precision = Number.parseInt(precisionStr, 10);
+  if (Number.isNaN(precision)) return Math.round(amountMajor).toString();
+  return Math.round(amountMajor * 10 ** precision).toString();
+}
+
 function formatAssetBalance(balance: AssetBalance) {
   const asset = getAssetLabel(balance.asset);
   const amount = parseAmount(balance.current, balance.asset);
 
   if (asset === 'USD') return formatUSD(amount);
-  if (asset === 'KSM') return formatKSM(amount);
   return formatCOP(amount);
 }
 
@@ -86,6 +97,7 @@ function getProductLink(
 }
 
 function RouteComponent() {
+  const { t } = useTranslation();
   const { urn } = Route.useParams();
   const navigate = useNavigate();
   const [selectedAsset, setSelectedAsset] = useState<string>('');
@@ -95,13 +107,25 @@ function RouteComponent() {
   const [addProductStep, setAddProductStep] =
     useState<AddProductStep>('closed');
   const [productName, setProductName] = useState('');
+  const [showTransferDrawer, setShowTransferDrawer] = useState(false);
+  const [transferDestinationId, setTransferDestinationId] = useState('');
+  const [transferAmount, setTransferAmount] = useState('');
 
   const accountQuery = useAccount(urn);
   const account = accountQuery.data;
-  const balances = account?.balances ?? [];
+  const balances = sortBalancesForDisplay(account?.balances ?? []);
 
   const createCardMutation = useCreateCard();
   const createPolygonMutation = useCreatePolygonAccount();
+  const transferMutation = useTransfer();
+  const { accounts: ownAccounts } = useAccountPicker();
+  const transferDestinations = ownAccounts.filter(
+    (candidate) => candidate.ledgerId !== account?.ledgerId,
+  );
+  const transferDestination =
+    transferDestinations.find(
+      (candidate) => candidate.ledgerId === transferDestinationId,
+    ) ?? null;
 
   useEffect(() => {
     if (!selectedAsset && balances[0]) {
@@ -144,25 +168,64 @@ function RouteComponent() {
     try {
       if (addProductStep === 'card') {
         await createCardMutation.mutateAsync({
-          name: productName.trim() || 'Tarjeta',
+          name: productName.trim() || t('accounts.detail.defaultCardName'),
           ledgerId: account.ledgerId,
         });
-        toast.success('Tarjeta creada exitosamente');
+        toast.success(t('accounts.detail.cardCreatedToast'));
       } else if (addProductStep === 'polygon') {
         await createPolygonMutation.mutateAsync({
           name: productName.trim() || undefined,
           ledgerId: account.ledgerId,
         });
-        toast.success('Cuenta Polygon creada');
+        toast.success(t('accounts.detail.polygonCreatedToast'));
       }
       setAddProductStep('closed');
     } catch {
-      toast.error('No se pudo crear el producto. Intenta de nuevo.');
+      toast.error(t('accounts.detail.createProductErrorToast'));
     }
   };
 
   const isCreatingProduct =
     createCardMutation.isPending || createPolygonMutation.isPending;
+
+  const transferAssetBalance = balances.find(
+    (balance) => balance.asset === selectedAsset,
+  );
+  const transferAvailableMajor = transferAssetBalance
+    ? parseAmount(transferAssetBalance.current, transferAssetBalance.asset)
+    : 0;
+  const parsedTransferAmount = Number.parseFloat(transferAmount) || 0;
+
+  const handleOpenTransferDrawer = () => {
+    setTransferDestinationId('');
+    setTransferAmount('');
+    setShowTransferDrawer(true);
+  };
+
+  const handleSubmitTransfer = async () => {
+    if (!account || !transferDestination) return;
+    if (
+      parsedTransferAmount <= 0 ||
+      parsedTransferAmount > transferAvailableMajor
+    ) {
+      toast.error(t('accounts.detail.transferInsufficientBalance'));
+      return;
+    }
+
+    try {
+      await transferMutation.mutateAsync({
+        sourceUrn: account.primaryUrn,
+        destinationUrn: transferDestination.primaryUrn,
+        amount: majorToMinor(parsedTransferAmount, selectedAsset),
+        asset: selectedAsset as SupportedAsset,
+        metadata: { reference: `own-account-transfer-${Date.now()}` },
+      });
+      toast.success(t('accounts.detail.transferSuccessToast'));
+      setShowTransferDrawer(false);
+    } catch {
+      toast.error(t('accounts.detail.transferErrorToast'));
+    }
+  };
 
   return (
     <div className="flex flex-col gap-5">
@@ -172,20 +235,20 @@ function RouteComponent() {
           className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Volver
+          {t('common.back')}
         </Link>
         <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
-          Detalle de cuenta
+          {t('accounts.detail.title')}
         </h1>
       </div>
 
       {accountQuery.isLoading ? (
         <div className="rounded-2xl border border-border/75 bg-card/80 p-4 text-sm text-muted-foreground">
-          Cargando cuenta...
+          {t('accounts.detail.loadingAccount')}
         </div>
       ) : !account ? (
         <div className="rounded-2xl border border-border/75 bg-card/80 p-4 text-sm text-muted-foreground">
-          No encontramos esta cuenta.
+          {t('accounts.detail.notFound')}
         </div>
       ) : (
         <>
@@ -200,7 +263,7 @@ function RouteComponent() {
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {getProductKindLabel(primaryProduct?.kind ?? 'other')} •{' '}
-                  {primaryProduct?.status ?? 'sin estado'}
+                  {primaryProduct?.status ?? t('accounts.detail.noStatus')}
                 </p>
               </div>
             </div>
@@ -209,13 +272,13 @@ function RouteComponent() {
           <section className="flex flex-col gap-3 rounded-3xl border border-border/75 bg-card/85 p-4">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-sm font-semibold text-foreground">
-                Balances
+                {t('accounts.detail.balances')}
               </h2>
             </div>
 
             {balances.length === 0 || !balances[0] ? (
               <p className="text-sm text-muted-foreground">
-                Esta cuenta no tiene balances disponibles.
+                {t('accounts.detail.noBalances')}
               </p>
             ) : (
               <>
@@ -244,7 +307,7 @@ function RouteComponent() {
                 <div className="flex items-center justify-between rounded-2xl border border-border/75 bg-background/70 px-4 py-3">
                   <div>
                     <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                      Disponible
+                      {t('accounts.detail.available')}
                     </p>
                     <p className="text-lg font-semibold text-foreground">
                       {formatAssetBalance(
@@ -256,6 +319,17 @@ function RouteComponent() {
                   </div>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </div>
+
+                {transferDestinations.length > 0 && (
+                  <Button
+                    variant="outline"
+                    className="h-10 w-full gap-1.5 rounded-xl text-xs font-medium"
+                    onClick={handleOpenTransferDrawer}
+                  >
+                    <ArrowRightLeft className="h-3.5 w-3.5" />
+                    {t('accounts.detail.transferToOwnAccount')}
+                  </Button>
+                )}
               </>
             )}
           </section>
@@ -263,7 +337,7 @@ function RouteComponent() {
           <section className="flex flex-col gap-3 rounded-3xl border border-border/75 bg-card/85 p-4">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-sm font-semibold text-foreground">
-                Productos asociados
+                {t('accounts.detail.associatedProducts')}
               </h2>
               <Button
                 size="sm"
@@ -272,13 +346,13 @@ function RouteComponent() {
                 onClick={() => setAddProductStep('pick')}
               >
                 <Plus className="h-3.5 w-3.5" />
-                Agregar producto
+                {t('accounts.detail.addProduct')}
               </Button>
             </div>
 
             {associatedProducts.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                Esta cuenta aún no tiene otros productos asociados.
+                {t('accounts.detail.noAssociatedProducts')}
               </p>
             ) : (
               <div className="flex flex-col divide-y divide-border/60">
@@ -333,7 +407,7 @@ function RouteComponent() {
           <section className="flex flex-col gap-3">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-sm font-semibold text-foreground">
-                Movimientos
+                {t('accounts.detail.movements')}
               </h2>
               {selectedAsset ? (
                 <span className="text-xs text-muted-foreground">
@@ -344,11 +418,11 @@ function RouteComponent() {
 
             {movementsQuery.isLoading ? (
               <div className="rounded-2xl border border-dashed border-border py-12 text-center text-sm text-muted-foreground">
-                Cargando movimientos...
+                {t('home.loadingMovements')}
               </div>
             ) : movements.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-border py-12 text-center text-sm text-muted-foreground">
-                No hay movimientos para esta cuenta.
+                {t('accounts.detail.noMovements')}
               </div>
             ) : (
               <div className="flex flex-col gap-2">
@@ -369,8 +443,8 @@ function RouteComponent() {
                     disabled={movementsQuery.isFetchingNextPage}
                   >
                     {movementsQuery.isFetchingNextPage
-                      ? 'Cargando...'
-                      : 'Ver más'}
+                      ? t('common.loading')
+                      : t('home.viewMore')}
                   </Button>
                 ) : null}
               </div>
@@ -395,18 +469,26 @@ function RouteComponent() {
             <>
               <DrawerHeader className="text-left">
                 <DrawerTitle className="text-lg font-bold tracking-[-0.025em]">
-                  Agregar producto
+                  {t('accounts.detail.addProduct')}
                 </DrawerTitle>
               </DrawerHeader>
               <div className="flex flex-col gap-3 px-5 pb-4">
                 {[
-                  { kind: 'card' as const, label: 'Tarjeta', icon: CreditCard },
+                  {
+                    kind: 'card' as const,
+                    label: t('accounts.productKind.card'),
+                    icon: CreditCard,
+                  },
                   {
                     kind: 'breb' as const,
-                    label: 'Llave BRE-B',
+                    label: t('accounts.detail.brebKeyLabel'),
                     icon: KeyRound,
                   },
-                  { kind: 'polygon' as const, label: 'Polygon', icon: Wallet },
+                  {
+                    kind: 'polygon' as const,
+                    label: t('accounts.productKind.polygon'),
+                    icon: Wallet,
+                  },
                 ].map((option) => (
                   <button
                     key={option.kind}
@@ -429,16 +511,16 @@ function RouteComponent() {
               <DrawerHeader className="text-left">
                 <DrawerTitle className="text-lg font-bold tracking-[-0.025em]">
                   {addProductStep === 'card'
-                    ? 'Nueva tarjeta'
-                    : 'Cuenta Polygon'}
+                    ? t('accounts.detail.newCard')
+                    : t('accounts.detail.polygonAccount')}
                 </DrawerTitle>
               </DrawerHeader>
               <div className="px-5 pb-2">
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="product-name" className="text-sm font-medium">
                     {addProductStep === 'card'
-                      ? 'Nombre de la tarjeta'
-                      : 'Nombre (opcional)'}
+                      ? t('accounts.detail.cardNameLabel')
+                      : t('accounts.detail.optionalNameLabel')}
                   </Label>
                   <Input
                     id="product-name"
@@ -448,14 +530,18 @@ function RouteComponent() {
                       if (e.key === 'Enter') handleCreateProduct();
                     }}
                     placeholder={
-                      addProductStep === 'card' ? 'Personal' : 'Principal'
+                      addProductStep === 'card'
+                        ? t('accounts.detail.cardNamePlaceholder')
+                        : t('accounts.detail.polygonNamePlaceholder')
                     }
                     maxLength={40}
                     disabled={isCreatingProduct}
                     className="h-12 rounded-xl"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Compartirá el saldo de {account?.label}.
+                    {t('accounts.detail.sharesBalanceOf', {
+                      label: account?.label,
+                    })}
                   </p>
                 </div>
               </div>
@@ -468,11 +554,91 @@ function RouteComponent() {
                   }
                   className="h-12 w-full rounded-xl text-sm font-medium"
                 >
-                  {isCreatingProduct ? 'Creando...' : 'Crear'}
+                  {isCreatingProduct
+                    ? t('common.creating')
+                    : t('common.create')}
                 </Button>
               </DrawerFooter>
             </>
           )}
+        </DrawerContent>
+      </Drawer>
+
+      <Drawer
+        open={showTransferDrawer}
+        onOpenChange={(open) => !open && setShowTransferDrawer(false)}
+      >
+        <DrawerContent>
+          <DrawerHeader className="text-left">
+            <DrawerTitle className="text-lg font-bold tracking-[-0.025em]">
+              {t('accounts.detail.transferDrawerTitle')}
+            </DrawerTitle>
+          </DrawerHeader>
+          <div className="flex flex-col gap-4 px-5 pb-2">
+            <div className="flex flex-col gap-2">
+              <Label className="text-sm font-medium">
+                {t('accounts.detail.transferDestinationLabel')}
+              </Label>
+              <div className="flex flex-col gap-2">
+                {transferDestinations.map((destination) => (
+                  <button
+                    key={destination.ledgerId}
+                    type="button"
+                    onClick={() =>
+                      setTransferDestinationId(destination.ledgerId)
+                    }
+                    className={cn(
+                      'flex items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-colors',
+                      transferDestinationId === destination.ledgerId
+                        ? 'border-foreground bg-foreground/5'
+                        : 'border-border/75 bg-background/70 hover:bg-muted/60',
+                    )}
+                  >
+                    <span className="text-sm font-medium text-foreground">
+                      {destination.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="transfer-amount" className="text-sm font-medium">
+                {t('accounts.detail.transferAmountLabel')}
+              </Label>
+              <Input
+                id="transfer-amount"
+                inputMode="decimal"
+                value={transferAmount}
+                onChange={(e) => setTransferAmount(e.target.value)}
+                placeholder="0"
+                disabled={transferMutation.isPending}
+                className="h-12 rounded-xl"
+              />
+              <p className="text-xs text-muted-foreground">
+                {t('accounts.detail.transferAvailable', {
+                  amount: transferAssetBalance
+                    ? formatAssetBalance(transferAssetBalance)
+                    : '-',
+                })}
+              </p>
+            </div>
+          </div>
+          <DrawerFooter>
+            <Button
+              onClick={handleSubmitTransfer}
+              disabled={
+                transferMutation.isPending ||
+                !transferDestination ||
+                parsedTransferAmount <= 0
+              }
+              className="h-12 w-full rounded-xl text-sm font-medium"
+            >
+              {transferMutation.isPending
+                ? t('accounts.detail.transferring')
+                : t('accounts.detail.transferSubmit')}
+            </Button>
+          </DrawerFooter>
         </DrawerContent>
       </Drawer>
     </div>

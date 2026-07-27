@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router';
 import { ArrowLeft, Check, Copy, KeyRound } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import type { BrebKeyProduct } from '~/domain/accounts/types';
 import { useAccounts } from '~/hooks/accounts/use-accounts';
@@ -14,6 +15,7 @@ export const Route = createFileRoute('/_authed/breb-keys/deposit/')({
 });
 
 function RouteComponent() {
+  const { t } = useTranslation();
   const { from } = Route.useSearch();
   const { history } = useRouter();
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -35,10 +37,10 @@ function RouteComponent() {
     try {
       await navigator.clipboard.writeText(key);
       setCopiedKey(key);
-      toast.success('Llave copiada');
+      toast.success(t('brebKeys.deposit.keyCopiedToast'));
       setTimeout(() => setCopiedKey(null), 2000);
     } catch {
-      toast.error('No se pudo copiar la llave');
+      toast.error(t('brebKeys.deposit.copyErrorToast'));
     }
   };
 
@@ -51,25 +53,24 @@ function RouteComponent() {
           className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Volver
+          {t('common.back')}
         </button>
         <div>
           <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
-            Depositar
+            {t('brebKeys.menu.deposit.title')}
           </h1>
           <p className="text-xs text-muted-foreground">
-            Trae tu dinero desde otro banco
+            {t('brebKeys.menu.deposit.description')}
           </p>
         </div>
       </div>
 
       <div className="rounded-2xl border border-primary/20 bg-primary/[0.06] p-4">
         <p className="text-sm font-semibold tracking-[-0.015em] text-foreground">
-          Recibe con tus llaves BRE-B
+          {t('brebKeys.deposit.receiveWithKeys')}
         </p>
         <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-          Comparte una de tus llaves para que te transfieran desde cualquier
-          banco colombiano al instante.
+          {t('brebKeys.deposit.receiveWithKeysDescription')}
         </p>
       </div>
 
@@ -89,10 +90,10 @@ function RouteComponent() {
           </div>
           <div>
             <p className="text-sm font-medium text-foreground">
-              No tienes llaves activas
+              {t('brebKeys.deposit.noActiveKeys')}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Registra una llave BRE-B para empezar a recibir dinero.
+              {t('brebKeys.deposit.noActiveKeysHint')}
             </p>
           </div>
           <Link
@@ -100,7 +101,7 @@ function RouteComponent() {
             search={{ ledgerId: undefined }}
             className="inline-flex h-10 items-center rounded-xl border border-primary/30 bg-primary/[0.06] px-4 text-xs font-medium text-primary"
           >
-            Registrar llave
+            {t('brebKeys.deposit.registerKey')}
           </Link>
         </div>
       ) : (
@@ -118,7 +119,9 @@ function RouteComponent() {
                   {account.keyValue}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {account.displayName ?? account.keyType ?? 'Llave BRE-B'}
+                  {account.displayName ??
+                    account.keyType ??
+                    t('accounts.detail.brebKeyLabel')}
                 </p>
               </div>
               <button

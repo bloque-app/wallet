@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { CardProduct } from '~/domain/accounts/types';
 import { useAccounts } from '~/hooks/accounts/use-accounts';
 import { useCardMovements } from '~/hooks/accounts/use-card-movements';
+import i18n from '~/i18n/config';
 import type { Asset } from '~/lib/formatters';
 import { useShowBalances } from '~/lib/show-balances';
 import { useBalance } from './use-accounts';
@@ -14,10 +15,13 @@ const DISPLAY_ASSET_MAP: Record<string, Asset> = {
   KSM: 'KSM',
 };
 
-export const MOVEMENT_FILTERS: { label: string; value: MovementFilter }[] = [
-  { label: 'Todas', value: 'todas' },
-  { label: 'Entrantes', value: 'entrantes' },
-  { label: 'Salientes', value: 'salientes' },
+export const MOVEMENT_FILTERS: {
+  labelKey: string;
+  value: MovementFilter;
+}[] = [
+  { labelKey: 'card.details.filters.all', value: 'todas' },
+  { labelKey: 'card.details.filters.incoming', value: 'entrantes' },
+  { labelKey: 'card.details.filters.outgoing', value: 'salientes' },
 ];
 
 export function useCardDetail(urn: string) {
@@ -53,7 +57,7 @@ export function useCardDetail(urn: string) {
   const selectedCard =
     cards.find((card) => card.urn === urn) ?? cards[0] ?? null;
 
-  const cardLabel = selectedCard?.label || 'Tarjeta';
+  const cardLabel = selectedCard?.label || i18n.t('card.detail.defaultLabel');
 
   const { assetList, balanceByKey } = useMemo(() => {
     const raw = balanceQuery.data as
@@ -75,6 +79,9 @@ export function useCardDetail(urn: string) {
 
     for (const [key, value] of Object.entries(raw)) {
       const [assetKey, precisionStr] = key.split('/');
+      // KSM isn't a balance this app surfaces to users — skip it entirely
+      // rather than list it as a selectable asset chip.
+      if (assetKey === 'KSM') continue;
       const precision = Number.parseInt(precisionStr, 10);
       const code = DISPLAY_ASSET_MAP[assetKey] ?? assetKey;
       balance[key] =
@@ -86,6 +93,14 @@ export function useCardDetail(urn: string) {
         precision: Number.isNaN(precision) ? 0 : precision,
       });
     }
+
+    // USD first among whatever remains, stable otherwise.
+    list.sort((a, b) => {
+      const aIsUsd = a.code === 'USD';
+      const bIsUsd = b.code === 'USD';
+      if (aIsUsd === bIsUsd) return 0;
+      return aIsUsd ? -1 : 1;
+    });
 
     return { assetList: list, balanceByKey: balance };
   }, [balanceQuery.data]);

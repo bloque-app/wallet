@@ -1,6 +1,7 @@
 'use client';
 
 import { Copy, KeyRound } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Button } from '~/components/ui/button';
 import type { ExecutionOutcome } from '~/domain/payments/types';
@@ -29,6 +30,7 @@ export function ExecutionOutcomeStep({
   execution,
   onError,
 }: ExecutionOutcomeStepProps) {
+  const { t } = useTranslation();
   if (execution?.kind === 'breb-deposit') {
     const depositAmountMajor = Number.parseInt(execution.amount, 10) / 100;
 
@@ -40,35 +42,41 @@ export function ExecutionOutcomeStep({
 
         <div className="flex flex-col items-center gap-2 text-center">
           <h2 className="text-lg font-bold text-foreground">
-            Completa el pago por BRE-B
+            {t('topup.executionOutcome.brebTitle')}
           </h2>
           <p className="text-sm text-muted-foreground">
-            Envía{' '}
-            {formatCOP(
-              Number.isNaN(depositAmountMajor) ? amount : depositAmountMajor,
-            )}{' '}
-            desde tu app bancaria a esta llave BRE-B para completar la orden.
+            {t('topup.executionOutcome.brebDescription', {
+              amount: formatCOP(
+                Number.isNaN(depositAmountMajor) ? amount : depositAmountMajor,
+              ),
+            })}
           </p>
         </div>
 
         <div className="flex w-full flex-col gap-2 rounded-2xl border border-border/85 bg-background/70 p-4">
           <div className="flex items-center justify-between gap-3">
-            <span className="text-sm text-muted-foreground">Llave BRE-B</span>
+            <span className="text-sm text-muted-foreground">
+              {t('accounts.detail.brebKeyLabel')}
+            </span>
             <span className="font-mono text-sm font-medium text-foreground">
               {execution.keyValue}
             </span>
           </div>
           <div className="flex items-center justify-between gap-3">
-            <span className="text-sm text-muted-foreground">Estado</span>
+            <span className="text-sm text-muted-foreground">
+              {t('topup.executionOutcome.status')}
+            </span>
             <span className="text-sm font-medium text-foreground">
               {execution.depositStatus === 'partial'
-                ? 'Pago parcial recibido'
-                : 'Esperando pago'}
+                ? t('topup.executionOutcome.partialPayment')
+                : t('topup.executionOutcome.waitingPayment')}
             </span>
           </div>
           {orderId && (
             <div className="flex items-center justify-between gap-3">
-              <span className="text-sm text-muted-foreground">Orden</span>
+              <span className="text-sm text-muted-foreground">
+                {t('topup.executionOutcome.order')}
+              </span>
               <span className="text-xs text-foreground">{orderId}</span>
             </div>
           )}
@@ -79,20 +87,22 @@ export function ExecutionOutcomeStep({
             onClick={() => {
               void navigator.clipboard
                 .writeText(execution.keyValue)
-                .then(() => toast.success('Llave BRE-B copiada.'));
+                .then(() =>
+                  toast.success(t('topup.executionOutcome.keyCopiedToast')),
+                );
             }}
             variant="default"
             className="h-12 w-full gap-2 rounded-2xl text-sm font-medium"
           >
             <Copy className="h-4 w-4" />
-            Copiar llave
+            {t('topup.executionOutcome.copyKey')}
           </Button>
           <Button
             onClick={onError}
             variant="outline"
             className="h-12 w-full rounded-2xl text-sm font-medium bg-transparent"
           >
-            Reportar problema
+            {t('topup.executionOutcome.reportProblem')}
           </Button>
         </div>
       </div>
@@ -106,13 +116,17 @@ export function ExecutionOutcomeStep({
     <TopUpPendingStep
       amount={amount}
       orderId={orderId}
-      actionLabel={redirectUrl ? 'Abrir enlace' : 'Verificar estado'}
+      actionLabel={
+        redirectUrl
+          ? t('topup.executionOutcome.openLink')
+          : t('topup.pendingStep.checkStatus')
+      }
       onRefresh={() => {
         if (redirectUrl) {
           window.open(redirectUrl, '_blank', 'noopener,noreferrer');
           return;
         }
-        toast.info('Revisa el estado en movimientos.');
+        toast.info(t('topup.executionOutcome.checkMovementsToast'));
       }}
       onError={onError}
     />

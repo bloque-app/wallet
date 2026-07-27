@@ -201,3 +201,32 @@ export function toDomainMovement(raw: RawMovementFields): Movement | null {
     direction: raw.direction === 'in' ? 'incoming' : 'outgoing',
   };
 }
+
+/**
+ * The global/cross-account transactions feed returns one row per linked
+ * medium on a shared ledger for what is really a single transfer event —
+ * confirmed against real production data: a ledger with 5 linked accounts
+ * (a pocket, a card, two BRE-B keys, a Polygon address) shows the same
+ * topup 5 times, identical amount and timestamp. This is a backend
+ * data-shape reality, not something this mapper or any of its three
+ * predecessors ever deduplicated. `reference` uniquely identifies the
+ * actual transfer event regardless of which linked account leg the API
+ * expanded it for, so dedupe on it, keeping the first occurrence
+ * (order-preserving — the feed is already newest-first).
+ *
+ * Only apply this to the global feed. The per-account feed is already
+ * scoped to one account, so this class of duplication can't occur there
+ * — deduping it too would be harmless but pointless.
+ */
+export function dedupeGlobalMovements(movements: Movement[]): Movement[] {
+  const seen = new Set<string>();
+  const result: Movement[] = [];
+
+  for (const movement of movements) {
+    if (seen.has(movement.reference)) continue;
+    seen.add(movement.reference);
+    result.push(movement);
+  }
+
+  return result;
+}

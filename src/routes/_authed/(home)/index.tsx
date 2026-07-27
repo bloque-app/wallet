@@ -1,29 +1,12 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
-import { LoaderCircle, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AccountsCarousel } from '~/components/account/accounts-carousel';
 import { CreateAccountDrawer } from '~/components/account/create-account-drawer';
 import { MovementRow } from '~/components/movement-row';
-import { Button } from '~/components/ui/button';
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-} from '~/components/ui/drawer';
-import type { PolygonProduct } from '~/domain/accounts/types';
 import { useAccounts } from '~/hooks/accounts/use-accounts';
 import { useGlobalTransactions } from '~/hooks/accounts/use-global-transactions';
-import {
-  type Asset,
-  formatAmount,
-  formatKSM,
-  formatPolygonAddress,
-  type Movement,
-} from '~/lib/formatters';
+import { type Asset, formatAmount, type Movement } from '~/lib/formatters';
 import { useShowBalances } from '~/lib/show-balances';
 import { MovementDetailDrawer } from '../../../components/movement-detail-drawer';
 import { BalanceToggle } from './-components/currency-balance-card';
@@ -76,32 +59,13 @@ function parseBalances(
   return parsed;
 }
 
-function getKsmBalance(product: PolygonProduct): number {
-  const entry = product.balances.find((balance) =>
-    balance.asset.startsWith('KSM'),
-  );
-  if (!entry) return 0;
-  const [, precisionStr] = entry.asset.split('/');
-  const precision = Number.parseInt(precisionStr, 10);
-  return (
-    Number.parseInt(entry.current, 10) /
-    10 ** (Number.isNaN(precision) ? 0 : precision)
-  );
-}
-
 function RouteComponent() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: balancesData, isLoading: isLoadingBalances } = useBalance();
   const { data: transactionsData, isLoading: isLoadingTransactions } =
     useGlobalTransactions(5);
   const accountsQuery = useAccounts();
-  const isLoadingPolygon = accountsQuery.isLoading;
-  const polygonAccounts =
-    accountsQuery.data?.flatMap((account) =>
-      account.products.filter(
-        (product): product is PolygonProduct => product.kind === 'polygon',
-      ),
-    ) ?? [];
 
   const parsedBalances = useMemo(
     () => parseBalances(balancesData as BalancesResponse),
@@ -112,12 +76,11 @@ function RouteComponent() {
   const [selectedMovement, setSelectedMovement] = useState<Movement | null>(
     null,
   );
-  const [selectedAsset, setSelectedAsset] = useState<Asset>('COP');
-  const [showPolygonAccounts, setShowPolygonAccounts] = useState(false);
+  const [selectedAsset, setSelectedAsset] = useState<Asset>('USD');
   const [showCreateAccount, setShowCreateAccount] = useState(false);
 
   const accounts = accountsQuery.data ?? [];
-  const assets: Asset[] = ['COP', 'USD', 'KSM'];
+  const assets: Asset[] = ['USD', 'COP'];
   const selectedBalance = parsedBalances[selectedAsset] ?? 0;
 
   const recentMovements = transactionsData?.movements ?? [];
@@ -141,7 +104,7 @@ function RouteComponent() {
               >
                 <img
                   src={ASSET_LOGO_MAP[asset]}
-                  alt={`Logo ${asset}`}
+                  alt={t('home.assetLogoAlt', { asset })}
                   className="h-3.5 w-3.5 rounded-full object-cover"
                 />
                 {asset}
@@ -152,7 +115,7 @@ function RouteComponent() {
         <div className="flex flex-col gap-1">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-              Saldo disponible
+              {t('home.availableBalance')}
             </p>
             <BalanceToggle />
           </div>
@@ -164,17 +127,6 @@ function RouteComponent() {
                 : '••••••'}
           </p>
           <p className="text-xs text-muted-foreground">{selectedAsset}</p>
-          {selectedAsset === 'KSM' && (
-            <div className="pt-2">
-              <button
-                type="button"
-                onClick={() => setShowPolygonAccounts(true)}
-                className="rounded-full border border-border px-2.5 py-0.5 text-[11px] text-muted-foreground transition-colors hover:text-foreground"
-              >
-                Ver detalles
-              </button>
-            </div>
-          )}
         </div>
       </section>
 
@@ -185,13 +137,13 @@ function RouteComponent() {
       <section className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-            Cuentas
+            {t('home.accounts')}
           </p>
           <Link
             to="/accounts"
             className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
           >
-            Ver todas
+            {t('home.viewAll')}
           </Link>
         </div>
         <AccountsCarousel
@@ -208,26 +160,28 @@ function RouteComponent() {
       <section className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-            Movimientos recientes
+            {t('home.recentMovements')}
           </p>
           <Link
             to="/movements"
             className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
           >
-            Ver más
+            {t('home.viewMore')}
           </Link>
         </div>
         {isLoadingTransactions ? (
           <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-border py-8">
             <p className="text-sm text-muted-foreground">
-              Cargando movimientos...
+              {t('home.loadingMovements')}
             </p>
           </div>
         ) : recentMovements.length === 0 ? (
           <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-border py-8">
-            <p className="text-sm text-muted-foreground">Sin movimientos</p>
+            <p className="text-sm text-muted-foreground">
+              {t('home.noMovements')}
+            </p>
             <p className="text-xs text-muted-foreground">
-              Realiza tu primera recarga para comenzar
+              {t('home.noMovementsHint')}
             </p>
           </div>
         ) : (
@@ -248,82 +202,6 @@ function RouteComponent() {
         open={!!selectedMovement}
         onClose={() => setSelectedMovement(null)}
       />
-
-      {/* Polygon accounts drawer */}
-      <Drawer
-        open={showPolygonAccounts}
-        onOpenChange={(nextOpen) => !nextOpen && setShowPolygonAccounts(false)}
-      >
-        <DrawerContent>
-          <DrawerHeader className="text-left">
-            <div className="flex items-center justify-between">
-              <DrawerTitle className="text-lg font-bold text-foreground">
-                Cuentas Polygon
-              </DrawerTitle>
-              <DrawerClose asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 rounded-xl"
-                  aria-label="Cerrar"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </DrawerClose>
-            </div>
-            <DrawerDescription>
-              Administra tus cuentas con saldo en KSM.
-            </DrawerDescription>
-          </DrawerHeader>
-
-          <div className="px-5 pb-2">
-            <div className="flex flex-col overflow-hidden rounded-2xl border border-border/85 bg-card/75">
-              {isLoadingPolygon ? (
-                <div className="flex items-center justify-center px-4 py-6">
-                  <LoaderCircle className="h-4 w-4 animate-spin text-muted-foreground" />
-                </div>
-              ) : polygonAccounts.length === 0 ? (
-                <div className="px-4 py-6 text-center text-sm text-muted-foreground">
-                  No tienes cuentas Polygon creadas.
-                </div>
-              ) : (
-                polygonAccounts.map((account, index) => (
-                  <div key={account.urn}>
-                    <div className="flex items-center justify-between gap-3 px-4 py-3.5">
-                      <div className="flex min-w-0 flex-col gap-0.5">
-                        <p className="truncate text-sm font-medium text-foreground">
-                          {account.label}
-                        </p>
-                        <p className="font-mono text-xs text-muted-foreground">
-                          {formatPolygonAddress(account.address)}
-                        </p>
-                      </div>
-                      <p className="shrink-0 text-sm font-semibold tabular-nums text-foreground">
-                        {formatKSM(getKsmBalance(account))}
-                      </p>
-                    </div>
-                    {index < polygonAccounts.length - 1 && (
-                      <div className="h-px w-full bg-border/50" />
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          <DrawerFooter>
-            <Button
-              onClick={() => {
-                setShowPolygonAccounts(false);
-                navigate({ to: '/accounts' });
-              }}
-              className="h-12 w-full gap-2 rounded-2xl text-sm"
-            >
-              Agregar cuenta
-            </Button>
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
 
       <CreateAccountDrawer
         open={showCreateAccount}

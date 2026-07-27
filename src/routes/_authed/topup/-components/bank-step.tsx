@@ -1,6 +1,7 @@
 'use client';
 
 import { ArrowLeft } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
@@ -62,16 +63,6 @@ export const COLOMBIAN_BANKS = [
   { code: 'nequi', name: 'Nequi' },
 ] as const;
 
-const ID_TYPE_LABELS: Record<
-  TopUpBankAccountData['bankAccountHolderIdentificationType'],
-  string
-> = {
-  CC: 'Cédula de ciudadanía (CC)',
-  CE: 'Cédula de extranjería (CE)',
-  NIT: 'NIT',
-  PP: 'Pasaporte (PP)',
-};
-
 interface BankStepProps {
   form: TopUpBankAccountData;
   selectedBank: string;
@@ -89,6 +80,16 @@ export function TopUpBankStep({
   onBack,
   onNext,
 }: BankStepProps) {
+  const { t } = useTranslation();
+  const ID_TYPE_LABELS: Record<
+    TopUpBankAccountData['bankAccountHolderIdentificationType'],
+    string
+  > = {
+    CC: t('topup.idTypeCc'),
+    CE: t('topup.idTypeCe'),
+    NIT: 'NIT',
+    PP: t('topup.bankStep.idTypePp'),
+  };
   const selectedBankName =
     COLOMBIAN_BANKS.find((b) => b.code === selectedBank)?.name ?? '';
 
@@ -115,13 +116,13 @@ export function TopUpBankStep({
         className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="h-4 w-4" />
-        Volver
+        {t('common.back')}
       </button>
 
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
           <Label className="text-sm font-medium text-foreground">
-            Banco destino
+            {t('topup.bankStep.destinationBank')}
           </Label>
           <Select
             value={selectedBank}
@@ -132,7 +133,7 @@ export function TopUpBankStep({
                 <span>{selectedBankName}</span>
               ) : (
                 <span className="text-muted-foreground">
-                  Selecciona un banco
+                  {t('topup.bankStep.selectABank')}
                 </span>
               )}
             </SelectTrigger>
@@ -148,13 +149,13 @@ export function TopUpBankStep({
 
         <div className="flex flex-col gap-2">
           <Label className="text-sm font-medium text-foreground">
-            Tipo de cuenta
+            {t('topup.bankStep.accountType')}
           </Label>
           <div className="grid grid-cols-2 gap-2">
             {(
               [
-                ['savings', 'Ahorros'],
-                ['checking', 'Corriente'],
+                ['savings', t('topup.bankStep.savings')],
+                ['checking', t('topup.bankStep.checking')],
               ] as const
             ).map(([val, label]) => (
               <button
@@ -176,7 +177,7 @@ export function TopUpBankStep({
 
         <div className="flex flex-col gap-2">
           <Label className="text-sm font-medium text-foreground">
-            Número de cuenta
+            {t('topup.bankStep.accountNumber')}
           </Label>
           <Input
             value={form.bankAccountNumber}
@@ -184,19 +185,19 @@ export function TopUpBankStep({
               update('bankAccountNumber', e.target.value.replace(/\D/g, ''))
             }
             inputMode="numeric"
-            placeholder="Ej: 5740088718"
+            placeholder={t('topup.bankStep.accountNumberPlaceholder')}
             className="h-12 rounded-2xl"
           />
         </div>
 
         <div className="flex flex-col gap-2">
           <Label className="text-sm font-medium text-foreground">
-            Titular de la cuenta
+            {t('topup.bankStep.accountHolder')}
           </Label>
           <Input
             value={form.bankAccountHolderName}
             onChange={(e) => update('bankAccountHolderName', e.target.value)}
-            placeholder="Nombre completo"
+            placeholder={t('topup.fullName')}
             className="h-12 rounded-2xl"
           />
         </div>
@@ -204,7 +205,7 @@ export function TopUpBankStep({
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-2">
             <Label className="text-sm font-medium text-foreground">
-              Tipo de documento
+              {t('topup.documentType')}
             </Label>
             <Select
               value={form.bankAccountHolderIdentificationType}
@@ -221,17 +222,19 @@ export function TopUpBankStep({
                 </span>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="CC">Cédula de ciudadanía (CC)</SelectItem>
-                <SelectItem value="CE">Cédula de extranjería (CE)</SelectItem>
+                <SelectItem value="CC">{t('topup.idTypeCc')}</SelectItem>
+                <SelectItem value="CE">{t('topup.idTypeCe')}</SelectItem>
                 <SelectItem value="NIT">NIT</SelectItem>
-                <SelectItem value="PP">Pasaporte (PP)</SelectItem>
+                <SelectItem value="PP">
+                  {t('topup.bankStep.idTypePp')}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="flex flex-col gap-2">
             <Label className="text-sm font-medium text-foreground">
-              Número de documento
+              {t('topup.documentNumber')}
             </Label>
             <Input
               value={form.bankAccountHolderIdentificationValue}
@@ -242,7 +245,7 @@ export function TopUpBankStep({
                 )
               }
               inputMode="numeric"
-              placeholder="Ej: 123456789"
+              placeholder={t('topup.bankStep.documentNumberPlaceholder')}
               className="h-12 rounded-2xl"
             />
           </div>
@@ -254,7 +257,7 @@ export function TopUpBankStep({
         disabled={!isValid}
         className="h-12 w-full rounded-2xl text-sm font-medium"
       >
-        Continuar
+        {t('common.continue')}
       </Button>
     </div>
   );

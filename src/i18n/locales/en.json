@@ -1,0 +1,643 @@
+{
+  "common": {
+    "back": "Back",
+    "loading": "Loading...",
+    "creating": "Creating...",
+    "create": "Create",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving...",
+    "confirm": "Confirm",
+    "close": "Close",
+    "continue": "Continue",
+    "retry": "Retry",
+    "copy": "Copy",
+    "copied": "Copied",
+    "share": "Share",
+    "delete": "Delete",
+    "edit": "Edit",
+    "next": "Next",
+    "done": "Done",
+    "error": "Error",
+    "success": "Success",
+    "search": "Search",
+    "optional": "Optional",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "appHeader": {
+    "logoAlt": "Logo",
+    "notifications": "Notifications"
+  },
+  "accountCarousel": {
+    "accountAria": "{{label}} account, available {{balance}}",
+    "selected": "Selected",
+    "defaultLabel": "Account",
+    "availableAccountsAria": "Available accounts"
+  },
+  "accountsCarousel": {
+    "accountAria": "{{label}} account",
+    "noBalance": "No balance",
+    "myAccountsAria": "My accounts",
+    "createNewAria": "Create new account",
+    "newAccount": "New account"
+  },
+  "createAccountDrawer": {
+    "createdToast": "Account created successfully",
+    "createErrorToast": "Couldn't create the account. Please try again.",
+    "namePlaceholder": "Savings, Business...",
+    "createAccount": "Create account"
+  },
+  "accounts": {
+    "title": "Accounts",
+    "loading": "Loading accounts...",
+    "empty": "We couldn't find any accounts for this user.",
+    "createNew": "Create New Account",
+    "noAssociatedProducts": "No associated products",
+    "productKind": {
+      "card": "Card",
+      "breb": "BRE-B",
+      "polygon": "Polygon",
+      "pocket": "Account",
+      "other": "Other"
+    },
+    "detail": {
+      "title": "Account details",
+      "loadingAccount": "Loading account...",
+      "notFound": "We couldn't find this account.",
+      "noStatus": "no status",
+      "balances": "Balances",
+      "noBalances": "This account has no balances available.",
+      "available": "Available",
+      "associatedProducts": "Associated products",
+      "addProduct": "Add product",
+      "noAssociatedProducts": "This account doesn't have other associated products yet.",
+      "movements": "Movements",
+      "noMovements": "There are no movements for this account.",
+      "brebKeyLabel": "BRE-B key",
+      "newCard": "New card",
+      "polygonAccount": "Polygon account",
+      "cardNameLabel": "Card name",
+      "optionalNameLabel": "Name (optional)",
+      "cardNamePlaceholder": "Personal",
+      "polygonNamePlaceholder": "Main",
+      "sharesBalanceOf": "It will share the balance of {{label}}.",
+      "defaultCardName": "Card",
+      "cardCreatedToast": "Card created successfully",
+      "polygonCreatedToast": "Polygon account created",
+      "createProductErrorToast": "Couldn't create the product. Please try again.",
+      "transferToOwnAccount": "Transfer to another account",
+      "transferDrawerTitle": "Transfer funds",
+      "transferDestinationLabel": "Destination account",
+      "transferAmountLabel": "Amount to transfer",
+      "transferAvailable": "Available: {{amount}}",
+      "transferInsufficientBalance": "Insufficient balance for this transfer.",
+      "transferSubmit": "Transfer",
+      "transferring": "Transferring...",
+      "transferSuccessToast": "Transfer completed successfully",
+      "transferErrorToast": "Couldn't complete the transfer. Please try again."
+    }
+  },
+  "brebKeys": {
+    "subtitle": "Send and receive instantly from any bank",
+    "cameraOpenError": "Couldn't open the camera.",
+    "qrReadError": "Couldn't read the BRE-B QR code.",
+    "menu": {
+      "sendWithKeys": {
+        "title": "Send with keys",
+        "description": "Transfer using a BRE-B key"
+      },
+      "deposit": {
+        "title": "Deposit",
+        "description": "Bring your money from another bank"
+      },
+      "yourKeys": {
+        "title": "Your keys",
+        "description": "Manage your registered keys"
+      },
+      "qrCode": {
+        "title": "QR code",
+        "description": "Scan a BRE-B QR code to transfer"
+      }
+    },
+    "discoverZone": {
+      "title": "Discover your BRE-B zone",
+      "description": "Register and manage your keys. Send money for free, instantly. All from one place.",
+      "cta": "Go to your keys"
+    },
+    "scanner": {
+      "title": "Scan QR code",
+      "description": "Align the BRE-B QR within the frame.",
+      "permissionHint": "If the camera takes a while to open, check your browser permissions."
+    },
+    "decoding": {
+      "title": "Processing BRE-B QR",
+      "description": "Validating recipient information."
+    },
+    "deposit": {
+      "keyCopiedToast": "Key copied",
+      "copyErrorToast": "Couldn't copy the key",
+      "receiveWithKeys": "Receive with your BRE-B keys",
+      "receiveWithKeysDescription": "Share one of your keys so people can transfer to you from any Colombian bank instantly.",
+      "noActiveKeys": "You don't have any active keys",
+      "noActiveKeysHint": "Register a BRE-B key to start receiving money.",
+      "registerKey": "Register key"
+    },
+    "keyTypes": {
+      "phone": "Phone",
+      "email": "Email",
+      "id": "Document",
+      "alpha": "Alphanumeric",
+      "bcode": "Bank code"
+    },
+    "defaultRecipientName": "BRE-B recipient",
+    "status": {
+      "active": "Active",
+      "frozen": "Suspended",
+      "deleted": "Deleted",
+      "none": "No status"
+    },
+    "manageKeys": {
+      "title": "Your keys",
+      "subtitle": "Register or edit your keys to receive money instantly",
+      "readyKeys": "Keys ready to use",
+      "registerYourKeys": "Register your BRE-B keys",
+      "registering": "Registering...",
+      "register": "Register",
+      "noKeysAvailable": "There are no keys available to register.",
+      "keyRegisteredToast": "BRE-B key registered successfully.",
+      "creationErrorFallback": "Couldn't register the BRE-B key. Please try again.",
+      "defaultDisplayName": "Bloque user",
+      "bloqueKey": "Bloque key",
+      "phone": "Phone",
+      "email": "Email address",
+      "document": "Document",
+      "conflictTitle": "This key is already registered with another entity",
+      "conflictDescriptionPrefix": "The key",
+      "conflictDescriptionSuffix": "is already active at another bank. To register it with Bloque, first remove or deactivate it from that entity's app.",
+      "understood": "Got it",
+      "activeKey": "Active key",
+      "suspendedKey": "Suspended key",
+      "suspending": "Suspending...",
+      "suspendKey": "Suspend key",
+      "keySuspendedToast": "Key suspended.",
+      "suspendErrorToast": "Couldn't suspend the key.",
+      "activating": "Activating...",
+      "activateKey": "Activate key",
+      "keyActivatedToast": "Key activated.",
+      "activateErrorToast": "Couldn't activate the key.",
+      "deleting": "Deleting...",
+      "deleteKey": "Delete key",
+      "keyDeletedToast": "Key deleted.",
+      "deleteErrorToast": "Couldn't delete the key.",
+      "chooseAccountTitle": "Choose the account for your new key",
+      "chooseAccountDescriptionPrefix": "The key",
+      "chooseAccountDescriptionSuffix": "will share the balance of the account you choose.",
+      "linkedAccountLabel": "Account to link to",
+      "confirm": "Confirm"
+    },
+    "payTransfer": {
+      "title": "Pay or transfer",
+      "subtitle": "Enter the key or scan the QR",
+      "immediateByKey": "Instant transfer by key",
+      "keyLabel": "BRE-B key",
+      "keyPlaceholder": "3001234567 or @MBP313",
+      "sendFrom": "Send from",
+      "amount": "Amount",
+      "available": "Available: {{amount}}",
+      "message": "Message",
+      "messagePlaceholder": "What's this transfer for?",
+      "youSend": "You send",
+      "validatingKey": "Validating key...",
+      "sending": "Sending...",
+      "sendMoney": "Send money",
+      "confirmSend": "Confirm send",
+      "confirmSendDescription": "Verify the person or entity before sending the money.",
+      "recipient": "Recipient",
+      "key": "Key",
+      "from": "From",
+      "noFundedAccounts": "You don't have available balance in any active BRE-B key.",
+      "selectSourceAccount": "Select the BRE-B account you want to send from.",
+      "invalidKey": "Enter a valid BRE-B key, e.g. a phone, email, or alias like @MBP313.",
+      "minAmount": "The minimum amount is $10 COP.",
+      "noRecipientConfirmed": "There's no confirmed recipient.",
+      "noRateToSend": "No rate available to send.",
+      "transferSentToast": "BRE-B transfer sent successfully.",
+      "transferErrorToast": "Couldn't send the BRE-B transfer.",
+      "keyValidationErrorToast": "Couldn't validate the BRE-B key."
+    },
+    "payTransferQr": {
+      "noResolution": "We couldn't find the BRE-B QR resolution.",
+      "noValidKeyInQr": "We couldn't find a valid BRE-B key in the QR.",
+      "completeAmount": "Complete the amount for the BRE-B QR",
+      "paymentStartedFromQr": "Payment started from BRE-B QR",
+      "qrReference": "QR reference",
+      "aboutToSend": "You're about to send money to {{recipient}}.",
+      "checkingRateToOpenConfirmation": "Checking the rate to open the confirmation."
+    }
+  },
+  "card": {
+    "title": "Cards",
+    "detailsDrawerTitle": "Card details",
+    "detailsLoadError": "We couldn't load the card details",
+    "designAlt": "Card design",
+    "exp": "Exp",
+    "frozenOverlay": "Card frozen",
+    "viewCardData": "View card data",
+    "manage": "Manage",
+    "processing": "Processing...",
+    "unfreeze": "Unfreeze",
+    "freeze": {
+      "action": "Freeze",
+      "activatedToast": "Card activated successfully",
+      "frozenToast": "Card frozen successfully",
+      "activateErrorToast": "Error activating the card",
+      "freezeErrorToast": "Error freezing the card"
+    },
+    "noCard": {
+      "empty": "You don't have any cards yet",
+      "title": "Create your first virtual card",
+      "description": "Pay at any online merchant with your USD balances. No issuance fees.",
+      "createCard": "Create card",
+      "identityVerified": "Your identity has already been verified.",
+      "requiresKyc": "Requires identity verification (KYC)"
+    },
+    "list": {
+      "cardAria": "{{label}} card, ending in {{lastFour}}",
+      "selected": "Selected",
+      "frozenBadge": "Frozen",
+      "myCardsAria": "My cards",
+      "createNewAria": "Create new card",
+      "newCard": "+ New card"
+    },
+    "detail": {
+      "defaultLabel": "Card",
+      "title": "Card details",
+      "notFound": "We couldn't find a card to show.",
+      "backToCards": "Back to cards",
+      "editNameTitle": "Edit name",
+      "statusFrozen": "Frozen",
+      "statusActive": "Active",
+      "activate": "Activate",
+      "topupCurrencies": "Top-up currencies",
+      "availableToTopup": "Balance available to top up in {{asset}}",
+      "movements": "Movements",
+      "recordsCount": "{{count}} records",
+      "noMovementsForFilter": "No movements for this filter",
+      "lastActivity": "Last activity",
+      "noRecentActivity": "No recent activity",
+      "renameTitle": "Change card name",
+      "renameDescription": "Enter the new name for your card",
+      "renamePlaceholder": "E.g.: Personal, Business...",
+      "nameUpdatedToast": "Card name updated successfully",
+      "nameUpdateErrorToast": "Error updating the card name"
+    },
+    "details": {
+      "filters": {
+        "all": "All",
+        "incoming": "Incoming",
+        "outgoing": "Outgoing"
+      }
+    }
+  },
+  "home": {
+    "availableBalance": "Available balance",
+    "accounts": "Accounts",
+    "viewAll": "View all",
+    "recentMovements": "Recent movements",
+    "viewMore": "View more",
+    "loadingMovements": "Loading movements...",
+    "noMovements": "No movements",
+    "noMovementsHint": "Make your first top-up to get started",
+    "assetLogoAlt": "{{asset}} logo",
+    "viewDetails": "View details",
+    "hideBalancesAria": "Hide balances",
+    "showBalancesAria": "Show balances",
+    "hide": "Hide",
+    "show": "Show",
+    "assetLabels": {
+      "cop": "Colombian Peso",
+      "usd": "US Dollar",
+      "ksm": "Kusama"
+    },
+    "quickActions": {
+      "title": "Quick actions",
+      "topup": "Top up",
+      "send": "Send"
+    }
+  },
+  "send": {
+    "title": "Send",
+    "options": {
+      "brebKeys": {
+        "title": "BRE-B keys",
+        "description": "Send to any Colombian bank instantly."
+      },
+      "colombianBanks": {
+        "title": "Colombian banks",
+        "description": "Transfer to bank accounts in Colombia."
+      },
+      "bloqueFriends": {
+        "title": "Friends on Bloque",
+        "description": "Send to contacts within Bloque."
+      },
+      "usBanks": {
+        "title": "US banks/wallets",
+        "description": "Send USD to banks and wallets in the United States.",
+        "comingSoon": "Sending to the US coming soon."
+      },
+      "blockchain": {
+        "title": "Blockchain addresses",
+        "description": "Send funds to external wallets.",
+        "comingSoon": "Sending to blockchain coming soon."
+      }
+    },
+    "bloqueFriends": {
+      "noSourceAccount": "We couldn't find an available source account.",
+      "invalidAlias": "Enter a valid alias.",
+      "invalidAmount": "Enter a valid amount.",
+      "aliasNotFound": "We couldn't find that alias.",
+      "aliasValidationError": "Couldn't validate the alias.",
+      "noConfirmedRecipient": "There's no confirmed recipient.",
+      "invalidTransferAmount": "Invalid amount to transfer.",
+      "transferSentToast": "Transfer sent successfully.",
+      "transferErrorToast": "Couldn't send the transfer.",
+      "transferSentTitle": "Transfer sent",
+      "transferSentDescription": "We sent {{amount}} to your Bloque contact.",
+      "transferFailedTitle": "Couldn't send the transfer",
+      "subtitle": "Send money to a Bloque alias",
+      "transferBetweenUsers": "Transfer between Bloque users",
+      "currency": "Currency",
+      "alias": "Alias",
+      "amount": "Amount",
+      "message": "Message",
+      "messagePlaceholder": "What's this transfer for?",
+      "youSend": "You send",
+      "validatingAlias": "Validating alias...",
+      "sending": "Sending...",
+      "sendMoney": "Send money",
+      "confirmSend": "Confirm send",
+      "confirmSendDescription": "Verify the person before sending the money.",
+      "recipient": "Recipient"
+    },
+    "colombianBanks": {
+      "title": "Send to Colombian banks",
+      "stepAccount": "Account",
+      "noCardToSend": "We couldn't find a card to send from.",
+      "noRateForOrder": "No rate selected to create the order.",
+      "invalidAmountForOrder": "Invalid amount to create the order.",
+      "noSourceAccount": "No source account available.",
+      "selectDestinationBank": "Select a destination bank.",
+      "unsupportedBank": "The selected bank isn't valid for this transfer.",
+      "minAmountToast": "The minimum amount is $5,000 COP.",
+      "noRateToContinue": "No rate available to continue."
+    }
+  },
+  "topup": {
+    "title": "Top up balance",
+    "stepAmount": "Amount",
+    "stepDetails": "Details",
+    "stepConfirm": "Confirm",
+    "bankFallback": "Bank",
+    "noDestinationAccount": "We couldn't find an available destination account.",
+    "noDestinationAccountShort": "No destination account available.",
+    "noRateForOrder": "No rate is available to create the order.",
+    "pseStartedToast": "PSE top-up started successfully.",
+    "rateExpiredToast": "The rate expired. Recalculating...",
+    "startErrorToast": "Couldn't start the top-up.",
+    "noRateRetryToast": "No rate available. Please try again.",
+    "methods": {
+      "colombianBanks": {
+        "title": "Colombian banks",
+        "subtitle": "PSE"
+      },
+      "brebKeys": {
+        "title": "BRE-B keys",
+        "subtitle": "Register and manage your keys"
+      },
+      "usBanks": {
+        "title": "From US banks",
+        "subtitle": "ACH / Wire",
+        "comingSoon": "Top-up from US banks coming soon."
+      },
+      "blockchain": {
+        "title": "From blockchain addresses",
+        "subtitle": "External wallets",
+        "comingSoon": "Top-up from blockchain coming soon."
+      },
+      "card": {
+        "title": "With card",
+        "subtitle": "Visa, Mastercard, etc",
+        "comingSoon": "Top-up with card coming soon."
+      }
+    },
+    "iWantToReceive": "I want to receive",
+    "pseAmountLabel": "Amount to pay via PSE (COP)",
+    "minAmount": "Minimum amount: $5,000 COP",
+    "youPay": "You pay",
+    "youReceive": "You receive",
+    "pseBank": "PSE bank",
+    "selectYourBank": "Select your bank",
+    "userType": "User type",
+    "userTypeNatural": "Individual",
+    "userTypeLegal": "Business",
+    "documentType": "Document type",
+    "idTypeCc": "Citizenship ID (CC)",
+    "idTypeCe": "Foreigner ID (CE)",
+    "documentNumber": "Document number",
+    "fullName": "Full name",
+    "email": "Email",
+    "phone": "Phone",
+    "bank": "Bank",
+    "accountHolder": "Account holder",
+    "document": "Document",
+    "redirectDisclaimer": "You'll be redirected to PSE to complete the payment.",
+    "startingPayment": "Starting payment...",
+    "goToPse": "Go to PSE",
+    "amountStep": {
+      "label": "Amount to top up (COP)",
+      "minAmount": "Minimum amount: $5,000 COP",
+      "amount": "Amount",
+      "pseFee": "PSE fee",
+      "totalToDebit": "Total to debit",
+      "estimatedArrival": "Estimated arrival time: 5-15 minutes",
+      "appliedRate": "Applied rate",
+      "checkingRate": "Checking available rate...",
+      "youWillReceive": "You will receive",
+      "enterAmountToQuery": "Enter an amount to check the rate.",
+      "pseDisclaimer": "Transaction processed through PSE (Pagos Seguros en Línea). Regulated by Colombia's Superintendencia Financiera."
+    },
+    "bankStep": {
+      "destinationBank": "Destination bank",
+      "selectABank": "Select a bank",
+      "accountType": "Account type",
+      "savings": "Savings",
+      "checking": "Checking",
+      "accountNumber": "Account number",
+      "accountNumberPlaceholder": "E.g.: 5740088718",
+      "accountHolder": "Account holder",
+      "idTypePp": "Passport (PP)",
+      "documentNumberPlaceholder": "E.g.: 123456789"
+    },
+    "confirmStep": {
+      "summary": "Top-up summary",
+      "sending": "Sending...",
+      "sendWithdrawal": "Send withdrawal",
+      "verifyDisclaimer": "Verify that the bank details are correct before sending."
+    },
+    "errorStep": {
+      "title": "Payment failed",
+      "description": "We couldn't process your payment. This can happen due to insufficient funds, an expired session, or a temporary bank error.",
+      "tryAgain": "Try again",
+      "contactSupport": "Contact support"
+    },
+    "executionOutcome": {
+      "brebTitle": "Complete the BRE-B payment",
+      "brebDescription": "Send {{amount}} from your banking app to this BRE-B key to complete the order.",
+      "status": "Status",
+      "partialPayment": "Partial payment received",
+      "waitingPayment": "Waiting for payment",
+      "order": "Order",
+      "keyCopiedToast": "BRE-B key copied.",
+      "copyKey": "Copy key",
+      "reportProblem": "Report a problem",
+      "openLink": "Open link",
+      "checkMovementsToast": "Check the status in movements."
+    },
+    "pendingStep": {
+      "title": "Order created",
+      "description": "Your order is being processed. It may complete, remain pending, or be rejected.",
+      "orderId": "Order: {{orderId}}",
+      "checkStatus": "Check status",
+      "contactSupportDisclaimer": "If you have questions about your order status, contact support."
+    }
+  },
+  "convert": {
+    "title": "Convert",
+    "from": "From",
+    "to": "To",
+    "available": "Available: {{amount}}",
+    "swapAssetsAria": "Swap assets",
+    "querying": "Fetching...",
+    "rate": "Rate",
+    "youReceive": "You receive",
+    "queryingRate": "Fetching rate...",
+    "confirmConversion": "Confirm conversion",
+    "disclaimer": "Exchange rates are indicative and may vary at the time the operation is executed.",
+    "and": "and",
+    "stillAvailable": "are still available in the meantime.",
+    "rateFetchError": "We couldn't fetch the rate. Please try again.",
+    "noRatesAvailable": "No rates are available for this amount.",
+    "noCurrentRateError": "There's no current rate to confirm the conversion.",
+    "directConversionUnavailable": "Direct conversion between balances isn't available from the app yet. Use Top up or Send in the meantime."
+  },
+  "kyc": {
+    "banner": {
+      "rejectedTitle": "We couldn't verify your identity",
+      "defaultTitle": "Complete your verification",
+      "rejectedDescription": "Your verification wasn't approved. Try again to activate your card.",
+      "defaultDescription": "You still need to verify your identity to activate your card.",
+      "retryCta": "Retry verification",
+      "startCta": "Go verify",
+      "stepRegistration": "Registration",
+      "stepVerification": "Verification",
+      "stepActivation": "Activation"
+    },
+    "route": {
+      "noUserUrn": "We couldn't find the user's URN to start KYC.",
+      "backHome": "Back to home",
+      "starting": "Starting KYC verification...",
+      "alreadyVerified": "Your identity has already been verified.",
+      "startError": "It wasn't possible to start the verification right now.",
+      "iframeTitle": "KYC verification"
+    }
+  },
+  "movements": {
+    "title": "Movements",
+    "searchPlaceholder": "Search by reference...",
+    "noResults": "No results",
+    "noResultsHint": "Try another filter or reference",
+    "types": {
+      "topup": "Top-up",
+      "withdraw": "Withdrawal",
+      "sendIncoming": "Transfer received",
+      "sendOutgoing": "Transfer sent",
+      "convert": "Conversion",
+      "card": "Card payment"
+    },
+    "status": {
+      "completed": "Completed",
+      "pending": "Pending",
+      "failed": "Failed"
+    },
+    "filters": {
+      "all": "All",
+      "cop": "COP",
+      "usd": "USD",
+      "ksm": "KSM",
+      "incoming": "Incoming",
+      "outgoing": "Outgoing"
+    },
+    "detail": {
+      "title": "Movement details",
+      "description": "Full details of the selected movement",
+      "type": "Type",
+      "asset": "Asset",
+      "date": "Date",
+      "counterparty": "Counterparty",
+      "fee": "Fee",
+      "reference": "Reference",
+      "copyReferenceAria": "Copy reference",
+      "downloadReceipt": "Download receipt"
+    }
+  },
+  "nav": {
+    "ariaLabel": "Main navigation",
+    "home": "Home",
+    "accounts": "Accounts",
+    "movements": "Movements",
+    "card": "Card",
+    "profile": "Profile"
+  },
+  "profile": {
+    "title": "Profile",
+    "kyc": {
+      "approved": "Verified",
+      "awaitingVerification": "Under review",
+      "rejected": "Rejected",
+      "notVerified": "Not verified"
+    },
+    "sections": {
+      "account": "Account",
+      "polygonAccounts": "Polygon accounts",
+      "settings": "Settings",
+      "legal": "Legal",
+      "support": "Support"
+    },
+    "rows": {
+      "allAccounts": "All accounts",
+      "view": "View",
+      "kycVerification": "KYC verification",
+      "devicesAndSessions": "Devices and sessions",
+      "oneActive": "1 active",
+      "addAccount": "Add account",
+      "language": "Language",
+      "pushNotifications": "Push notifications",
+      "pushNotificationsSublabel": "Get alerts about your movements",
+      "theme": "Theme",
+      "themeSublabel": "Turn on for dark, turn off for light",
+      "termsAndConditions": "Terms and conditions",
+      "privacyPolicy": "Privacy policy",
+      "feesAndCommissions": "Fees and commissions",
+      "supportChat": "Support chat",
+      "helpCenter": "Help center",
+      "contact": "Contact"
+    },
+    "settings": {
+      "languageSpanish": "Spanish (CO)",
+      "languageEnglish": "English (US)"
+    },
+    "logout": "Log out",
+    "version": "Wallet Bloque v{{version}}"
+  }
+}

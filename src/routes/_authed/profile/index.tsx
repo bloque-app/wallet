@@ -17,6 +17,7 @@ import {
   Smartphone,
   UserCircle,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '~/components/ui/button';
 import { Separator } from '~/components/ui/separator';
 import { Switch } from '~/components/ui/switch';
@@ -24,32 +25,24 @@ import { useTheme } from '~/components/ui/theme-provider';
 import { useAuth } from '~/contexts/auth/auth-context';
 import type { PolygonProduct } from '~/domain/accounts/types';
 import { useAccounts } from '~/hooks/accounts/use-accounts';
-import { formatKSM, formatPolygonAddress } from '~/lib/formatters';
+import { type SupportedLanguage, setLanguage } from '~/i18n/config';
+import { formatPolygonAddress } from '~/lib/formatters';
 
 export const Route = createFileRoute('/_authed/profile/')({
   component: RouteComponent,
 });
 
-function getKsmBalance(product: PolygonProduct): number {
-  const entry = product.balances.find((balance) =>
-    balance.asset.startsWith('KSM'),
-  );
-  if (!entry) return 0;
-  const [, precisionStr] = entry.asset.split('/');
-  const precision = Number.parseInt(precisionStr, 10);
-  return (
-    Number.parseInt(entry.current, 10) /
-    10 ** (Number.isNaN(precision) ? 0 : precision)
-  );
-}
-
 function RouteComponent() {
+  const { t, i18n } = useTranslation();
   const { user, logout } = useAuth();
   const { theme, setTheme } = useTheme();
   const { navigate } = useRouter();
   const profileName = user.name;
   const profileEmail = user.email;
   const selectedTheme = theme === 'light' ? 'light' : 'dark';
+  const currentLanguage = (
+    i18n.language === 'en' ? 'en' : 'es'
+  ) satisfies SupportedLanguage;
 
   const accountsQuery = useAccounts();
   const isLoadingPolygon = accountsQuery.isLoading;
@@ -62,17 +55,22 @@ function RouteComponent() {
 
   const kycLabel =
     user?.kycStatus === 'approved'
-      ? 'Verificado'
+      ? t('profile.kyc.approved')
       : user?.kycStatus === 'awaiting_verification'
-        ? 'En revisión'
+        ? t('profile.kyc.awaitingVerification')
         : user?.kycStatus === 'rejected'
-          ? 'Rechazado'
-          : 'Sin verificar';
+          ? t('profile.kyc.rejected')
+          : t('profile.kyc.notVerified');
+
+  const languageLabel =
+    currentLanguage === 'es'
+      ? t('profile.settings.languageSpanish')
+      : t('profile.settings.languageEnglish');
 
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-bold tracking-[-0.025em] text-foreground">
-        Perfil
+        {t('profile.title')}
       </h1>
 
       <div className="flex items-center gap-4 rounded-2xl border border-border/80 bg-card/90 p-4 shadow-[0_16px_30px_-34px_color-mix(in_oklch,var(--foreground)_55%,transparent)]">
@@ -87,13 +85,13 @@ function RouteComponent() {
 
       <section className="flex flex-col gap-1">
         <p className="mb-1 px-1 text-xs font-medium tracking-wider text-muted-foreground uppercase">
-          Cuenta
+          {t('profile.sections.account')}
         </p>
         <div className="overflow-hidden rounded-2xl border border-border/85 bg-card/85">
           <ProfileRow
             icon={Landmark}
-            label="Todas las cuentas"
-            value="Ver"
+            label={t('profile.rows.allAccounts')}
+            value={t('profile.rows.view')}
             chevron
             onClick={() => {
               navigate({ to: '/accounts' });
@@ -102,7 +100,7 @@ function RouteComponent() {
           <Separator />
           <ProfileRow
             icon={Shield}
-            label="Verificación KYC"
+            label={t('profile.rows.kycVerification')}
             value={kycLabel}
             chevron
             onClick={() => {
@@ -112,8 +110,8 @@ function RouteComponent() {
           <Separator />
           <ProfileRow
             icon={Smartphone}
-            label="Dispositivos y sesiones"
-            value="1 activo"
+            label={t('profile.rows.devicesAndSessions')}
+            value={t('profile.rows.oneActive')}
             chevron
           />
         </div>
@@ -121,7 +119,7 @@ function RouteComponent() {
 
       <section className="flex flex-col gap-1">
         <p className="mb-1 px-1 text-xs font-medium tracking-wider text-muted-foreground uppercase">
-          Cuentas Polygon
+          {t('profile.sections.polygonAccounts')}
         </p>
         <div className="overflow-hidden rounded-2xl border border-border/85 bg-card/85">
           {isLoadingPolygon ? (
@@ -134,9 +132,7 @@ function RouteComponent() {
                 <ProfileRow
                   icon={Landmark}
                   label={account.label}
-                  value={`${formatPolygonAddress(account.address)} · ${formatKSM(
-                    getKsmBalance(account),
-                  )}`}
+                  value={formatPolygonAddress(account.address)}
                   chevron
                 />
                 {index < polygonAccounts.length - 1 && <Separator />}
@@ -146,7 +142,7 @@ function RouteComponent() {
           {polygonAccounts.length > 0 && !isLoadingPolygon && <Separator />}
           <ProfileRow
             icon={Plus}
-            label="Agregar cuenta"
+            label={t('profile.rows.addAccount')}
             chevron
             onClick={() => {
               navigate({ to: '/accounts' });
@@ -157,15 +153,22 @@ function RouteComponent() {
 
       <section className="flex flex-col gap-1">
         <p className="mb-1 px-1 text-xs font-medium tracking-wider text-muted-foreground uppercase">
-          Configuración
+          {t('profile.sections.settings')}
         </p>
         <div className="overflow-hidden rounded-2xl border border-border/85 bg-card/85">
-          <ProfileRow icon={Globe} label="Idioma" value="Español (CO)" />
+          <ProfileRow
+            icon={Globe}
+            label={t('profile.rows.language')}
+            value={languageLabel}
+            onClick={() => {
+              setLanguage(currentLanguage === 'es' ? 'en' : 'es');
+            }}
+          />
           <Separator />
           <ProfileToggleRow
             icon={Bell}
-            label="Notificaciones push"
-            sublabel="Recibe alertas de movimientos"
+            label={t('profile.rows.pushNotifications')}
+            sublabel={t('profile.rows.pushNotificationsSublabel')}
             defaultChecked
           />
           <Separator />
@@ -180,29 +183,49 @@ function RouteComponent() {
 
       <section className="flex flex-col gap-1">
         <p className="mb-1 px-1 text-xs font-medium tracking-wider text-muted-foreground uppercase">
-          Legal
+          {t('profile.sections.legal')}
         </p>
         <div className="overflow-hidden rounded-2xl border border-border/85 bg-card/85">
-          <ProfileRow icon={FileText} label="Términos y condiciones" chevron />
+          <ProfileRow
+            icon={FileText}
+            label={t('profile.rows.termsAndConditions')}
+            chevron
+          />
           <Separator />
-          <ProfileRow icon={Lock} label="Política de privacidad" chevron />
+          <ProfileRow
+            icon={Lock}
+            label={t('profile.rows.privacyPolicy')}
+            chevron
+          />
           <Separator />
-          <ProfileRow icon={FileText} label="Tarifas y comisiones" chevron />
+          <ProfileRow
+            icon={FileText}
+            label={t('profile.rows.feesAndCommissions')}
+            chevron
+          />
         </div>
       </section>
 
       <section className="flex flex-col gap-1">
         <p className="mb-1 px-1 text-xs font-medium tracking-wider text-muted-foreground uppercase">
-          Soporte
+          {t('profile.sections.support')}
         </p>
         <div className="overflow-hidden rounded-2xl border border-border/85 bg-card/85">
-          <ProfileRow icon={MessageSquare} label="Chat de soporte" chevron />
+          <ProfileRow
+            icon={MessageSquare}
+            label={t('profile.rows.supportChat')}
+            chevron
+          />
           <Separator />
-          <ProfileRow icon={HelpCircle} label="Centro de ayuda" chevron />
+          <ProfileRow
+            icon={HelpCircle}
+            label={t('profile.rows.helpCenter')}
+            chevron
+          />
           <Separator />
           <ProfileRow
             icon={Mail}
-            label="Contacto"
+            label={t('profile.rows.contact')}
             value="soporte@bloque.team"
           />
         </div>
@@ -217,11 +240,11 @@ function RouteComponent() {
         className="h-12 w-full gap-2 rounded-2xl text-sm font-medium bg-transparent"
       >
         <LogOut className="h-4 w-4" />
-        Cerrar sesión
+        {t('profile.logout')}
       </Button>
 
       <p className="pb-4 text-center text-[10px] text-muted-foreground">
-        Wallet Bloque v0.0.1
+        {t('profile.version', { version: '0.0.1' })}
       </p>
     </div>
   );
@@ -293,13 +316,16 @@ function ProfileThemeRow({
   isDarkTheme: boolean;
   onToggleTheme: (checked: boolean) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div className="flex items-center gap-3 px-4 py-3.5">
       <Moon className="h-4.5 w-4.5 shrink-0 text-muted-foreground" />
       <div className="flex flex-1 flex-col gap-0.5">
-        <span className="text-sm text-foreground">Tema</span>
+        <span className="text-sm text-foreground">
+          {t('profile.rows.theme')}
+        </span>
         <span className="text-xs text-muted-foreground">
-          Activa para usar dark, desactiva para light
+          {t('profile.rows.themeSublabel')}
         </span>
       </div>
       <Switch checked={isDarkTheme} onCheckedChange={onToggleTheme} />

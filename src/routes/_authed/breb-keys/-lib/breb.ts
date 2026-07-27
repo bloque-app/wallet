@@ -2,6 +2,7 @@ import type {
   BrebKeyType as SdkBrebKeyType,
   BrebResolvedKey as SdkBrebResolvedKey,
 } from '@bloque/sdk-accounts';
+import i18n from '~/i18n/config';
 
 export type BrebKeyType = SdkBrebKeyType;
 export type ResolvedRecipient = SdkBrebResolvedKey;
@@ -15,17 +16,39 @@ export class BrebKeyError extends Error {
   }
 }
 
-export const BREB_KEY_TYPES: Array<{
+export function getBrebKeyTypes(): Array<{
   value: BrebKeyType;
   label: string;
   placeholder: string;
-}> = [
-  { value: 'PHONE', label: 'Celular', placeholder: '3001234567' },
-  { value: 'EMAIL', label: 'Email', placeholder: 'nombre@correo.com' },
-  { value: 'ID', label: 'Documento', placeholder: '123456789' },
-  { value: 'ALPHA', label: 'Alfanumerica', placeholder: 'nestor.bloque' },
-  { value: 'BCODE', label: 'Codigo bancario', placeholder: '0016027228' },
-];
+}> {
+  return [
+    {
+      value: 'PHONE',
+      label: i18n.t('brebKeys.keyTypes.phone'),
+      placeholder: '3001234567',
+    },
+    {
+      value: 'EMAIL',
+      label: i18n.t('brebKeys.keyTypes.email'),
+      placeholder: 'nombre@correo.com',
+    },
+    {
+      value: 'ID',
+      label: i18n.t('brebKeys.keyTypes.id'),
+      placeholder: '123456789',
+    },
+    {
+      value: 'ALPHA',
+      label: i18n.t('brebKeys.keyTypes.alpha'),
+      placeholder: 'nestor.bloque',
+    },
+    {
+      value: 'BCODE',
+      label: i18n.t('brebKeys.keyTypes.bcode'),
+      placeholder: '0016027228',
+    },
+  ];
+}
 
 export function getRecipientName(data: {
   owner: ResolvedRecipient['owner'];
@@ -48,19 +71,19 @@ export function getRecipientName(data: {
     personalName ||
     owner?.businessName ||
     participantName ||
-    'Destinatario BRE-B'
+    i18n.t('brebKeys.defaultRecipientName')
   );
 }
 
 export function getBrebStatusLabel(status?: string) {
   switch (status) {
     case 'active':
-      return 'Activa';
+      return i18n.t('brebKeys.status.active');
     case 'frozen':
-      return 'Suspendida';
+      return i18n.t('brebKeys.status.frozen');
     case 'deleted':
-      return 'Eliminada';
+      return i18n.t('brebKeys.status.deleted');
     default:
-      return status ?? 'Sin estado';
+      return status ?? i18n.t('brebKeys.status.none');
   }
 }

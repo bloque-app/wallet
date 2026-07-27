@@ -1,7 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { ArrowLeft, Lock, Pencil, Unlock } from 'lucide-react';
+import { ArrowLeft, EyeOff, Lock, Pencil, Unlock } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { MovementDetailDrawer } from '~/components/movement-detail-drawer';
 import { MovementRow } from '~/components/movement-row';
@@ -15,9 +16,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '~/components/ui/alert-dialog';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from '~/components/ui/drawer';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import {
+  useCardDetailsUrl,
   useCardToggleFreeze,
   useCardUpdateName,
 } from '~/hooks/accounts/use-cards';
@@ -35,10 +43,10 @@ export const Route = createFileRoute('/_authed/card/details/$urn')({
 const ASSET_LOGO_MAP: Record<string, string> = {
   COP: '/images/assets/cop.webp',
   USD: '/images/assets/usd.webp',
-  KSM: '/images/assets/ksm.webp',
 };
 
 function RouteComponent() {
+  const { t } = useTranslation();
   const { urn } = Route.useParams();
   const queryClient = useQueryClient();
   const {
@@ -69,11 +77,27 @@ function RouteComponent() {
     null,
   );
 
+  const {
+    mutateAsync: fetchCardDetailsUrl,
+    data: cardDetailsUrl,
+    isPending: isLoadingCardDetails,
+  } = useCardDetailsUrl();
+  const [showCardDetails, setShowCardDetails] = useState(false);
+
+  const handleViewCardDetails = async () => {
+    try {
+      await fetchCardDetailsUrl(urn);
+      setShowCardDetails(true);
+    } catch (error) {
+      toast.error(t('card.detailsLoadError'));
+      console.error('Error fetching card details:', error);
+    }
+  };
+
   const handleToggleFreeze = async () => {
     if (!selectedCard) return;
 
     const isFrozen = selectedCard.status === 'frozen';
-    const action = isFrozen ? 'activar' : 'congelar';
 
     try {
       await toggleFreezeMutation.mutateAsync({
@@ -84,10 +108,16 @@ function RouteComponent() {
       await queryClient.invalidateQueries({ queryKey: ['card-detail', urn] });
 
       toast.success(
-        `Tarjeta ${isFrozen ? 'activada' : 'congelada'} exitosamente`,
+        isFrozen
+          ? t('card.freeze.activatedToast')
+          : t('card.freeze.frozenToast'),
       );
     } catch (error) {
-      toast.error(`Error al ${action} la tarjeta`);
+      toast.error(
+        isFrozen
+          ? t('card.freeze.activateErrorToast')
+          : t('card.freeze.freezeErrorToast'),
+      );
       console.error('Error toggling freeze:', error);
     }
   };
@@ -117,10 +147,10 @@ function RouteComponent() {
 
       await queryClient.invalidateQueries({ queryKey: ['card-detail', urn] });
 
-      toast.success('Nombre de tarjeta actualizado exitosamente');
+      toast.success(t('card.detail.nameUpdatedToast'));
       setShowRenameDialog(false);
     } catch (error) {
-      toast.error('Error al actualizar el nombre de la tarjeta');
+      toast.error(t('card.detail.nameUpdateErrorToast'));
       console.error('Error updating card name:', error);
     }
   };
@@ -129,13 +159,13 @@ function RouteComponent() {
     return (
       <div className="flex flex-col items-center gap-3 py-12 text-center">
         <p className="text-sm text-muted-foreground">
-          No encontramos una tarjeta para mostrar.
+          {t('card.detail.notFound')}
         </p>
         <Link
           to="/card"
           className="rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground"
         >
-          Volver a tarjetas
+          {t('card.detail.backToCards')}
         </Link>
       </div>
     );
@@ -149,10 +179,10 @@ function RouteComponent() {
           className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Volver
+          {t('common.back')}
         </Link>
         <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
-          Detalle de tarjeta
+          {t('card.detail.title')}
         </h1>
       </div>
 
@@ -175,7 +205,7 @@ function RouteComponent() {
                 onClick={handleUpdateName}
                 disabled={updateNameMutation.isPending}
                 className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-border/80 bg-background/70 text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
-                title="Editar nombre"
+                title={t('card.detail.editNameTitle')}
               >
                 <Pencil className="h-3.5 w-3.5" />
               </button>
@@ -189,7 +219,9 @@ function RouteComponent() {
                     : 'border-primary/30 bg-primary/10 text-primary',
                 )}
               >
-                {selectedCard?.status === 'frozen' ? 'Congelada' : 'Activa'}
+                {selectedCard?.status === 'frozen'
+                  ? t('card.detail.statusFrozen')
+                  : t('card.detail.statusActive')}
               </span>
               <button
                 type="button"
@@ -203,27 +235,63 @@ function RouteComponent() {
                 )}
               >
                 {toggleFreezeMutation.isPending ? (
-                  'Procesando...'
+                  t('card.processing')
                 ) : selectedCard?.status === 'frozen' ? (
                   <>
                     <Unlock className="h-3.5 w-3.5" />
-                    Activar
+                    {t('card.detail.activate')}
                   </>
                 ) : (
                   <>
                     <Lock className="h-3.5 w-3.5" />
-                    Congelar
+                    {t('card.freeze.action')}
                   </>
                 )}
               </button>
             </div>
           </div>
+
+          <button
+            type="button"
+            onClick={handleViewCardDetails}
+            disabled={isLoadingCardDetails}
+            className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-border bg-background px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
+          >
+            <EyeOff className="h-3.5 w-3.5" />
+            {isLoadingCardDetails
+              ? t('common.loading')
+              : t('card.viewCardData')}
+          </button>
         </section>
       )}
 
+      <Drawer open={showCardDetails} onOpenChange={setShowCardDetails}>
+        <DrawerContent className="h-[85vh]">
+          <DrawerHeader>
+            <DrawerTitle>{t('card.detailsDrawerTitle')}</DrawerTitle>
+          </DrawerHeader>
+          <div className="flex-1 px-4 pb-6">
+            {cardDetailsUrl ? (
+              <iframe
+                src={cardDetailsUrl}
+                title={t('card.detailsDrawerTitle')}
+                className="h-full w-full rounded-xl border-0"
+                sandbox="allow-scripts allow-same-origin"
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center">
+                <p className="text-sm text-muted-foreground">
+                  {t('card.detailsLoadError')}
+                </p>
+              </div>
+            )}
+          </div>
+        </DrawerContent>
+      </Drawer>
+
       <section className="rounded-3xl border border-border/75 bg-card/80 p-5">
         <p className="mb-3 text-xs font-medium tracking-wider text-muted-foreground uppercase">
-          Monedas de recarga
+          {t('card.detail.topupCurrencies')}
         </p>
         {isLoadingBalance ? (
           <BalanceSkeleton />
@@ -245,7 +313,7 @@ function RouteComponent() {
                   {ASSET_LOGO_MAP[asset.code] && (
                     <img
                       src={ASSET_LOGO_MAP[asset.code]}
-                      alt={`Logo ${asset.code}`}
+                      alt={t('home.assetLogoAlt', { asset: asset.code })}
                       className="h-3.5 w-3.5 rounded-full object-cover"
                     />
                   )}
@@ -259,7 +327,7 @@ function RouteComponent() {
                 : '••••••'}
             </p>
             <p className="text-xs text-muted-foreground">
-              Saldo disponible para recargar en {displayAsset}
+              {t('card.detail.availableToTopup', { asset: displayAsset })}
             </p>
           </>
         )}
@@ -268,10 +336,10 @@ function RouteComponent() {
       <section className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-            Movimientos
+            {t('card.detail.movements')}
           </p>
           <p className="text-xs text-muted-foreground">
-            {filteredMovements.length} registros
+            {t('card.detail.recordsCount', { count: filteredMovements.length })}
           </p>
         </div>
 
@@ -288,7 +356,7 @@ function RouteComponent() {
                   : 'border-border bg-card text-muted-foreground hover:border-foreground hover:text-foreground',
               )}
             >
-              {filter.label}
+              {t(filter.labelKey)}
             </button>
           ))}
         </div>
@@ -298,7 +366,7 @@ function RouteComponent() {
         ) : filteredMovements.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border py-8 text-center">
             <p className="text-sm text-muted-foreground">
-              Sin movimientos para este filtro
+              {t('card.detail.noMovementsForFilter')}
             </p>
           </div>
         ) : (
@@ -317,7 +385,7 @@ function RouteComponent() {
                 className="mt-2 w-full rounded-2xl border border-border px-3 py-2 text-sm text-muted-foreground hover:text-foreground disabled:opacity-60"
                 disabled={isFetchingNextPage}
               >
-                {isFetchingNextPage ? 'Cargando...' : 'Ver más'}
+                {isFetchingNextPage ? t('common.loading') : t('home.viewMore')}
               </button>
             )}
           </div>
@@ -326,33 +394,33 @@ function RouteComponent() {
 
       <section className="rounded-2xl border border-border/75 bg-card/75 p-4">
         <p className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-          Ultima actividad
+          {t('card.detail.lastActivity')}
         </p>
         <p className="mt-1 text-sm text-foreground">
           {filteredMovements[0]?.createdAt
             ? formatDate(filteredMovements[0].createdAt)
-            : 'Sin actividad reciente'}
+            : t('card.detail.noRecentActivity')}
         </p>
       </section>
 
       <AlertDialog open={showRenameDialog} onOpenChange={setShowRenameDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Cambiar nombre de tarjeta</AlertDialogTitle>
+            <AlertDialogTitle>{t('card.detail.renameTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Ingresa el nuevo nombre para tu tarjeta
+              {t('card.detail.renameDescription')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="py-4">
             <Label htmlFor="card-name" className="text-sm font-medium">
-              Nombre de la tarjeta
+              {t('accounts.detail.cardNameLabel')}
             </Label>
             <Input
               id="card-name"
               type="text"
               value={newCardName}
               onChange={(e) => setNewCardName(e.target.value)}
-              placeholder="Ej: Personal, Negocios..."
+              placeholder={t('card.detail.renamePlaceholder')}
               className="mt-2"
               autoFocus
               onKeyDown={(e) => {
@@ -364,12 +432,14 @@ function RouteComponent() {
             />
           </div>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmUpdateName}
               disabled={updateNameMutation.isPending || !newCardName.trim()}
             >
-              {updateNameMutation.isPending ? 'Guardando...' : 'Guardar'}
+              {updateNameMutation.isPending
+                ? t('common.saving')
+                : t('common.save')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
