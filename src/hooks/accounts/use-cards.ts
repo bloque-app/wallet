@@ -1,3 +1,4 @@
+import type { SupportedAsset } from '@bloque/sdk-accounts';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { CreateCardInput } from '~/domain/accounts/ports';
 import { bloqueAccountsRepository } from '~/infra/bloque/accounts-repository';
@@ -27,6 +28,15 @@ export function useCardUpdateName() {
   return useMutation({
     mutationFn: ({ urn, name }: { urn: string; name: string }) =>
       bloqueAccountsRepository.updateCardName(urn, name),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['accounts'] }),
+  });
+}
+
+export function useCardUpdatePreferredAsset() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ urn, asset }: { urn: string; asset: SupportedAsset }) =>
+      bloqueAccountsRepository.updateCardPreferredAsset(urn, asset),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['accounts'] }),
   });
 }

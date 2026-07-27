@@ -28,6 +28,8 @@ export type CardProduct = ProductBase & {
   kind: 'card';
   lastFour: string;
   cardType?: string;
+  /** Asset the card settles purchase authorizations against, e.g. 'DUSD/6'. */
+  preferredAsset?: string;
 };
 
 export type BrebKeyProduct = ProductBase & {

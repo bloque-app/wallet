@@ -290,7 +290,11 @@
       "renameDescription": "Enter the new name for your card",
       "renamePlaceholder": "E.g.: Personal, Business...",
       "nameUpdatedToast": "Card name updated successfully",
-      "nameUpdateErrorToast": "Error updating the card name"
+      "nameUpdateErrorToast": "Error updating the card name",
+      "preferredAsset": "Preferred spending asset",
+      "preferredAssetDescription": "The asset this card will try to pay with first.",
+      "preferredAssetUpdatedToast": "Preferred spending asset updated",
+      "preferredAssetUpdateErrorToast": "Error updating the preferred spending asset"
     },
     "details": {
       "filters": {

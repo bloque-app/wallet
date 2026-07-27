@@ -1,3 +1,4 @@
+import type { SupportedAsset } from '@bloque/sdk-accounts';
 import { useQueryClient } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { ArrowLeft, EyeOff, Lock, Pencil, Unlock } from 'lucide-react';
@@ -28,6 +29,7 @@ import {
   useCardDetailsUrl,
   useCardToggleFreeze,
   useCardUpdateName,
+  useCardUpdatePreferredAsset,
 } from '~/hooks/accounts/use-cards';
 import { formatAmount, formatDate, type Movement } from '~/lib/formatters';
 import { cn } from '~/lib/utils';
@@ -71,6 +73,7 @@ function RouteComponent() {
 
   const toggleFreezeMutation = useCardToggleFreeze();
   const updateNameMutation = useCardUpdateName();
+  const updatePreferredAssetMutation = useCardUpdatePreferredAsset();
   const [showRenameDialog, setShowRenameDialog] = useState(false);
   const [newCardName, setNewCardName] = useState('');
   const [selectedMovement, setSelectedMovement] = useState<Movement | null>(
@@ -119,6 +122,19 @@ function RouteComponent() {
           : t('card.freeze.freezeErrorToast'),
       );
       console.error('Error toggling freeze:', error);
+    }
+  };
+
+  const handleSetPreferredAsset = async (asset: SupportedAsset) => {
+    if (!selectedCard || selectedCard.preferredAsset === asset) return;
+
+    try {
+      await updatePreferredAssetMutation.mutateAsync({ urn, asset });
+      await queryClient.invalidateQueries({ queryKey: ['card-detail', urn] });
+      toast.success(t('card.detail.preferredAssetUpdatedToast'));
+    } catch (error) {
+      toast.error(t('card.detail.preferredAssetUpdateErrorToast'));
+      console.error('Error updating preferred asset:', error);
     }
   };
 
@@ -330,6 +346,46 @@ function RouteComponent() {
               {t('card.detail.availableToTopup', { asset: displayAsset })}
             </p>
           </>
+        )}
+      </section>
+
+      <section className="rounded-3xl border border-border/75 bg-card/80 p-5">
+        <p className="mb-1 text-xs font-medium tracking-wider text-muted-foreground uppercase">
+          {t('card.detail.preferredAsset')}
+        </p>
+        <p className="mb-3 text-xs text-muted-foreground">
+          {t('card.detail.preferredAssetDescription')}
+        </p>
+        {isLoadingBalance ? (
+          <BalanceSkeleton />
+        ) : (
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+            {assetList.map((asset) => (
+              <button
+                key={asset.sdkKey}
+                type="button"
+                onClick={() =>
+                  handleSetPreferredAsset(asset.sdkKey as SupportedAsset)
+                }
+                disabled={updatePreferredAssetMutation.isPending}
+                className={cn(
+                  'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors disabled:opacity-50',
+                  selectedCard?.preferredAsset === asset.sdkKey
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-border bg-background/70 text-muted-foreground hover:text-foreground',
+                )}
+              >
+                {ASSET_LOGO_MAP[asset.code] && (
+                  <img
+                    src={ASSET_LOGO_MAP[asset.code]}
+                    alt={t('home.assetLogoAlt', { asset: asset.code })}
+                    className="h-3.5 w-3.5 rounded-full object-cover"
+                  />
+                )}
+                {asset.code}
+              </button>
+            ))}
+          </div>
         )}
       </section>
 
