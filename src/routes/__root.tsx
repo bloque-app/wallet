@@ -62,7 +62,18 @@ function RootComponent() {
     );
   }
 
-  const showKycBanner = user?.kycStatus !== 'approved';
+  // Only when we actually know they're unverified.
+  //
+  // `deriveKycStatus` returns `undefined` for "couldn't confirm right now" —
+  // a timeout (5s), a 5xx, a network blip — and `undefined !== 'approved'`
+  // was showing an approved user the "finish verifying" banner every time
+  // that call was slow. Failing closed is correct for *gating* a feature;
+  // for a banner it just tells a verified person something untrue.
+  //
+  // This also removes the banner flash on first paint, before the status
+  // has resolved.
+  const showKycBanner =
+    user?.kycStatus !== undefined && user.kycStatus !== 'approved';
 
   return (
     <div className="relative flex min-h-dvh flex-col bg-background">
