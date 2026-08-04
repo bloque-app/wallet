@@ -1,4 +1,17 @@
 [install]
+# Supply-chain guard: quarantine freshly published packages for 3 days.
 minimumReleaseAge = 259200 # seconds
+# ...except our own. The quarantine exists to blunt a compromised third-party
+# publish; @bloque/* are first-party and released from our own CI, so waiting
+# on them buys nothing and just blocks consuming our own SDK the day it ships.
+minimumReleaseAgeExcludes = [
+  "@bloque/sdk",
+  "@bloque/sdk-accounts",
+  "@bloque/sdk-compliance",
+  "@bloque/sdk-core",
+  "@bloque/sdk-identity",
+  "@bloque/sdk-orgs",
+  "@bloque/sdk-swap",
+]
 
 linker = "isolated"
