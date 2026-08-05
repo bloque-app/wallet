@@ -643,5 +643,12 @@
     },
     "logout": "Log out",
     "version": "Wallet Bloque v{{version}}"
+  },
+  "tos": {
+    "required": {
+      "title": "We have updated our terms",
+      "description": "To keep using your account, please review and accept the current terms and conditions.",
+      "cta": "Review and accept"
+    }
   }
 }

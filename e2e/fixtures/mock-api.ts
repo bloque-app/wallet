@@ -239,8 +239,22 @@ export type MockApiOptions = {
  * Any endpoint not explicitly mocked here fails loudly (404) instead of
  * silently reaching the real network.
  */
-export async function installMockApi(page: Page, options: MockApiOptions = {}) {
-  const missingRequirements = options.missingRequirements ?? [];
+/** Lets a test change compliance's answer after the app has already loaded. */
+export type MockApiHandle = {
+  /**
+   * Replace what `tier-status` reports as outstanding.
+   *
+   * Needed because the interesting case is a *transition*: a session that was
+   * compliant when it loaded and stops being so while it is open.
+   */
+  setMissingRequirements(keys: string[]): void;
+};
+
+export async function installMockApi(
+  page: Page,
+  options: MockApiOptions = {},
+): Promise<MockApiHandle> {
+  let missingRequirements = options.missingRequirements ?? [];
 
   await page.route('**/api/**', async (route: Route) => {
     const url = new URL(route.request().url());
@@ -324,4 +338,10 @@ export async function installMockApi(page: Page, options: MockApiOptions = {}) {
       },
     });
   });
+
+  return {
+    setMissingRequirements(keys: string[]) {
+      missingRequirements = keys;
+    },
+  };
 }

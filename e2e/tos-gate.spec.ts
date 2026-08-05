@@ -89,3 +89,54 @@ test('lets the user in when the gate cannot be minted', async ({ page }) => {
   ).toBeVisible({ timeout: 15_000 });
   expect(page.url()).not.toContain(TOS_GATE_PATH);
 });
+
+test('asks before redirecting when the session goes stale mid-use', async ({
+  page,
+}) => {
+  // The deploy case. Sign-in already routes an unaccepted identity to the gate,
+  // so this covers the one it cannot: a tab that was already open and compliant
+  // when a new document version activated.
+  //
+  // Redirecting outright here would be wrong — they may be halfway through a
+  // transfer — so the wallet asks, and they choose when to go.
+  const api = await installMockApi(page, { missingRequirements: [] });
+
+  await page.goto('/');
+  await expect(
+    page.getByRole('navigation', { name: 'Navegación principal' }),
+  ).toBeVisible();
+
+  // Compliance changes its mind underneath the open session.
+  api.setMissingRequirements(['tos']);
+  // The wallet re-reads on focus; dispatching it beats waiting out the timer.
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+
+  const dialog = page.getByRole('alertdialog');
+  await expect(dialog).toBeVisible({ timeout: 15_000 });
+  // Still on the wallet, not yanked to the gate.
+  expect(page.url()).not.toContain(TOS_GATE_PATH);
+
+  await dialog.getByRole('button').click();
+  await page.waitForURL(`**${TOS_GATE_PATH}**`, { timeout: 15_000 });
+  expect(page.url()).toContain('#token=');
+});
+
+test('does not nag an open session that is still compliant', async ({
+  page,
+}) => {
+  // The recheck runs on every focus, so a bug here would put a dialog in front
+  // of every compliant user who tabs back to the wallet.
+  const api = await installMockApi(page, { missingRequirements: [] });
+
+  await page.goto('/');
+  await expect(
+    page.getByRole('navigation', { name: 'Navegación principal' }),
+  ).toBeVisible();
+
+  api.setMissingRequirements([]);
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await page.waitForTimeout(2_000);
+
+  await expect(page.getByRole('alertdialog')).toHaveCount(0);
+  expect(page.url()).not.toContain(TOS_GATE_PATH);
+});

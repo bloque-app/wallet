@@ -52,6 +52,13 @@ export type AuthContextProps = {
   logout: () => Promise<void>;
   /** Silently re-fetches the current profile without affecting `loading` or signing the user out on failure. */
   refreshUser: () => Promise<void>;
+  /**
+   * Re-reads only the Terms of Service status, for a session that has been
+   * open long enough to have gone stale. Deliberately narrower than
+   * `refreshUser`: it must be cheap enough to run on a timer and on every
+   * window focus.
+   */
+  refreshTosStatus: () => Promise<void>;
   user: User;
 };
 
@@ -253,6 +260,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [setAuthenticatedUser]);
 
+  /**
+   * A new document version activating, or a grace period lapsing, can make a
+   * signed-in user non-compliant without them doing anything. Nothing else
+   * re-reads this: the status is resolved once at authentication, so without
+   * this a tab left open across a release would never notice.
+   *
+   * Silent on failure, and leaves the previous value alone — `deriveTosStatus`
+   * already maps its own failures to 'unknown', and overwriting a known
+   * 'accepted' with that on a network blip would prompt someone who is
+   * perfectly compliant.
+   */
+  const refreshTosStatus = useCallback(async () => {
+    const urn = currentUser?.urn;
+    if (!urn) return;
+
+    const tosStatus = await deriveTosStatus(urn);
+    if (tosStatus === 'unknown') return;
+
+    // Functional update, and compared before writing: this runs on a timer and
+    // on every focus, so a new object each time would re-render the whole tree
+    // for nothing.
+    setCurrentUser((latest) =>
+      latest && latest.tosStatus !== tosStatus
+        ? { ...latest, tosStatus }
+        : latest,
+    );
+  }, [currentUser?.urn]);
+
   const logout = useCallback(async () => {
     setLoading(true);
     try {
@@ -300,6 +335,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         resetOnboardingState,
         logout,
         refreshUser,
+        refreshTosStatus,
         user: currentUser as User,
       }}
     >
