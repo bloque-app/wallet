@@ -143,8 +143,16 @@ test('enrols a passkey through the hosted TOS gate', async ({ page }) => {
 
   // The intro screen animates in on timers, and whether it shows at all
   // depends on the origin's `show_home`. Wait for whichever appears.
-  const review = page.getByRole('button', { name: /Revisar el acuerdo/i });
-  const accept = page.getByRole('button', { name: /Aceptar|Ir al final/i });
+  // Both locales. The gate serves English or Spanish depending on the
+  // request, and it served English on the first real run while these
+  // selectors were Spanish-only — so the spec failed at the button step on a
+  // flow that had otherwise worked end to end.
+  const review = page.getByRole('button', {
+    name: /Revisar el acuerdo|Review the agreement/i,
+  });
+  const accept = page.getByRole('button', {
+    name: /Aceptar|Ir al final|Accept|Go to the bottom/i,
+  });
 
   await expect(review.or(accept).first()).toBeVisible({ timeout: 30_000 });
   if (await review.isVisible()) {
@@ -158,11 +166,11 @@ test('enrols a passkey through the hosted TOS gate', async ({ page }) => {
   // clicking until the label changes to the accept action.
   for (let i = 0; i < 12; i++) {
     const label = (await accept.textContent())?.trim() ?? '';
-    if (/Aceptar/i.test(label)) break;
+    if (/^(Aceptar|Accept)$/i.test(label)) break;
     await accept.click();
     await page.waitForTimeout(600);
   }
-  await expect(accept).toHaveText(/Aceptar/i);
+  await expect(accept).toHaveText(/^(Aceptar|Accept)$/i);
   await accept.click();
 
   // ── the passkey should have been created and the terms accepted ──────────
