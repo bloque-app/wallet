@@ -42,6 +42,20 @@ export const initBloque = async (): Promise<AuthenticatedBloque> => {
   return await globalForBloque.bloqueSdkPromise;
 };
 
+/**
+ * Drops the cached authenticated client.
+ *
+ * The client is memoized on `globalThis` for the page's lifetime, and it holds
+ * a session. So it must be discarded whenever the identity behind that session
+ * changes — signing out, or registering a different account in the same tab.
+ * Otherwise the next identity keeps making calls authenticated as the previous
+ * one, which is both wrong and, on a shared device, a leak.
+ */
+export const resetBloque = (): void => {
+  globalForBloque.bloqueSdk = undefined;
+  globalForBloque.bloqueSdkPromise = undefined;
+};
+
 export const getBloque = (): AuthenticatedBloque => {
   if (!globalForBloque.bloqueSdk) {
     throw new Error(
