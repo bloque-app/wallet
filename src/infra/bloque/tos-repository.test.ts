@@ -9,13 +9,19 @@ const startMock = mock(
     Promise.resolve({ url: 'https://api.example.com/api/tos-gate#token=abc' }),
 );
 
-mock.module('~/lib/bloque', () => ({
-  bloque: {
-    compliance: {
-      tiers: { getStatus: getStatusMock },
-      tosGate: { start: startMock },
-    },
+const bloqueClient = {
+  compliance: {
+    tiers: { getStatus: getStatusMock },
+    tosGate: { start: startMock },
   },
+};
+
+// Both shapes: the repository awaits `initBloque()` rather than touching the
+// `bloque` proxy, because the proxy throws until the SDK handshake has run and
+// these calls happen before it does.
+mock.module('~/lib/bloque', () => ({
+  bloque: bloqueClient,
+  initBloque: async () => bloqueClient,
 }));
 
 const { bloqueTosRepository } = await import('./tos-repository');

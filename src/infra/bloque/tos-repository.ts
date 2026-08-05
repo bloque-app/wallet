@@ -1,6 +1,6 @@
 import type { TosRepository } from '~/domain/tos/ports';
 import type { TosGate, TosStatus } from '~/domain/tos/types';
-import { bloque } from '~/lib/bloque';
+import { initBloque } from '~/lib/bloque';
 
 /**
  * Adapter for Terms of Service acceptance, over the SDK's compliance clients.
@@ -19,8 +19,22 @@ import { bloque } from '~/lib/bloque';
 /** Requirement key prefix compliance uses for Level 0 terms acceptance. */
 const TOS_REQUIREMENT_PREFIX = 'tos';
 
+/**
+ * `initBloque()` rather than the `bloque` proxy, and this is load-bearing.
+ *
+ * The proxy throws unless the SDK has already been initialized, and
+ * initialization is kicked off by an effect in `index.tsx` that only runs once
+ * `auth.isAuthenticated` is true. Both status lookups happen inside
+ * `setAuthenticatedUser`, which runs *before* that flips — so the proxy throws
+ * every time, the catch below turns it into `'unknown'`, and nobody is ever
+ * sent to the gate.
+ *
+ * `initBloque()` caches its promise, so awaiting it here is idempotent and
+ * simply orders this call after the handshake it depends on.
+ */
 async function getStatus(urn: string): Promise<TosStatus> {
   try {
+    const bloque = await initBloque();
     const status = await bloque.compliance.tiers.getStatus({ urn });
 
     // There is no positive "accepted" flag — an absent TOS key in
@@ -39,6 +53,7 @@ async function getStatus(urn: string): Promise<TosStatus> {
 }
 
 async function start(returnUrl: string): Promise<TosGate> {
+  const bloque = await initBloque();
   const result = await bloque.compliance.tosGate.start({ returnUrl });
   return { url: result.url };
 }

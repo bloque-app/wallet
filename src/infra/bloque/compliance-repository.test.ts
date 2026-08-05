@@ -24,15 +24,21 @@ const startVerificationMock = mock(
     }),
 );
 
-mock.module('~/lib/bloque', () => ({
-  bloque: {
-    compliance: {
-      kyc: {
-        getVerification: getVerificationMock,
-        startVerification: startVerificationMock,
-      },
+const bloqueClient = {
+  compliance: {
+    kyc: {
+      getVerification: getVerificationMock,
+      startVerification: startVerificationMock,
     },
   },
+};
+
+// Both shapes: the repository awaits `initBloque()` rather than touching the
+// `bloque` proxy, because the proxy throws until the SDK handshake has run and
+// `deriveKycStatus` runs before it does.
+mock.module('~/lib/bloque', () => ({
+  bloque: bloqueClient,
+  initBloque: async () => bloqueClient,
 }));
 
 const { bloqueComplianceRepository } = await import('./compliance-repository');
