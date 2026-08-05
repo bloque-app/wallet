@@ -643,5 +643,12 @@
     },
     "logout": "Cerrar sesión",
     "version": "Wallet Bloque v{{version}}"
+  },
+  "tos": {
+    "required": {
+      "title": "Actualizamos nuestros términos",
+      "description": "Para seguir usando tu cuenta, necesitamos que revises y aceptes los términos y condiciones vigentes.",
+      "cta": "Revisar y aceptar"
+    }
   }
 }
