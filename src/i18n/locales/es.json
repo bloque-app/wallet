@@ -290,7 +290,11 @@
       "renameDescription": "Ingresa el nuevo nombre para tu tarjeta",
       "renamePlaceholder": "Ej: Personal, Negocios...",
       "nameUpdatedToast": "Nombre de tarjeta actualizado exitosamente",
-      "nameUpdateErrorToast": "Error al actualizar el nombre de la tarjeta"
+      "nameUpdateErrorToast": "Error al actualizar el nombre de la tarjeta",
+      "preferredAsset": "Activo de pago preferido",
+      "preferredAssetDescription": "El activo que se usará primero para pagar con esta tarjeta.",
+      "preferredAssetUpdatedToast": "Activo de pago preferido actualizado",
+      "preferredAssetUpdateErrorToast": "Error al actualizar el activo de pago preferido"
     },
     "details": {
       "filters": {

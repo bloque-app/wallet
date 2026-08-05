@@ -212,19 +212,95 @@ export const mockIdentity = {
   metadata: { kyc_verified: true },
 };
 
+/** Path of the hosted TOS gate page, as compliance serves it. */
+export const TOS_GATE_PATH = '/api/tos-gate';
+const TOS_GATE_TOKEN = 'e2e-capability-token';
+
+export type MockApiOptions = {
+  /**
+   * Requirement keys compliance still reports as outstanding, as
+   * `missing_requirements` on `tier-status`.
+   *
+   * Defaults to none, so the wallet treats the terms as accepted and no
+   * suite that predates the TOS gate starts redirecting.
+   */
+  missingRequirements?: string[];
+  /**
+   * Wire status for `GET /api/compliance/:urn`, the call `deriveKycStatus`
+   * makes. Omit to leave it unmocked (404), which the repository reads as
+   * "no verification started".
+   */
+  kycWireStatus?: 'awaiting_compliance_verification' | 'approved' | 'rejected';
+};
+
 /**
  * Intercepts every `/api/**` request the app makes and fulfills it from an
  * in-memory fixture — fully offline, no real dev-API credentials involved.
  * Any endpoint not explicitly mocked here fails loudly (404) instead of
  * silently reaching the real network.
  */
-export async function installMockApi(page: Page) {
+export async function installMockApi(page: Page, options: MockApiOptions = {}) {
+  const missingRequirements = options.missingRequirements ?? [];
+
   await page.route('**/api/**', async (route: Route) => {
     const url = new URL(route.request().url());
     const { pathname } = url;
 
     if (pathname === '/api/identities/me') {
       return route.fulfill({ json: mockIdentity });
+    }
+
+    if (
+      options.kycWireStatus &&
+      pathname.startsWith('/api/compliance/') &&
+      !pathname.endsWith('/tier-status') &&
+      !pathname.endsWith('/documents')
+    ) {
+      return route.fulfill({
+        json: {
+          status: options.kycWireStatus,
+          verification_url: 'https://verify.example.com/session',
+          completed_at: null,
+        },
+      });
+    }
+
+    if (pathname.endsWith('/tier-status')) {
+      return route.fulfill({
+        json: {
+          identity_urn: OWNER_URN,
+          effective_level: 0,
+          policy_version: 'e2e',
+          levels: [],
+          next_level: null,
+          missing_requirements: missingRequirements,
+          pending_requirements: [],
+        },
+      });
+    }
+
+    if (pathname === `${TOS_GATE_PATH}/start`) {
+      return route.fulfill({
+        json: {
+          token: TOS_GATE_TOKEN,
+          // Same origin as the app under test purely so this stays offline;
+          // the real one is on compliance's host. What the wallet does with
+          // it — a full-page navigation — is identical either way.
+          url: `${url.origin}${TOS_GATE_PATH}#token=${TOS_GATE_TOKEN}`,
+          expires_in: 600,
+        },
+      });
+    }
+
+    // Stands in for the hosted gate itself. Its contents don't matter here:
+    // the gate's own behaviour is covered by the live suite against the real
+    // page, and what this suite asserts is that the wallet *sends people to
+    // it*.
+    if (pathname === TOS_GATE_PATH) {
+      return route.fulfill({
+        contentType: 'text/html',
+        body: '<html lang="es"><body><h1>Terminos y condiciones</h1></body></html>',
+      });
     }
 
     if (pathname === '/api/accounts') {

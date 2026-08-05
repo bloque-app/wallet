@@ -20,10 +20,10 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.1.0",
-    "@bloque/sdk": "^0.2.7",
-    "@bloque/sdk-accounts": "^0.2.7",
-    "@bloque/sdk-identity": "^0.2.7",
-    "@bloque/sdk-swap": "^0.2.7",
+    "@bloque/sdk": "^0.7.0",
+    "@bloque/sdk-accounts": "^0.7.0",
+    "@bloque/sdk-identity": "^0.7.0",
+    "@bloque/sdk-swap": "^0.7.0",
     "@fontsource-variable/outfit": "^5.2.8",
     "@tanstack/react-query": "^5.90.20",
     "@tanstack/react-router": "^1.159.4",
@@ -65,11 +65,11 @@
     "wrangler": "^4.105.0"
   },
   "overrides": {
-    "@bloque/sdk-accounts": "0.2.7",
-    "@bloque/sdk-compliance": "0.2.7",
-    "@bloque/sdk-core": "0.2.7",
-    "@bloque/sdk-identity": "0.2.7",
-    "@bloque/sdk-orgs": "0.2.7",
-    "@bloque/sdk-swap": "0.2.7"
+    "@bloque/sdk-accounts": "0.7.0",
+    "@bloque/sdk-compliance": "0.7.0",
+    "@bloque/sdk-core": "0.7.0",
+    "@bloque/sdk-identity": "0.7.0",
+    "@bloque/sdk-orgs": "0.7.0",
+    "@bloque/sdk-swap": "0.7.0"
   }
 }

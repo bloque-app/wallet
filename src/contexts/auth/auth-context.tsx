@@ -9,10 +9,12 @@ import {
 } from 'react';
 import { toast } from 'sonner';
 import type { VerificationStatus } from '~/domain/kyc/types';
+import type { TosStatus } from '~/domain/tos/types';
 import { apiFetch } from '~/lib/api-fetch';
 import { createBloqueSdk } from '~/lib/bloque';
 import { queryClient } from '~/lib/query-client';
 import { deriveKycStatus } from './kyc-status';
+import { deriveTosStatus } from './tos-status';
 import type {
   AliasCheckResult,
   LoginData,
@@ -31,6 +33,8 @@ interface User {
   personalIdNumber: string;
   personalIdType: string;
   kycStatus?: VerificationStatus;
+  /** Whether this identity still owes a Terms of Service acceptance. */
+  tosStatus?: TosStatus;
 }
 
 export type AuthContextProps = {
@@ -73,7 +77,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (
       me: Awaited<ReturnType<ReturnType<typeof createBloqueSdk>['me']>>,
     ) => {
-      const kycStatus = await deriveKycStatus(me.urn);
+      // Concurrent, not sequential: both are on the login path and each has
+      // its own 5s ceiling, so chaining them would double the worst case a
+      // user waits for the wallet to appear.
+      const [kycStatus, tosStatus] = await Promise.all([
+        deriveKycStatus(me.urn),
+        deriveTosStatus(me.urn),
+      ]);
       setCurrentUser({
         urn: me.urn,
         name: me.profile.first_name,
@@ -82,6 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         personalIdNumber: me.profile.personal_id_number,
         personalIdType: me.profile.personal_id_type,
         kycStatus,
+        tosStatus,
       });
     },
     [],

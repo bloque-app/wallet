@@ -2,6 +2,7 @@ import type {
   BrebKeyAccount,
   CardAccount,
   PolygonAccount,
+  SupportedAsset,
 } from '@bloque/sdk-accounts';
 import type {
   AccountsRepository,
@@ -119,6 +120,7 @@ function mapToProduct(account: ListedAccount): Product {
       kind: 'card',
       lastFour: account.lastFour,
       cardType: account.cardType,
+      preferredAsset: account.defaultAsset,
       label:
         metaString(base.metadata, 'card_name') ||
         metaString(base.metadata, 'name') ||
@@ -269,6 +271,13 @@ async function updateCardName(urn: string, name: string): Promise<void> {
   await bloque.accounts.card.updateName(urn, name);
 }
 
+async function updateCardPreferredAsset(
+  urn: string,
+  asset: SupportedAsset,
+): Promise<void> {
+  await bloque.accounts.card.updateMetadata({ urn, defaultAsset: asset });
+}
+
 /** `detailsUrl` is a provider-hosted, PCI-compliant iframe URL — the SDK
  * never returns raw PAN/CVV to the client directly. */
 async function getCardDetailsUrl(urn: string): Promise<string> {
@@ -368,6 +377,7 @@ export const bloqueAccountsRepository: AccountsRepository = {
   freezeCard,
   activateCard,
   updateCardName,
+  updateCardPreferredAsset,
   getCardDetailsUrl,
   createBrebKey,
   resolveBrebKey,

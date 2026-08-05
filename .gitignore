@@ -19,3 +19,8 @@ dist/
 
 .idea
 .env
+.env.local
+
+# Saved login for the live Playwright suite — real session cookies for a real
+# account. Never commit.
+.auth/

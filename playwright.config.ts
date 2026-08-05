@@ -5,6 +5,9 @@ const baseURL = `http://localhost:${PORT}`;
 
 export default defineConfig({
   testDir: './e2e',
+  // The live suite needs a human for the OTP and spends real test funds, so it
+  // never runs as part of the default gate. See playwright.live.config.ts.
+  testIgnore: '**/live/**',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
