@@ -11,9 +11,10 @@ import { toast } from 'sonner';
 import type { VerificationStatus } from '~/domain/kyc/types';
 import type { TosStatus } from '~/domain/tos/types';
 import { apiFetch } from '~/lib/api-fetch';
-import { createBloqueSdk } from '~/lib/bloque';
+import { createBloqueSdk, resetBloque } from '~/lib/bloque';
 import { queryClient } from '~/lib/query-client';
 import { deriveKycStatus } from './kyc-status';
+import { makeLatestWins } from './latest-wins';
 import { deriveTosStatus } from './tos-status';
 import type {
   AliasCheckResult,
@@ -73,6 +74,14 @@ export const AuthContext = createContext<AuthContextProps | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
+  /**
+   * Orders the four overlapping paths that can resolve "who is signed in", so
+   * a superseded `GET /identities/me` cannot land after a newer one. See
+   * `latest-wins.ts` for the incident this comes from.
+   */
+  const authSeqRef = useRef(makeLatestWins());
+  /** Whose session the memoized SDK client currently holds. */
+  const signedInUrnRef = useRef<string | null>(null);
   const pendingOnboardingSessionRef = useRef<OnboardingSession | null>(null);
   const pendingProfileOnboardingRef = useRef<PendingProfileOnboarding | null>(
     null,
@@ -84,6 +93,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (
       me: Awaited<ReturnType<ReturnType<typeof createBloqueSdk>['me']>>,
     ) => {
+      // Claimed before the first await, so a slower earlier caller cannot
+      // overwrite a newer identity when it eventually resolves.
+      const token = authSeqRef.current.begin();
+
+      // Any change of identity invalidates the memoized authenticated client,
+      // which still holds the previous session. Tracked on a ref rather than
+      // read out of state: a state updater must stay pure, and React may run
+      // it twice.
+      if (signedInUrnRef.current && signedInUrnRef.current !== me.urn) {
+        resetBloque();
+      }
+      signedInUrnRef.current = me.urn;
+
       // Concurrent, not sequential: both are on the login path and each has
       // its own 5s ceiling, so chaining them would double the worst case a
       // user waits for the wallet to appear.
@@ -91,6 +113,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         deriveKycStatus(me.urn),
         deriveTosStatus(me.urn),
       ]);
+
+      // Superseded while those were in flight — drop it rather than land a
+      // stale identity over the current one.
+      if (!authSeqRef.current.isCurrent(token)) return;
+
       setCurrentUser({
         urn: me.urn,
         name: me.profile.first_name,
@@ -297,6 +324,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       queryClient.clear();
       localStorage.clear();
+      // The memoized client holds the session that was just ended.
+      resetBloque();
+      signedInUrnRef.current = null;
       setCurrentUser(null);
       setLoading(false);
     }
