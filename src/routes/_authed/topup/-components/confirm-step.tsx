@@ -10,7 +10,7 @@ interface ConfirmStepProps {
   amount: number;
   amountDst: number;
   ratio: number;
-  bankAccountType: 'savings' | 'checking';
+  bankAccountType: 'savings' | 'checkings';
   bankAccountNumber: string;
   bankAccountHolderName: string;
   identificationLabel: string;

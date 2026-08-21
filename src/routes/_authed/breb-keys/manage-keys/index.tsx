@@ -146,7 +146,7 @@ function RouteComponent() {
   if (localPhone) {
     keyOptions.push({
       keyType: 'ALPHA',
-      value: `@bl${localPhone}`,
+      value: `@bq${localPhone}`,
       label: t('brebKeys.manageKeys.bloqueKey'),
       icon: KeyRound,
     });
@@ -168,6 +168,12 @@ function RouteComponent() {
     });
   }
   if (user.personalIdNumber && user.personalIdType === 'CC') {
+    keyOptions.push({
+      keyType: 'ALPHA',
+      value: `@bq${user.personalIdNumber}`,
+      label: t('brebKeys.manageKeys.bloqueKey'),
+      icon: KeyRound,
+    });
     keyOptions.push({
       keyType: 'ID',
       value: user.personalIdNumber,

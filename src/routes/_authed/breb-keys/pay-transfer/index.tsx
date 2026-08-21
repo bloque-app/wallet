@@ -20,7 +20,6 @@ import { Label } from '~/components/ui/label';
 import { Textarea } from '~/components/ui/textarea';
 import type { ExecutionOutcome } from '~/domain/payments/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
-import { useResolveBrebKey } from '~/hooks/accounts/use-breb-keys';
 import { useCreateBrebOrder } from '~/hooks/payments/use-breb-order';
 import { useRates } from '~/hooks/payments/use-rates';
 import { formatCOP, getAssetPrecision } from '~/lib/formatters';
@@ -29,6 +28,7 @@ import { TopUpErrorStep } from '../../topup/-components/error-step';
 import { ExecutionOutcomeStep } from '../../topup/-components/execution-outcome-step';
 import {
   type BrebKeyType,
+  buildUnverifiedRecipient,
   getRecipientName,
   type ResolvedRecipient,
 } from '../-lib/breb';
@@ -96,6 +96,9 @@ function RouteComponent() {
   }, [parsedAmount]);
 
   const hasValidKey = inferredKeyType !== null;
+  // Cobre — the active BRE-B provider — only has ALPHA (@alias) keys
+  // operationally verified for payouts today (see `buildUnverifiedRecipient`).
+  const isAlphaKey = inferredKeyType === 'ALPHA';
 
   const { accounts: fundedAccounts, isLoading: isLoadingFundedAccounts } =
     useAccountPicker({ asset: FROM_ASSET, requireProductKind: 'breb' });
@@ -146,6 +149,9 @@ function RouteComponent() {
     if (key.length > 0 && !hasValidKey) {
       return t('brebKeys.payTransfer.invalidKey');
     }
+    if (key.length > 0 && hasValidKey && !isAlphaKey) {
+      return t('brebKeys.payTransfer.onlyAlphaKeysSupported');
+    }
     if (parsedAmount > 0 && parsedAmount < MIN_TRANSFER_AMOUNT) {
       return t('brebKeys.payTransfer.minAmount');
     }
@@ -164,6 +170,7 @@ function RouteComponent() {
     isLoadingFundedAccounts,
     fundedAccounts.length,
     hasValidKey,
+    isAlphaKey,
     key.length,
     parsedAmount,
     ratesQuery.isError,
@@ -172,8 +179,6 @@ function RouteComponent() {
     selectedAccount,
     t,
   ]);
-
-  const previewRecipientMutation = useResolveBrebKey();
 
   const createOrderMutation = useCreateBrebOrder();
 
@@ -196,7 +201,13 @@ function RouteComponent() {
         params: {
           rateSig: selectedRate.sig,
           amountSrc,
-          depositInformation: { resolutionId: recipientPreview.resolutionId },
+          depositInformation: {
+            resolutionId: recipientPreview.resolutionId,
+            destinationKey: {
+              keyValue: recipientPreview.key.keyValue,
+              keyType: recipientPreview.key.keyType,
+            },
+          },
           args: { sourceAccountUrn: selectedSourceBrebUrn },
           metadata: message.trim() ? { message: message.trim() } : undefined,
         },
@@ -248,10 +259,9 @@ function RouteComponent() {
 
   const canSubmit =
     !!selectedSourceBrebUrn &&
-    hasValidKey &&
+    isAlphaKey &&
     parsedAmount >= MIN_TRANSFER_AMOUNT &&
     !!selectedRate &&
-    !previewRecipientMutation.isPending &&
     !createOrderMutation.isPending;
 
   const handleBack = () => {
@@ -430,33 +440,22 @@ function RouteComponent() {
           ) : null}
 
           <Button
-            onClick={() =>
-              previewRecipientMutation.mutate(
-                { keyType: inferredKeyType ?? 'ALPHA', key: normalizedKey },
-                {
-                  onSuccess: (result) => {
-                    setRecipientPreview(result);
-                    setConfirmOpen(true);
-                  },
-                  onError: (error) => {
-                    toast.error(
-                      error instanceof Error
-                        ? error.message
-                        : t('brebKeys.payTransfer.keyValidationErrorToast'),
-                    );
-                  },
-                },
-              )
-            }
+            onClick={() => {
+              setRecipientPreview(
+                buildUnverifiedRecipient(
+                  inferredKeyType ?? 'ALPHA',
+                  normalizedKey,
+                ),
+              );
+              setConfirmOpen(true);
+            }}
             disabled={!canSubmit}
             className="h-12 w-full gap-2 rounded-2xl text-sm font-medium"
           >
             <Send className="h-4 w-4" />
-            {previewRecipientMutation.isPending
-              ? t('brebKeys.payTransfer.validatingKey')
-              : createOrderMutation.isPending
-                ? t('brebKeys.payTransfer.sending')
-                : t('brebKeys.payTransfer.sendMoney')}
+            {createOrderMutation.isPending
+              ? t('brebKeys.payTransfer.sending')
+              : t('brebKeys.payTransfer.sendMoney')}
           </Button>
         </div>
       </section>

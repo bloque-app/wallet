@@ -1,4 +1,3 @@
-import { useMutation } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { ArrowLeft, Landmark, Send } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -21,7 +20,6 @@ import { Label } from '~/components/ui/label';
 import { Textarea } from '~/components/ui/textarea';
 import type { ExecutionOutcome } from '~/domain/payments/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
-import { useResolveBrebKey } from '~/hooks/accounts/use-breb-keys';
 import { useCreateBrebOrder } from '~/hooks/payments/use-breb-order';
 import { useRates } from '~/hooks/payments/use-rates';
 import i18n from '~/i18n/config';
@@ -31,6 +29,7 @@ import { TopUpErrorStep } from '../../topup/-components/error-step';
 import { ExecutionOutcomeStep } from '../../topup/-components/execution-outcome-step';
 import {
   type BrebKeyType,
+  buildUnverifiedRecipient,
   getRecipientName,
   type ResolvedRecipient,
 } from '../-lib/breb';
@@ -209,6 +208,15 @@ function RouteComponent() {
     return majorToMinor(parsedAmount, FROM_PRECISION);
   }, [parsedAmount]);
 
+  // Cobre — the active BRE-B provider — only has ALPHA (@alias) keys
+  // operationally verified for payouts today (see `buildUnverifiedRecipient`).
+  // Prefer the already-resolved type (a static QR embeds it via search
+  // params) over inferring from the raw text, since a static QR's key can
+  // look ambiguous once normalized.
+  const keyType =
+    recipientPreview?.key.keyType ?? inferBrebKeyType(normalizedKey);
+  const isAlphaKey = keyType === 'ALPHA';
+
   const recipientDisplayName = getRecipientDisplayName({
     recipientPreview,
     recipientOwnerName: search.recipientOwnerName,
@@ -263,6 +271,9 @@ function RouteComponent() {
     if (isStaticQr && !recipientPreview?.resolutionId) {
       return t('brebKeys.payTransferQr.noResolution');
     }
+    if (normalizedKey && keyType && !isAlphaKey) {
+      return t('brebKeys.payTransfer.onlyAlphaKeysSupported');
+    }
     if (parsedAmount > 0 && parsedAmount < MIN_TRANSFER_AMOUNT) {
       return t('brebKeys.payTransfer.minAmount');
     }
@@ -280,7 +291,10 @@ function RouteComponent() {
   }, [
     isLoadingFundedAccounts,
     fundedAccounts.length,
+    isAlphaKey,
     isStaticQr,
+    keyType,
+    normalizedKey,
     parsedAmount,
     ratesQuery.isError,
     ratesQuery.isSuccess,
@@ -339,7 +353,13 @@ function RouteComponent() {
         params: {
           rateSig: selectedRate.sig,
           amountSrc,
-          depositInformation: { resolutionId: recipientPreview.resolutionId },
+          depositInformation: {
+            resolutionId: recipientPreview.resolutionId,
+            destinationKey: {
+              keyValue: recipientPreview.key.keyValue,
+              keyType: recipientPreview.key.keyType,
+            },
+          },
           args: { sourceAccountUrn: selectedSourceBrebUrn },
           metadata: message.trim() ? { message: message.trim() } : undefined,
         },
@@ -389,35 +409,26 @@ function RouteComponent() {
     }
   }, [autoRetry, ratesQuery.isFetching, selectedRate, submitOrder, t]);
 
-  const resolveBrebKeyMutation = useResolveBrebKey();
-  const previewRecipientMutation = useMutation({
-    mutationFn: async () => {
-      if (recipientPreview?.resolutionId) {
-        return recipientPreview;
-      }
-
-      const inferredKeyType = inferBrebKeyType(normalizedKey);
-      if (!inferredKeyType || !normalizedKey) {
-        throw new Error(t('brebKeys.payTransferQr.noValidKeyInQr'));
-      }
-
-      return await resolveBrebKeyMutation.mutateAsync({
-        keyType: inferredKeyType,
-        key: normalizedKey,
-      });
-    },
-    onSuccess: (result) => {
-      setRecipientPreview(result);
+  // Stands in for the old `resolveKey`-backed preview: Cobre — the active
+  // BRE-B provider — has no resolution to look up (see
+  // `buildUnverifiedRecipient`), so this is synchronous and never fails.
+  const previewRecipient = useCallback(() => {
+    if (recipientPreview?.resolutionId) {
       setConfirmOpen(true);
-    },
-    onError: (error) => {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : t('brebKeys.payTransfer.keyValidationErrorToast'),
-      );
-    },
-  });
+      return;
+    }
+
+    const inferredKeyType = inferBrebKeyType(normalizedKey);
+    if (!inferredKeyType || !normalizedKey) {
+      toast.error(t('brebKeys.payTransferQr.noValidKeyInQr'));
+      return;
+    }
+
+    setRecipientPreview(
+      buildUnverifiedRecipient(inferredKeyType, normalizedKey),
+    );
+    setConfirmOpen(true);
+  }, [recipientPreview, normalizedKey, t]);
 
   const handleBack = () => {
     goBackOrFallback(() => {
@@ -617,21 +628,18 @@ function RouteComponent() {
 
             <Button
               type="button"
-              onClick={() => previewRecipientMutation.mutate()}
+              onClick={previewRecipient}
               disabled={
                 !selectedSourceBrebUrn ||
                 parsedAmount < MIN_TRANSFER_AMOUNT ||
                 !selectedRate ||
                 !!formError ||
-                createOrderMutation.isPending ||
-                previewRecipientMutation.isPending
+                createOrderMutation.isPending
               }
               className="h-12 w-full gap-2 rounded-2xl text-sm font-medium"
             >
               <Send className="h-4 w-4" />
-              {previewRecipientMutation.isPending
-                ? t('brebKeys.payTransfer.validatingKey')
-                : t('common.continue')}
+              {t('common.continue')}
             </Button>
           </div>
         </section>

@@ -282,7 +282,11 @@ async function updateCardPreferredAsset(
  * never returns raw PAN/CVV to the client directly. */
 async function getCardDetailsUrl(urn: string): Promise<string> {
   const account = await bloque.accounts.get(urn);
-  return (account as CardAccount).detailsUrl;
+  const detailsUrl = (account as CardAccount).detailsUrl;
+  if (!detailsUrl) {
+    throw new Error('No se pudo obtener la URL de detalles de la tarjeta.');
+  }
+  return detailsUrl;
 }
 
 async function createBrebKey(input: CreateBrebKeyInput): Promise<Product> {
