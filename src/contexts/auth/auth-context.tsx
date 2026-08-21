@@ -1,3 +1,4 @@
+import type { IdentityMeProfile } from '@bloque/sdk-identity';
 import {
   createContext,
   type ReactNode,
@@ -12,7 +13,7 @@ import type { VerificationStatus } from '~/domain/kyc/types';
 import type { TosStatus } from '~/domain/tos/types';
 import { apiFetch } from '~/lib/api-fetch';
 import { createBloqueSdk, resetBloque } from '~/lib/bloque';
-import { queryClient } from '~/lib/query-client';
+import { queryClient, SESSION_EXPIRED_EVENT } from '~/lib/query-client';
 import { deriveKycStatus } from './kyc-status';
 import { makeLatestWins } from './latest-wins';
 import { deriveTosStatus } from './tos-status';
@@ -118,13 +119,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // stale identity over the current one.
       if (!authSeqRef.current.isCurrent(token)) return;
 
+      // This wallet only ever registers/logs in `type: 'individual'`
+      // identities (see `login`/`completeOnboarding` below), so `profile` is
+      // always shaped as `IdentityMeProfile` in practice — but the SDK types
+      // it as a union with the business/other shapes, which don't carry
+      // these fields at all.
+      const profile = me.profile as IdentityMeProfile;
+
       setCurrentUser({
         urn: me.urn,
-        name: me.profile.first_name,
-        email: me.profile.email,
-        phone: me.profile.phone,
-        personalIdNumber: me.profile.personal_id_number,
-        personalIdType: me.profile.personal_id_type,
+        name: profile.first_name ?? '',
+        email: profile.email ?? '',
+        phone: profile.phone ?? '',
+        personalIdNumber: profile.personal_id_number ?? '',
+        personalIdType: profile.personal_id_type ?? '',
         kycStatus,
         tosStatus,
       });
@@ -351,6 +359,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     void checkAuth();
   }, [setAuthenticatedUser]);
+
+  // A bare 401 is only a *candidate* signal, not proof the session is dead:
+  // payment-rails' `E_INVALID_TOKEN` covers both an expired and a malformed
+  // token, a missing-cookie 401 carries no code at all, and unrelated flows
+  // (revoked API keys, webhook signatures, TOS/verification gate tokens, a
+  // business check on external-US-bank swaps) can also 401 for reasons that
+  // have nothing to do with this browser session. So instead of closing the
+  // session on the first 401, re-probe with the same `me()` call `checkAuth`
+  // already trusts on mount, and only close the session if that confirms it.
+  //
+  // `sessionCheckInFlightRef` collapses a burst — a token that's actually
+  // expired usually fails several in-flight queries at once, each dispatching
+  // the event — into a single probe. It resets on a false alarm, so a later
+  // real expiry still gets caught; it deliberately does not reset once a
+  // close is confirmed, since by then the page is navigating to /login.
+  const sessionCheckInFlightRef = useRef(false);
+
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      if (sessionCheckInFlightRef.current) return;
+      sessionCheckInFlightRef.current = true;
+
+      createBloqueSdk()
+        .me()
+        .then(() => {
+          // Still valid — the 401 that triggered this was a one-off, not a
+          // dead session.
+          sessionCheckInFlightRef.current = false;
+        })
+        .catch(() => {
+          void logout().finally(() => {
+            window.location.href = '/login';
+          });
+        });
+    };
+
+    window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+    return () =>
+      window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+  }, [logout]);
 
   return (
     <AuthContext.Provider

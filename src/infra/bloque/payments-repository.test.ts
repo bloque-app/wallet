@@ -149,6 +149,7 @@ describe('bloquePaymentsRepository order creation — execution outcome mapping'
         userLegalIdType: 'CC',
         userLegalId: '123',
         customerData: { fullName: 'User', phoneNumber: '3000000000' },
+        redirectUrl: 'https://wallet.example.com/topup',
       },
     });
 
@@ -187,7 +188,10 @@ describe('bloquePaymentsRepository order creation — execution outcome mapping'
     const result = await bloquePaymentsRepository.createBrebOrder({
       rateSig: 'rate-sig-1',
       amountSrc: '5000000',
-      depositInformation: { resolutionId: 'resolution-1' },
+      depositInformation: {
+        resolutionId: 'resolution-1',
+        destinationKey: { keyValue: '@one-time-key', keyType: 'ALPHA' },
+      },
       args: { sourceAccountUrn: 'did:bloque:account:card:source' },
     });
 
@@ -239,6 +243,7 @@ describe('bloquePaymentsRepository order creation — execution outcome mapping'
         userLegalIdType: 'CC',
         userLegalId: '123',
         customerData: { fullName: 'User', phoneNumber: '3000000000' },
+        redirectUrl: 'https://wallet.example.com/topup',
       },
     });
 
