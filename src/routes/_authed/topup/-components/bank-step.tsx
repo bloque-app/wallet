@@ -14,10 +14,10 @@ import {
 import { cn } from '~/lib/utils';
 
 export interface TopUpBankAccountData {
-  bankAccountType: 'savings' | 'checking';
+  bankAccountType: 'savings' | 'checkings';
   bankAccountNumber: string;
   bankAccountHolderName: string;
-  bankAccountHolderIdentificationType: 'CC' | 'CE' | 'NIT' | 'PP';
+  bankAccountHolderIdentificationType: 'CC' | 'CE' | 'NIT' | 'PASSPORT';
   bankAccountHolderIdentificationValue: string;
 }
 
@@ -88,7 +88,7 @@ export function TopUpBankStep({
     CC: t('topup.idTypeCc'),
     CE: t('topup.idTypeCe'),
     NIT: 'NIT',
-    PP: t('topup.bankStep.idTypePp'),
+    PASSPORT: t('topup.bankStep.idTypePp'),
   };
   const selectedBankName =
     COLOMBIAN_BANKS.find((b) => b.code === selectedBank)?.name ?? '';
@@ -155,7 +155,7 @@ export function TopUpBankStep({
             {(
               [
                 ['savings', t('topup.bankStep.savings')],
-                ['checking', t('topup.bankStep.checking')],
+                ['checkings', t('topup.bankStep.checking')],
               ] as const
             ).map(([val, label]) => (
               <button
@@ -225,7 +225,7 @@ export function TopUpBankStep({
                 <SelectItem value="CC">{t('topup.idTypeCc')}</SelectItem>
                 <SelectItem value="CE">{t('topup.idTypeCe')}</SelectItem>
                 <SelectItem value="NIT">NIT</SelectItem>
-                <SelectItem value="PP">
+                <SelectItem value="PASSPORT">
                   {t('topup.bankStep.idTypePp')}
                 </SelectItem>
               </SelectContent>

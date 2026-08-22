@@ -1,3 +1,4 @@
+import type { IdentityMeProfile } from '@bloque/sdk-identity';
 import {
   createContext,
   type ReactNode,
@@ -11,9 +12,10 @@ import { toast } from 'sonner';
 import type { VerificationStatus } from '~/domain/kyc/types';
 import type { TosStatus } from '~/domain/tos/types';
 import { apiFetch } from '~/lib/api-fetch';
-import { createBloqueSdk } from '~/lib/bloque';
-import { queryClient } from '~/lib/query-client';
+import { createBloqueSdk, resetBloque } from '~/lib/bloque';
+import { queryClient, SESSION_EXPIRED_EVENT } from '~/lib/query-client';
 import { deriveKycStatus } from './kyc-status';
+import { makeLatestWins } from './latest-wins';
 import { deriveTosStatus } from './tos-status';
 import type {
   AliasCheckResult,
@@ -52,6 +54,13 @@ export type AuthContextProps = {
   logout: () => Promise<void>;
   /** Silently re-fetches the current profile without affecting `loading` or signing the user out on failure. */
   refreshUser: () => Promise<void>;
+  /**
+   * Re-reads only the Terms of Service status, for a session that has been
+   * open long enough to have gone stale. Deliberately narrower than
+   * `refreshUser`: it must be cheap enough to run on a timer and on every
+   * window focus.
+   */
+  refreshTosStatus: () => Promise<void>;
   user: User;
 };
 
@@ -66,6 +75,14 @@ export const AuthContext = createContext<AuthContextProps | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
+  /**
+   * Orders the four overlapping paths that can resolve "who is signed in", so
+   * a superseded `GET /identities/me` cannot land after a newer one. See
+   * `latest-wins.ts` for the incident this comes from.
+   */
+  const authSeqRef = useRef(makeLatestWins());
+  /** Whose session the memoized SDK client currently holds. */
+  const signedInUrnRef = useRef<string | null>(null);
   const pendingOnboardingSessionRef = useRef<OnboardingSession | null>(null);
   const pendingProfileOnboardingRef = useRef<PendingProfileOnboarding | null>(
     null,
@@ -77,6 +94,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (
       me: Awaited<ReturnType<ReturnType<typeof createBloqueSdk>['me']>>,
     ) => {
+      // Claimed before the first await, so a slower earlier caller cannot
+      // overwrite a newer identity when it eventually resolves.
+      const token = authSeqRef.current.begin();
+
+      // Any change of identity invalidates the memoized authenticated client,
+      // which still holds the previous session. Tracked on a ref rather than
+      // read out of state: a state updater must stay pure, and React may run
+      // it twice.
+      if (signedInUrnRef.current && signedInUrnRef.current !== me.urn) {
+        resetBloque();
+      }
+      signedInUrnRef.current = me.urn;
+
       // Concurrent, not sequential: both are on the login path and each has
       // its own 5s ceiling, so chaining them would double the worst case a
       // user waits for the wallet to appear.
@@ -84,13 +114,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         deriveKycStatus(me.urn),
         deriveTosStatus(me.urn),
       ]);
+
+      // Superseded while those were in flight — drop it rather than land a
+      // stale identity over the current one.
+      if (!authSeqRef.current.isCurrent(token)) return;
+
+      // This wallet only ever registers/logs in `type: 'individual'`
+      // identities (see `login`/`completeOnboarding` below), so `profile` is
+      // always shaped as `IdentityMeProfile` in practice — but the SDK types
+      // it as a union with the business/other shapes, which don't carry
+      // these fields at all.
+      const profile = me.profile as IdentityMeProfile;
+
       setCurrentUser({
         urn: me.urn,
-        name: me.profile.first_name,
-        email: me.profile.email,
-        phone: me.profile.phone,
-        personalIdNumber: me.profile.personal_id_number,
-        personalIdType: me.profile.personal_id_type,
+        name: profile.first_name ?? '',
+        email: profile.email ?? '',
+        phone: profile.phone ?? '',
+        personalIdNumber: profile.personal_id_number ?? '',
+        personalIdType: profile.personal_id_type ?? '',
         kycStatus,
         tosStatus,
       });
@@ -253,6 +295,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [setAuthenticatedUser]);
 
+  /**
+   * A new document version activating, or a grace period lapsing, can make a
+   * signed-in user non-compliant without them doing anything. Nothing else
+   * re-reads this: the status is resolved once at authentication, so without
+   * this a tab left open across a release would never notice.
+   *
+   * Silent on failure, and leaves the previous value alone — `deriveTosStatus`
+   * already maps its own failures to 'unknown', and overwriting a known
+   * 'accepted' with that on a network blip would prompt someone who is
+   * perfectly compliant.
+   */
+  const refreshTosStatus = useCallback(async () => {
+    const urn = currentUser?.urn;
+    if (!urn) return;
+
+    const tosStatus = await deriveTosStatus(urn);
+    if (tosStatus === 'unknown') return;
+
+    // Functional update, and compared before writing: this runs on a timer and
+    // on every focus, so a new object each time would re-render the whole tree
+    // for nothing.
+    setCurrentUser((latest) =>
+      latest && latest.tosStatus !== tosStatus
+        ? { ...latest, tosStatus }
+        : latest,
+    );
+  }, [currentUser?.urn]);
+
   const logout = useCallback(async () => {
     setLoading(true);
     try {
@@ -262,6 +332,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       queryClient.clear();
       localStorage.clear();
+      // The memoized client holds the session that was just ended.
+      resetBloque();
+      signedInUrnRef.current = null;
       setCurrentUser(null);
       setLoading(false);
     }
@@ -287,6 +360,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void checkAuth();
   }, [setAuthenticatedUser]);
 
+  // A bare 401 is only a *candidate* signal, not proof the session is dead:
+  // payment-rails' `E_INVALID_TOKEN` covers both an expired and a malformed
+  // token, a missing-cookie 401 carries no code at all, and unrelated flows
+  // (revoked API keys, webhook signatures, TOS/verification gate tokens, a
+  // business check on external-US-bank swaps) can also 401 for reasons that
+  // have nothing to do with this browser session. So instead of closing the
+  // session on the first 401, re-probe with the same `me()` call `checkAuth`
+  // already trusts on mount, and only close the session if that confirms it.
+  //
+  // `sessionCheckInFlightRef` collapses a burst — a token that's actually
+  // expired usually fails several in-flight queries at once, each dispatching
+  // the event — into a single probe. It resets on a false alarm, so a later
+  // real expiry still gets caught; it deliberately does not reset once a
+  // close is confirmed, since by then the page is navigating to /login.
+  const sessionCheckInFlightRef = useRef(false);
+
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      if (sessionCheckInFlightRef.current) return;
+      sessionCheckInFlightRef.current = true;
+
+      createBloqueSdk()
+        .me()
+        .then(() => {
+          // Still valid — the 401 that triggered this was a one-off, not a
+          // dead session.
+          sessionCheckInFlightRef.current = false;
+        })
+        .catch(() => {
+          void logout().finally(() => {
+            window.location.href = '/login';
+          });
+        });
+    };
+
+    window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+    return () =>
+      window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+  }, [logout]);
+
   return (
     <AuthContext.Provider
       value={{
@@ -300,6 +413,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         resetOnboardingState,
         logout,
         refreshUser,
+        refreshTosStatus,
         user: currentUser as User,
       }}
     >

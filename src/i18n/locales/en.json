@@ -201,7 +201,7 @@
       "subtitle": "Enter the key or scan the QR",
       "immediateByKey": "Instant transfer by key",
       "keyLabel": "BRE-B key",
-      "keyPlaceholder": "3001234567 or @MBP313",
+      "keyPlaceholder": "@MBP313",
       "sendFrom": "Send from",
       "amount": "Amount",
       "available": "Available: {{amount}}",
@@ -218,7 +218,8 @@
       "from": "From",
       "noFundedAccounts": "You don't have available balance in any active BRE-B key.",
       "selectSourceAccount": "Select the BRE-B account you want to send from.",
-      "invalidKey": "Enter a valid BRE-B key, e.g. a phone, email, or alias like @MBP313.",
+      "invalidKey": "Enter a valid BRE-B key, e.g. an alias like @MBP313.",
+      "onlyAlphaKeysSupported": "For now you can only send to a BRE-B alias (starts with @), like @MBP313. Phone, ID, email, and BCODE aren't enabled for sending yet.",
       "minAmount": "The minimum amount is $10 COP.",
       "noRecipientConfirmed": "There's no confirmed recipient.",
       "noRateToSend": "No rate available to send.",
@@ -643,5 +644,12 @@
     },
     "logout": "Log out",
     "version": "Wallet Bloque v{{version}}"
+  },
+  "tos": {
+    "required": {
+      "title": "We have updated our terms",
+      "description": "To keep using your account, please review and accept the current terms and conditions.",
+      "cta": "Review and accept"
+    }
   }
 }

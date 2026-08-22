@@ -191,6 +191,12 @@ function RouteComponent() {
               fullName: form.fullName.trim(),
               phoneNumber: form.phoneNumber.trim(),
             },
+            // Required as of @bloque/sdk-swap 0.8.0 — payment-rails now
+            // rejects a PSE order up front without it. This is where the
+            // bank sends the user's tab back once they finish paying (or
+            // abandon); it opens in a new tab (see `window.open` below), so
+            // the original tab keeps showing the pending step regardless.
+            redirectUrl: `${window.location.origin}/topup`,
           },
         },
       },
