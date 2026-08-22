@@ -64,6 +64,21 @@ function minorToMajor(amountMinor: number, precision: number) {
   return amountMinor / 10 ** precision;
 }
 
+/**
+ * Cobre rejects r2p counterparty creation outright unless `phone_number` is
+ * full E.164 (`+` + country code + digits) — but the PSE form only ever
+ * collects a bare 10-digit local number (see the `pse-phone` input below,
+ * which strips everything but digits on every keystroke). Applied once here,
+ * right before the SDK call, so the input/state/confirmation step never show
+ * a country code the user never typed.
+ */
+function toColombianE164(phoneNumber: string): string {
+  const digits = phoneNumber.replace(/\D/g, '');
+  const local =
+    digits.startsWith('57') && digits.length > 10 ? digits.slice(2) : digits;
+  return `+57${local}`;
+}
+
 export const Route = createFileRoute('/_authed/topup/')({
   component: RouteComponent,
 });
@@ -189,7 +204,7 @@ function RouteComponent() {
             userLegalId: form.userLegalId.trim(),
             customerData: {
               fullName: form.fullName.trim(),
-              phoneNumber: form.phoneNumber.trim(),
+              phoneNumber: toColombianE164(form.phoneNumber),
             },
             // Required as of @bloque/sdk-swap 0.8.0 — payment-rails now
             // rejects a PSE order up front without it. This is where the
