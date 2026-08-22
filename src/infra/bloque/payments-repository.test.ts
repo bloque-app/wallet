@@ -148,7 +148,11 @@ describe('bloquePaymentsRepository order creation — execution outcome mapping'
         customerEmail: 'user@example.com',
         userLegalIdType: 'CC',
         userLegalId: '123',
-        customerData: { fullName: 'User', phoneNumber: '3000000000' },
+        // E.164 — the route that builds this (topup/index.tsx) always
+        // prepends +57 before it reaches this repository; this fixture
+        // documents that shape rather than testing the conversion itself
+        // (that's a pure function local to the route, not exercised here).
+        customerData: { fullName: 'User', phoneNumber: '+573000000000' },
         redirectUrl: 'https://wallet.example.com/topup',
       },
     });
@@ -242,7 +246,11 @@ describe('bloquePaymentsRepository order creation — execution outcome mapping'
         customerEmail: 'user@example.com',
         userLegalIdType: 'CC',
         userLegalId: '123',
-        customerData: { fullName: 'User', phoneNumber: '3000000000' },
+        // E.164 — the route that builds this (topup/index.tsx) always
+        // prepends +57 before it reaches this repository; this fixture
+        // documents that shape rather than testing the conversion itself
+        // (that's a pure function local to the route, not exercised here).
+        customerData: { fullName: 'User', phoneNumber: '+573000000000' },
         redirectUrl: 'https://wallet.example.com/topup',
       },
     });
