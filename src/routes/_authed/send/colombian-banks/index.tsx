@@ -2,10 +2,9 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import type { CardProduct } from '~/domain/accounts/types';
 import { isSupportedBank } from '~/domain/payments/supported-bank';
 import type { ExecutionOutcome } from '~/domain/payments/types';
-import { useAccounts } from '~/hooks/accounts/use-accounts';
+import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useCreateBankTransferOrder } from '~/hooks/payments/use-bank-transfer';
 import { useRates } from '~/hooks/payments/use-rates';
 import { TopUpAmountStep } from '../../topup/-components/amount-step';
@@ -64,26 +63,15 @@ function RouteComponent() {
   } | null>(null);
   const [autoRetry, setAutoRetry] = useState(false);
   const [selectedBank, setSelectedBank] = useState('');
-  const accountsQuery = useAccounts();
-  const isLoadingCards = accountsQuery.isLoading;
-  const cards =
-    accountsQuery.data?.flatMap((account) =>
-      account.products.filter(
-        (product): product is CardProduct => product.kind === 'card',
-      ),
-    ) ?? [];
+  const { accounts: sourceAccounts, isLoading: isLoadingAccounts } =
+    useAccountPicker();
+  const sourceAccountUrn = sourceAccounts[0]?.primaryUrn ?? '';
 
   const parsedAmount = Number.parseInt(amount.replace(/\D/g, ''), 10) || 0;
   const amountSrc = useMemo(() => {
     if (parsedAmount <= 0) return '';
     return majorToMinor(parsedAmount, FROM_PRECISION);
   }, [parsedAmount]);
-
-  // TODO: silently uses the first card as the funding source when more than
-  // one exists — same class of bug fixed elsewhere in the accounts/products
-  // work this session (BRE-B send, product creation). Flagged, not fixed
-  // here — out of this pass's approved scope.
-  const sourceAccountUrn = cards[0]?.urn ?? '';
 
   const ratesQuery = useRates(
     parsedAmount >= MIN_TRANSFER_AMOUNT && amountSrc && sourceAccountUrn
@@ -117,8 +105,8 @@ function RouteComponent() {
 
   const rateError = useMemo(() => {
     if (parsedAmount < MIN_TRANSFER_AMOUNT) return null;
-    if (!sourceAccountUrn && !isLoadingCards) {
-      return t('send.colombianBanks.noCardToSend');
+    if (!sourceAccountUrn && !isLoadingAccounts) {
+      return t('send.colombianBanks.noSourceAccount');
     }
     if (ratesQuery.isError) {
       return t('convert.rateFetchError');
@@ -130,7 +118,7 @@ function RouteComponent() {
   }, [
     parsedAmount,
     sourceAccountUrn,
-    isLoadingCards,
+    isLoadingAccounts,
     ratesQuery.isError,
     ratesQuery.isSuccess,
     selectedRate,
