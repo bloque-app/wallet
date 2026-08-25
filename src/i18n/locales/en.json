@@ -388,7 +388,6 @@
     "colombianBanks": {
       "title": "Send to Colombian banks",
       "stepAccount": "Account",
-      "noCardToSend": "We couldn't find a card to send from.",
       "noRateForOrder": "No rate selected to create the order.",
       "invalidAmountForOrder": "Invalid amount to create the order.",
       "noSourceAccount": "No source account available.",

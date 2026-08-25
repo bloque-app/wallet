@@ -388,7 +388,6 @@
     "colombianBanks": {
       "title": "Enviar a bancos colombianos",
       "stepAccount": "Cuenta",
-      "noCardToSend": "No encontramos una tarjeta para enviar.",
       "noRateForOrder": "No hay tasa seleccionada para crear la orden.",
       "invalidAmountForOrder": "Monto inválido para crear la orden.",
       "noSourceAccount": "No hay cuenta origen disponible.",
