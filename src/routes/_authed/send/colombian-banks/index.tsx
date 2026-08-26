@@ -2,7 +2,10 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { isSupportedBank } from '~/domain/payments/supported-bank';
+import {
+  isSupportedBank,
+  SUPPORTED_BANK_LABELS,
+} from '~/domain/payments/supported-bank';
 import type { ExecutionOutcome } from '~/domain/payments/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useCreateBankTransferOrder } from '~/hooks/payments/use-bank-transfer';
@@ -84,6 +87,10 @@ function RouteComponent() {
         }
       : undefined,
   );
+
+  const selectedBankName = isSupportedBank(selectedBank)
+    ? SUPPORTED_BANK_LABELS[selectedBank]
+    : '';
 
   const selectedRate = ratesQuery.data?.[0] ?? null;
   const rateSummary = useMemo(() => {
@@ -299,6 +306,7 @@ function RouteComponent() {
           amount={parsedAmount}
           amountDst={rateSummary?.amountDst ?? 0}
           ratio={rateSummary?.ratio ?? 0}
+          bankName={selectedBankName}
           bankAccountType={bankForm.bankAccountType}
           bankAccountNumber={bankForm.bankAccountNumber}
           bankAccountHolderName={bankForm.bankAccountHolderName}
