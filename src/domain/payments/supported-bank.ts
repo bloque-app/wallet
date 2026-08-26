@@ -54,3 +54,43 @@ const SUPPORTED_BANK_SET = new Set<string>(SUPPORTED_BANKS);
 export function isSupportedBank(value: string): value is SupportedBank {
   return SUPPORTED_BANK_SET.has(value);
 }
+
+/**
+ * Display names for `SUPPORTED_BANKS`. Typed as `Record<SupportedBank, string>`
+ * so the compiler itself rejects a missing or stale entry — any UI that lists
+ * bank options should build its list from here (or from `SUPPORTED_BANKS`
+ * directly) rather than keeping a separate hardcoded array that can drift
+ * out of sync with what `isSupportedBank` actually accepts.
+ */
+export const SUPPORTED_BANK_LABELS: Record<SupportedBank, string> = {
+  banco_agrario_de_colombia: 'Banco Agrario de Colombia',
+  banco_av_villas: 'Banco AV Villas',
+  banco_bancamia: 'Banco Bancamia',
+  banco_bbva_colombia: 'BBVA Colombia',
+  banco_btg_pactual_colombia: 'Banco BTG Pactual Colombia',
+  citibank_colombia: 'Citibank Colombia',
+  banco_caja_social_bcsc: 'Banco Caja Social BCSC',
+  davibank: 'Davibank',
+  banco_contactar: 'Banco Contactar',
+  banco_cooperativo_coopcentral: 'Banco Cooperativo Coopcentral',
+  ban100: 'Ban100',
+  banco_davivienda: 'Banco Davivienda',
+  banco_de_bogota: 'Banco de Bogotá',
+  banco_de_occidente: 'Banco de Occidente',
+  banco_gnb_sudameris: 'Banco GNB Sudameris',
+  banco_jp_morgan_colombia: 'Banco JP Morgan Colombia',
+  banco_popular: 'Banco Popular',
+  banco_itau: 'Banco Itaú',
+  bancolombia: 'Bancolombia',
+  banco_w: 'Banco W',
+  banco_coomeva: 'Banco Coomeva',
+  banco_finandina_bic: 'Banco Finandina BIC',
+  banco_falabella: 'Banco Falabella',
+  banco_pichincha: 'Banco Pichincha',
+  banco_santander_de_negocios_colombia: 'Banco Santander de Negocios Colombia',
+  banco_mundo_mujer: 'Banco Mundo Mujer',
+  banco_serfinanza: 'Banco Serfinanza',
+  mibanco: 'Mibanco',
+  lulo_bank: 'Lulo Bank',
+  banco_union: 'Banco Unión',
+};

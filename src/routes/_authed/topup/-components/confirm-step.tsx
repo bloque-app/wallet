@@ -10,6 +10,7 @@ interface ConfirmStepProps {
   amount: number;
   amountDst: number;
   ratio: number;
+  bankName: string;
   bankAccountType: 'savings' | 'checkings';
   bankAccountNumber: string;
   bankAccountHolderName: string;
@@ -24,6 +25,7 @@ export function TopUpConfirmStep({
   amount,
   amountDst,
   ratio,
+  bankName,
   bankAccountType,
   bankAccountNumber,
   bankAccountHolderName,
@@ -72,7 +74,7 @@ export function TopUpConfirmStep({
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">{t('topup.bank')}</span>
-            <span className="font-medium text-foreground">Bancolombia</span>
+            <span className="font-medium text-foreground">{bankName}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">

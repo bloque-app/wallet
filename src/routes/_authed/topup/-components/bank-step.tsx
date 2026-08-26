@@ -11,6 +11,10 @@ import {
   SelectItem,
   SelectTrigger,
 } from '~/components/ui/select';
+import {
+  SUPPORTED_BANK_LABELS,
+  SUPPORTED_BANKS,
+} from '~/domain/payments/supported-bank';
 import { cn } from '~/lib/utils';
 
 export interface TopUpBankAccountData {
@@ -21,47 +25,16 @@ export interface TopUpBankAccountData {
   bankAccountHolderIdentificationValue: string;
 }
 
-export const COLOMBIAN_BANKS = [
-  { code: 'banco_agrario_de_colombia', name: 'Banco Agrario de Colombia' },
-  { code: 'banco_av_villas', name: 'Banco AV Villas' },
-  { code: 'banco_bancamia', name: 'Banco Bancamia' },
-  { code: 'banco_bbva_colombia', name: 'BBVA Colombia' },
-  { code: 'banco_btg_pactual_colombia', name: 'Banco BTG Pactual Colombia' },
-  { code: 'citibank_colombia', name: 'Citibank Colombia' },
-  { code: 'banco_caja_social_bcsc', name: 'Banco Caja Social BCSC' },
-  { code: 'davibank', name: 'Davibank' },
-  { code: 'banco_contactar', name: 'Banco Contactar' },
-  {
-    code: 'banco_cooperativo_coopcentral',
-    name: 'Banco Cooperativo Coopcentral',
-  },
-  { code: 'ban100', name: 'Ban100' },
-  { code: 'banco_de_bogota', name: 'Banco de Bogotá' },
-  { code: 'banco_de_occidente', name: 'Banco de Occidente' },
-  { code: 'banco_gnb_sudameris', name: 'Banco GNB Sudameris' },
-  { code: 'banco_jp_morgan_colombia', name: 'Banco JP Morgan Colombia' },
-  { code: 'banco_popular', name: 'Banco Popular' },
-  { code: 'banco_itau', name: 'Banco Itaú' },
-  { code: 'banco_w', name: 'Banco W' },
-  { code: 'daviplata', name: 'Daviplata' },
-  { code: 'banco_coomeva', name: 'Banco Coomeva' },
-  { code: 'banco_finandina_bic', name: 'Banco Finandina BIC' },
-  { code: 'banco_falabella', name: 'Banco Falabella' },
-  { code: 'banco_pichincha', name: 'Banco Pichincha' },
-  {
-    code: 'banco_santander_de_negocios_colombia',
-    name: 'Banco Santander de Negocios Colombia',
-  },
-  { code: 'banco_mundo_mujer', name: 'Banco Mundo Mujer' },
-  { code: 'banco_serfinanza', name: 'Banco Serfinanza' },
-  { code: 'mibanco', name: 'Mibanco' },
-  { code: 'lulo_bank', name: 'Lulo Bank' },
-  { code: 'banco_union', name: 'Banco Unión' },
-  { code: 'nubank', name: 'Nubank' },
-  { code: 'rappipay', name: 'RappiPay' },
-  { code: 'banco_davivienda', name: 'Banco Davivienda' },
-  { code: 'nequi', name: 'Nequi' },
-] as const;
+/**
+ * Destination banks offered in this step. Sourced from `SUPPORTED_BANKS`
+ * (the same list `isSupportedBank` validates against before an order is
+ * created) so this selector can never offer a bank the submit step then
+ * rejects.
+ */
+const COLOMBIAN_BANKS = SUPPORTED_BANKS.map((code) => ({
+  code,
+  name: SUPPORTED_BANK_LABELS[code],
+}));
 
 interface BankStepProps {
   form: TopUpBankAccountData;
