@@ -20,6 +20,7 @@ import { Label } from '~/components/ui/label';
 import { Textarea } from '~/components/ui/textarea';
 import type { ExecutionOutcome } from '~/domain/payments/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
+import { useResolveBrebKey } from '~/hooks/accounts/use-breb-keys';
 import { useCreateBrebOrder } from '~/hooks/payments/use-breb-order';
 import { useRates } from '~/hooks/payments/use-rates';
 import { formatCOP, getAssetPrecision } from '~/lib/formatters';
@@ -28,7 +29,6 @@ import { TopUpErrorStep } from '../../topup/-components/error-step';
 import { ExecutionOutcomeStep } from '../../topup/-components/execution-outcome-step';
 import {
   type BrebKeyType,
-  buildUnverifiedRecipient,
   getRecipientName,
   type ResolvedRecipient,
 } from '../-lib/breb';
@@ -97,8 +97,9 @@ function RouteComponent() {
 
   const hasValidKey = inferredKeyType !== null;
   // Cobre — the active BRE-B provider — only has ALPHA (@alias) keys
-  // operationally verified for payouts today (see `buildUnverifiedRecipient`).
+  // operationally verified for payouts today.
   const isAlphaKey = inferredKeyType === 'ALPHA';
+  const resolveBrebKey = useResolveBrebKey();
 
   const { accounts: fundedAccounts, isLoading: isLoadingFundedAccounts } =
     useAccountPicker({ asset: FROM_ASSET, requireProductKind: 'breb' });
@@ -441,21 +442,33 @@ function RouteComponent() {
 
           <Button
             onClick={() => {
-              setRecipientPreview(
-                buildUnverifiedRecipient(
-                  inferredKeyType ?? 'ALPHA',
-                  normalizedKey,
-                ),
+              if (!inferredKeyType) return;
+              resolveBrebKey.mutate(
+                { keyType: inferredKeyType, key: normalizedKey },
+                {
+                  onSuccess: (resolved) => {
+                    setRecipientPreview(resolved);
+                    setConfirmOpen(true);
+                  },
+                  onError: (error) => {
+                    toast.error(
+                      error instanceof Error
+                        ? error.message
+                        : t('brebKeys.payTransfer.keyValidationErrorToast'),
+                    );
+                  },
+                },
               );
-              setConfirmOpen(true);
             }}
-            disabled={!canSubmit}
+            disabled={!canSubmit || resolveBrebKey.isPending}
             className="h-12 w-full gap-2 rounded-2xl text-sm font-medium"
           >
             <Send className="h-4 w-4" />
-            {createOrderMutation.isPending
-              ? t('brebKeys.payTransfer.sending')
-              : t('brebKeys.payTransfer.sendMoney')}
+            {resolveBrebKey.isPending
+              ? t('brebKeys.payTransfer.validatingKey')
+              : createOrderMutation.isPending
+                ? t('brebKeys.payTransfer.sending')
+                : t('brebKeys.payTransfer.sendMoney')}
           </Button>
         </div>
       </section>
