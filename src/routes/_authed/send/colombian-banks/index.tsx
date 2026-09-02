@@ -76,13 +76,22 @@ function RouteComponent() {
     return majorToMinor(parsedAmount, FROM_PRECISION);
   }, [parsedAmount]);
 
+  // Different destination banks can live on different swap graphs with their
+  // own rateSig (e.g. bancolombia/nequi are quoted separately from the rest),
+  // and the order endpoint rejects a toMedium that isn't covered by the
+  // quoted rateSig's graph with E_UNSUPPORTED_TO_MEDIUM. Quote against the
+  // selected bank once one is picked; fall back to bancolombia only for the
+  // amount step's estimate, before a bank has been chosen.
+  const rateToMedium = isSupportedBank(selectedBank)
+    ? selectedBank
+    : 'bancolombia';
   const ratesQuery = useRates(
     parsedAmount >= MIN_TRANSFER_AMOUNT && amountSrc && sourceAccountUrn
       ? {
           fromAsset: FROM_ASSET,
           toAsset: TO_ASSET,
           fromMediums: [FROM_MEDIUM],
-          toMediums: ['bancolombia'],
+          toMediums: [rateToMedium],
           amountSrc,
         }
       : undefined,
