@@ -50,36 +50,6 @@ export function getBrebKeyTypes(): Array<{
   ];
 }
 
-/**
- * Stands in for `resolveKey` while Cobre — the active BRE-B provider — has no
- * equivalent (`resolve-breb-key.command.ts` throws `E_BREB_RESOLVE_KEY_UNSUPPORTED`
- * for it by product decision, not as a bug: it's billed per call with no free
- * alternative). Cobre addresses the payee by `destinationKey` directly and
- * never looks up `resolutionId` against a real resolution — it's only an
- * idempotency seed — so there is no owner name to show up front, and none of
- * this needs a network call. Kept behind this one function so re-wiring a
- * real `resolveKey` call back in (e.g. if a future provider supports it) only
- * means replacing this function, not every call site.
- */
-export function buildUnverifiedRecipient(
-  keyType: BrebKeyType,
-  keyValue: string,
-): ResolvedRecipient {
-  return {
-    id: crypto.randomUUID(),
-    resolutionId: crypto.randomUUID(),
-    customerId: '',
-    key: { keyType, keyValue },
-    owner: null,
-    participant: null,
-    account: null,
-    receptorNode: null,
-    resolvedAt: null,
-    expiresAt: null,
-    raw: {},
-  };
-}
-
 export function getRecipientName(data: {
   owner: ResolvedRecipient['owner'];
   participant: ResolvedRecipient['participant'];
