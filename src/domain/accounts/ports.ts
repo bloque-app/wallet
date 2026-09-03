@@ -64,6 +64,13 @@ export type CreatePolygonAccountInput = { name?: string; ledgerId?: string };
 
 export type CreateVirtualAccountInput = { name?: string };
 
+export type CreateExternalUsBankAccountInput = {
+  /** URL the hosted Plaid Link page redirects to once linking finishes. */
+  returnUrl: string;
+  /** Opaque correlator echoed back on `returnUrl` as `state`. */
+  state?: string;
+};
+
 export type TransferInput = {
   sourceUrn: string;
   destinationUrn: string;
@@ -124,4 +131,8 @@ export type AccountsRepository = {
   createPolygonAccount(input: CreatePolygonAccountInput): Promise<Product>;
 
   createVirtualAccount(input: CreateVirtualAccountInput): Promise<Product>;
+
+  createExternalUsBankAccount(
+    input: CreateExternalUsBankAccountInput,
+  ): Promise<Product>;
 };

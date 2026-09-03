@@ -9,6 +9,15 @@ type AccountPickerOptions = {
   asset?: string;
   /** Only include accounts that have at least one product of this kind. */
   requireProductKind?: Product['kind'];
+  /**
+   * Only include accounts with an `external-us-bank` product in this Plaid
+   * `linkStatus` — distinct from `requireActive`, which checks the primary
+   * product's top-level `status`, not Plaid's linking state.
+   */
+  requireLinkStatus?: Extract<
+    Product,
+    { kind: 'external-us-bank' }
+  >['linkStatus'];
 };
 
 function hasPositiveBalance(account: Account, asset: string): boolean {
@@ -29,7 +38,12 @@ function hasPositiveBalance(account: Account, asset: string): boolean {
  */
 export function useAccountPicker(options: AccountPickerOptions = {}) {
   const accountsQuery = useAccounts();
-  const { requireActive = true, asset, requireProductKind } = options;
+  const {
+    requireActive = true,
+    asset,
+    requireProductKind,
+    requireLinkStatus,
+  } = options;
 
   const accounts = useMemo(() => {
     return (accountsQuery.data ?? []).filter((account) => {
@@ -45,10 +59,26 @@ export function useAccountPicker(options: AccountPickerOptions = {}) {
       ) {
         return false;
       }
+      if (
+        requireLinkStatus &&
+        !account.products.some(
+          (product) =>
+            product.kind === 'external-us-bank' &&
+            product.linkStatus === requireLinkStatus,
+        )
+      ) {
+        return false;
+      }
 
       return true;
     });
-  }, [accountsQuery.data, requireActive, asset, requireProductKind]);
+  }, [
+    accountsQuery.data,
+    requireActive,
+    asset,
+    requireProductKind,
+    requireLinkStatus,
+  ]);
 
   return { accounts, isLoading: accountsQuery.isLoading };
 }

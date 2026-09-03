@@ -348,8 +348,7 @@
       },
       "usBanks": {
         "title": "Bancos/billeteras en EE.UU.",
-        "description": "Envia USD a bancos y wallets en Estados Unidos.",
-        "comingSoon": "Envío a EE.UU. disponible próximamente."
+        "description": "Envia USD a bancos y wallets en Estados Unidos."
       },
       "blockchain": {
         "title": "Direcciones blockchain",
@@ -395,6 +394,34 @@
       "unsupportedBank": "El banco seleccionado no es válido para esta transferencia.",
       "minAmountToast": "El monto mínimo es $5,000 COP.",
       "noRateToContinue": "No hay tasa disponible para continuar."
+    },
+    "usBanks": {
+      "title": "Enviar a bancos en EE.UU.",
+      "stepBank": "Banco",
+      "noRateForOrder": "No hay tasa seleccionada para crear la orden.",
+      "invalidAmountForOrder": "Monto inválido para crear la orden.",
+      "noSourceAccount": "No hay cuenta origen disponible.",
+      "minAmountToast": "El monto mínimo es $10 USD.",
+      "noRateToContinue": "No hay tasa disponible para continuar.",
+      "transferSentToast": "Transferencia RTP iniciada correctamente.",
+      "transferErrorToast": "No se pudo enviar la transferencia RTP.",
+      "bankStep": {
+        "owner": "Nombre del titular",
+        "ownerPlaceholder": "Ej: Jane Doe",
+        "accountNumber": "Número de cuenta bancaria",
+        "accountNumberPlaceholder": "Ej: 1234567890",
+        "routingNumber": "Número de ruta (ABA)",
+        "routingNumberPlaceholder": "Ej: 063108680",
+        "accountType": "Tipo de cuenta",
+        "checking": "Corriente",
+        "savings": "Ahorros",
+        "bankName": "Nombre del banco",
+        "bankNamePlaceholder": "Opcional"
+      },
+      "confirmStep": {
+        "destinationBank": "Banco destino",
+        "owner": "Titular"
+      }
     }
   },
   "topup": {
@@ -421,8 +448,7 @@
       },
       "usBanks": {
         "title": "Desde bancos en EE.UU.",
-        "subtitle": "ACH / Wire",
-        "comingSoon": "Recarga desde bancos en EE.UU. disponible próximamente."
+        "subtitle": "ACH / Wire"
       },
       "blockchain": {
         "title": "Desde direcciones blockchain",
@@ -514,6 +540,49 @@
       "orderId": "Orden: {{orderId}}",
       "checkStatus": "Verificar estado",
       "contactSupportDisclaimer": "Si tienes dudas sobre el estado de tu orden, contacta soporte."
+    },
+    "usAmountStep": {
+      "label": "Monto (USD)",
+      "minAmount": "Monto mínimo: $10 USD",
+      "amount": "Monto",
+      "appliedRate": "Tasa aplicada",
+      "checkingRate": "Consultando tasa disponible...",
+      "youWillReceive": "Recibirás",
+      "enterAmountToQuery": "Ingresa un monto para consultar la tasa."
+    },
+    "usConfirmStep": {
+      "summary": "Resumen",
+      "sending": "Enviando...",
+      "send": "Enviar",
+      "verifyDisclaimer": "Verifica que los datos sean correctos antes de enviar."
+    },
+    "usBanks": {
+      "title": "Recargar desde bancos en EE.UU.",
+      "stepLink": "Banco",
+      "noRateForOrder": "No hay tasa seleccionada para crear la orden.",
+      "invalidAmountForOrder": "Monto inválido para crear la orden.",
+      "noSourceAccount": "No encontramos una cuenta bancaria vinculada desde donde recargar.",
+      "noDestinationAccount": "No encontramos una cuenta destino disponible.",
+      "minAmountToast": "El monto mínimo es $10 USD.",
+      "noRateToContinue": "No hay tasa disponible para continuar.",
+      "topupStartedToast": "Recarga ACH iniciada correctamente.",
+      "startErrorToast": "No se pudo iniciar la recarga.",
+      "linkedBankLabel": "Banco vinculado",
+      "confirmStep": {
+        "sourceBank": "Banco origen"
+      },
+      "linkStep": {
+        "title": "Vincula una cuenta bancaria en EE.UU.",
+        "description": "Conecta una cuenta bancaria en EE.UU. para recargar tu saldo vía ACH.",
+        "cta": "Vincular cuenta bancaria",
+        "linking": "Vinculando tu cuenta bancaria…",
+        "linkingDescription": "Esto puede tardar unos segundos. Continuaremos automáticamente cuando termine.",
+        "checkAgain": "Verificar de nuevo",
+        "failed": "No pudimos vincular tu cuenta bancaria.",
+        "retry": "Intentar de nuevo",
+        "needsUpdate": "Tu banco vinculado necesita reconectarse.",
+        "startErrorToast": "No se pudo iniciar la vinculación bancaria. Intenta de nuevo."
+      }
     }
   },
   "convert": {

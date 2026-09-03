@@ -146,6 +146,37 @@ describe('bloqueAccountsRepository.listProducts — medium duck-typing', () => {
     expect(product?.label).toBe('Main');
   });
 
+  test('a linked external US bank account (details.linkStatus) maps to "external-us-bank", not "pocket"', async () => {
+    listMock.mockImplementationOnce(() =>
+      Promise.resolve({
+        accounts: [
+          {
+            urn: 'did:bloque:account:external-us-bank:abc123',
+            ledgerId: 'ledger-6',
+            status: 'active',
+            createdAt: '2026-01-15T00:00:00.000Z',
+            balance: {},
+            details: {
+              id: 'abc123',
+              linkStatus: 'active',
+              bankName: 'Chase',
+              bankAccountLast4: '4321',
+            },
+          },
+        ],
+      }),
+    );
+
+    const [product] = await bloqueAccountsRepository.listProducts();
+
+    expect(product?.kind).toBe('external-us-bank');
+    expect(product?.label).toBe('Chase •• 4321');
+    if (product?.kind === 'external-us-bank') {
+      expect(product.linkStatus).toBe('active');
+      expect(product.bankAccountLast4).toBe('4321');
+    }
+  });
+
   test('a Bancolombia-shaped account (referenceCode) maps to "other", not "pocket"', async () => {
     listMock.mockImplementationOnce(() =>
       Promise.resolve({
