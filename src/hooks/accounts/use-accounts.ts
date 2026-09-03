@@ -1,9 +1,18 @@
+import type { QueryObserverOptions } from '@tanstack/react-query';
 import { useQuery } from '@tanstack/react-query';
 import { groupIntoAccounts } from '~/domain/accounts/grouping';
+import type { Account } from '~/domain/accounts/types';
 import { bloqueAccountsRepository } from '~/infra/bloque/accounts-repository';
 
-/** Every ledger the user holds, grouped from their raw products. */
-export function useAccounts() {
+/**
+ * Every ledger the user holds, grouped from their raw products. Pass
+ * `refetchInterval` to poll (e.g. while waiting for a linked bank account's
+ * Plaid `linkStatus` to leave `pending_link`) — omit it for the normal,
+ * one-shot-per-staleness behavior every other caller relies on.
+ */
+export function useAccounts(options?: {
+  refetchInterval?: QueryObserverOptions<Account[]>['refetchInterval'];
+}) {
   return useQuery({
     queryKey: ['accounts'],
     queryFn: async () => {
@@ -11,6 +20,7 @@ export function useAccounts() {
       return groupIntoAccounts(products);
     },
     staleTime: 30_000,
+    refetchInterval: options?.refetchInterval,
   });
 }
 

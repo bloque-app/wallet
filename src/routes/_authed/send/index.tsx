@@ -41,8 +41,8 @@ function RouteComponent() {
     {
       title: t('send.options.usBanks.title'),
       description: t('send.options.usBanks.description'),
+      to: '/send/us-banks',
       icon: Building2,
-      onClick: () => toast.info(t('send.options.usBanks.comingSoon')),
     },
     {
       title: t('send.options.blockchain.title'),

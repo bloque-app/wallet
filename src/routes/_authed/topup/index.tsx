@@ -339,8 +339,8 @@ function RouteComponent() {
               title: t('topup.methods.usBanks.title'),
               subtitle: t('topup.methods.usBanks.subtitle'),
               icon: Building2,
-              enabled: false,
-              onClick: () => toast.info(t('topup.methods.usBanks.comingSoon')),
+              enabled: true,
+              onClick: () => navigate({ to: '/topup/us-banks' }),
             },
             {
               title: t('topup.methods.blockchain.title'),

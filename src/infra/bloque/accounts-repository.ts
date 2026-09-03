@@ -1,6 +1,7 @@
 import type {
   BrebKeyAccount,
   CardAccount,
+  ExternalUsBankAccount,
   PolygonAccount,
   SupportedAsset,
 } from '@bloque/sdk-accounts';
@@ -8,6 +9,7 @@ import type {
   AccountsRepository,
   CreateBrebKeyInput,
   CreateCardInput,
+  CreateExternalUsBankAccountInput,
   CreatePolygonAccountInput,
   CreateVirtualAccountInput,
   GetMovementsParams,
@@ -60,6 +62,22 @@ function isBancolombiaAccount(account: ListedAccount): boolean {
 
 function isUsAccount(account: ListedAccount): boolean {
   return 'accountNumber' in account && 'routingNumber' in account;
+}
+
+/**
+ * `ExternalUsBankAccount`'s `accountNumber`/`routingNumber` live nested under
+ * `.details`, not at the top level, so `isUsAccount` never matches it — must
+ * be checked before the generic pocket fallback.
+ */
+function isExternalUsBankAccount(
+  account: ListedAccount,
+): account is ExternalUsBankAccount {
+  return (
+    'details' in account &&
+    !!account.details &&
+    typeof account.details === 'object' &&
+    'linkStatus' in account.details
+  );
 }
 
 function stringField(account: ListedAccount, key: string): string | undefined {
@@ -135,6 +153,24 @@ function mapToProduct(account: ListedAccount): Product {
       address: account.address,
       network: account.network,
       label: metaString(base.metadata, 'name') || account.address,
+    };
+  }
+
+  if (isExternalUsBankAccount(account)) {
+    const { details } = account;
+    return {
+      ...base,
+      kind: 'external-us-bank',
+      linkStatus: details.linkStatus,
+      bankName: details.bankName,
+      bankAccountLast4: details.bankAccountLast4,
+      needsUpdate: details.needsUpdate,
+      linkUrl: details.linkUrl,
+      label:
+        metaString(base.metadata, 'name') ||
+        (details.bankName
+          ? `${details.bankName} •• ${details.bankAccountLast4 ?? ''}`
+          : 'Cuenta bancaria (EE. UU.)'),
     };
   }
 
@@ -371,6 +407,16 @@ async function createVirtualAccount(
   return mapToProduct(account as ListedAccount);
 }
 
+async function createExternalUsBankAccount(
+  input: CreateExternalUsBankAccountInput,
+): Promise<Product> {
+  const account = await bloque.accounts.externalUsBank.create({
+    returnUrl: input.returnUrl,
+    state: input.state,
+  });
+  return mapToProduct(account as ListedAccount);
+}
+
 export const bloqueAccountsRepository: AccountsRepository = {
   listProducts,
   getBalance,
@@ -391,4 +437,5 @@ export const bloqueAccountsRepository: AccountsRepository = {
   deleteBrebKey,
   createPolygonAccount,
   createVirtualAccount,
+  createExternalUsBankAccount,
 };

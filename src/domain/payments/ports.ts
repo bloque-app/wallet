@@ -2,7 +2,9 @@ import type {
   Bank,
   CreateBankTransferOrderParams,
   CreateBrebOrderParams,
+  CreateExternalUsBankOrderParams,
   CreatePseOrderParams,
+  CreateRtpOrderParams,
   FindRatesParams,
 } from '@bloque/sdk-swap';
 import type { ExecutionOutcome, PaymentOrder, Rate } from './types';
@@ -45,6 +47,16 @@ export type PaymentsRepository = {
 
   createBrebOrder(
     params: CreateBrebOrderParams,
+    options?: CreateOrderOptions,
+  ): Promise<CreateOrderResult>;
+
+  createRtpOrder(
+    params: CreateRtpOrderParams,
+    options?: CreateOrderOptions,
+  ): Promise<CreateOrderResult>;
+
+  createExternalUsBankOrder(
+    params: CreateExternalUsBankOrderParams,
     options?: CreateOrderOptions,
   ): Promise<CreateOrderResult>;
 };

@@ -2,7 +2,9 @@ import type {
   Bank,
   CreateBankTransferOrderParams,
   CreateBrebOrderParams,
+  CreateExternalUsBankOrderParams,
   CreatePseOrderParams,
+  CreateRtpOrderParams,
   ExecutionResult,
   FindRatesParams,
   SwapOrder,
@@ -93,10 +95,28 @@ async function createBrebOrder(
   return mapCreateResult(result);
 }
 
+async function createRtpOrder(
+  params: CreateRtpOrderParams,
+  options?: CreateOrderOptions,
+): Promise<CreateOrderResult> {
+  const result = await bloque.swap.rtp.create(params, options);
+  return mapCreateResult(result);
+}
+
+async function createExternalUsBankOrder(
+  params: CreateExternalUsBankOrderParams,
+  options?: CreateOrderOptions,
+): Promise<CreateOrderResult> {
+  const result = await bloque.swap.externalUsBank.create(params, options);
+  return mapCreateResult(result);
+}
+
 export const bloquePaymentsRepository: PaymentsRepository = {
   findRates,
   listPseBanks,
   createPseOrder,
   createBankTransferOrder,
   createBrebOrder,
+  createRtpOrder,
+  createExternalUsBankOrder,
 };
