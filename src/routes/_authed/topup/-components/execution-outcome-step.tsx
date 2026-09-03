@@ -14,6 +14,9 @@ interface ExecutionOutcomeStepProps {
   /** The `execution` returned alongside a created swap order, already
    * translated by `resolveExecutionOutcome` — never a raw SDK `how`. */
   execution: ExecutionOutcome | undefined;
+  /** Defaults to `formatCOP` — pass `formatUSD` for the RTP/ACH US-bank flows.
+   * Only affects the generic pending fallback; `breb-deposit` is always COP. */
+  formatAmount?: (amount: number) => string;
   onError: () => void;
 }
 
@@ -28,6 +31,7 @@ export function ExecutionOutcomeStep({
   amount,
   orderId,
   execution,
+  formatAmount,
   onError,
 }: ExecutionOutcomeStepProps) {
   const { t } = useTranslation();
@@ -116,6 +120,7 @@ export function ExecutionOutcomeStep({
     <TopUpPendingStep
       amount={amount}
       orderId={orderId}
+      formatAmount={formatAmount}
       actionLabel={
         redirectUrl
           ? t('topup.executionOutcome.openLink')

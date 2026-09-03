@@ -8,7 +8,7 @@ import { useAccounts } from '~/hooks/accounts/use-accounts';
 import { useCreateExternalUsBankAccount } from '~/hooks/accounts/use-external-us-bank-account';
 import { useCreateExternalUsBankOrder } from '~/hooks/payments/use-external-us-bank-order';
 import { useRates } from '~/hooks/payments/use-rates';
-import { getAssetPrecision } from '~/lib/formatters';
+import { formatUSD, getAssetPrecision } from '~/lib/formatters';
 import { TopUpErrorStep } from '../-components/error-step';
 import { ExecutionOutcomeStep } from '../-components/execution-outcome-step';
 import { LinkBankStep } from '../-components/link-bank-step';
@@ -25,8 +25,14 @@ const FROM_MEDIUM = 'external-us-bank';
 const TO_MEDIUM = 'kusama';
 const FROM_PRECISION = getAssetPrecision(FROM_ASSET);
 
-function majorToMinor(amountMajor: number, precision: number) {
-  return (BigInt(amountMajor) * 10n ** BigInt(precision)).toString();
+/** Converts a decimal major-unit string (e.g. "50.25") to a bigint-string of
+ * minor units, via string manipulation to avoid float precision loss. */
+function majorToMinor(amountMajorStr: string, precision: number) {
+  const [intPartRaw, fracPartRaw = ''] = amountMajorStr.split('.');
+  const intPart = intPartRaw || '0';
+  const frac = (fracPartRaw + '0'.repeat(precision)).slice(0, precision);
+  const combined = `${intPart}${frac}`.replace(/^0+(?=\d)/, '');
+  return combined || '0';
 }
 
 function minorToMajor(amountMinor: number, precision: number) {
@@ -41,6 +47,7 @@ export const Route = createFileRoute('/_authed/topup/us-banks/')({
 
 function RouteComponent() {
   const { t } = useTranslation();
+  const search = Route.useSearch();
   const [step, setStep] = useState<PayinStep>('link');
   const [amount, setAmount] = useState('');
   const [lastOrder, setLastOrder] = useState<{
@@ -59,18 +66,42 @@ function RouteComponent() {
     requireActive: false,
     requireLinkStatus: 'active',
   });
-  const sourceAccountUrn = activeBankAccounts[0]?.primaryUrn ?? '';
   const sourceBankProduct = activeBankAccounts[0]?.products.find(
     (p) => p.kind === 'external-us-bank',
   );
+  // A linked bank can be `linkStatus: 'active'` yet still need Plaid
+  // re-authentication (`needsUpdate`) — not a usable ACH source until relinked.
+  const bankNeedsUpdate =
+    sourceBankProduct?.kind === 'external-us-bank' &&
+    sourceBankProduct.needsUpdate === true;
+  const sourceAccountUrn =
+    sourceBankProduct?.kind === 'external-us-bank' && !bankNeedsUpdate
+      ? sourceBankProduct.urn
+      : '';
 
   const { accounts: destinationAccounts } = useAccountPicker({
     requireProductKind: 'pocket',
   });
   const ledgerAccountId = destinationAccounts[0]?.ledgerId ?? '';
 
+  // Function form (not a static boolean): must inspect the *freshest* fetched
+  // data on every tick to know when to stop — a value computed once per
+  // render would keep re-scheduling forever once the account settles into
+  // `link_failed` without any further data change to trigger a re-render.
   const accountsQuery = useAccounts({
-    refetchInterval: pendingUrn && !sourceAccountUrn ? 3000 : false,
+    refetchInterval: (query) => {
+      if (!pendingUrn) return false;
+      const product = (query.state.data ?? [])
+        .flatMap((account) => account.products)
+        .find((p) => p.urn === pendingUrn);
+      if (
+        product?.kind === 'external-us-bank' &&
+        product.linkStatus !== 'pending_link'
+      ) {
+        return false;
+      }
+      return 3000;
+    },
   });
 
   const pendingProduct = pendingUrn
@@ -79,13 +110,15 @@ function RouteComponent() {
         .find((product) => product.urn === pendingUrn)
     : undefined;
 
-  const linkStepStatus: 'idle' | 'linking' | 'failed' =
+  const linkStepStatus: 'idle' | 'linking' | 'failed' | 'needs_update' =
     pendingProduct?.kind === 'external-us-bank' &&
     pendingProduct.linkStatus === 'link_failed'
       ? 'failed'
       : pendingUrn
         ? 'linking'
-        : 'idle';
+        : bankNeedsUpdate
+          ? 'needs_update'
+          : 'idle';
 
   useEffect(() => {
     if (sourceAccountUrn) {
@@ -94,6 +127,26 @@ function RouteComponent() {
       setStep((current) => (current === 'link' ? 'amount' : current));
     }
   }, [sourceAccountUrn]);
+
+  // A failed link must stop polling and not resume silently on a future
+  // visit — clear the persisted marker while still rendering this render's
+  // "failed" state from the in-memory `pendingUrn`.
+  useEffect(() => {
+    if (linkStepStatus === 'failed') {
+      window.sessionStorage.removeItem(PENDING_URN_KEY);
+    }
+  }, [linkStepStatus]);
+
+  // Plaid's hosted page echoes `?status=...` on redirect back — check
+  // immediately instead of waiting for the first 3s poll tick. Only on
+  // mount: reacting to these again on their own would refetch every render,
+  // since `accountsQuery.refetch` is a fresh reference each render.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally mount-only
+  useEffect(() => {
+    if (search.status && pendingUrn) {
+      void accountsQuery.refetch();
+    }
+  }, []);
 
   const createLinkMutation = useCreateExternalUsBankAccount();
 
@@ -117,11 +170,11 @@ function RouteComponent() {
     );
   };
 
-  const parsedAmount = Number.parseInt(amount.replace(/\D/g, ''), 10) || 0;
+  const parsedAmount = Number.parseFloat(amount) || 0;
   const amountSrc = useMemo(() => {
     if (parsedAmount <= 0) return '';
-    return majorToMinor(parsedAmount, FROM_PRECISION);
-  }, [parsedAmount]);
+    return majorToMinor(amount, FROM_PRECISION);
+  }, [amount, parsedAmount]);
 
   const ratesQuery = useRates(
     parsedAmount >= MIN_TOPUP_AMOUNT_USD && amountSrc && sourceAccountUrn
@@ -145,7 +198,7 @@ function RouteComponent() {
       typeof selectedRate.ratio === 'number' &&
       Number.isFinite(selectedRate.ratio)
         ? selectedRate.ratio
-        : (selectedRate.rate?.[1] ?? 1) / (selectedRate.rate?.[0] ?? 1);
+        : (selectedRate.rate?.[1] || 1) / (selectedRate.rate?.[0] || 1);
     const dstAmountMajor = srcAmountMajor * ratio;
     return {
       amountDst: dstAmountMajor,
@@ -357,6 +410,7 @@ function RouteComponent() {
           amount={parsedAmount}
           orderId={lastOrder?.id}
           execution={lastOrder?.execution}
+          formatAmount={formatUSD}
           onError={() => setStep('error')}
         />
       )}

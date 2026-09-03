@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '~/components/ui/button';
 
 interface LinkBankStepProps {
-  status: 'idle' | 'linking' | 'failed';
+  status: 'idle' | 'linking' | 'failed' | 'needs_update';
   isStarting: boolean;
   onStartLink: () => void;
   onCheckAgain: () => void;
@@ -61,6 +61,31 @@ export function LinkBankStep({
         <div className="flex flex-col items-center gap-2 text-center">
           <h2 className="text-lg font-bold text-foreground">
             {t('topup.usBanks.linkStep.failed')}
+          </h2>
+        </div>
+        <Button
+          onClick={onStartLink}
+          disabled={isStarting}
+          className="h-12 w-full rounded-2xl text-sm font-medium"
+        >
+          {t('topup.usBanks.linkStep.retry')}
+        </Button>
+      </div>
+    );
+  }
+
+  if (status === 'needs_update') {
+    return (
+      <div className="flex flex-col items-center gap-6 py-8">
+        <div className="flex h-16 w-16 items-center justify-center rounded-3xl border border-foreground bg-card">
+          <AlertTriangle
+            className="h-7 w-7 text-foreground"
+            strokeWidth={1.5}
+          />
+        </div>
+        <div className="flex flex-col items-center gap-2 text-center">
+          <h2 className="text-lg font-bold text-foreground">
+            {t('topup.usBanks.linkStep.needsUpdate')}
           </h2>
         </div>
         <Button

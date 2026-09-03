@@ -9,6 +9,8 @@ interface PendingStepProps {
   amount: number;
   orderId?: string;
   actionLabel?: string;
+  /** Defaults to `formatCOP` — pass `formatUSD` for the RTP/ACH US-bank flows. */
+  formatAmount?: (amount: number) => string;
   onRefresh: () => void;
   onError: () => void;
 }
@@ -17,6 +19,7 @@ export function TopUpPendingStep({
   amount,
   orderId,
   actionLabel,
+  formatAmount = formatCOP,
   onRefresh,
   onError,
 }: PendingStepProps) {
@@ -35,7 +38,7 @@ export function TopUpPendingStep({
           {t('topup.pendingStep.description')}
         </p>
         <p className="text-2xl font-bold tabular-nums text-foreground">
-          {formatCOP(amount)}
+          {formatAmount(amount)}
         </p>
         {orderId && (
           <p className="text-xs text-muted-foreground">

@@ -34,7 +34,7 @@ export function UsAmountStep({
   onNext,
 }: UsAmountStepProps) {
   const { t } = useTranslation();
-  const parsed = Number.parseInt(amount.replace(/\D/g, ''), 10) || 0;
+  const parsed = Number.parseFloat(amount) || 0;
   const isValid = parsed >= minAmount;
 
   return (
@@ -52,7 +52,15 @@ export function UsAmountStep({
           inputMode="numeric"
           placeholder="$0"
           value={amount}
-          onChange={(e) => onAmountChange(e.target.value.replace(/\D/g, ''))}
+          onChange={(e) => {
+            const cleaned = e.target.value.replace(/[^\d.]/g, '');
+            const [intPart, ...rest] = cleaned.split('.');
+            const next =
+              rest.length > 0
+                ? `${intPart}.${rest.join('').slice(0, 2)}`
+                : intPart;
+            onAmountChange(next);
+          }}
           className="h-14 rounded-2xl text-center text-xl font-bold tabular-nums"
           autoFocus
         />

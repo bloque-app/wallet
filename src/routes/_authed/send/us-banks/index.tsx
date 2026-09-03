@@ -6,7 +6,7 @@ import type { ExecutionOutcome } from '~/domain/payments/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useRates } from '~/hooks/payments/use-rates';
 import { useCreateRtpOrder } from '~/hooks/payments/use-rtp-order';
-import { getAssetPrecision } from '~/lib/formatters';
+import { formatUSD, getAssetPrecision } from '~/lib/formatters';
 import { TopUpErrorStep } from '../../topup/-components/error-step';
 import { ExecutionOutcomeStep } from '../../topup/-components/execution-outcome-step';
 import { UsAmountStep } from '../../topup/-components/us-amount-step';
@@ -25,8 +25,14 @@ const FROM_MEDIUM = 'kusama';
 const TO_MEDIUM = 'rtp';
 const FROM_PRECISION = getAssetPrecision(FROM_ASSET);
 
-function majorToMinor(amountMajor: number, precision: number) {
-  return (BigInt(amountMajor) * 10n ** BigInt(precision)).toString();
+/** Converts a decimal major-unit string (e.g. "50.25") to a bigint-string of
+ * minor units, via string manipulation to avoid float precision loss. */
+function majorToMinor(amountMajorStr: string, precision: number) {
+  const [intPartRaw, fracPartRaw = ''] = amountMajorStr.split('.');
+  const intPart = intPartRaw || '0';
+  const frac = (fracPartRaw + '0'.repeat(precision)).slice(0, precision);
+  const combined = `${intPart}${frac}`.replace(/^0+(?=\d)/, '');
+  return combined || '0';
 }
 
 function minorToMajor(amountMinor: number, precision: number) {
@@ -60,11 +66,11 @@ function RouteComponent() {
     useAccountPicker({ asset: FROM_ASSET });
   const sourceAccountUrn = sourceAccounts[0]?.primaryUrn ?? '';
 
-  const parsedAmount = Number.parseInt(amount.replace(/\D/g, ''), 10) || 0;
+  const parsedAmount = Number.parseFloat(amount) || 0;
   const amountSrc = useMemo(() => {
     if (parsedAmount <= 0) return '';
-    return majorToMinor(parsedAmount, FROM_PRECISION);
-  }, [parsedAmount]);
+    return majorToMinor(amount, FROM_PRECISION);
+  }, [amount, parsedAmount]);
 
   const ratesQuery = useRates(
     parsedAmount >= MIN_TRANSFER_AMOUNT_USD && amountSrc && sourceAccountUrn
@@ -88,7 +94,7 @@ function RouteComponent() {
       typeof selectedRate.ratio === 'number' &&
       Number.isFinite(selectedRate.ratio)
         ? selectedRate.ratio
-        : (selectedRate.rate?.[1] ?? 1) / (selectedRate.rate?.[0] ?? 1);
+        : (selectedRate.rate?.[1] || 1) / (selectedRate.rate?.[0] || 1);
     const dstAmountMajor = srcAmountMajor * ratio;
     return {
       amountDst: dstAmountMajor,
@@ -308,6 +314,7 @@ function RouteComponent() {
           amount={parsedAmount}
           orderId={lastOrder?.id}
           execution={lastOrder?.execution}
+          formatAmount={formatUSD}
           onError={() => setStep('error')}
         />
       )}
