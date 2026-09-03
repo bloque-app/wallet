@@ -10,6 +10,12 @@ const bankTransferCreateMock = mock(() =>
 const brebCreateMock = mock(() =>
   Promise.resolve({ order: baseOrder(), requestId: 'req-3' }),
 );
+const rtpCreateMock = mock(() =>
+  Promise.resolve({ order: baseOrder(), requestId: 'req-4' }),
+);
+const externalUsBankCreateMock = mock(() =>
+  Promise.resolve({ order: baseOrder(), requestId: 'req-5' }),
+);
 const pseBanksMock = mock(() =>
   Promise.resolve({ banks: [{ code: '1', name: 'Bancolombia' }] }),
 );
@@ -53,6 +59,12 @@ mock.module('~/lib/bloque', () => ({
       },
       breb: {
         create: brebCreateMock,
+      },
+      rtp: {
+        create: rtpCreateMock,
+      },
+      externalUsBank: {
+        create: externalUsBankCreateMock,
       },
     },
   },
@@ -227,6 +239,45 @@ describe('bloquePaymentsRepository order creation — execution outcome mapping'
       args: { sourceAccountUrn: 'did:bloque:account:card:source' },
     });
 
+    expect(result.execution).toEqual({ kind: 'none' });
+  });
+
+  test('createRtpOrder resolves { kind: "none" } when no execution is returned', async () => {
+    rtpCreateMock.mockImplementationOnce(() =>
+      Promise.resolve({ order: baseOrder(), requestId: 'req-4' }),
+    );
+
+    const result = await bloquePaymentsRepository.createRtpOrder({
+      rateSig: 'rate-sig-1',
+      amountSrc: '1000000',
+      depositInformation: {
+        owner: 'Jane Doe',
+        accountNumber: '1234567890',
+        routingNumber: '063108680',
+        accountType: 'checking',
+      },
+      args: { sourceAccountUrn: 'did:bloque:account:kusama-user-001' },
+    });
+
+    expect(result.order.id).toBe('order-1');
+    expect(result.execution).toEqual({ kind: 'none' });
+  });
+
+  test('createExternalUsBankOrder resolves { kind: "none" } when no execution is returned', async () => {
+    externalUsBankCreateMock.mockImplementationOnce(() =>
+      Promise.resolve({ order: baseOrder(), requestId: 'req-5' }),
+    );
+
+    const result = await bloquePaymentsRepository.createExternalUsBankOrder({
+      rateSig: 'rate-sig-1',
+      amountSrc: '1000000',
+      depositInformation: { ledgerAccountId: 'ledger-user-001' },
+      args: {
+        sourceAccountUrn: 'did:bloque:account:external-us-bank:abc123',
+      },
+    });
+
+    expect(result.order.id).toBe('order-1');
     expect(result.execution).toEqual({ kind: 'none' });
   });
 

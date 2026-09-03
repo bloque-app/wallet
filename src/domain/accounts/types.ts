@@ -58,16 +58,28 @@ export type OtherProduct = ProductBase & {
   medium?: string;
 };
 
+/** A linked US bank account (Plaid via Brale), used as the source for an ACH payin. */
+export type ExternalUsBankProduct = ProductBase & {
+  kind: 'external-us-bank';
+  linkStatus: 'pending_link' | 'active' | 'link_failed' | 'closed';
+  bankName?: string;
+  bankAccountLast4?: string;
+  needsUpdate?: boolean;
+  /** Bloque-hosted Plaid Link page; only populated right after `create()` or while pending_link. */
+  linkUrl?: string;
+};
+
 /**
  * A single financial product a user holds — a card, a BRE-B key, a Polygon
- * address, or a named pocket. Several products can share a `ledgerId`,
- * meaning they draw from the same underlying balance.
+ * address, a named pocket, or a linked US bank account. Several products can
+ * share a `ledgerId`, meaning they draw from the same underlying balance.
  */
 export type Product =
   | CardProduct
   | BrebKeyProduct
   | PolygonProduct
   | PocketProduct
+  | ExternalUsBankProduct
   | OtherProduct;
 
 /**

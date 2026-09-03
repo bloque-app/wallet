@@ -348,8 +348,7 @@
       },
       "usBanks": {
         "title": "US banks/wallets",
-        "description": "Send USD to banks and wallets in the United States.",
-        "comingSoon": "Sending to the US coming soon."
+        "description": "Send USD to banks and wallets in the United States."
       },
       "blockchain": {
         "title": "Blockchain addresses",
@@ -395,6 +394,34 @@
       "unsupportedBank": "The selected bank isn't valid for this transfer.",
       "minAmountToast": "The minimum amount is $5,000 COP.",
       "noRateToContinue": "No rate available to continue."
+    },
+    "usBanks": {
+      "title": "Send to US banks",
+      "stepBank": "Bank",
+      "noRateForOrder": "No rate selected to create the order.",
+      "invalidAmountForOrder": "Invalid amount to create the order.",
+      "noSourceAccount": "No source account available.",
+      "minAmountToast": "The minimum amount is $10 USD.",
+      "noRateToContinue": "No rate available to continue.",
+      "transferSentToast": "RTP transfer started successfully.",
+      "transferErrorToast": "Couldn't send the RTP transfer.",
+      "bankStep": {
+        "owner": "Account holder name",
+        "ownerPlaceholder": "E.g.: Jane Doe",
+        "accountNumber": "Bank account number",
+        "accountNumberPlaceholder": "E.g.: 1234567890",
+        "routingNumber": "Routing number (ABA)",
+        "routingNumberPlaceholder": "E.g.: 063108680",
+        "accountType": "Account type",
+        "checking": "Checking",
+        "savings": "Savings",
+        "bankName": "Bank name",
+        "bankNamePlaceholder": "Optional"
+      },
+      "confirmStep": {
+        "destinationBank": "Destination bank",
+        "owner": "Account holder"
+      }
     }
   },
   "topup": {
@@ -421,8 +448,7 @@
       },
       "usBanks": {
         "title": "From US banks",
-        "subtitle": "ACH / Wire",
-        "comingSoon": "Top-up from US banks coming soon."
+        "subtitle": "ACH / Wire"
       },
       "blockchain": {
         "title": "From blockchain addresses",
@@ -514,6 +540,49 @@
       "orderId": "Order: {{orderId}}",
       "checkStatus": "Check status",
       "contactSupportDisclaimer": "If you have questions about your order status, contact support."
+    },
+    "usAmountStep": {
+      "label": "Amount (USD)",
+      "minAmount": "Minimum amount: $10 USD",
+      "amount": "Amount",
+      "appliedRate": "Applied rate",
+      "checkingRate": "Checking available rate...",
+      "youWillReceive": "You will receive",
+      "enterAmountToQuery": "Enter an amount to check the rate."
+    },
+    "usConfirmStep": {
+      "summary": "Summary",
+      "sending": "Sending...",
+      "send": "Send",
+      "verifyDisclaimer": "Verify the details are correct before sending."
+    },
+    "usBanks": {
+      "title": "Top up from US banks",
+      "stepLink": "Bank",
+      "noRateForOrder": "No rate selected to create the order.",
+      "invalidAmountForOrder": "Invalid amount to create the order.",
+      "noSourceAccount": "We couldn't find a linked bank account to pull from.",
+      "noDestinationAccount": "We couldn't find an available destination account.",
+      "minAmountToast": "The minimum amount is $10 USD.",
+      "noRateToContinue": "No rate available to continue.",
+      "topupStartedToast": "ACH top-up started successfully.",
+      "startErrorToast": "Couldn't start the top-up.",
+      "linkedBankLabel": "Linked bank",
+      "confirmStep": {
+        "sourceBank": "Source bank"
+      },
+      "linkStep": {
+        "title": "Link a US bank account",
+        "description": "Connect a US bank account to top up your balance via ACH.",
+        "cta": "Link bank account",
+        "linking": "Linking your bank account…",
+        "linkingDescription": "This can take a few seconds. We'll continue automatically once it's done.",
+        "checkAgain": "Check again",
+        "failed": "We couldn't link your bank account.",
+        "retry": "Try again",
+        "needsUpdate": "Your linked bank needs to be reconnected.",
+        "startErrorToast": "Couldn't start bank linking. Please try again."
+      }
     }
   },
   "convert": {
