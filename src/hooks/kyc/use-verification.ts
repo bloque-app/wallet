@@ -2,6 +2,10 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 import { useAuth } from '~/contexts/auth/auth-context';
 import { bloqueComplianceRepository } from '~/infra/bloque/compliance-repository';
+import {
+  needsFreshVerificationLink,
+  verificationStartKey,
+} from './verification-policy';
 
 function isNotFoundError(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false;
@@ -16,10 +20,13 @@ function isNotFoundError(error: unknown): boolean {
  * Owns the whole "get the user into an in-progress KYC verification" policy
  * — this used to live as a component effect in
  * src/routes/_authed/kyc/index.tsx, which made it untestable and
- * unreusable. If `getVerification` 404s (no verification exists yet) or
- * resolves without a usable `url`, this hook fires `startVerification`
- * exactly once per urn (guarded by a ref, same as the old component code)
- * and folds the resulting url back into what it returns.
+ * unreusable. If `getVerification` 404s (no verification exists yet),
+ * resolves without a usable `url`, or resolves as `rejected` (the provider
+ * link from a past attempt is spent and its TTL has since expired), this
+ * hook fires `startVerification` to mint a fresh link. It's guarded by a
+ * ref keyed on urn+status rather than urn alone, so a user rejected more
+ * than once still gets a new link minted on each rejection instead of only
+ * the first.
  *
  * `refetchOnWindowFocus` covers "user returns from the provider's iframe/tab
  * without a manual reload" — a full realtime completion webhook is out of
@@ -32,7 +39,7 @@ function isNotFoundError(error: unknown): boolean {
 export function useVerification() {
   const { user, refreshUser } = useAuth();
   const urn = user?.urn;
-  const startedForUrnRef = useRef<string | null>(null);
+  const startedForKeyRef = useRef<string | null>(null);
   const syncedStatusRef = useRef<string | null>(null);
 
   const verificationQuery = useQuery({
@@ -48,19 +55,28 @@ export function useVerification() {
       bloqueComplianceRepository.startVerification(targetUrn),
   });
 
-  const shouldStartVerification =
-    (verificationQuery.isSuccess && !verificationQuery.data?.url) ||
-    (verificationQuery.isError && isNotFoundError(verificationQuery.error));
+  const status = verificationQuery.data?.status;
+
+  const fetchOutcome = verificationQuery.isSuccess
+    ? 'success'
+    : verificationQuery.isError && isNotFoundError(verificationQuery.error)
+      ? 'not-found'
+      : 'other-error';
+
+  const shouldStartVerification = needsFreshVerificationLink({
+    fetchOutcome,
+    status,
+    hasUrl: !!verificationQuery.data?.url,
+  });
 
   useEffect(() => {
     if (!urn) return;
     if (!shouldStartVerification) return;
-    if (startedForUrnRef.current === urn) return;
-    startedForUrnRef.current = urn;
+    const key = verificationStartKey(urn, status);
+    if (startedForKeyRef.current === key) return;
+    startedForKeyRef.current = key;
     startVerification.mutate(urn);
-  }, [urn, shouldStartVerification, startVerification.mutate]);
-
-  const status = verificationQuery.data?.status;
+  }, [urn, status, shouldStartVerification, startVerification.mutate]);
 
   useEffect(() => {
     if (!urn) return;
@@ -71,8 +87,13 @@ export function useVerification() {
     void refreshUser();
   }, [urn, status, refreshUser]);
 
-  const url =
-    verificationQuery.data?.url ?? startVerification.data?.url ?? null;
+  // While a fresh link is being minted (rejected retry or first start), the
+  // old/stale `verificationQuery.data.url` must not leak through — it's
+  // either absent (not-found path) or a spent, TTL-expired provider link
+  // (rejected path).
+  const url = shouldStartVerification
+    ? (startVerification.data?.url ?? null)
+    : (verificationQuery.data?.url ?? null);
 
   const hasUnhandledGetError =
     verificationQuery.isError && !isNotFoundError(verificationQuery.error);
