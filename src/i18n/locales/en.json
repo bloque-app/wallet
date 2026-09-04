@@ -578,10 +578,12 @@
         "linking": "Linking your bank account…",
         "linkingDescription": "This can take a few seconds. We'll continue automatically once it's done.",
         "checkAgain": "Check again",
+        "cancel": "Cancel and start over",
         "failed": "We couldn't link your bank account.",
         "retry": "Try again",
         "needsUpdate": "Your linked bank needs to be reconnected.",
-        "startErrorToast": "Couldn't start bank linking. Please try again."
+        "startErrorToast": "Couldn't start bank linking. Please try again.",
+        "timeoutToast": "We couldn't confirm the bank link in time. Please try again."
       }
     }
   },

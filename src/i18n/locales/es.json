@@ -578,10 +578,12 @@
         "linking": "Vinculando tu cuenta bancaria…",
         "linkingDescription": "Esto puede tardar unos segundos. Continuaremos automáticamente cuando termine.",
         "checkAgain": "Verificar de nuevo",
+        "cancel": "Cancelar y volver a empezar",
         "failed": "No pudimos vincular tu cuenta bancaria.",
         "retry": "Intentar de nuevo",
         "needsUpdate": "Tu banco vinculado necesita reconectarse.",
-        "startErrorToast": "No se pudo iniciar la vinculación bancaria. Intenta de nuevo."
+        "startErrorToast": "No se pudo iniciar la vinculación bancaria. Intenta de nuevo.",
+        "timeoutToast": "No pudimos confirmar la vinculación bancaria a tiempo. Intenta de nuevo."
       }
     }
   },
