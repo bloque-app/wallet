@@ -9,6 +9,7 @@ interface LinkBankStepProps {
   isStarting: boolean;
   onStartLink: () => void;
   onCheckAgain: () => void;
+  onCancel: () => void;
 }
 
 /** CTA + pending/failed states for linking a US bank account via hosted Plaid Link. */
@@ -17,6 +18,7 @@ export function LinkBankStep({
   isStarting,
   onStartLink,
   onCheckAgain,
+  onCancel,
 }: LinkBankStepProps) {
   const { t } = useTranslation();
 
@@ -44,6 +46,13 @@ export function LinkBankStep({
         >
           <RefreshCw className="h-4 w-4" />
           {t('topup.usBanks.linkStep.checkAgain')}
+        </Button>
+        <Button
+          onClick={onCancel}
+          variant="ghost"
+          className="h-auto p-0 text-sm font-medium text-muted-foreground underline-offset-4 hover:underline"
+        >
+          {t('topup.usBanks.linkStep.cancel')}
         </Button>
       </div>
     );

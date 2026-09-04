@@ -18,6 +18,12 @@ import { UsConfirmStep } from '../-components/us-confirm-step';
 type PayinStep = 'link' | 'amount' | 'confirm' | 'pending' | 'error';
 
 const PENDING_URN_KEY = 'bloque:pendingExternalUsBankUrn';
+const PENDING_URN_STARTED_AT_KEY = 'bloque:pendingExternalUsBankUrnStartedAt';
+// Plaid's hosted flow (incl. OAuth bank redirects) resolves well under this.
+// If the user cancels/abandons it, the backend never flips `linkStatus` away
+// from `pending_link` (there's no "user exited" event) — without this cap the
+// 3s poll below would run forever with no way out.
+const LINK_TIMEOUT_MS = 5 * 60 * 1000;
 const MIN_TOPUP_AMOUNT_USD = 10;
 const FROM_ASSET = 'USD/2';
 const TO_ASSET = 'DUSD/6';
@@ -120,13 +126,18 @@ function RouteComponent() {
           ? 'needs_update'
           : 'idle';
 
+  const resetPendingLink = useCallback(() => {
+    window.sessionStorage.removeItem(PENDING_URN_KEY);
+    window.sessionStorage.removeItem(PENDING_URN_STARTED_AT_KEY);
+    setPendingUrn((current) => (current ? null : current));
+  }, []);
+
   useEffect(() => {
     if (sourceAccountUrn) {
-      window.sessionStorage.removeItem(PENDING_URN_KEY);
-      setPendingUrn((current) => (current ? null : current));
+      resetPendingLink();
       setStep((current) => (current === 'link' ? 'amount' : current));
     }
-  }, [sourceAccountUrn]);
+  }, [sourceAccountUrn, resetPendingLink]);
 
   // A failed link must stop polling and not resume silently on a future
   // visit — clear the persisted marker while still rendering this render's
@@ -134,8 +145,30 @@ function RouteComponent() {
   useEffect(() => {
     if (linkStepStatus === 'failed') {
       window.sessionStorage.removeItem(PENDING_URN_KEY);
+      window.sessionStorage.removeItem(PENDING_URN_STARTED_AT_KEY);
     }
   }, [linkStepStatus]);
+
+  // Safety net for a cancelled/abandoned Plaid session: the backend has no
+  // "user exited" signal, so without this the poll above runs forever.
+  useEffect(() => {
+    if (!pendingUrn) return;
+    const startedAtRaw = window.sessionStorage.getItem(
+      PENDING_URN_STARTED_AT_KEY,
+    );
+    const startedAt = startedAtRaw ? Number(startedAtRaw) : Date.now();
+    const remaining = startedAt + LINK_TIMEOUT_MS - Date.now();
+    if (remaining <= 0) {
+      resetPendingLink();
+      toast.error(t('topup.usBanks.linkStep.timeoutToast'));
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      resetPendingLink();
+      toast.error(t('topup.usBanks.linkStep.timeoutToast'));
+    }, remaining);
+    return () => window.clearTimeout(timer);
+  }, [pendingUrn, resetPendingLink, t]);
 
   // Plaid's hosted page echoes `?status=...` on redirect back — check
   // immediately instead of waiting for the first 3s poll tick. Only on
@@ -160,6 +193,10 @@ function RouteComponent() {
             return;
           }
           window.sessionStorage.setItem(PENDING_URN_KEY, product.urn);
+          window.sessionStorage.setItem(
+            PENDING_URN_STARTED_AT_KEY,
+            String(Date.now()),
+          );
           setPendingUrn(product.urn);
           window.location.href = product.linkUrl;
         },
@@ -373,6 +410,7 @@ function RouteComponent() {
           isStarting={createLinkMutation.isPending}
           onStartLink={handleStartLink}
           onCheckAgain={() => void accountsQuery.refetch()}
+          onCancel={resetPendingLink}
         />
       )}
 
