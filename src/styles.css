@@ -1,7 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/outfit";
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -30,7 +31,7 @@
   --chart-3: oklch(0.677 0.169 28.72); /* #ed6758 coral */
   --chart-4: oklch(0.352 0.068 244.867); /* #173e5c navy-2 */
   --chart-5: oklch(0.842 0.163 123.151); /* #b7dc58 lime */
-  --radius: 0.875rem;
+  --radius: 0.625rem; /* landing --l-radius: 10px standard card radius */
   --sidebar: oklch(1 0 0);
   --sidebar-foreground: oklch(0.324 0.06 248.613);
   --sidebar-primary: oklch(0.324 0.06 248.613);
@@ -77,7 +78,8 @@
 }
 
 @theme inline {
-  --font-sans: "Outfit", sans-serif;
+  --font-sans: "Geist Variable", "Geist", sans-serif;
+  --font-mono: "Geist Mono Variable", "Geist Mono", monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
