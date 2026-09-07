@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test';
 
 const listMock = mock(() => Promise.resolve({ accounts: [] as unknown[] }));
-const transactionsMock = mock(() =>
+const transactionsMock = mock((_params?: { asset?: string }) =>
   Promise.resolve({ data: [] as unknown[], pageSize: 0, hasMore: false }),
 );
 
@@ -276,26 +276,30 @@ describe('bloqueAccountsRepository.getTransactions — global feed adapter', () 
   });
 
   test('forwards details onto the MovementEntry so toDomainMovement can fall back to details.type', async () => {
-    transactionsMock.mockImplementationOnce(() =>
-      Promise.resolve({
-        data: [
-          {
-            status: 'confirmed',
-            amount: '500000',
-            asset: 'COPM/2',
-            fromAccountId: 'urn:from',
-            toAccountId: 'urn:to',
-            direction: 'out',
-            reference: 'ref-3',
-            railName: 'ach',
-            details: { type: 'cash-out' },
-            createdAt: '2026-01-03T00:00:00.000Z',
-            // type deliberately omitted — GlobalTransaction.type is optional
-          },
-        ],
-        pageSize: 1,
-        hasMore: false,
-      }),
+    transactionsMock.mockImplementation(({ asset } = {}) =>
+      Promise.resolve(
+        asset === 'COPM/2'
+          ? {
+              data: [
+                {
+                  status: 'confirmed',
+                  amount: '500000',
+                  asset: 'COPM/2',
+                  fromAccountId: 'urn:from',
+                  toAccountId: 'urn:to',
+                  direction: 'out',
+                  reference: 'ref-3',
+                  railName: 'ach',
+                  details: { type: 'cash-out' },
+                  createdAt: '2026-01-03T00:00:00.000Z',
+                  // type deliberately omitted — GlobalTransaction.type is optional
+                },
+              ],
+              pageSize: 1,
+              hasMore: false,
+            }
+          : { data: [], pageSize: 0, hasMore: false },
+      ),
     );
 
     const page = await bloqueAccountsRepository.getTransactions({});
@@ -305,25 +309,29 @@ describe('bloqueAccountsRepository.getTransactions — global feed adapter', () 
   });
 
   test('derives counterparty from toAccountId for outbound transactions', async () => {
-    transactionsMock.mockImplementationOnce(() =>
-      Promise.resolve({
-        data: [
-          {
-            status: 'settled',
-            amount: '10000',
-            asset: 'DUSD/6',
-            fromAccountId: 'urn:from',
-            toAccountId: 'urn:to',
-            direction: 'out',
-            reference: 'ref-2',
-            railName: 'wire',
-            details: {},
-            createdAt: '2026-01-02T00:00:00.000Z',
-          },
-        ],
-        pageSize: 1,
-        hasMore: false,
-      }),
+    transactionsMock.mockImplementation(({ asset } = {}) =>
+      Promise.resolve(
+        asset === 'DUSD/6'
+          ? {
+              data: [
+                {
+                  status: 'settled',
+                  amount: '10000',
+                  asset: 'DUSD/6',
+                  fromAccountId: 'urn:from',
+                  toAccountId: 'urn:to',
+                  direction: 'out',
+                  reference: 'ref-2',
+                  railName: 'wire',
+                  details: {},
+                  createdAt: '2026-01-02T00:00:00.000Z',
+                },
+              ],
+              pageSize: 1,
+              hasMore: false,
+            }
+          : { data: [], pageSize: 0, hasMore: false },
+      ),
     );
 
     const page = await bloqueAccountsRepository.getTransactions({});
@@ -332,7 +340,7 @@ describe('bloqueAccountsRepository.getTransactions — global feed adapter', () 
     expect(page.hasMore).toBe(false);
   });
 
-  test('passes asset/limit/direction/next through to the SDK call', async () => {
+  test('passes asset/limit/direction/next through to the SDK call when an asset is given', async () => {
     await bloqueAccountsRepository.getTransactions({
       asset: 'KSM/12',
       limit: 25,
@@ -345,6 +353,107 @@ describe('bloqueAccountsRepository.getTransactions — global feed adapter', () 
       direction: 'out',
       limit: 25,
       next: 'cursor-1',
+    });
+  });
+
+  test('BQE-2642: an omitted asset fans out across COP/USD/KSM instead of relying on the SDK default of DUSD/6, merging and sorting by createdAt desc', async () => {
+    transactionsMock.mockImplementation(({ asset } = {}) => {
+      if (asset === 'COPM/2') {
+        return Promise.resolve({
+          data: [
+            {
+              status: 'confirmed',
+              amount: '500000',
+              asset: 'COPM/2',
+              fromAccountId: 'urn:from',
+              toAccountId: 'urn:to',
+              direction: 'in',
+              reference: 'cop-1',
+              railName: 'breb',
+              details: {},
+              createdAt: '2026-01-01T00:00:00.000Z',
+              type: 'deposit',
+            },
+          ],
+          pageSize: 1,
+          hasMore: true,
+          next: 'cop-cursor-2',
+        });
+      }
+      if (asset === 'KSM/12') {
+        return Promise.resolve({
+          data: [
+            {
+              status: 'confirmed',
+              amount: '1000000000000',
+              asset: 'KSM/12',
+              fromAccountId: 'urn:from',
+              toAccountId: 'urn:to',
+              direction: 'out',
+              reference: 'ksm-1',
+              railName: 'kreivo',
+              details: {},
+              createdAt: '2026-01-02T00:00:00.000Z',
+              type: 'send',
+            },
+          ],
+          pageSize: 1,
+          hasMore: false,
+        });
+      }
+      return Promise.resolve({ data: [], pageSize: 0, hasMore: false });
+    });
+
+    const page = await bloqueAccountsRepository.getTransactions({ limit: 10 });
+
+    expect(transactionsMock).toHaveBeenCalledTimes(3);
+    expect(transactionsMock).toHaveBeenCalledWith({
+      asset: 'COPM/2',
+      direction: undefined,
+      limit: 10,
+      next: undefined,
+    });
+    expect(transactionsMock).toHaveBeenCalledWith({
+      asset: 'DUSD/6',
+      direction: undefined,
+      limit: 10,
+      next: undefined,
+    });
+    expect(transactionsMock).toHaveBeenCalledWith({
+      asset: 'KSM/12',
+      direction: undefined,
+      limit: 10,
+      next: undefined,
+    });
+
+    // Newest first across assets, even though KSM came back from the second call.
+    expect(page.movements.map((m) => m.reference)).toEqual(['ksm-1', 'cop-1']);
+    // Only COP still has more pages — hasMore/next reflect just that asset.
+    expect(page.hasMore).toBe(true);
+    expect(JSON.parse(page.next ?? '{}')).toEqual({ 'COPM/2': 'cop-cursor-2' });
+  });
+
+  test('BQE-2642: a cursor from a previous all-assets page resumes each asset independently', async () => {
+    transactionsMock.mockImplementation(() =>
+      Promise.resolve({ data: [], pageSize: 0, hasMore: false }),
+    );
+
+    await bloqueAccountsRepository.getTransactions({
+      limit: 10,
+      next: JSON.stringify({ 'COPM/2': 'cop-cursor-2' }),
+    });
+
+    expect(transactionsMock).toHaveBeenCalledWith({
+      asset: 'COPM/2',
+      direction: undefined,
+      limit: 10,
+      next: 'cop-cursor-2',
+    });
+    expect(transactionsMock).toHaveBeenCalledWith({
+      asset: 'DUSD/6',
+      direction: undefined,
+      limit: 10,
+      next: undefined,
     });
   });
 });
