@@ -303,10 +303,15 @@ function RouteComponent() {
         <TopUpBankStep
           form={bankForm}
           selectedBank={selectedBank}
+          isRateLoading={ratesQuery.isFetching}
+          hasRate={!!selectedRate}
           onBankChange={setSelectedBank}
           onFormChange={setBankForm}
           onBack={() => setStep('amount')}
-          onNext={() => setStep('confirm')}
+          onNext={() => {
+            if (ratesQuery.isFetching || !selectedRate) return;
+            setStep('confirm');
+          }}
         />
       )}
 

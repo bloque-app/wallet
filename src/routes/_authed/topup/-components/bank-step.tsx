@@ -39,6 +39,8 @@ const COLOMBIAN_BANKS = SUPPORTED_BANKS.map((code) => ({
 interface BankStepProps {
   form: TopUpBankAccountData;
   selectedBank: string;
+  isRateLoading: boolean;
+  hasRate: boolean;
   onBankChange: (code: string) => void;
   onFormChange: (value: TopUpBankAccountData) => void;
   onBack: () => void;
@@ -48,6 +50,8 @@ interface BankStepProps {
 export function TopUpBankStep({
   form,
   selectedBank,
+  isRateLoading,
+  hasRate,
   onBankChange,
   onFormChange,
   onBack,
@@ -227,10 +231,10 @@ export function TopUpBankStep({
 
       <Button
         onClick={onNext}
-        disabled={!isValid}
+        disabled={!isValid || isRateLoading || !hasRate}
         className="h-12 w-full rounded-2xl text-sm font-medium"
       >
-        {t('common.continue')}
+        {isRateLoading ? t('convert.queryingRate') : t('common.continue')}
       </Button>
     </div>
   );
