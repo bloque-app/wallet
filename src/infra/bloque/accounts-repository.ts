@@ -253,9 +253,93 @@ type TransactionsParams = NonNullable<
   Parameters<typeof bloque.accounts.transactions>[0]
 >;
 
+type RawTransaction = Awaited<
+  ReturnType<typeof bloque.accounts.transactions>
+>['data'][number];
+
+function mapTransaction(transaction: RawTransaction): MovementEntry {
+  return {
+    id: transaction.reference,
+    asset: transaction.asset,
+    amount: transaction.amount,
+    direction: transaction.direction,
+    status: transaction.status,
+    createdAt: transaction.createdAt,
+    reference: transaction.reference,
+    counterparty:
+      transaction.direction === 'in'
+        ? transaction.fromAccountId
+        : transaction.toAccountId,
+    railName: transaction.railName,
+    type: transaction.type,
+    details: transaction.details,
+  };
+}
+
+/**
+ * `bloque.accounts.transactions()` has no "all assets" mode: an omitted
+ * `asset` silently defaults to `'DUSD/6'` server-side (BQE-2642 — the
+ * unfiltered "todos" feed never showed COP/KSM movements, only USD). Fan out
+ * across every asset this app renders and merge instead of relying on that
+ * default.
+ */
+const GLOBAL_FEED_ASSETS = ['COPM/2', 'DUSD/6', 'KSM/12'] as const;
+
+type GlobalFeedCursor = Partial<
+  Record<(typeof GLOBAL_FEED_ASSETS)[number], string>
+>;
+
+function decodeGlobalFeedCursor(next: string | undefined): GlobalFeedCursor {
+  if (!next) return {};
+  try {
+    return JSON.parse(next) as GlobalFeedCursor;
+  } catch {
+    return {};
+  }
+}
+
+async function getAllAssetsTransactions(
+  params: GetTransactionsParams,
+): Promise<MovementsPage> {
+  const cursor = decodeGlobalFeedCursor(params.next);
+
+  const perAsset = await Promise.all(
+    GLOBAL_FEED_ASSETS.map(async (asset) => {
+      const result = await bloque.accounts.transactions({
+        asset,
+        direction: params.direction,
+        limit: params.limit,
+        next: cursor[asset],
+      });
+      return { asset, result };
+    }),
+  );
+
+  const movements = perAsset
+    .flatMap(({ result }) => result.data.map(mapTransaction))
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+
+  const nextCursor: GlobalFeedCursor = {};
+  for (const { asset, result } of perAsset) {
+    if (result.hasMore && result.next) nextCursor[asset] = result.next;
+  }
+  const hasMore = Object.keys(nextCursor).length > 0;
+
+  return {
+    movements,
+    hasMore,
+    next: hasMore ? JSON.stringify(nextCursor) : undefined,
+  };
+}
+
 async function getTransactions(
   params: GetTransactionsParams,
 ): Promise<MovementsPage> {
+  if (!params.asset) return getAllAssetsTransactions(params);
+
   const result = await bloque.accounts.transactions({
     asset: params.asset as TransactionsParams['asset'],
     direction: params.direction,
@@ -264,24 +348,7 @@ async function getTransactions(
   });
 
   return {
-    movements: result.data.map(
-      (transaction): MovementEntry => ({
-        id: transaction.reference,
-        asset: transaction.asset,
-        amount: transaction.amount,
-        direction: transaction.direction,
-        status: transaction.status,
-        createdAt: transaction.createdAt,
-        reference: transaction.reference,
-        counterparty:
-          transaction.direction === 'in'
-            ? transaction.fromAccountId
-            : transaction.toAccountId,
-        railName: transaction.railName,
-        type: transaction.type,
-        details: transaction.details,
-      }),
-    ),
+    movements: result.data.map(mapTransaction),
     hasMore: result.hasMore,
     next: result.next,
   };
