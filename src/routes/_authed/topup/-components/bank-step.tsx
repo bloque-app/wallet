@@ -41,6 +41,7 @@ interface BankStepProps {
   selectedBank: string;
   isRateLoading: boolean;
   hasRate: boolean;
+  rateError: string | null;
   onBankChange: (code: string) => void;
   onFormChange: (value: TopUpBankAccountData) => void;
   onBack: () => void;
@@ -52,6 +53,7 @@ export function TopUpBankStep({
   selectedBank,
   isRateLoading,
   hasRate,
+  rateError,
   onBankChange,
   onFormChange,
   onBack,
@@ -228,6 +230,10 @@ export function TopUpBankStep({
           </div>
         </div>
       </div>
+
+      {selectedBank && !isRateLoading && !hasRate && rateError && (
+        <p className="text-xs text-destructive">{rateError}</p>
+      )}
 
       <Button
         onClick={onNext}

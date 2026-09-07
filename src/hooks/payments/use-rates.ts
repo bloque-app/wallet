@@ -1,5 +1,5 @@
 import type { FindRatesParams } from '@bloque/sdk-swap';
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { bloquePaymentsRepository } from '~/infra/bloque/payments-repository';
 
 /**
@@ -18,6 +18,5 @@ export function useRates(
     enabled: !!params && (options?.enabled ?? true),
     staleTime: 30_000,
     retry: 1,
-    placeholderData: keepPreviousData,
   });
 }
