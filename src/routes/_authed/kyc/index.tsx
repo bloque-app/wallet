@@ -80,6 +80,7 @@ function RouteComponent() {
         title={t('kyc.route.iframeTitle')}
         className="h-full w-full border-0"
         sandbox="allow-forms allow-scripts allow-same-origin allow-popups"
+        allow="camera; microphone"
       />
 
       <div className="pointer-events-none absolute inset-x-0 top-0 p-3">
