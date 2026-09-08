@@ -12,6 +12,7 @@ import {
   Mail,
   MessageSquare,
   Moon,
+  Pencil,
   Plus,
   Shield,
   Smartphone,
@@ -88,6 +89,15 @@ function RouteComponent() {
           {t('profile.sections.account')}
         </p>
         <div className="overflow-hidden rounded-2xl border border-border/85 bg-card/85">
+          <ProfileRow
+            icon={Pencil}
+            label={t('profile.rows.editProfile')}
+            chevron
+            onClick={() => {
+              navigate({ to: '/profile/edit' });
+            }}
+          />
+          <Separator />
           <ProfileRow
             icon={Landmark}
             label={t('profile.rows.allAccounts')}
