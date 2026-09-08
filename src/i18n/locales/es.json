@@ -392,8 +392,12 @@
       "noSourceAccount": "No hay cuenta origen disponible.",
       "selectDestinationBank": "Selecciona un banco destino.",
       "unsupportedBank": "El banco seleccionado no es válido para esta transferencia.",
-      "minAmountToast": "El monto mínimo es $5,000 COP.",
-      "noRateToContinue": "No hay tasa disponible para continuar."
+      "minAmountToast": "El monto mínimo es $10,000 COP.",
+      "noRateToContinue": "No hay tasa disponible para continuar.",
+      "amountStep": {
+        "label": "Monto a enviar (COP)",
+        "minAmount": "Monto mínimo: $10,000 COP"
+      }
     },
     "usBanks": {
       "title": "Enviar a bancos en EE.UU.",

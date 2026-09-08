@@ -21,7 +21,7 @@ import { ExecutionOutcomeStep } from '../../topup/-components/execution-outcome-
 
 type TransferStep = 'amount' | 'bank' | 'confirm' | 'pending' | 'error';
 
-const MIN_TRANSFER_AMOUNT = 5_000;
+const MIN_TRANSFER_AMOUNT = 10_000;
 const FROM_ASSET = 'COPM/2';
 const TO_ASSET = 'COP/2';
 const FROM_MEDIUM = 'kusama';
@@ -296,6 +296,9 @@ function RouteComponent() {
           rateSummary={rateSummary}
           onAmountChange={setAmount}
           onNext={handleAmountNext}
+          label={t('send.colombianBanks.amountStep.label')}
+          minAmount={MIN_TRANSFER_AMOUNT}
+          minAmountLabel={t('send.colombianBanks.amountStep.minAmount')}
         />
       )}
 
