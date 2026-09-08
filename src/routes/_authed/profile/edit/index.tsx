@@ -41,8 +41,6 @@ interface ProfileFormState {
   postal_code: string;
   country_of_residence_code: string;
   country_of_birth_code: string;
-  personal_id_type: string;
-  personal_id_number: string;
 }
 
 const EMPTY_FORM: ProfileFormState = {
@@ -56,8 +54,6 @@ const EMPTY_FORM: ProfileFormState = {
   postal_code: '',
   country_of_residence_code: '',
   country_of_birth_code: '',
-  personal_id_type: '',
-  personal_id_number: '',
 };
 
 function toFormState(profile: IdentityMeProfile): ProfileFormState {
@@ -72,8 +68,6 @@ function toFormState(profile: IdentityMeProfile): ProfileFormState {
     postal_code: profile.postal_code ?? '',
     country_of_residence_code: profile.country_of_residence_code ?? '',
     country_of_birth_code: profile.country_of_birth_code ?? '',
-    personal_id_type: profile.personal_id_type ?? '',
-    personal_id_number: profile.personal_id_number ?? '',
   };
 }
 
@@ -181,8 +175,6 @@ function RouteComponent() {
       postal_code: form.postal_code.trim(),
       country_of_residence_code: form.country_of_residence_code,
       country_of_birth_code: form.country_of_birth_code || undefined,
-      personal_id_type: form.personal_id_type.trim() || undefined,
-      personal_id_number: form.personal_id_number.trim() || undefined,
     };
 
     try {
@@ -292,30 +284,6 @@ function RouteComponent() {
           <p className="px-1 text-xs font-medium tracking-wider text-muted-foreground uppercase">
             {t('profile.edit.sections.personal')}
           </p>
-
-          <FormField
-            id="personal_id_type"
-            label={t('profile.edit.fields.personalIdType')}
-          >
-            <Input
-              id="personal_id_type"
-              value={form.personal_id_type}
-              onChange={(e) => setField('personal_id_type', e.target.value)}
-              className="h-12 rounded-2xl"
-            />
-          </FormField>
-
-          <FormField
-            id="personal_id_number"
-            label={t('profile.edit.fields.personalIdNumber')}
-          >
-            <Input
-              id="personal_id_number"
-              value={form.personal_id_number}
-              onChange={(e) => setField('personal_id_number', e.target.value)}
-              className="h-12 rounded-2xl"
-            />
-          </FormField>
 
           <FormField
             id="country_of_birth_code"
