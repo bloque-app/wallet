@@ -17,9 +17,13 @@ interface AmountStepProps {
   } | null;
   onAmountChange: (v: string) => void;
   onNext: () => void;
+  label?: string;
+  minAmount?: number;
+  minAmountLabel?: string;
 }
 
 const quickAmounts = [50_000, 100_000, 200_000, 500_000];
+const DEFAULT_MIN_AMOUNT = 5_000;
 
 export function TopUpAmountStep({
   amount,
@@ -29,10 +33,13 @@ export function TopUpAmountStep({
   rateSummary,
   onAmountChange,
   onNext,
+  label,
+  minAmount = DEFAULT_MIN_AMOUNT,
+  minAmountLabel,
 }: AmountStepProps) {
   const { t } = useTranslation();
   const parsed = Number.parseInt(amount.replace(/\D/g, ''), 10) || 0;
-  const isValid = parsed >= 5_000;
+  const isValid = parsed >= minAmount;
 
   return (
     <div className="flex flex-col gap-5">
@@ -41,7 +48,7 @@ export function TopUpAmountStep({
           htmlFor="topup-amount"
           className="text-sm font-medium text-foreground"
         >
-          {t('topup.amountStep.label')}
+          {label ?? t('topup.amountStep.label')}
         </Label>
         <Input
           id="topup-amount"
@@ -53,9 +60,9 @@ export function TopUpAmountStep({
           className="h-14 rounded-2xl text-center text-xl font-bold tabular-nums"
           autoFocus
         />
-        {parsed > 0 && parsed < 5_000 && (
+        {parsed > 0 && parsed < minAmount && (
           <p className="text-xs text-destructive">
-            {t('topup.amountStep.minAmount')}
+            {minAmountLabel ?? t('topup.amountStep.minAmount')}
           </p>
         )}
       </div>
