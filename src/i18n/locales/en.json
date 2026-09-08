@@ -726,8 +726,6 @@
         "phone": "Phone",
         "phonePlaceholder": "+1 415 555 0100",
         "birthdate": "Date of birth",
-        "personalIdType": "ID type",
-        "personalIdNumber": "ID number",
         "countryOfBirth": "Country of birth",
         "countryOfResidence": "Country of residence",
         "addressLine1": "Address",

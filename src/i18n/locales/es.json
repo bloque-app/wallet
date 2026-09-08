@@ -726,8 +726,6 @@
         "phone": "Teléfono",
         "phonePlaceholder": "+57 300 123 4567",
         "birthdate": "Fecha de nacimiento",
-        "personalIdType": "Tipo de documento",
-        "personalIdNumber": "Número de documento",
         "countryOfBirth": "País de nacimiento",
         "countryOfResidence": "País de residencia",
         "addressLine1": "Dirección",
