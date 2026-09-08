@@ -1,4 +1,5 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { BloqueAPIError } from '@bloque/sdk';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -45,6 +46,24 @@ function minorToMajor(amountMinor: number, precision: number) {
   return amountMinor / 10 ** precision;
 }
 
+/** Mediums' external-us-bank provider rejects linking with `E_PROFILE_*`
+ * (400) when a required identity field is missing/invalid, reporting which
+ * field via `extra_details.missing_field` / `invalid_field` (see
+ * `payment-rails/server/services/mediums/.../external-us-bank/provider.ts`).
+ * Only `phone`/`birthdate` are editable from the wallet's edit-profile
+ * screen — `legal_name`/`email` fall through to the generic toast since
+ * there's nowhere in-app to send the user to fix those yet. */
+function getMissingProfileField(
+  error: unknown,
+): 'phone' | 'birthdate' | undefined {
+  if (!(error instanceof BloqueAPIError)) return undefined;
+  if (!error.code?.startsWith('E_PROFILE_')) return undefined;
+  const body = error.response as Record<string, unknown> | undefined;
+  const details = body?.extra_details as Record<string, unknown> | undefined;
+  const field = details?.missing_field ?? details?.invalid_field;
+  return field === 'phone' || field === 'birthdate' ? field : undefined;
+}
+
 export const Route = createFileRoute('/_authed/topup/us-banks/')({
   validateSearch: (search: Record<string, unknown>): { status?: string } =>
     typeof search.status === 'string' ? { status: search.status } : {},
@@ -53,6 +72,7 @@ export const Route = createFileRoute('/_authed/topup/us-banks/')({
 
 function RouteComponent() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const search = Route.useSearch();
   const [step, setStep] = useState<PayinStep>('link');
   const [amount, setAmount] = useState('');
@@ -200,7 +220,13 @@ function RouteComponent() {
           setPendingUrn(product.urn);
           window.location.href = product.linkUrl;
         },
-        onError: () => {
+        onError: (error) => {
+          const missingField = getMissingProfileField(error);
+          if (missingField) {
+            toast.error(t('topup.usBanks.linkStep.missingProfileToast'));
+            navigate({ to: '/profile/edit', search: { focus: missingField } });
+            return;
+          }
           toast.error(t('topup.usBanks.linkStep.startErrorToast'));
         },
       },

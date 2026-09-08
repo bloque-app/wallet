@@ -583,6 +583,7 @@
         "retry": "Try again",
         "needsUpdate": "Your linked bank needs to be reconnected.",
         "startErrorToast": "Couldn't start bank linking. Please try again.",
+        "missingProfileToast": "We need to complete your profile before linking your bank.",
         "timeoutToast": "We couldn't confirm the bank link in time. Please try again."
       }
     }
@@ -690,6 +691,7 @@
       "support": "Support"
     },
     "rows": {
+      "editProfile": "Edit profile",
       "allAccounts": "All accounts",
       "view": "View",
       "kycVerification": "KYC verification",
@@ -711,6 +713,44 @@
     "settings": {
       "languageSpanish": "Spanish (CO)",
       "languageEnglish": "English (US)"
+    },
+    "edit": {
+      "title": "Edit profile",
+      "description": "Complete your details to unlock every top-up and send method.",
+      "sections": {
+        "contact": "Contact",
+        "personal": "Personal details",
+        "address": "Address"
+      },
+      "fields": {
+        "phone": "Phone",
+        "phonePlaceholder": "+1 415 555 0100",
+        "birthdate": "Date of birth",
+        "personalIdType": "ID type",
+        "personalIdNumber": "ID number",
+        "countryOfBirth": "Country of birth",
+        "countryOfResidence": "Country of residence",
+        "addressLine1": "Address",
+        "addressLine2": "Apt/Suite (optional)",
+        "neighborhood": "Neighborhood (optional)",
+        "city": "City",
+        "state": "State/Province",
+        "postalCode": "Postal code",
+        "selectCountry": "Select a country"
+      },
+      "errors": {
+        "phoneRequired": "Enter your phone number",
+        "phoneInvalid": "Invalid format. Include the country code, e.g. +14155550100",
+        "birthdateRequired": "Enter your date of birth",
+        "birthdateInvalid": "Invalid date",
+        "postalCodeInvalid": "Invalid postal code",
+        "requiredField": "This field is required"
+      },
+      "saveButton": "Save changes",
+      "saving": "Saving...",
+      "saveSuccessToast": "Profile updated successfully.",
+      "saveErrorToast": "We couldn't update your profile. Please try again.",
+      "loadErrorToast": "We couldn't load your profile."
     },
     "logout": "Log out",
     "version": "Wallet Bloque v{{version}}"
