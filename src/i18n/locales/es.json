@@ -583,6 +583,7 @@
         "retry": "Intentar de nuevo",
         "needsUpdate": "Tu banco vinculado necesita reconectarse.",
         "startErrorToast": "No se pudo iniciar la vinculación bancaria. Intenta de nuevo.",
+        "missingProfileToast": "Necesitamos completar tu perfil antes de vincular tu banco.",
         "timeoutToast": "No pudimos confirmar la vinculación bancaria a tiempo. Intenta de nuevo."
       }
     }
@@ -690,6 +691,7 @@
       "support": "Soporte"
     },
     "rows": {
+      "editProfile": "Editar perfil",
       "allAccounts": "Todas las cuentas",
       "view": "Ver",
       "kycVerification": "Verificación KYC",
@@ -711,6 +713,42 @@
     "settings": {
       "languageSpanish": "Español (CO)",
       "languageEnglish": "English (US)"
+    },
+    "edit": {
+      "title": "Editar perfil",
+      "description": "Completa tus datos para poder usar todos los métodos de recarga y envío.",
+      "sections": {
+        "contact": "Contacto",
+        "personal": "Datos personales",
+        "address": "Dirección"
+      },
+      "fields": {
+        "phone": "Teléfono",
+        "phonePlaceholder": "+57 300 123 4567",
+        "birthdate": "Fecha de nacimiento",
+        "countryOfBirth": "País de nacimiento",
+        "countryOfResidence": "País de residencia",
+        "addressLine1": "Dirección",
+        "addressLine2": "Complemento (opcional)",
+        "neighborhood": "Barrio (opcional)",
+        "city": "Ciudad",
+        "state": "Departamento/Estado",
+        "postalCode": "Código postal",
+        "selectCountry": "Selecciona un país"
+      },
+      "errors": {
+        "phoneRequired": "Ingresa tu teléfono",
+        "phoneInvalid": "Formato inválido. Usa el código de país y el número, ej: +573001234567",
+        "birthdateRequired": "Ingresa tu fecha de nacimiento",
+        "birthdateInvalid": "Fecha inválida",
+        "postalCodeInvalid": "Código postal inválido",
+        "requiredField": "Este campo es obligatorio"
+      },
+      "saveButton": "Guardar cambios",
+      "saving": "Guardando...",
+      "saveSuccessToast": "Perfil actualizado correctamente.",
+      "saveErrorToast": "No pudimos actualizar tu perfil. Intenta de nuevo.",
+      "loadErrorToast": "No pudimos cargar tu perfil."
     },
     "logout": "Cerrar sesión",
     "version": "Wallet Bloque v{{version}}"
