@@ -8,6 +8,7 @@ import {
   KeyRound,
   Plus,
   Wallet,
+  WalletCards,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -35,6 +36,7 @@ import { useAccount } from '~/hooks/accounts/use-accounts';
 import { useCreateCard } from '~/hooks/accounts/use-cards';
 import { useCreatePolygonAccount } from '~/hooks/accounts/use-polygon-account';
 import { useTransfer } from '~/hooks/accounts/use-transfer';
+import { useCreateVirtualAccount } from '~/hooks/accounts/use-virtual-account';
 import type { Asset, Movement } from '~/lib/formatters';
 import { formatCOP, formatUSD, sortBalancesForDisplay } from '~/lib/formatters';
 import { cn } from '~/lib/utils';
@@ -51,7 +53,7 @@ const ASSET_LABELS: Record<string, Asset> = {
   KSM: 'KSM',
 };
 
-type AddProductStep = 'closed' | 'pick' | 'card' | 'polygon';
+type AddProductStep = 'closed' | 'pick' | 'card' | 'polygon' | 'virtual';
 
 function parseAmount(rawAmount: string, rawAsset: string) {
   const [, precisionStr] = rawAsset.split('/');
@@ -117,6 +119,7 @@ function RouteComponent() {
 
   const createCardMutation = useCreateCard();
   const createPolygonMutation = useCreatePolygonAccount();
+  const createVirtualMutation = useCreateVirtualAccount();
   const transferMutation = useTransfer();
   const { accounts: ownAccounts } = useAccountPicker();
   const transferDestinations = ownAccounts.filter(
@@ -149,7 +152,9 @@ function RouteComponent() {
     [];
   const Icon = getProductKindIcon(primaryProduct?.kind ?? 'other');
 
-  const handlePickProductKind = (kind: 'card' | 'breb' | 'polygon') => {
+  const handlePickProductKind = (
+    kind: 'card' | 'breb' | 'polygon' | 'virtual',
+  ) => {
     if (!account) return;
     if (kind === 'breb') {
       setAddProductStep('closed');
@@ -178,6 +183,12 @@ function RouteComponent() {
           ledgerId: account.ledgerId,
         });
         toast.success(t('accounts.detail.polygonCreatedToast'));
+      } else if (addProductStep === 'virtual') {
+        await createVirtualMutation.mutateAsync({
+          name: productName.trim() || undefined,
+          ledgerId: account.ledgerId,
+        });
+        toast.success(t('accounts.detail.virtualAccountCreatedToast'));
       }
       setAddProductStep('closed');
     } catch {
@@ -186,7 +197,9 @@ function RouteComponent() {
   };
 
   const isCreatingProduct =
-    createCardMutation.isPending || createPolygonMutation.isPending;
+    createCardMutation.isPending ||
+    createPolygonMutation.isPending ||
+    createVirtualMutation.isPending;
 
   const transferAssetBalance = balances.find(
     (balance) => balance.asset === selectedAsset,
@@ -475,6 +488,11 @@ function RouteComponent() {
               <div className="flex flex-col gap-3 px-5 pb-4">
                 {[
                   {
+                    kind: 'virtual' as const,
+                    label: t('accounts.productKind.pocket'),
+                    icon: WalletCards,
+                  },
+                  {
                     kind: 'card' as const,
                     label: t('accounts.productKind.card'),
                     icon: CreditCard,
@@ -512,7 +530,9 @@ function RouteComponent() {
                 <DrawerTitle className="text-lg font-bold tracking-[-0.025em]">
                   {addProductStep === 'card'
                     ? t('accounts.detail.newCard')
-                    : t('accounts.detail.polygonAccount')}
+                    : addProductStep === 'virtual'
+                      ? t('accounts.detail.newVirtualAccount')
+                      : t('accounts.detail.polygonAccount')}
                 </DrawerTitle>
               </DrawerHeader>
               <div className="px-5 pb-2">
@@ -532,7 +552,9 @@ function RouteComponent() {
                     placeholder={
                       addProductStep === 'card'
                         ? t('accounts.detail.cardNamePlaceholder')
-                        : t('accounts.detail.polygonNamePlaceholder')
+                        : addProductStep === 'virtual'
+                          ? t('accounts.detail.virtualAccountNamePlaceholder')
+                          : t('accounts.detail.polygonNamePlaceholder')
                     }
                     maxLength={40}
                     disabled={isCreatingProduct}
