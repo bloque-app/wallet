@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { useAuth } from '~/contexts/auth/auth-context';
 import type { ExecutionOutcome } from '~/domain/payments/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useAccounts } from '~/hooks/accounts/use-accounts';
@@ -73,6 +74,8 @@ export const Route = createFileRoute('/_authed/topup/us-banks/')({
 function RouteComponent() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const kycStatus = user.kycStatus;
   const search = Route.useSearch();
   const [step, setStep] = useState<PayinStep>('link');
   const [amount, setAmount] = useState('');
@@ -272,11 +275,18 @@ function RouteComponent() {
 
   const rateError = useMemo(() => {
     if (parsedAmount < MIN_TOPUP_AMOUNT_USD) return null;
-    if (!sourceAccountUrn) {
-      return t('topup.usBanks.noSourceAccount');
-    }
-    if (!ledgerAccountId) {
-      return t('topup.usBanks.noDestinationAccount');
+    if (!sourceAccountUrn || !ledgerAccountId) {
+      // A rejected KYC blocks account provisioning entirely, which is what
+      // actually surfaces as "no source/destination account" here — say so
+      // instead of the generic error so the user knows to fix verification.
+      if (kycStatus === 'rejected') {
+        return t('topup.usBanks.kycRejectedError');
+      }
+      return t(
+        sourceAccountUrn
+          ? 'topup.usBanks.noDestinationAccount'
+          : 'topup.usBanks.noSourceAccount',
+      );
     }
     if (ratesQuery.isError) {
       return t('convert.rateFetchError');
@@ -289,6 +299,7 @@ function RouteComponent() {
     parsedAmount,
     sourceAccountUrn,
     ledgerAccountId,
+    kycStatus,
     ratesQuery.isError,
     ratesQuery.isSuccess,
     selectedRate,
@@ -448,6 +459,7 @@ function RouteComponent() {
           rateError={rateError}
           rateSummary={rateSummary}
           onAmountChange={setAmount}
+          onBack={() => setStep('link')}
           onNext={handleAmountNext}
         />
       )}

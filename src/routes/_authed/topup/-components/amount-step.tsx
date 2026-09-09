@@ -20,6 +20,11 @@ interface AmountStepProps {
   label?: string;
   minAmount?: number;
   minAmountLabel?: string;
+  feeLabel?: string;
+  /** The PSE-specific default only applies to PSE deposits — pass `null` to hide it for other rails (e.g. a bank payout). */
+  disclaimer?: string | null;
+  /** Same as `disclaimer`: the "5-15 min" default is PSE-specific — pass `null` to hide it for other rails. */
+  arrivalLabel?: string | null;
 }
 
 const quickAmounts = [50_000, 100_000, 200_000, 500_000];
@@ -36,6 +41,9 @@ export function TopUpAmountStep({
   label,
   minAmount = DEFAULT_MIN_AMOUNT,
   minAmountLabel,
+  feeLabel,
+  disclaimer,
+  arrivalLabel,
 }: AmountStepProps) {
   const { t } = useTranslation();
   const parsed = Number.parseInt(amount.replace(/\D/g, ''), 10) || 0;
@@ -95,7 +103,7 @@ export function TopUpAmountStep({
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">
-                {t('topup.amountStep.pseFee')}
+                {feeLabel ?? t('topup.amountStep.pseFee')}
               </span>
               <span className="font-medium text-foreground">
                 {formatCOP(fee)}
@@ -110,9 +118,11 @@ export function TopUpAmountStep({
                 {formatCOP(parsed + fee)}
               </span>
             </div>
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              {t('topup.amountStep.estimatedArrival')}
-            </p>
+            {arrivalLabel !== null && (
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                {arrivalLabel ?? t('topup.amountStep.estimatedArrival')}
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -165,9 +175,11 @@ export function TopUpAmountStep({
         {isLoadingRate ? t('convert.queryingRate') : t('common.continue')}
       </Button>
 
-      <p className="text-[10px] leading-relaxed text-muted-foreground text-center">
-        {t('topup.amountStep.pseDisclaimer')}
-      </p>
+      {disclaimer !== null && (
+        <p className="text-[10px] leading-relaxed text-muted-foreground text-center">
+          {disclaimer ?? t('topup.amountStep.pseDisclaimer')}
+        </p>
+      )}
     </div>
   );
 }

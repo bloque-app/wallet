@@ -299,6 +299,9 @@ function RouteComponent() {
           label={t('send.colombianBanks.amountStep.label')}
           minAmount={MIN_TRANSFER_AMOUNT}
           minAmountLabel={t('send.colombianBanks.amountStep.minAmount')}
+          feeLabel={t('send.colombianBanks.amountStep.feeLabel')}
+          disclaimer={null}
+          arrivalLabel={null}
         />
       )}
 

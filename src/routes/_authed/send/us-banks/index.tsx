@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { useAuth } from '~/contexts/auth/auth-context';
 import type { ExecutionOutcome } from '~/domain/payments/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useRates } from '~/hooks/payments/use-rates';
@@ -53,6 +54,8 @@ export const Route = createFileRoute('/_authed/send/us-banks/')({
 
 function RouteComponent() {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const kycStatus = user.kycStatus;
   const [step, setStep] = useState<TransferStep>('amount');
   const [amount, setAmount] = useState('');
   const [bankForm, setBankForm] =
@@ -106,7 +109,12 @@ function RouteComponent() {
   const rateError = useMemo(() => {
     if (parsedAmount < MIN_TRANSFER_AMOUNT_USD) return null;
     if (!sourceAccountUrn && !isLoadingAccounts) {
-      return t('send.usBanks.noSourceAccount');
+      // A rejected KYC blocks account provisioning entirely, which is what
+      // actually surfaces as "no source account" here — say so instead of
+      // the generic error so the user knows to fix verification.
+      return kycStatus === 'rejected'
+        ? t('send.usBanks.kycRejectedError')
+        : t('send.usBanks.noSourceAccount');
     }
     if (ratesQuery.isError) {
       return t('convert.rateFetchError');
@@ -119,6 +127,7 @@ function RouteComponent() {
     parsedAmount,
     sourceAccountUrn,
     isLoadingAccounts,
+    kycStatus,
     ratesQuery.isError,
     ratesQuery.isSuccess,
     selectedRate,

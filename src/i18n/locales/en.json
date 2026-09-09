@@ -77,14 +77,17 @@
       "brebKeyLabel": "BRE-B key",
       "newCard": "New card",
       "polygonAccount": "Polygon account",
+      "newVirtualAccount": "New account",
       "cardNameLabel": "Card name",
       "optionalNameLabel": "Name (optional)",
       "cardNamePlaceholder": "Personal",
       "polygonNamePlaceholder": "Main",
+      "virtualAccountNamePlaceholder": "Personal",
       "sharesBalanceOf": "It will share the balance of {{label}}.",
       "defaultCardName": "Card",
       "cardCreatedToast": "Card created successfully",
       "polygonCreatedToast": "Polygon account created",
+      "virtualAccountCreatedToast": "Account created successfully",
       "createProductErrorToast": "Couldn't create the product. Please try again.",
       "transferToOwnAccount": "Transfer to another account",
       "transferDrawerTitle": "Transfer funds",
@@ -328,7 +331,8 @@
     "quickActions": {
       "title": "Quick actions",
       "topup": "Top up",
-      "send": "Send"
+      "send": "Send",
+      "needsAccount": "Create an account first to use this."
     }
   },
   "send": {
@@ -396,7 +400,8 @@
       "noRateToContinue": "No rate available to continue.",
       "amountStep": {
         "label": "Amount to send (COP)",
-        "minAmount": "Minimum amount: $10,000 COP"
+        "minAmount": "Minimum amount: $10,000 COP",
+        "feeLabel": "Fee"
       }
     },
     "usBanks": {
@@ -405,6 +410,7 @@
       "noRateForOrder": "No rate selected to create the order.",
       "invalidAmountForOrder": "Invalid amount to create the order.",
       "noSourceAccount": "No source account available.",
+      "kycRejectedError": "Your identity verification wasn't approved, so we can't complete this operation. Retry verification from your profile.",
       "minAmountToast": "The minimum amount is $10 USD.",
       "noRateToContinue": "No rate available to continue.",
       "transferSentToast": "RTP transfer started successfully.",
@@ -514,7 +520,7 @@
       "documentNumberPlaceholder": "E.g.: 123456789"
     },
     "confirmStep": {
-      "summary": "Top-up summary",
+      "summary": "Summary",
       "sending": "Sending...",
       "sendWithdrawal": "Send withdrawal",
       "verifyDisclaimer": "Verify that the bank details are correct before sending."
@@ -567,6 +573,7 @@
       "invalidAmountForOrder": "Invalid amount to create the order.",
       "noSourceAccount": "We couldn't find a linked bank account to pull from.",
       "noDestinationAccount": "We couldn't find an available destination account.",
+      "kycRejectedError": "Your identity verification wasn't approved, so we can't complete this operation. Retry verification from your profile.",
       "minAmountToast": "The minimum amount is $10 USD.",
       "noRateToContinue": "No rate available to continue.",
       "topupStartedToast": "ACH top-up started successfully.",
