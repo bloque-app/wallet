@@ -62,10 +62,18 @@ export function AccountsCarousel({
   accounts,
   onSelectAccount,
   onAddAccount,
+  highlightAdd = false,
 }: {
   accounts: Account[];
   onSelectAccount: (urn: string) => void;
   onAddAccount: () => void;
+  /**
+   * Highlights the "+ new account" card to guide a genuinely accountless
+   * user there. Callers must gate this on their accounts query having
+   * settled — `accounts` reads as `[]` while it's still loading too, and
+   * that must not read as "confirmed empty" (see BQE-2653).
+   */
+  highlightAdd?: boolean;
 }) {
   const { t } = useTranslation();
   return (
@@ -86,20 +94,20 @@ export function AccountsCarousel({
         onClick={onAddAccount}
         className={cn(
           'flex h-[6.5rem] w-[9.5rem] shrink-0 snap-center flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed bg-card/35 transition-colors hover:bg-muted',
-          accounts.length === 0 ? 'border-primary/60' : 'border-border',
+          highlightAdd ? 'border-primary/60' : 'border-border',
         )}
         aria-label={t('accountsCarousel.createNewAria')}
       >
         <div
           className={cn(
             'flex h-8 w-8 items-center justify-center rounded-2xl border',
-            accounts.length === 0 ? 'border-primary/60' : 'border-border',
+            highlightAdd ? 'border-primary/60' : 'border-border',
           )}
         >
           <Plus
             className={cn(
               'h-4 w-4',
-              accounts.length === 0 ? 'text-primary' : 'text-muted-foreground',
+              highlightAdd ? 'text-primary' : 'text-muted-foreground',
             )}
             strokeWidth={1.5}
           />
@@ -107,7 +115,7 @@ export function AccountsCarousel({
         <span
           className={cn(
             'text-[10px] font-medium',
-            accounts.length === 0
+            highlightAdd
               ? 'text-primary underline underline-offset-2'
               : 'text-muted-foreground',
           )}

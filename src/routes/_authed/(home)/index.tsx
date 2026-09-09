@@ -80,6 +80,10 @@ function RouteComponent() {
   const [showCreateAccount, setShowCreateAccount] = useState(false);
 
   const accounts = accountsQuery.data ?? [];
+  // While the accounts query is still resolving, `accounts` is `[]` — that
+  // must not read as "no accounts" and disable the quick actions for a user
+  // who actually has one; only a *settled* empty list means that.
+  const hasAccount = accountsQuery.isLoading || accounts.length > 0;
   const assets: Asset[] = ['USD', 'COP'];
   const selectedBalance = parsedBalances[selectedAsset] ?? 0;
 
@@ -130,7 +134,7 @@ function RouteComponent() {
         </div>
       </section>
 
-      <QuickActions hasAccount={accounts.length > 0} />
+      <QuickActions hasAccount={hasAccount} />
 
       <div className="my-1 h-px w-full bg-gradient-to-r from-transparent via-border to-transparent" />
 
@@ -152,6 +156,7 @@ function RouteComponent() {
             navigate({ to: '/accounts/$urn', params: { urn } })
           }
           onAddAccount={() => setShowCreateAccount(true)}
+          highlightAdd={!accountsQuery.isLoading && accounts.length === 0}
         />
       </section>
 
