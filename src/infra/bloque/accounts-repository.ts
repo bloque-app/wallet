@@ -468,9 +468,10 @@ async function transfer(input: TransferInput): Promise<TransferOutcome> {
 async function createVirtualAccount(
   input: CreateVirtualAccountInput,
 ): Promise<Product> {
-  const account = await bloque.accounts.virtual.create(
-    input.name ? { name: input.name } : {},
-  );
+  const account = await bloque.accounts.virtual.create({
+    ...(input.name ? { name: input.name } : {}),
+    ...(input.ledgerId ? { ledgerId: input.ledgerId } : {}),
+  });
   return mapToProduct(account as ListedAccount);
 }
 

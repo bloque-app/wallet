@@ -2,6 +2,7 @@ import { Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Account } from '~/domain/accounts/types';
 import { formatCOP, formatUSD, sortBalancesForDisplay } from '~/lib/formatters';
+import { cn } from '~/lib/utils';
 import { getProductKindIcon } from './product-presentation';
 
 function formatAccountBalanceChip(asset: string, current: string): string {
@@ -83,13 +84,34 @@ export function AccountsCarousel({
       <button
         type="button"
         onClick={onAddAccount}
-        className="flex h-[6.5rem] w-[9.5rem] shrink-0 snap-center flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border bg-card/35 transition-colors hover:bg-muted"
+        className={cn(
+          'flex h-[6.5rem] w-[9.5rem] shrink-0 snap-center flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed bg-card/35 transition-colors hover:bg-muted',
+          accounts.length === 0 ? 'border-primary/60' : 'border-border',
+        )}
         aria-label={t('accountsCarousel.createNewAria')}
       >
-        <div className="flex h-8 w-8 items-center justify-center rounded-2xl border border-border">
-          <Plus className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+        <div
+          className={cn(
+            'flex h-8 w-8 items-center justify-center rounded-2xl border',
+            accounts.length === 0 ? 'border-primary/60' : 'border-border',
+          )}
+        >
+          <Plus
+            className={cn(
+              'h-4 w-4',
+              accounts.length === 0 ? 'text-primary' : 'text-muted-foreground',
+            )}
+            strokeWidth={1.5}
+          />
         </div>
-        <span className="text-[10px] font-medium text-muted-foreground">
+        <span
+          className={cn(
+            'text-[10px] font-medium',
+            accounts.length === 0
+              ? 'text-primary underline underline-offset-2'
+              : 'text-muted-foreground',
+          )}
+        >
           {t('accountsCarousel.newAccount')}
         </span>
       </button>

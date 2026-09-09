@@ -62,7 +62,7 @@ export type CreateBrebKeyInput = {
 
 export type CreatePolygonAccountInput = { name?: string; ledgerId?: string };
 
-export type CreateVirtualAccountInput = { name?: string };
+export type CreateVirtualAccountInput = { name?: string; ledgerId?: string };
 
 export type CreateExternalUsBankAccountInput = {
   /** URL the hosted Plaid Link page redirects to once linking finishes. */

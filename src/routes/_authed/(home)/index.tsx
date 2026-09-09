@@ -130,7 +130,7 @@ function RouteComponent() {
         </div>
       </section>
 
-      <QuickActions />
+      <QuickActions hasAccount={accounts.length > 0} />
 
       <div className="my-1 h-px w-full bg-gradient-to-r from-transparent via-border to-transparent" />
 

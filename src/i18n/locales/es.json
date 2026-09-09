@@ -77,14 +77,17 @@
       "brebKeyLabel": "Llave BRE-B",
       "newCard": "Nueva tarjeta",
       "polygonAccount": "Cuenta Polygon",
+      "newVirtualAccount": "Nueva cuenta",
       "cardNameLabel": "Nombre de la tarjeta",
       "optionalNameLabel": "Nombre (opcional)",
       "cardNamePlaceholder": "Personal",
       "polygonNamePlaceholder": "Principal",
+      "virtualAccountNamePlaceholder": "Personal",
       "sharesBalanceOf": "Compartirá el saldo de {{label}}.",
       "defaultCardName": "Tarjeta",
       "cardCreatedToast": "Tarjeta creada exitosamente",
       "polygonCreatedToast": "Cuenta Polygon creada",
+      "virtualAccountCreatedToast": "Cuenta creada exitosamente",
       "createProductErrorToast": "No se pudo crear el producto. Intenta de nuevo.",
       "transferToOwnAccount": "Transferir a otra cuenta",
       "transferDrawerTitle": "Transferir fondos",
@@ -328,7 +331,8 @@
     "quickActions": {
       "title": "Acciones rápidas",
       "topup": "Recargar",
-      "send": "Enviar"
+      "send": "Enviar",
+      "needsAccount": "Crea una cuenta primero para poder usar esta opción."
     }
   },
   "send": {
