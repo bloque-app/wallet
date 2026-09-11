@@ -117,6 +117,6 @@ describe('AccountCarousel', () => {
       />,
     );
 
-    expect(screen.getByText('1500.50 COP')).toBeInTheDocument();
+    expect(screen.getByText('$ 1.501')).toBeInTheDocument();
   });
 });
