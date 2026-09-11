@@ -26,10 +26,6 @@ const MIN_TRANSFER_AMOUNT = 10_000;
 const FROM_ASSET = 'COPM/2';
 const TO_ASSET = 'COP/2';
 const FROM_MEDIUM = 'kusama';
-// Cobre manual payout (3500 COP) + Bloque's own flat cut (2000 COP), per
-// rail-fee-config.ts ("kusama-bank"). Cobre's additional 0.2% spread isn't
-// representable here — TopUpAmountStep only takes a flat fee.
-const COLOMBIAN_BANKS_FLAT_FEE = 5_500;
 
 function getAssetPrecision(assetWithPrecision: string) {
   const [, precisionStr] = assetWithPrecision.split('/');
@@ -72,7 +68,7 @@ function RouteComponent() {
   const [autoRetry, setAutoRetry] = useState(false);
   const [selectedBank, setSelectedBank] = useState('');
   const { accounts: sourceAccounts, isLoading: isLoadingAccounts } =
-    useAccountPicker();
+    useAccountPicker({ asset: FROM_ASSET });
   const [sourceLedgerId, setSourceLedgerId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -324,7 +320,7 @@ function RouteComponent() {
       {step === 'amount' && (
         <TopUpAmountStep
           amount={amount}
-          fee={COLOMBIAN_BANKS_FLAT_FEE}
+          fee={0}
           isLoadingRate={ratesQuery.isFetching}
           rateError={rateError}
           rateSummary={rateSummary}

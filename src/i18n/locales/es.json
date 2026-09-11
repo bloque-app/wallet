@@ -357,7 +357,7 @@
       },
       "usBanks": {
         "title": "Bancos/billeteras",
-        "description": "Envia USD via RTP a bancos y wallets."
+        "description": "Envia USD vía RTP a bancos y wallets."
       },
       "blockchain": {
         "title": "Direcciones blockchain",
