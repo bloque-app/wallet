@@ -352,7 +352,7 @@
       },
       "usBanks": {
         "title": "US banks/wallets",
-        "description": "Send USD to banks and wallets in the United States."
+        "description": "Send USD via RTP to banks and wallets in the United States."
       },
       "blockchain": {
         "title": "Blockchain addresses",
@@ -458,7 +458,7 @@
       },
       "usBanks": {
         "title": "From US banks",
-        "subtitle": "ACH / Wire"
+        "subtitle": "ACH"
       },
       "blockchain": {
         "title": "From blockchain addresses",
