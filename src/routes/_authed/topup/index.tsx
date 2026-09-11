@@ -314,15 +314,23 @@ function RouteComponent() {
         </div>
       )}
 
-      {step === 'method' && (
-        <section className="flex flex-col gap-3">
-          {[
+      {step === 'method' &&
+        (() => {
+          const methods: Array<{
+            title: string;
+            subtitle: string;
+            icon: typeof Building2;
+            enabled: boolean;
+            onClick: () => void;
+            group?: 'colombia' | 'us';
+          }> = [
             {
               title: t('topup.methods.colombianBanks.title'),
               subtitle: t('topup.methods.colombianBanks.subtitle'),
               icon: Building2,
               enabled: true,
               onClick: () => setStep('amount'),
+              group: 'colombia',
             },
             {
               title: t('topup.methods.brebKeys.title'),
@@ -334,6 +342,7 @@ function RouteComponent() {
                   to: '/breb-keys/deposit',
                   search: { from: '/topup' },
                 }),
+              group: 'colombia',
             },
             {
               title: t('topup.methods.usBanks.title'),
@@ -341,6 +350,7 @@ function RouteComponent() {
               icon: Building2,
               enabled: true,
               onClick: () => navigate({ to: '/topup/us-banks' }),
+              group: 'us',
             },
             {
               title: t('topup.methods.blockchain.title'),
@@ -357,7 +367,9 @@ function RouteComponent() {
               enabled: false,
               onClick: () => toast.info(t('topup.methods.card.comingSoon')),
             },
-          ].map((option) => {
+          ];
+
+          const renderMethod = (option: (typeof methods)[number]) => {
             const Icon = option.icon;
             return (
               <button
@@ -382,9 +394,34 @@ function RouteComponent() {
                 </div>
               </button>
             );
-          })}
-        </section>
-      )}
+          };
+
+          const colombiaMethods = methods.filter((m) => m.group === 'colombia');
+          const usMethods = methods.filter((m) => m.group === 'us');
+          const otherMethods = methods.filter((m) => !m.group);
+
+          return (
+            <>
+              <section className="flex flex-col gap-3">
+                <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t('topup.groups.colombia')}
+                </h2>
+                {colombiaMethods.map(renderMethod)}
+              </section>
+
+              <section className="flex flex-col gap-3">
+                <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t('topup.groups.us')}
+                </h2>
+                {usMethods.map(renderMethod)}
+              </section>
+
+              <section className="flex flex-col gap-3">
+                {otherMethods.map(renderMethod)}
+              </section>
+            </>
+          );
+        })()}
 
       {step === 'amount' && (
         <section className="rounded-3xl border border-border/75 bg-card/80 p-5">

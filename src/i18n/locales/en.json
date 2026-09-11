@@ -337,22 +337,26 @@
   },
   "send": {
     "title": "Send",
+    "groups": {
+      "colombia": "Colombia",
+      "us": "United States"
+    },
     "options": {
       "brebKeys": {
         "title": "BRE-B keys",
         "description": "Send to any Colombian bank instantly."
       },
       "colombianBanks": {
-        "title": "Colombian banks",
-        "description": "Transfer to bank accounts in Colombia."
+        "title": "Banks",
+        "description": "Transfer to bank accounts."
       },
       "bloqueFriends": {
         "title": "Friends on Bloque",
         "description": "Send to contacts within Bloque."
       },
       "usBanks": {
-        "title": "US banks/wallets",
-        "description": "Send USD via RTP to banks and wallets in the United States."
+        "title": "Banks/wallets",
+        "description": "Send USD via RTP to banks and wallets."
       },
       "blockchain": {
         "title": "Blockchain addresses",
@@ -447,9 +451,13 @@
     "rateExpiredToast": "The rate expired. Recalculating...",
     "startErrorToast": "Couldn't start the top-up.",
     "noRateRetryToast": "No rate available. Please try again.",
+    "groups": {
+      "colombia": "Colombia",
+      "us": "United States"
+    },
     "methods": {
       "colombianBanks": {
-        "title": "Colombian banks",
+        "title": "Banks",
         "subtitle": "PSE"
       },
       "brebKeys": {
@@ -457,7 +465,7 @@
         "subtitle": "Register and manage your keys"
       },
       "usBanks": {
-        "title": "From US banks",
+        "title": "From banks",
         "subtitle": "ACH"
       },
       "blockchain": {

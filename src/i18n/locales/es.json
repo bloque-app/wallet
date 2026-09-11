@@ -337,22 +337,26 @@
   },
   "send": {
     "title": "Enviar",
+    "groups": {
+      "colombia": "Colombia",
+      "us": "Estados Unidos"
+    },
     "options": {
       "brebKeys": {
         "title": "Llaves BRE-B",
         "description": "Envia a cualquier banco colombiano al instante."
       },
       "colombianBanks": {
-        "title": "Bancos colombianos",
-        "description": "Transfiere a cuentas bancarias en Colombia."
+        "title": "Bancos",
+        "description": "Transfiere a cuentas bancarias."
       },
       "bloqueFriends": {
         "title": "Amigos en bloque",
         "description": "Envia a contactos dentro de Bloque."
       },
       "usBanks": {
-        "title": "Bancos/billeteras en EE.UU.",
-        "description": "Envia USD via RTP a bancos y wallets en Estados Unidos."
+        "title": "Bancos/billeteras",
+        "description": "Envia USD via RTP a bancos y wallets."
       },
       "blockchain": {
         "title": "Direcciones blockchain",
@@ -447,9 +451,13 @@
     "rateExpiredToast": "La tasa expiró. Recalculando...",
     "startErrorToast": "No se pudo iniciar la recarga.",
     "noRateRetryToast": "No hay tasa disponible. Intenta de nuevo.",
+    "groups": {
+      "colombia": "Colombia",
+      "us": "Estados Unidos"
+    },
     "methods": {
       "colombianBanks": {
-        "title": "Bancos colombianos",
+        "title": "Bancos",
         "subtitle": "PSE"
       },
       "brebKeys": {
@@ -457,7 +465,7 @@
         "subtitle": "Registra y gestiona tus llaves"
       },
       "usBanks": {
-        "title": "Desde bancos en EE.UU.",
+        "title": "Desde bancos",
         "subtitle": "ACH"
       },
       "blockchain": {
