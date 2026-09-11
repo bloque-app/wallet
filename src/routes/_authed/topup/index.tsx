@@ -345,7 +345,7 @@ function RouteComponent() {
                   search: { from: '/topup' },
                 }),
               group: 'colombia',
-              fee: '500 COP + 0.4%',
+              fee: '500 COP + 0.2%',
             },
             {
               title: t('topup.methods.usBanks.title'),
