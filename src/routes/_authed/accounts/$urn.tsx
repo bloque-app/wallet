@@ -39,6 +39,7 @@ import { useTransfer } from '~/hooks/accounts/use-transfer';
 import { useCreateVirtualAccount } from '~/hooks/accounts/use-virtual-account';
 import type { Asset, Movement } from '~/lib/formatters';
 import { formatCOP, formatUSD, sortBalancesForDisplay } from '~/lib/formatters';
+import { goBackOrFallback } from '~/lib/navigation';
 import { cn } from '~/lib/utils';
 
 export const Route = createFileRoute('/_authed/accounts/$urn')({
@@ -243,13 +244,18 @@ function RouteComponent() {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center gap-2">
-        <Link
-          to="/accounts"
+        <button
+          type="button"
+          onClick={() =>
+            goBackOrFallback(() => {
+              void navigate({ to: '/accounts' });
+            })
+          }
           className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           {t('common.back')}
-        </Link>
+        </button>
         <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
           {t('accounts.detail.title')}
         </h1>
