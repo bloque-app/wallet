@@ -337,22 +337,27 @@
   },
   "send": {
     "title": "Send",
+    "noFee": "No cost",
+    "groups": {
+      "colombia": "Colombia",
+      "us": "United States"
+    },
     "options": {
       "brebKeys": {
         "title": "BRE-B keys",
         "description": "Send to any Colombian bank instantly."
       },
       "colombianBanks": {
-        "title": "Colombian banks",
-        "description": "Transfer to bank accounts in Colombia."
+        "title": "Banks",
+        "description": "Transfer to bank accounts."
       },
       "bloqueFriends": {
         "title": "Friends on Bloque",
         "description": "Send to contacts within Bloque."
       },
       "usBanks": {
-        "title": "US banks/wallets",
-        "description": "Send USD to banks and wallets in the United States."
+        "title": "Banks/wallets",
+        "description": "Send USD via RTP to banks and wallets."
       },
       "blockchain": {
         "title": "Blockchain addresses",
@@ -394,6 +399,7 @@
       "noRateForOrder": "No rate selected to create the order.",
       "invalidAmountForOrder": "Invalid amount to create the order.",
       "noSourceAccount": "No source account available.",
+      "sourceAccountLabel": "Source account",
       "selectDestinationBank": "Select a destination bank.",
       "unsupportedBank": "The selected bank isn't valid for this transfer.",
       "minAmountToast": "The minimum amount is $10,000 COP.",
@@ -410,6 +416,7 @@
       "noRateForOrder": "No rate selected to create the order.",
       "invalidAmountForOrder": "Invalid amount to create the order.",
       "noSourceAccount": "No source account available.",
+      "sourceAccountLabel": "Source account",
       "kycRejectedError": "Your identity verification wasn't approved, so we can't complete this operation. Retry verification from your profile.",
       "minAmountToast": "The minimum amount is $10 USD.",
       "noRateToContinue": "No rate available to continue.",
@@ -447,9 +454,13 @@
     "rateExpiredToast": "The rate expired. Recalculating...",
     "startErrorToast": "Couldn't start the top-up.",
     "noRateRetryToast": "No rate available. Please try again.",
+    "groups": {
+      "colombia": "Colombia",
+      "us": "United States"
+    },
     "methods": {
       "colombianBanks": {
-        "title": "Colombian banks",
+        "title": "Banks",
         "subtitle": "PSE"
       },
       "brebKeys": {
@@ -457,8 +468,8 @@
         "subtitle": "Register and manage your keys"
       },
       "usBanks": {
-        "title": "From US banks",
-        "subtitle": "ACH / Wire"
+        "title": "From banks",
+        "subtitle": "ACH"
       },
       "blockchain": {
         "title": "From blockchain addresses",
@@ -471,6 +482,7 @@
         "comingSoon": "Top-up with card coming soon."
       }
     },
+    "destinationAccountLabel": "Destination account",
     "iWantToReceive": "I want to receive",
     "pseAmountLabel": "Amount to pay via PSE (COP)",
     "minAmount": "Minimum amount: $5,000 COP",

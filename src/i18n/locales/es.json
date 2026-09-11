@@ -337,22 +337,27 @@
   },
   "send": {
     "title": "Enviar",
+    "noFee": "Sin costo",
+    "groups": {
+      "colombia": "Colombia",
+      "us": "Estados Unidos"
+    },
     "options": {
       "brebKeys": {
         "title": "Llaves BRE-B",
         "description": "Envia a cualquier banco colombiano al instante."
       },
       "colombianBanks": {
-        "title": "Bancos colombianos",
-        "description": "Transfiere a cuentas bancarias en Colombia."
+        "title": "Bancos",
+        "description": "Transfiere a cuentas bancarias."
       },
       "bloqueFriends": {
         "title": "Amigos en bloque",
         "description": "Envia a contactos dentro de Bloque."
       },
       "usBanks": {
-        "title": "Bancos/billeteras en EE.UU.",
-        "description": "Envia USD a bancos y wallets en Estados Unidos."
+        "title": "Bancos/billeteras",
+        "description": "Envia USD vía RTP a bancos y wallets."
       },
       "blockchain": {
         "title": "Direcciones blockchain",
@@ -394,6 +399,7 @@
       "noRateForOrder": "No hay tasa seleccionada para crear la orden.",
       "invalidAmountForOrder": "Monto inválido para crear la orden.",
       "noSourceAccount": "No hay cuenta origen disponible.",
+      "sourceAccountLabel": "Cuenta origen",
       "selectDestinationBank": "Selecciona un banco destino.",
       "unsupportedBank": "El banco seleccionado no es válido para esta transferencia.",
       "minAmountToast": "El monto mínimo es $10,000 COP.",
@@ -410,6 +416,7 @@
       "noRateForOrder": "No hay tasa seleccionada para crear la orden.",
       "invalidAmountForOrder": "Monto inválido para crear la orden.",
       "noSourceAccount": "No hay cuenta origen disponible.",
+      "sourceAccountLabel": "Cuenta origen",
       "kycRejectedError": "Tu verificación de identidad no fue aprobada, por eso no podemos completar esta operación. Vuelve a intentar la verificación desde tu perfil.",
       "minAmountToast": "El monto mínimo es $10 USD.",
       "noRateToContinue": "No hay tasa disponible para continuar.",
@@ -447,9 +454,13 @@
     "rateExpiredToast": "La tasa expiró. Recalculando...",
     "startErrorToast": "No se pudo iniciar la recarga.",
     "noRateRetryToast": "No hay tasa disponible. Intenta de nuevo.",
+    "groups": {
+      "colombia": "Colombia",
+      "us": "Estados Unidos"
+    },
     "methods": {
       "colombianBanks": {
-        "title": "Bancos colombianos",
+        "title": "Bancos",
         "subtitle": "PSE"
       },
       "brebKeys": {
@@ -457,8 +468,8 @@
         "subtitle": "Registra y gestiona tus llaves"
       },
       "usBanks": {
-        "title": "Desde bancos en EE.UU.",
-        "subtitle": "ACH / Wire"
+        "title": "Desde bancos",
+        "subtitle": "ACH"
       },
       "blockchain": {
         "title": "Desde direcciones blockchain",
@@ -471,6 +482,7 @@
         "comingSoon": "Recarga con tarjeta disponible próximamente."
       }
     },
+    "destinationAccountLabel": "Cuenta destino",
     "iWantToReceive": "Quiero recibir",
     "pseAmountLabel": "Monto a pagar por PSE (COP)",
     "minAmount": "Monto minimo: $5,000 COP",

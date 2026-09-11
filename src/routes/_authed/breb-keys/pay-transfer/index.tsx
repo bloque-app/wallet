@@ -369,7 +369,7 @@ function RouteComponent() {
             />
           </div>
 
-          {fundedAccounts.length > 1 ? (
+          {fundedAccounts.length > 0 ? (
             <AccountCarousel
               accounts={fundedAccounts}
               asset={FROM_ASSET}
