@@ -79,6 +79,19 @@ function majorToMinor(amountMajor: number, rawAsset: string): string {
   return Math.round(amountMajor * 10 ** precision).toString();
 }
 
+/**
+ * COP has no meaningful sub-unit in this app's UX (every other COP input is
+ * digit-only, whole pesos) — a "." here would be a thousands separator, not
+ * a decimal point, and `parseFloat` has no way to tell those apart. Only
+ * assets with a real decimal convention (USD, KSM) get a "." at all.
+ */
+function sanitizeTransferAmountInput(raw: string, rawAsset: string): string {
+  if (getAssetLabel(rawAsset) === 'COP') return raw.replace(/\D/g, '');
+  const cleaned = raw.replace(/[^\d.]/g, '');
+  const [intPart, ...rest] = cleaned.split('.');
+  return rest.length > 0 ? `${intPart}.${rest.join('').slice(0, 2)}` : intPart;
+}
+
 function formatAssetBalance(balance: AssetBalance) {
   const asset = getAssetLabel(balance.asset);
   const amount = parseAmount(balance.current, balance.asset);
@@ -638,7 +651,11 @@ function RouteComponent() {
                 id="transfer-amount"
                 inputMode="decimal"
                 value={transferAmount}
-                onChange={(e) => setTransferAmount(e.target.value)}
+                onChange={(e) =>
+                  setTransferAmount(
+                    sanitizeTransferAmountInput(e.target.value, selectedAsset),
+                  )
+                }
                 placeholder="0"
                 disabled={transferMutation.isPending}
                 className="h-12 rounded-xl"
