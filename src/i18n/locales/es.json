@@ -337,6 +337,7 @@
   },
   "send": {
     "title": "Enviar",
+    "noFee": "Sin costo",
     "groups": {
       "colombia": "Colombia",
       "us": "Estados Unidos"

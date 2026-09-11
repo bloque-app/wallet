@@ -14,6 +14,7 @@ type SendOption = {
   icon: React.ComponentType<{ className?: string }>;
   search?: Record<string, string>;
   group?: 'colombia' | 'us';
+  fee?: string;
 } & ({ to: string; onClick?: never } | { to?: never; onClick: () => void });
 
 function RouteComponent() {
@@ -25,6 +26,7 @@ function RouteComponent() {
       description: t('send.options.bloqueFriends.description'),
       to: '/send/bloque-friends',
       icon: Users,
+      fee: t('send.noFee'),
     },
     {
       title: t('send.options.brebKeys.title'),
@@ -33,6 +35,7 @@ function RouteComponent() {
       search: { from: '/send' },
       icon: KeyRound,
       group: 'colombia',
+      fee: '500 COP + 0.4%',
     },
     {
       title: t('send.options.colombianBanks.title'),
@@ -40,6 +43,7 @@ function RouteComponent() {
       to: '/send/colombian-banks',
       icon: Building2,
       group: 'colombia',
+      fee: '5.500 COP + 0.2%',
     },
     {
       title: t('send.options.usBanks.title'),
@@ -47,6 +51,7 @@ function RouteComponent() {
       to: '/send/us-banks',
       icon: Building2,
       group: 'us',
+      fee: '$1 + 1%',
     },
     {
       title: t('send.options.blockchain.title'),
@@ -112,10 +117,15 @@ function renderSendOption(option: SendOption) {
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
         <Icon className="h-4 w-4 text-primary" />
       </div>
-      <div className="flex flex-col">
+      <div className="flex flex-1 flex-col">
         <p className="text-sm font-medium text-foreground">{option.title}</p>
         <p className="text-xs text-muted-foreground">{option.description}</p>
       </div>
+      {option.fee && (
+        <span className="shrink-0 text-[11px] font-medium text-primary">
+          {option.fee}
+        </span>
+      )}
     </div>
   );
 

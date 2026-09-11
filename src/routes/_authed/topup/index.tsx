@@ -323,6 +323,7 @@ function RouteComponent() {
             enabled: boolean;
             onClick: () => void;
             group?: 'colombia' | 'us';
+            fee?: string;
           }> = [
             {
               title: t('topup.methods.colombianBanks.title'),
@@ -331,6 +332,7 @@ function RouteComponent() {
               enabled: true,
               onClick: () => setStep('amount'),
               group: 'colombia',
+              fee: '2.500 COP + 1%',
             },
             {
               title: t('topup.methods.brebKeys.title'),
@@ -343,6 +345,7 @@ function RouteComponent() {
                   search: { from: '/topup' },
                 }),
               group: 'colombia',
+              fee: '500 COP + 0.4%',
             },
             {
               title: t('topup.methods.usBanks.title'),
@@ -351,6 +354,7 @@ function RouteComponent() {
               enabled: true,
               onClick: () => navigate({ to: '/topup/us-banks' }),
               group: 'us',
+              fee: '$0.25 + 1%',
             },
             {
               title: t('topup.methods.blockchain.title'),
@@ -384,7 +388,7 @@ function RouteComponent() {
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
                   <Icon className="h-4 w-4 text-primary" />
                 </div>
-                <div className="flex flex-col">
+                <div className="flex flex-1 flex-col">
                   <p className="text-sm font-medium text-foreground">
                     {option.title}
                   </p>
@@ -392,6 +396,11 @@ function RouteComponent() {
                     {option.subtitle}
                   </p>
                 </div>
+                {option.fee && (
+                  <span className="shrink-0 text-[11px] font-medium text-primary">
+                    {option.fee}
+                  </span>
+                )}
               </button>
             );
           };
