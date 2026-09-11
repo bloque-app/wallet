@@ -399,6 +399,7 @@
       "noRateForOrder": "No rate selected to create the order.",
       "invalidAmountForOrder": "Invalid amount to create the order.",
       "noSourceAccount": "No source account available.",
+      "sourceAccountLabel": "Source account",
       "selectDestinationBank": "Select a destination bank.",
       "unsupportedBank": "The selected bank isn't valid for this transfer.",
       "minAmountToast": "The minimum amount is $10,000 COP.",
@@ -415,6 +416,7 @@
       "noRateForOrder": "No rate selected to create the order.",
       "invalidAmountForOrder": "Invalid amount to create the order.",
       "noSourceAccount": "No source account available.",
+      "sourceAccountLabel": "Source account",
       "kycRejectedError": "Your identity verification wasn't approved, so we can't complete this operation. Retry verification from your profile.",
       "minAmountToast": "The minimum amount is $10 USD.",
       "noRateToContinue": "No rate available to continue.",
@@ -480,6 +482,7 @@
         "comingSoon": "Top-up with card coming soon."
       }
     },
+    "destinationAccountLabel": "Destination account",
     "iWantToReceive": "I want to receive",
     "pseAmountLabel": "Amount to pay via PSE (COP)",
     "minAmount": "Minimum amount: $5,000 COP",

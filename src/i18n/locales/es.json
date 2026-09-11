@@ -399,6 +399,7 @@
       "noRateForOrder": "No hay tasa seleccionada para crear la orden.",
       "invalidAmountForOrder": "Monto inválido para crear la orden.",
       "noSourceAccount": "No hay cuenta origen disponible.",
+      "sourceAccountLabel": "Cuenta origen",
       "selectDestinationBank": "Selecciona un banco destino.",
       "unsupportedBank": "El banco seleccionado no es válido para esta transferencia.",
       "minAmountToast": "El monto mínimo es $10,000 COP.",
@@ -415,6 +416,7 @@
       "noRateForOrder": "No hay tasa seleccionada para crear la orden.",
       "invalidAmountForOrder": "Monto inválido para crear la orden.",
       "noSourceAccount": "No hay cuenta origen disponible.",
+      "sourceAccountLabel": "Cuenta origen",
       "kycRejectedError": "Tu verificación de identidad no fue aprobada, por eso no podemos completar esta operación. Vuelve a intentar la verificación desde tu perfil.",
       "minAmountToast": "El monto mínimo es $10 USD.",
       "noRateToContinue": "No hay tasa disponible para continuar.",
@@ -480,6 +482,7 @@
         "comingSoon": "Recarga con tarjeta disponible próximamente."
       }
     },
+    "destinationAccountLabel": "Cuenta destino",
     "iWantToReceive": "Quiero recibir",
     "pseAmountLabel": "Monto a pagar por PSE (COP)",
     "minAmount": "Monto minimo: $5,000 COP",

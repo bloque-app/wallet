@@ -3,6 +3,7 @@ import { Building2, CreditCard, KeyRound, Wallet } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { AccountCarousel } from '~/components/account/account-carousel';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
@@ -116,7 +117,28 @@ function RouteComponent() {
 
   const { accounts: destinationAccounts, isLoading: isLoadingAccounts } =
     useAccountPicker();
-  const destinationAccountUrn = destinationAccounts[0]?.primaryUrn;
+  const [destinationLedgerId, setDestinationLedgerId] = useState<string | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (destinationAccounts.length === 1 && destinationAccounts[0]) {
+      setDestinationLedgerId(destinationAccounts[0].ledgerId);
+      return;
+    }
+    setDestinationLedgerId((current) =>
+      current &&
+      destinationAccounts.some((account) => account.ledgerId === current)
+        ? current
+        : null,
+    );
+  }, [destinationAccounts]);
+
+  const destinationAccount =
+    destinationAccounts.find(
+      (account) => account.ledgerId === destinationLedgerId,
+    ) ?? null;
+  const destinationAccountUrn = destinationAccount?.primaryUrn;
 
   const banksQuery = usePseBanks();
 
@@ -435,6 +457,18 @@ function RouteComponent() {
       {step === 'amount' && (
         <section className="rounded-3xl border border-border/75 bg-card/80 p-5">
           <div className="flex flex-col gap-5">
+            {destinationAccounts.length > 0 && (
+              <AccountCarousel
+                accounts={destinationAccounts}
+                asset={selectedReceiveAsset.sdkAsset}
+                precision={selectedReceiveAsset.precision}
+                unit={receiveAsset}
+                value={destinationLedgerId}
+                onChange={setDestinationLedgerId}
+                label={t('topup.destinationAccountLabel')}
+              />
+            )}
+
             <div className="flex flex-col gap-2">
               <Label>{t('topup.iWantToReceive')}</Label>
               <div className="grid grid-cols-2 gap-2">
