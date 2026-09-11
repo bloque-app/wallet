@@ -2,6 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { ArrowLeft, Building2, KeyRound, Users, Wallet } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { formatCOP, formatUSD } from '~/lib/formatters';
 import { cn } from '~/lib/utils';
 
 export const Route = createFileRoute('/_authed/send/')({
@@ -35,7 +36,7 @@ function RouteComponent() {
       search: { from: '/send' },
       icon: KeyRound,
       group: 'colombia',
-      fee: '500 COP + 0.4%',
+      fee: `${formatCOP(500)} + 0.4%`,
     },
     {
       title: t('send.options.colombianBanks.title'),
@@ -43,7 +44,7 @@ function RouteComponent() {
       to: '/send/colombian-banks',
       icon: Building2,
       group: 'colombia',
-      fee: '5.500 COP + 0.2%',
+      fee: `${formatCOP(5500)} + 0.2%`,
     },
     {
       title: t('send.options.usBanks.title'),
@@ -51,7 +52,7 @@ function RouteComponent() {
       to: '/send/us-banks',
       icon: Building2,
       group: 'us',
-      fee: '$1 + 1%',
+      fee: `${formatUSD(1)} + 1%`,
     },
     {
       title: t('send.options.blockchain.title'),

@@ -19,7 +19,7 @@ import type { ExecutionOutcome } from '~/domain/payments/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useCreatePseOrder, usePseBanks } from '~/hooks/payments/use-pse-topup';
 import { useRates } from '~/hooks/payments/use-rates';
-import { formatAmount, formatCOP } from '~/lib/formatters';
+import { formatAmount, formatCOP, formatUSD } from '~/lib/formatters';
 import { cn } from '~/lib/utils';
 import { TopUpErrorStep } from './-components/error-step';
 import { ExecutionOutcomeStep } from './-components/execution-outcome-step';
@@ -354,7 +354,7 @@ function RouteComponent() {
               enabled: true,
               onClick: () => setStep('amount'),
               group: 'colombia',
-              fee: '2.500 COP + 1%',
+              fee: `${formatCOP(2500)} + 1%`,
             },
             {
               title: t('topup.methods.brebKeys.title'),
@@ -367,7 +367,7 @@ function RouteComponent() {
                   search: { from: '/topup' },
                 }),
               group: 'colombia',
-              fee: '500 COP + 0.2%',
+              fee: `${formatCOP(500)} + 0.2%`,
             },
             {
               title: t('topup.methods.usBanks.title'),
@@ -376,7 +376,7 @@ function RouteComponent() {
               enabled: true,
               onClick: () => navigate({ to: '/topup/us-banks' }),
               group: 'us',
-              fee: '$0.25 + 1%',
+              fee: `${formatUSD(0.25)} + 1%`,
             },
             {
               title: t('topup.methods.blockchain.title'),
