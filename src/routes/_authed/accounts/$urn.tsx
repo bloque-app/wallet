@@ -39,6 +39,7 @@ import { useTransfer } from '~/hooks/accounts/use-transfer';
 import { useCreateVirtualAccount } from '~/hooks/accounts/use-virtual-account';
 import type { Asset, Movement } from '~/lib/formatters';
 import { formatCOP, formatUSD, sortBalancesForDisplay } from '~/lib/formatters';
+import { goBackOrFallback } from '~/lib/navigation';
 import { cn } from '~/lib/utils';
 
 export const Route = createFileRoute('/_authed/accounts/$urn')({
@@ -76,6 +77,25 @@ function majorToMinor(amountMajor: number, rawAsset: string): string {
   const precision = Number.parseInt(precisionStr, 10);
   if (Number.isNaN(precision)) return Math.round(amountMajor).toString();
   return Math.round(amountMajor * 10 ** precision).toString();
+}
+
+/**
+ * COP has no meaningful sub-unit in this app's UX (every other COP input is
+ * digit-only, whole pesos) — a "." here would be a thousands separator, not
+ * a decimal point, and `parseFloat` has no way to tell those apart. Only
+ * assets with a real decimal convention (USD, KSM) get a "." at all, capped
+ * to that asset's own on-chain precision rather than a fixed 2 places.
+ */
+function sanitizeTransferAmountInput(raw: string, rawAsset: string): string {
+  if (getAssetLabel(rawAsset) === 'COP') return raw.replace(/\D/g, '');
+  const [, precisionStr] = rawAsset.split('/');
+  const precision = Number.parseInt(precisionStr, 10);
+  const maxDecimals = Number.isNaN(precision) ? 2 : precision;
+  const cleaned = raw.replace(/[^\d.]/g, '');
+  const [intPart, ...rest] = cleaned.split('.');
+  return rest.length > 0
+    ? `${intPart}.${rest.join('').slice(0, maxDecimals)}`
+    : intPart;
 }
 
 function formatAssetBalance(balance: AssetBalance) {
@@ -243,13 +263,18 @@ function RouteComponent() {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center gap-2">
-        <Link
-          to="/accounts"
+        <button
+          type="button"
+          onClick={() =>
+            goBackOrFallback(() => {
+              void navigate({ to: '/accounts' });
+            })
+          }
           className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           {t('common.back')}
-        </Link>
+        </button>
         <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
           {t('accounts.detail.title')}
         </h1>
@@ -632,7 +657,11 @@ function RouteComponent() {
                 id="transfer-amount"
                 inputMode="decimal"
                 value={transferAmount}
-                onChange={(e) => setTransferAmount(e.target.value)}
+                onChange={(e) =>
+                  setTransferAmount(
+                    sanitizeTransferAmountInput(e.target.value, selectedAsset),
+                  )
+                }
                 placeholder="0"
                 disabled={transferMutation.isPending}
                 className="h-12 rounded-xl"

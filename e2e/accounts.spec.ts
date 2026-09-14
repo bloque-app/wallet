@@ -20,7 +20,7 @@ test('lands on the ledger-grouped accounts list with a mocked, authenticated ses
   await expect(
     page
       .getByRole('navigation', { name: 'Navegación principal' })
-      .getByText('Cuentas'),
+      .getByText('Movimientos'),
   ).toBeVisible();
 });
 

@@ -101,23 +101,27 @@ export function TopUpAmountStep({
                 {formatCOP(parsed)}
               </span>
             </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">
-                {feeLabel ?? t('topup.amountStep.pseFee')}
-              </span>
-              <span className="font-medium text-foreground">
-                {formatCOP(fee)}
-              </span>
-            </div>
-            <div className="my-1 h-px bg-border" />
-            <div className="flex items-center justify-between text-sm">
-              <span className="font-medium text-foreground">
-                {t('topup.amountStep.totalToDebit')}
-              </span>
-              <span className="font-bold text-foreground">
-                {formatCOP(parsed + fee)}
-              </span>
-            </div>
+            {fee > 0 && (
+              <>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">
+                    {feeLabel ?? t('topup.amountStep.pseFee')}
+                  </span>
+                  <span className="font-medium text-foreground">
+                    {formatCOP(fee)}
+                  </span>
+                </div>
+                <div className="my-1 h-px bg-border" />
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium text-foreground">
+                    {t('topup.amountStep.totalToDebit')}
+                  </span>
+                  <span className="font-bold text-foreground">
+                    {formatCOP(parsed + fee)}
+                  </span>
+                </div>
+              </>
+            )}
             {arrivalLabel !== null && (
               <p className="mt-1 text-[11px] text-muted-foreground">
                 {arrivalLabel ?? t('topup.amountStep.estimatedArrival')}

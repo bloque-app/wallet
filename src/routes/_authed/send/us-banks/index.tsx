@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { AccountCarousel } from '~/components/account/account-carousel';
 import { useAuth } from '~/contexts/auth/auth-context';
 import type { ExecutionOutcome } from '~/domain/payments/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
@@ -67,7 +68,24 @@ function RouteComponent() {
   const [autoRetry, setAutoRetry] = useState(false);
   const { accounts: sourceAccounts, isLoading: isLoadingAccounts } =
     useAccountPicker({ asset: FROM_ASSET });
-  const sourceAccountUrn = sourceAccounts[0]?.primaryUrn ?? '';
+  const [sourceLedgerId, setSourceLedgerId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (sourceAccounts.length === 1 && sourceAccounts[0]) {
+      setSourceLedgerId(sourceAccounts[0].ledgerId);
+      return;
+    }
+    setSourceLedgerId((current) =>
+      current && sourceAccounts.some((account) => account.ledgerId === current)
+        ? current
+        : null,
+    );
+  }, [sourceAccounts]);
+
+  const sourceAccount =
+    sourceAccounts.find((account) => account.ledgerId === sourceLedgerId) ??
+    null;
+  const sourceAccountUrn = sourceAccount?.primaryUrn ?? '';
 
   const parsedAmount = Number.parseFloat(amount) || 0;
   const amountSrc = useMemo(() => {
@@ -271,6 +289,18 @@ function RouteComponent() {
           );
         })}
       </div>
+
+      {step === 'amount' && sourceAccounts.length > 0 && (
+        <AccountCarousel
+          accounts={sourceAccounts}
+          asset={FROM_ASSET}
+          precision={FROM_PRECISION}
+          unit="USD"
+          value={sourceLedgerId}
+          onChange={setSourceLedgerId}
+          label={t('send.usBanks.sourceAccountLabel')}
+        />
+      )}
 
       {step === 'amount' && (
         <UsAmountStep

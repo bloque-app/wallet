@@ -77,7 +77,7 @@ if (rootEl) {
   const root = ReactDOM.createRoot(rootEl);
   root.render(
     <React.StrictMode>
-      <ThemeProvider defaultTheme="dark" storageKey="ui-theme">
+      <ThemeProvider defaultTheme="light" storageKey="ui-theme">
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
             {PUBLIC_APP_ENV === 'dev' && (
