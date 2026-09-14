@@ -83,13 +83,19 @@ function majorToMinor(amountMajor: number, rawAsset: string): string {
  * COP has no meaningful sub-unit in this app's UX (every other COP input is
  * digit-only, whole pesos) — a "." here would be a thousands separator, not
  * a decimal point, and `parseFloat` has no way to tell those apart. Only
- * assets with a real decimal convention (USD, KSM) get a "." at all.
+ * assets with a real decimal convention (USD, KSM) get a "." at all, capped
+ * to that asset's own on-chain precision rather than a fixed 2 places.
  */
 function sanitizeTransferAmountInput(raw: string, rawAsset: string): string {
   if (getAssetLabel(rawAsset) === 'COP') return raw.replace(/\D/g, '');
+  const [, precisionStr] = rawAsset.split('/');
+  const precision = Number.parseInt(precisionStr, 10);
+  const maxDecimals = Number.isNaN(precision) ? 2 : precision;
   const cleaned = raw.replace(/[^\d.]/g, '');
   const [intPart, ...rest] = cleaned.split('.');
-  return rest.length > 0 ? `${intPart}.${rest.join('').slice(0, 2)}` : intPart;
+  return rest.length > 0
+    ? `${intPart}.${rest.join('').slice(0, maxDecimals)}`
+    : intPart;
 }
 
 function formatAssetBalance(balance: AssetBalance) {
