@@ -18,13 +18,6 @@ export function useResolveBrebKey() {
   });
 }
 
-export function useDecodeBrebQr() {
-  return useMutation({
-    mutationFn: (qrCodeData: string) =>
-      bloqueAccountsRepository.decodeBrebQr(qrCodeData),
-  });
-}
-
 export function useSuspendBrebKey() {
   const queryClient = useQueryClient();
   return useMutation({

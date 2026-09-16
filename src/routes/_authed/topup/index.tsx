@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { AccountCarousel } from '~/components/account/account-carousel';
+import { BackButton } from '~/components/back-button';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
@@ -73,11 +74,14 @@ function toColombianE164(phoneNumber: string): string {
 }
 
 export const Route = createFileRoute('/_authed/topup/')({
+  validateSearch: (search: Record<string, unknown>): { from?: 'convert' } =>
+    search.from === 'convert' ? { from: 'convert' } : {},
   component: RouteComponent,
 });
 
 function RouteComponent() {
   const { t } = useTranslation();
+  const { from } = Route.useSearch();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [step, setStep] = useState<TopUpStep>('method');
@@ -104,7 +108,7 @@ function RouteComponent() {
   }, [parsedAmount]);
 
   const { accounts: destinationAccounts, isLoading: isLoadingAccounts } =
-    useAccountPicker();
+    useAccountPicker({ requireActive: false });
   const [destinationLedgerId, setDestinationLedgerId] = useState<string | null>(
     null,
   );
@@ -281,6 +285,16 @@ function RouteComponent() {
 
   return (
     <div className="flex flex-col gap-5">
+      {step === 'method' && (
+        <div className="flex items-center gap-2">
+          <BackButton
+            onClick={() =>
+              void navigate({ to: from === 'convert' ? '/convert' : '/' })
+            }
+          />
+        </div>
+      )}
+
       <h1 className="text-2xl font-bold tracking-[-0.025em] text-foreground">
         {step === 'method' ? t('topup.title') : t('topup.pseTitle')}
       </h1>
@@ -512,13 +526,7 @@ function RouteComponent() {
       {step === 'details' && (
         <section className="rounded-3xl border border-border/75 bg-card/80 p-5">
           <div className="flex flex-col gap-5">
-            <button
-              type="button"
-              onClick={() => setStep('amount')}
-              className="text-left text-sm text-muted-foreground hover:text-foreground"
-            >
-              {t('common.back')}
-            </button>
+            <BackButton onClick={() => setStep('amount')} />
 
             <div className="flex flex-col gap-2">
               <Label>{t('topup.pseBank')}</Label>
@@ -673,13 +681,7 @@ function RouteComponent() {
       {step === 'confirm' && (
         <section className="rounded-3xl border border-border/75 bg-card/80 p-5">
           <div className="flex flex-col gap-5">
-            <button
-              type="button"
-              onClick={() => setStep('details')}
-              className="text-left text-sm text-muted-foreground hover:text-foreground"
-            >
-              {t('common.back')}
-            </button>
+            <BackButton onClick={() => setStep('details')} />
 
             <div className="rounded-2xl border border-border/85 bg-background/70 p-4">
               <div className="flex flex-col gap-3">

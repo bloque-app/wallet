@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
-import { ArrowLeft, ChevronRight, Plus } from 'lucide-react';
+import { ChevronRight, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CreateAccountDrawer } from '~/components/account/create-account-drawer';
@@ -7,6 +7,7 @@ import {
   getProductKindIcon,
   getProductKindLabel,
 } from '~/components/account/product-presentation';
+import { BackButton } from '~/components/back-button';
 import { Button } from '~/components/ui/button';
 import type { Account } from '~/domain/accounts/types';
 import { useAccounts } from '~/hooks/accounts/use-accounts';
@@ -75,16 +76,11 @@ function RouteComponent() {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center gap-2">
-        <button
-          type="button"
+        <BackButton
           onClick={() =>
             void navigate({ to: from === 'profile' ? '/profile' : '/' })
           }
-          className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          {t('common.back')}
-        </button>
+        />
         <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
           {t('accounts.title')}
         </h1>

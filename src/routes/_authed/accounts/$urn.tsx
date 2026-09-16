@@ -1,7 +1,6 @@
 import type { SupportedAsset } from '@bloque/sdk-accounts';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import {
-  ArrowLeft,
   ArrowRightLeft,
   ChevronRight,
   CreditCard,
@@ -15,6 +14,7 @@ import {
   getProductKindIcon,
   getProductKindLabel,
 } from '~/components/account/product-presentation';
+import { BackButton } from '~/components/back-button';
 import { MovementDetailDrawer } from '~/components/movement-detail-drawer';
 import { MovementRow } from '~/components/movement-row';
 import { Button } from '~/components/ui/button';
@@ -240,18 +240,13 @@ function RouteComponent() {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center gap-2">
-        <button
-          type="button"
+        <BackButton
           onClick={() =>
             goBackOrFallback(() => {
               void navigate({ to: '/accounts' });
             })
           }
-          className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          {t('common.back')}
-        </button>
+        />
         <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
           {t('accounts.detail.title')}
         </h1>

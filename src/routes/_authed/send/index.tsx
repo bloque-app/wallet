@@ -1,10 +1,22 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
-import { ArrowLeft, Building2, KeyRound, Users } from 'lucide-react';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
+import { Building2, KeyRound, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { BackButton } from '~/components/back-button';
 import { formatCOP, formatUSD } from '~/lib/formatters';
 import { cn } from '~/lib/utils';
 
+type SendOrigin = 'breb-keys' | 'convert';
+
+const ORIGIN_ROUTES: Record<SendOrigin, string> = {
+  'breb-keys': '/breb-keys',
+  convert: '/convert',
+};
+
 export const Route = createFileRoute('/_authed/send/')({
+  validateSearch: (search: Record<string, unknown>): { from?: SendOrigin } =>
+    search.from === 'breb-keys' || search.from === 'convert'
+      ? { from: search.from }
+      : {},
   component: RouteComponent,
 });
 
@@ -19,6 +31,8 @@ type SendOption = {
 
 function RouteComponent() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { from } = Route.useSearch();
 
   const options: SendOption[] = [
     {
@@ -64,14 +78,11 @@ function RouteComponent() {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center gap-2">
-        <Link
-          to="/"
-          replace
-          className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          {t('common.back')}
-        </Link>
+        <BackButton
+          onClick={() =>
+            void navigate({ to: from ? ORIGIN_ROUTES[from] : '/' })
+          }
+        />
         <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
           {t('send.title')}
         </h1>

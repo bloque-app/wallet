@@ -1,8 +1,9 @@
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router';
-import { ArrowLeft, Check, Copy, KeyRound } from 'lucide-react';
+import { Check, Copy, KeyRound } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { BackButton } from '~/components/back-button';
 import type { BrebKeyProduct } from '~/domain/accounts/types';
 import { useAccounts } from '~/hooks/accounts/use-accounts';
 import { goBackOrFallback } from '~/lib/navigation';
@@ -47,14 +48,9 @@ function RouteComponent() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-2">
-        <button
-          type="button"
+        <BackButton
           onClick={() => goBackOrFallback(() => history.push(from))}
-          className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          {t('common.back')}
-        </button>
+        />
         <div>
           <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
             {t('brebKeys.menu.deposit.title')}

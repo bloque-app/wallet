@@ -414,16 +414,6 @@ async function resolveBrebKey(input: { keyType: string; key: string }) {
   return result.data;
 }
 
-async function decodeBrebQr(qrCodeData: string) {
-  const result = await bloque.accounts.breb.decodeQr({ qrCodeData });
-  if (result.error || !result.data) {
-    throw new Error(
-      result.error?.message ?? 'No se pudo decodificar el QR BRE-B.',
-    );
-  }
-  return result.data;
-}
-
 async function suspendBrebKey(urn: string): Promise<void> {
   const result = await bloque.accounts.breb.suspendKey({ accountUrn: urn });
   if (result.error) throw new Error(result.error.message);
@@ -499,7 +489,6 @@ export const bloqueAccountsRepository: AccountsRepository = {
   getCardDetailsUrl,
   createBrebKey,
   resolveBrebKey,
-  decodeBrebQr,
   suspendBrebKey,
   activateBrebKey,
   deleteBrebKey,

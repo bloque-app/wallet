@@ -1,7 +1,6 @@
 import { BloqueAPIError } from '@bloque/sdk';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import {
-  ArrowLeft,
   CreditCard,
   KeyRound,
   Mail,
@@ -12,6 +11,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { AccountCarousel } from '~/components/account/account-carousel';
+import { BackButton } from '~/components/back-button';
 import { Button } from '~/components/ui/button';
 import {
   Drawer,
@@ -240,14 +240,7 @@ function RouteComponent() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={handleBack}
-          className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          {t('common.back')}
-        </button>
+        <BackButton onClick={handleBack} />
         <div>
           <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
             {t('brebKeys.manageKeys.title')}
