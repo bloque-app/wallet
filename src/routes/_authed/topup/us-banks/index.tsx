@@ -127,7 +127,7 @@ function RouteComponent() {
   const [selectedLinkLedgerId, setSelectedLinkLedgerId] = useState<
     string | null
   >(null);
-  const { accounts: allPockets } = useAccountPicker({ requireActive: false });
+  const { accounts: allPockets } = useAccountPicker();
   const linkablePockets = useMemo(
     () =>
       allPockets.filter(

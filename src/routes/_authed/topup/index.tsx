@@ -108,7 +108,7 @@ function RouteComponent() {
   }, [parsedAmount]);
 
   const { accounts: destinationAccounts, isLoading: isLoadingAccounts } =
-    useAccountPicker({ requireActive: false });
+    useAccountPicker();
   const [destinationLedgerId, setDestinationLedgerId] = useState<string | null>(
     null,
   );
