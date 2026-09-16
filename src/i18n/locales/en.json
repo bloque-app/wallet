@@ -94,7 +94,8 @@
       "transferSuccessToast": "Transfer completed successfully",
       "transferErrorToast": "Couldn't complete the transfer. Please try again.",
       "addProductCardLabel": "Card (Global)",
-      "addProductBrebLabel": "BRE-B key (COP)"
+      "addProductBrebLabel": "BRE-B key (COP)",
+      "addProductPlaidLabel": "Plaid (USD)"
     }
   },
   "brebKeys": {
@@ -575,7 +576,9 @@
         "needsUpdate": "Your linked bank needs to be reconnected.",
         "startErrorToast": "Couldn't start bank linking. Please try again.",
         "missingProfileToast": "We need to complete your profile before linking your bank.",
-        "timeoutToast": "We couldn't confirm the bank link in time. Please try again."
+        "timeoutToast": "We couldn't confirm the bank link in time. Please try again.",
+        "chooseAccountLabel": "Choose the pocket to link this bank to",
+        "noPocketsAvailable": "You already have a US bank linked to every pocket."
       }
     },
     "pseTitle": "Top up with PSE from Colombia"

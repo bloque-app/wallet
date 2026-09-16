@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { AccountCarousel } from '~/components/account/account-carousel';
 import { useAuth } from '~/contexts/auth/auth-context';
 import type { ExecutionOutcome } from '~/domain/payments/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
@@ -66,8 +67,14 @@ function getMissingProfileField(
 }
 
 export const Route = createFileRoute('/_authed/topup/us-banks/')({
-  validateSearch: (search: Record<string, unknown>): { status?: string } =>
-    typeof search.status === 'string' ? { status: search.status } : {},
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { status?: string; ledgerId?: string } => ({
+    ...(typeof search.status === 'string' ? { status: search.status } : {}),
+    ...(typeof search.ledgerId === 'string'
+      ? { ledgerId: search.ledgerId }
+      : {}),
+  }),
   component: RouteComponent,
 });
 
@@ -112,6 +119,28 @@ function RouteComponent() {
     requireProductKind: 'pocket',
   });
   const ledgerAccountId = destinationAccounts[0]?.ledgerId ?? '';
+
+  // Which pocket the new Plaid link itself gets associated with — distinct
+  // from `ledgerAccountId` above (where recharged money lands). Only one
+  // `external-us-bank` product per pocket, same rule as card/BRE-B.
+  const { ledgerId: contextLedgerId } = Route.useSearch();
+  const [selectedLinkLedgerId, setSelectedLinkLedgerId] = useState<
+    string | null
+  >(null);
+  const { accounts: allPockets } = useAccountPicker({ requireActive: false });
+  const linkablePockets = useMemo(
+    () =>
+      allPockets.filter(
+        (account) =>
+          !account.products.some((p) => p.kind === 'external-us-bank'),
+      ),
+    [allPockets],
+  );
+  const linkLedgerId =
+    contextLedgerId ||
+    selectedLinkLedgerId ||
+    (linkablePockets.length === 1 ? linkablePockets[0]?.ledgerId : null) ||
+    '';
 
   // Function form (not a static boolean): must inspect the *freshest* fetched
   // data on every tick to know when to stop — a value computed once per
@@ -207,8 +236,12 @@ function RouteComponent() {
   const createLinkMutation = useCreateExternalUsBankAccount();
 
   const handleStartLink = () => {
+    if (!linkLedgerId) return;
     createLinkMutation.mutate(
-      { returnUrl: `${window.location.origin}/topup/us-banks` },
+      {
+        returnUrl: `${window.location.origin}/topup/us-banks`,
+        ledgerId: linkLedgerId,
+      },
       {
         onSuccess: (product) => {
           if (product.kind !== 'external-us-bank' || !product.linkUrl) {
@@ -442,13 +475,34 @@ function RouteComponent() {
       )}
 
       {step === 'link' && (
-        <LinkBankStep
-          status={linkStepStatus}
-          isStarting={createLinkMutation.isPending}
-          onStartLink={handleStartLink}
-          onCheckAgain={() => void accountsQuery.refetch()}
-          onCancel={resetPendingLink}
-        />
+        <div className="flex flex-col gap-5">
+          {linkStepStatus === 'idle' &&
+            !contextLedgerId &&
+            (linkablePockets.length > 1 ? (
+              <AccountCarousel
+                accounts={linkablePockets}
+                asset="COPM/2"
+                precision={2}
+                unit="COP"
+                value={selectedLinkLedgerId}
+                onChange={setSelectedLinkLedgerId}
+                label={t('topup.usBanks.linkStep.chooseAccountLabel')}
+              />
+            ) : linkablePockets.length === 0 ? (
+              <p className="rounded-2xl border border-border/75 bg-card/80 p-4 text-sm text-muted-foreground">
+                {t('topup.usBanks.linkStep.noPocketsAvailable')}
+              </p>
+            ) : null)}
+
+          <LinkBankStep
+            status={linkStepStatus}
+            isStarting={createLinkMutation.isPending}
+            disabled={!linkLedgerId}
+            onStartLink={handleStartLink}
+            onCheckAgain={() => void accountsQuery.refetch()}
+            onCancel={resetPendingLink}
+          />
+        </div>
       )}
 
       {step === 'amount' && (

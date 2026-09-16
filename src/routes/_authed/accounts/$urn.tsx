@@ -5,6 +5,7 @@ import {
   ChevronRight,
   CreditCard,
   KeyRound,
+  Landmark,
   Plus,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -166,12 +167,20 @@ function RouteComponent() {
     [];
   const Icon = getProductKindIcon(primaryProduct?.kind ?? 'other');
 
-  const handlePickProductKind = (kind: 'card' | 'breb') => {
+  const handlePickProductKind = (kind: 'card' | 'breb' | 'plaid') => {
     if (!account) return;
     if (kind === 'breb') {
       setAddProductStep('closed');
       navigate({
         to: '/breb-keys/manage-keys',
+        search: { ledgerId: account.ledgerId },
+      });
+      return;
+    }
+    if (kind === 'plaid') {
+      setAddProductStep('closed');
+      navigate({
+        to: '/topup/us-banks',
         search: { ledgerId: account.ledgerId },
       });
       return;
@@ -486,19 +495,27 @@ function RouteComponent() {
                 {[
                   {
                     kind: 'card' as const,
+                    matchKind: 'card',
                     label: t('accounts.detail.addProductCardLabel'),
                     icon: CreditCard,
                   },
                   {
                     kind: 'breb' as const,
+                    matchKind: 'breb',
                     label: t('accounts.detail.addProductBrebLabel'),
                     icon: KeyRound,
+                  },
+                  {
+                    kind: 'plaid' as const,
+                    matchKind: 'external-us-bank',
+                    label: t('accounts.detail.addProductPlaidLabel'),
+                    icon: Landmark,
                   },
                 ]
                   .filter(
                     (option) =>
                       !(account?.products ?? []).some(
-                        (product) => product.kind === option.kind,
+                        (product) => product.kind === option.matchKind,
                       ),
                   )
                   .map((option) => (

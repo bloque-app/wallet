@@ -10,7 +10,7 @@ test('lands on the ledger-grouped accounts list with a mocked, authenticated ses
 }) => {
   await page.goto('/accounts');
 
-  await expect(page.getByRole('heading', { name: 'Cuentas' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Bolsillos' })).toBeVisible();
 
   await expect(page.getByText('Main', { exact: true })).toBeVisible();
   await expect(page.getByText('PawHaus', { exact: true })).toBeVisible();

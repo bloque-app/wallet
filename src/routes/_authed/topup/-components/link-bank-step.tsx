@@ -7,6 +7,8 @@ import { Button } from '~/components/ui/button';
 interface LinkBankStepProps {
   status: 'idle' | 'linking' | 'failed' | 'needs_update';
   isStarting: boolean;
+  /** Disables the idle-state CTA only — e.g. no destination pocket chosen yet. */
+  disabled?: boolean;
   onStartLink: () => void;
   onCheckAgain: () => void;
   onCancel: () => void;
@@ -16,6 +18,7 @@ interface LinkBankStepProps {
 export function LinkBankStep({
   status,
   isStarting,
+  disabled,
   onStartLink,
   onCheckAgain,
   onCancel,
@@ -123,7 +126,7 @@ export function LinkBankStep({
       </div>
       <Button
         onClick={onStartLink}
-        disabled={isStarting}
+        disabled={isStarting || disabled}
         className="h-12 w-full rounded-2xl text-sm font-medium"
       >
         {t('topup.usBanks.linkStep.cta')}

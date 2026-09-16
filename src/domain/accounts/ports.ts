@@ -68,6 +68,8 @@ export type CreateExternalUsBankAccountInput = {
   returnUrl: string;
   /** Opaque correlator echoed back on `returnUrl` as `state`. */
   state?: string;
+  /** Bloque account this linked bank is associated with. */
+  ledgerId?: string;
 };
 
 export type TransferInput = {

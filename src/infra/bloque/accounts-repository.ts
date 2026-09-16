@@ -471,6 +471,7 @@ async function createExternalUsBankAccount(
   const account = await bloque.accounts.externalUsBank.create({
     returnUrl: input.returnUrl,
     state: input.state,
+    ledgerId: input.ledgerId,
   });
   return mapToProduct(account as ListedAccount);
 }
