@@ -33,3 +33,27 @@ test('opens a single account and lists its associated products', async ({
   await expect(page).toHaveURL(/\/accounts\/urn(%3A|:)pocket-main/);
   await expect(page.getByText('Productos asociados')).toBeVisible();
 });
+
+/**
+ * Regression for the add-product drawer's history bookkeeping racing a
+ * same-tick navigate() away from the page (see `skipDrawerHistoryOnce` in
+ * `src/lib/navigation.ts`): closing the drawer while navigating used to get
+ * silently reverted by the drawer's own "rewind on close" history handling,
+ * because it only checks whether the URL has changed *yet* — which it
+ * hadn't, since navigate() hadn't committed. No console error, no failed
+ * request, just a click that visibly did nothing.
+ */
+test('picking BRE-B key or Plaid from add-product navigates away instead of silently no-op-ing', async ({
+  page,
+}) => {
+  await page.goto('/accounts/urn%3Apocket-orphan');
+
+  await page.getByRole('button', { name: 'Agregar producto' }).click();
+  await page.getByRole('button', { name: /Llave BRE-B/ }).click();
+  await expect(page).toHaveURL(/breb-keys\/manage-keys/);
+
+  await page.goto('/accounts/urn%3Apocket-orphan');
+  await page.getByRole('button', { name: 'Agregar producto' }).click();
+  await page.getByRole('button', { name: /Plaid/ }).click();
+  await expect(page).toHaveURL(/topup\/us-banks/);
+});

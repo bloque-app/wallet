@@ -36,7 +36,7 @@ import { useCreateCard } from '~/hooks/accounts/use-cards';
 import { useTransfer } from '~/hooks/accounts/use-transfer';
 import type { Asset, Movement } from '~/lib/formatters';
 import { formatCOP, formatUSD, sortBalancesForDisplay } from '~/lib/formatters';
-import { goBackOrFallback } from '~/lib/navigation';
+import { goBackOrFallback, skipDrawerHistoryOnce } from '~/lib/navigation';
 import { cn } from '~/lib/utils';
 
 export const Route = createFileRoute('/_authed/accounts/$urn')({
@@ -171,6 +171,7 @@ function RouteComponent() {
     if (!account) return;
     if (kind === 'breb') {
       setAddProductStep('closed');
+      skipDrawerHistoryOnce();
       navigate({
         to: '/breb-keys/manage-keys',
         search: { ledgerId: account.ledgerId },
@@ -179,6 +180,7 @@ function RouteComponent() {
     }
     if (kind === 'plaid') {
       setAddProductStep('closed');
+      skipDrawerHistoryOnce();
       navigate({
         to: '/topup/us-banks',
         search: { ledgerId: account.ledgerId },
