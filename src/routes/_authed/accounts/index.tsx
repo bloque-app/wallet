@@ -12,9 +12,10 @@ import type { Account } from '~/domain/accounts/types';
 import { useAccounts } from '~/hooks/accounts/use-accounts';
 import i18n from '~/i18n/config';
 import { formatCOP, formatUSD, sortBalancesForDisplay } from '~/lib/formatters';
-import { goBackOrFallback } from '~/lib/navigation';
 
 export const Route = createFileRoute('/_authed/accounts/')({
+  validateSearch: (search: Record<string, unknown>): { from?: 'profile' } =>
+    search.from === 'profile' ? { from: 'profile' } : {},
   component: RouteComponent,
 });
 
@@ -52,6 +53,7 @@ function getCompositionLabel(account: Account) {
 function RouteComponent() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { from } = Route.useSearch();
   const accountsQuery = useAccounts();
   const accounts = accountsQuery.data ?? [];
   const [showCreateDrawer, setShowCreateDrawer] = useState(false);
@@ -76,9 +78,7 @@ function RouteComponent() {
         <button
           type="button"
           onClick={() =>
-            goBackOrFallback(() => {
-              void navigate({ to: '/profile' });
-            })
+            void navigate({ to: from === 'profile' ? '/profile' : '/' })
           }
           className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
         >

@@ -76,18 +76,12 @@
       "noMovements": "No hay movimientos para esta cuenta.",
       "brebKeyLabel": "Llave BRE-B",
       "newCard": "Nueva tarjeta",
-      "polygonAccount": "Cuenta Polygon",
-      "newVirtualAccount": "Nueva cuenta",
       "cardNameLabel": "Nombre de la tarjeta",
       "optionalNameLabel": "Nombre (opcional)",
       "cardNamePlaceholder": "Personal",
-      "polygonNamePlaceholder": "Principal",
-      "virtualAccountNamePlaceholder": "Personal",
       "sharesBalanceOf": "Compartirá el saldo de {{label}}.",
       "defaultCardName": "Tarjeta",
       "cardCreatedToast": "Tarjeta creada exitosamente",
-      "polygonCreatedToast": "Cuenta Polygon creada",
-      "virtualAccountCreatedToast": "Cuenta creada exitosamente",
       "createProductErrorToast": "No se pudo crear el producto. Intenta de nuevo.",
       "transferToOwnAccount": "Transferir a otra cuenta",
       "transferDrawerTitle": "Transferir fondos",
@@ -98,7 +92,9 @@
       "transferSubmit": "Transferir",
       "transferring": "Transfiriendo...",
       "transferSuccessToast": "Transferencia realizada exitosamente",
-      "transferErrorToast": "No se pudo completar la transferencia. Intenta de nuevo."
+      "transferErrorToast": "No se pudo completar la transferencia. Intenta de nuevo.",
+      "addProductCardLabel": "Tarjeta (Global)",
+      "addProductBrebLabel": "Llave BRE-B (COP)"
     }
   },
   "brebKeys": {
@@ -358,11 +354,6 @@
       "usBanks": {
         "title": "Bancos/billeteras",
         "description": "Envia USD vía RTP a bancos y wallets."
-      },
-      "blockchain": {
-        "title": "Direcciones blockchain",
-        "description": "Envia fondos a wallets externas.",
-        "comingSoon": "Envío a blockchain disponible próximamente."
       }
     },
     "bloqueFriends": {
@@ -470,20 +461,9 @@
       "usBanks": {
         "title": "Desde bancos",
         "subtitle": "ACH"
-      },
-      "blockchain": {
-        "title": "Desde direcciones blockchain",
-        "subtitle": "Wallets externas",
-        "comingSoon": "Recarga desde blockchain disponible próximamente."
-      },
-      "card": {
-        "title": "Con tarjeta",
-        "subtitle": "Visa, Mastercard, etc",
-        "comingSoon": "Recarga con tarjeta disponible próximamente."
       }
     },
     "destinationAccountLabel": "Cuenta destino",
-    "iWantToReceive": "Quiero recibir",
     "pseAmountLabel": "Monto a pagar por PSE (COP)",
     "minAmount": "Monto minimo: $5,000 COP",
     "youPay": "Pagas",
@@ -609,7 +589,8 @@
         "missingProfileToast": "Necesitamos completar tu perfil antes de vincular tu banco.",
         "timeoutToast": "No pudimos confirmar la vinculación bancaria a tiempo. Intenta de nuevo."
       }
-    }
+    },
+    "pseTitle": "Recarga con PSE desde Colombia"
   },
   "convert": {
     "title": "Convertir",
@@ -708,7 +689,6 @@
     },
     "sections": {
       "account": "Cuenta",
-      "polygonAccounts": "Cuentas Polygon",
       "settings": "Configuración",
       "legal": "Legal",
       "support": "Soporte"
@@ -718,9 +698,6 @@
       "allAccounts": "Todas las cuentas",
       "view": "Ver",
       "kycVerification": "Verificación KYC",
-      "devicesAndSessions": "Dispositivos y sesiones",
-      "oneActive": "1 activo",
-      "addAccount": "Agregar cuenta",
       "language": "Idioma",
       "pushNotifications": "Notificaciones push",
       "pushNotificationsSublabel": "Recibe alertas de movimientos",
@@ -729,8 +706,6 @@
       "termsAndConditions": "Términos y condiciones",
       "privacyPolicy": "Política de privacidad",
       "feesAndCommissions": "Tarifas y comisiones",
-      "supportChat": "Chat de soporte",
-      "helpCenter": "Centro de ayuda",
       "contact": "Contacto"
     },
     "settings": {

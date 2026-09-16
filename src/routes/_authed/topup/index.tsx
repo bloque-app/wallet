@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { Building2, CreditCard, KeyRound, Wallet } from 'lucide-react';
+import { Building2, KeyRound } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -31,7 +31,6 @@ type TopUpStep =
   | 'confirm'
   | 'pending'
   | 'error';
-type ReceiveAsset = 'COP' | 'USD';
 
 type PseForm = {
   bankCode: string;
@@ -47,15 +46,8 @@ const MIN_TOPUP_AMOUNT = 5_000;
 const FROM_ASSET = 'COP/2';
 const FROM_MEDIUM = 'pse';
 const TO_MEDIUM = 'kusama';
-
-const RECEIVE_ASSETS: Array<{
-  value: ReceiveAsset;
-  sdkAsset: 'COPM/2' | 'DUSD/6';
-  precision: number;
-}> = [
-  { value: 'COP', sdkAsset: 'COPM/2', precision: 2 },
-  { value: 'USD', sdkAsset: 'DUSD/6', precision: 6 },
-];
+const RECEIVE_SDK_ASSET = 'COPM/2';
+const RECEIVE_PRECISION = 2;
 
 function majorToMinor(amountMajor: number, precision: number) {
   return (BigInt(amountMajor) * 10n ** BigInt(precision)).toString();
@@ -89,7 +81,6 @@ function RouteComponent() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [step, setStep] = useState<TopUpStep>('method');
-  const [receiveAsset, setReceiveAsset] = useState<ReceiveAsset>('COP');
   const [amount, setAmount] = useState('');
   const [form, setForm] = useState<PseForm>({
     bankCode: '',
@@ -107,9 +98,6 @@ function RouteComponent() {
   const [autoRetry, setAutoRetry] = useState(false);
 
   const parsedAmount = Number.parseInt(amount.replace(/\D/g, ''), 10) || 0;
-  const selectedReceiveAsset = RECEIVE_ASSETS.find(
-    (asset) => asset.value === receiveAsset,
-  )!;
   const amountSrc = useMemo(() => {
     if (parsedAmount <= 0) return '';
     return majorToMinor(parsedAmount, 2);
@@ -146,7 +134,7 @@ function RouteComponent() {
     parsedAmount >= MIN_TOPUP_AMOUNT && amountSrc && destinationAccountUrn
       ? {
           fromAsset: FROM_ASSET,
-          toAsset: selectedReceiveAsset.sdkAsset,
+          toAsset: RECEIVE_SDK_ASSET,
           fromMediums: [FROM_MEDIUM],
           toMediums: [TO_MEDIUM],
           amountSrc,
@@ -164,8 +152,8 @@ function RouteComponent() {
       return parsedAmount * selectedRate.ratio;
     }
     const dstAmountMinor = selectedRate.rate?.[1] ?? 0;
-    return minorToMajor(dstAmountMinor, selectedReceiveAsset.precision);
-  }, [selectedRate, amountSrc, parsedAmount, selectedReceiveAsset.precision]);
+    return minorToMajor(dstAmountMinor, RECEIVE_PRECISION);
+  }, [selectedRate, amountSrc, parsedAmount]);
 
   const rateError = useMemo(() => {
     if (parsedAmount < MIN_TOPUP_AMOUNT) return null;
@@ -294,7 +282,7 @@ function RouteComponent() {
   return (
     <div className="flex flex-col gap-5">
       <h1 className="text-2xl font-bold tracking-[-0.025em] text-foreground">
-        {t('topup.title')}
+        {step === 'method' ? t('topup.title') : t('topup.pseTitle')}
       </h1>
 
       {step !== 'method' && (
@@ -378,21 +366,6 @@ function RouteComponent() {
               group: 'us',
               fee: `${formatUSD(0.25)} + 1%`,
             },
-            {
-              title: t('topup.methods.blockchain.title'),
-              subtitle: t('topup.methods.blockchain.subtitle'),
-              icon: Wallet,
-              enabled: false,
-              onClick: () =>
-                toast.info(t('topup.methods.blockchain.comingSoon')),
-            },
-            {
-              title: t('topup.methods.card.title'),
-              subtitle: t('topup.methods.card.subtitle'),
-              icon: CreditCard,
-              enabled: false,
-              onClick: () => toast.info(t('topup.methods.card.comingSoon')),
-            },
           ];
 
           const renderMethod = (option: (typeof methods)[number]) => {
@@ -429,7 +402,6 @@ function RouteComponent() {
 
           const colombiaMethods = methods.filter((m) => m.group === 'colombia');
           const usMethods = methods.filter((m) => m.group === 'us');
-          const otherMethods = methods.filter((m) => !m.group);
 
           return (
             <>
@@ -446,10 +418,6 @@ function RouteComponent() {
                 </h2>
                 {usMethods.map(renderMethod)}
               </section>
-
-              <section className="flex flex-col gap-3">
-                {otherMethods.map(renderMethod)}
-              </section>
             </>
           );
         })()}
@@ -460,34 +428,14 @@ function RouteComponent() {
             {destinationAccounts.length > 0 && (
               <AccountCarousel
                 accounts={destinationAccounts}
-                asset={selectedReceiveAsset.sdkAsset}
-                precision={selectedReceiveAsset.precision}
-                unit={receiveAsset}
+                asset={RECEIVE_SDK_ASSET}
+                precision={RECEIVE_PRECISION}
+                unit="COP"
                 value={destinationLedgerId}
                 onChange={setDestinationLedgerId}
                 label={t('topup.destinationAccountLabel')}
               />
             )}
-
-            <div className="flex flex-col gap-2">
-              <Label>{t('topup.iWantToReceive')}</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {RECEIVE_ASSETS.map((asset) => (
-                  <button
-                    key={asset.value}
-                    type="button"
-                    onClick={() => setReceiveAsset(asset.value)}
-                    className={`rounded-2xl border px-3 py-3 text-sm transition-all ${
-                      receiveAsset === asset.value
-                        ? 'border-foreground bg-foreground text-background'
-                        : 'border-border bg-background/70 text-foreground hover:bg-muted/70'
-                    }`}
-                  >
-                    {asset.value}
-                  </button>
-                ))}
-              </div>
-            </div>
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="topup-amount">{t('topup.pseAmountLabel')}</Label>
@@ -525,7 +473,7 @@ function RouteComponent() {
                     </span>
                     <span className="font-medium text-foreground">
                       {selectedRate
-                        ? formatAmount(receiveAsset, receiveAmount)
+                        ? formatAmount('COP', receiveAmount)
                         : t('convert.querying')}
                     </span>
                   </div>
@@ -748,7 +696,7 @@ function RouteComponent() {
                     {t('topup.youReceive')}
                   </span>
                   <span className="font-medium text-foreground">
-                    {formatAmount(receiveAsset, receiveAmount)}
+                    {formatAmount('COP', receiveAmount)}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">

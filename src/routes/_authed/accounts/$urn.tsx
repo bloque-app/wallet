@@ -7,8 +7,6 @@ import {
   CreditCard,
   KeyRound,
   Plus,
-  Wallet,
-  WalletCards,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -34,9 +32,7 @@ import { useAccountMovements } from '~/hooks/accounts/use-account-movements';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useAccount } from '~/hooks/accounts/use-accounts';
 import { useCreateCard } from '~/hooks/accounts/use-cards';
-import { useCreatePolygonAccount } from '~/hooks/accounts/use-polygon-account';
 import { useTransfer } from '~/hooks/accounts/use-transfer';
-import { useCreateVirtualAccount } from '~/hooks/accounts/use-virtual-account';
 import type { Asset, Movement } from '~/lib/formatters';
 import { formatCOP, formatUSD, sortBalancesForDisplay } from '~/lib/formatters';
 import { goBackOrFallback } from '~/lib/navigation';
@@ -54,7 +50,7 @@ const ASSET_LABELS: Record<string, Asset> = {
   KSM: 'KSM',
 };
 
-type AddProductStep = 'closed' | 'pick' | 'card' | 'polygon' | 'virtual';
+type AddProductStep = 'closed' | 'pick' | 'card';
 
 function parseAmount(rawAmount: string, rawAsset: string) {
   const [, precisionStr] = rawAsset.split('/');
@@ -138,8 +134,6 @@ function RouteComponent() {
   const balances = sortBalancesForDisplay(account?.balances ?? []);
 
   const createCardMutation = useCreateCard();
-  const createPolygonMutation = useCreatePolygonAccount();
-  const createVirtualMutation = useCreateVirtualAccount();
   const transferMutation = useTransfer();
   const { accounts: ownAccounts } = useAccountPicker();
   const transferDestinations = ownAccounts.filter(
@@ -172,9 +166,7 @@ function RouteComponent() {
     [];
   const Icon = getProductKindIcon(primaryProduct?.kind ?? 'other');
 
-  const handlePickProductKind = (
-    kind: 'card' | 'breb' | 'polygon' | 'virtual',
-  ) => {
+  const handlePickProductKind = (kind: 'card' | 'breb') => {
     if (!account) return;
     if (kind === 'breb') {
       setAddProductStep('closed');
@@ -197,18 +189,6 @@ function RouteComponent() {
           ledgerId: account.ledgerId,
         });
         toast.success(t('accounts.detail.cardCreatedToast'));
-      } else if (addProductStep === 'polygon') {
-        await createPolygonMutation.mutateAsync({
-          name: productName.trim() || undefined,
-          ledgerId: account.ledgerId,
-        });
-        toast.success(t('accounts.detail.polygonCreatedToast'));
-      } else if (addProductStep === 'virtual') {
-        await createVirtualMutation.mutateAsync({
-          name: productName.trim() || undefined,
-          ledgerId: account.ledgerId,
-        });
-        toast.success(t('accounts.detail.virtualAccountCreatedToast'));
       }
       setAddProductStep('closed');
     } catch {
@@ -216,10 +196,7 @@ function RouteComponent() {
     }
   };
 
-  const isCreatingProduct =
-    createCardMutation.isPending ||
-    createPolygonMutation.isPending ||
-    createVirtualMutation.isPending;
+  const isCreatingProduct = createCardMutation.isPending;
 
   const transferAssetBalance = balances.find(
     (balance) => balance.asset === selectedAsset,
@@ -513,59 +490,50 @@ function RouteComponent() {
               <div className="flex flex-col gap-3 px-5 pb-4">
                 {[
                   {
-                    kind: 'virtual' as const,
-                    label: t('accounts.productKind.pocket'),
-                    icon: WalletCards,
-                  },
-                  {
                     kind: 'card' as const,
-                    label: t('accounts.productKind.card'),
+                    label: t('accounts.detail.addProductCardLabel'),
                     icon: CreditCard,
                   },
                   {
                     kind: 'breb' as const,
-                    label: t('accounts.detail.brebKeyLabel'),
+                    label: t('accounts.detail.addProductBrebLabel'),
                     icon: KeyRound,
                   },
-                  {
-                    kind: 'polygon' as const,
-                    label: t('accounts.productKind.polygon'),
-                    icon: Wallet,
-                  },
-                ].map((option) => (
-                  <button
-                    key={option.kind}
-                    type="button"
-                    onClick={() => handlePickProductKind(option.kind)}
-                    className="flex items-center gap-3 rounded-2xl border border-border/75 bg-background/70 px-4 py-3.5 text-left transition-colors hover:bg-muted/60"
-                  >
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
-                      <option.icon className="h-4 w-4 text-primary" />
-                    </div>
-                    <span className="text-sm font-medium text-foreground">
-                      {option.label}
-                    </span>
-                  </button>
-                ))}
+                ]
+                  .filter(
+                    (option) =>
+                      !(account?.products ?? []).some(
+                        (product) => product.kind === option.kind,
+                      ),
+                  )
+                  .map((option) => (
+                    <button
+                      key={option.kind}
+                      type="button"
+                      onClick={() => handlePickProductKind(option.kind)}
+                      className="flex items-center gap-3 rounded-2xl border border-border/75 bg-background/70 px-4 py-3.5 text-left transition-colors hover:bg-muted/60"
+                    >
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
+                        <option.icon className="h-4 w-4 text-primary" />
+                      </div>
+                      <span className="text-sm font-medium text-foreground">
+                        {option.label}
+                      </span>
+                    </button>
+                  ))}
               </div>
             </>
           ) : (
             <>
               <DrawerHeader className="text-left">
                 <DrawerTitle className="text-lg font-bold tracking-[-0.025em]">
-                  {addProductStep === 'card'
-                    ? t('accounts.detail.newCard')
-                    : addProductStep === 'virtual'
-                      ? t('accounts.detail.newVirtualAccount')
-                      : t('accounts.detail.polygonAccount')}
+                  {t('accounts.detail.newCard')}
                 </DrawerTitle>
               </DrawerHeader>
               <div className="px-5 pb-2">
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="product-name" className="text-sm font-medium">
-                    {addProductStep === 'card'
-                      ? t('accounts.detail.cardNameLabel')
-                      : t('accounts.detail.optionalNameLabel')}
+                    {t('accounts.detail.cardNameLabel')}
                   </Label>
                   <Input
                     id="product-name"
@@ -574,13 +542,7 @@ function RouteComponent() {
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') handleCreateProduct();
                     }}
-                    placeholder={
-                      addProductStep === 'card'
-                        ? t('accounts.detail.cardNamePlaceholder')
-                        : addProductStep === 'virtual'
-                          ? t('accounts.detail.virtualAccountNamePlaceholder')
-                          : t('accounts.detail.polygonNamePlaceholder')
-                    }
+                    placeholder={t('accounts.detail.cardNamePlaceholder')}
                     maxLength={40}
                     disabled={isCreatingProduct}
                     className="h-12 rounded-xl"
@@ -595,10 +557,7 @@ function RouteComponent() {
               <DrawerFooter>
                 <Button
                   onClick={handleCreateProduct}
-                  disabled={
-                    isCreatingProduct ||
-                    (addProductStep === 'card' && !productName.trim())
-                  }
+                  disabled={isCreatingProduct || !productName.trim()}
                   className="h-12 w-full rounded-xl text-sm font-medium"
                 >
                   {isCreatingProduct

@@ -76,18 +76,12 @@
       "noMovements": "There are no movements for this account.",
       "brebKeyLabel": "BRE-B key",
       "newCard": "New card",
-      "polygonAccount": "Polygon account",
-      "newVirtualAccount": "New account",
       "cardNameLabel": "Card name",
       "optionalNameLabel": "Name (optional)",
       "cardNamePlaceholder": "Personal",
-      "polygonNamePlaceholder": "Main",
-      "virtualAccountNamePlaceholder": "Personal",
       "sharesBalanceOf": "It will share the balance of {{label}}.",
       "defaultCardName": "Card",
       "cardCreatedToast": "Card created successfully",
-      "polygonCreatedToast": "Polygon account created",
-      "virtualAccountCreatedToast": "Account created successfully",
       "createProductErrorToast": "Couldn't create the product. Please try again.",
       "transferToOwnAccount": "Transfer to another account",
       "transferDrawerTitle": "Transfer funds",
@@ -98,7 +92,9 @@
       "transferSubmit": "Transfer",
       "transferring": "Transferring...",
       "transferSuccessToast": "Transfer completed successfully",
-      "transferErrorToast": "Couldn't complete the transfer. Please try again."
+      "transferErrorToast": "Couldn't complete the transfer. Please try again.",
+      "addProductCardLabel": "Card (Global)",
+      "addProductBrebLabel": "BRE-B key (COP)"
     }
   },
   "brebKeys": {
@@ -358,11 +354,6 @@
       "usBanks": {
         "title": "Banks/wallets",
         "description": "Send USD via RTP to banks and wallets."
-      },
-      "blockchain": {
-        "title": "Blockchain addresses",
-        "description": "Send funds to external wallets.",
-        "comingSoon": "Sending to blockchain coming soon."
       }
     },
     "bloqueFriends": {
@@ -470,20 +461,9 @@
       "usBanks": {
         "title": "From banks",
         "subtitle": "ACH"
-      },
-      "blockchain": {
-        "title": "From blockchain addresses",
-        "subtitle": "External wallets",
-        "comingSoon": "Top-up from blockchain coming soon."
-      },
-      "card": {
-        "title": "With card",
-        "subtitle": "Visa, Mastercard, etc",
-        "comingSoon": "Top-up with card coming soon."
       }
     },
     "destinationAccountLabel": "Destination account",
-    "iWantToReceive": "I want to receive",
     "pseAmountLabel": "Amount to pay via PSE (COP)",
     "minAmount": "Minimum amount: $5,000 COP",
     "youPay": "You pay",
@@ -609,7 +589,8 @@
         "missingProfileToast": "We need to complete your profile before linking your bank.",
         "timeoutToast": "We couldn't confirm the bank link in time. Please try again."
       }
-    }
+    },
+    "pseTitle": "Top up with PSE from Colombia"
   },
   "convert": {
     "title": "Convert",
@@ -708,7 +689,6 @@
     },
     "sections": {
       "account": "Account",
-      "polygonAccounts": "Polygon accounts",
       "settings": "Settings",
       "legal": "Legal",
       "support": "Support"
@@ -718,9 +698,6 @@
       "allAccounts": "All accounts",
       "view": "View",
       "kycVerification": "KYC verification",
-      "devicesAndSessions": "Devices and sessions",
-      "oneActive": "1 active",
-      "addAccount": "Add account",
       "language": "Language",
       "pushNotifications": "Push notifications",
       "pushNotificationsSublabel": "Get alerts about your movements",
@@ -729,8 +706,6 @@
       "termsAndConditions": "Terms and conditions",
       "privacyPolicy": "Privacy policy",
       "feesAndCommissions": "Fees and commissions",
-      "supportChat": "Support chat",
-      "helpCenter": "Help center",
       "contact": "Contact"
     },
     "settings": {

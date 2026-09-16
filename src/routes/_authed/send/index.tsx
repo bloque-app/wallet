@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { ArrowLeft, Building2, KeyRound, Users, Wallet } from 'lucide-react';
+import { ArrowLeft, Building2, KeyRound, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'sonner';
 import { formatCOP, formatUSD } from '~/lib/formatters';
 import { cn } from '~/lib/utils';
 
@@ -53,12 +52,6 @@ function RouteComponent() {
       icon: Building2,
       group: 'us',
       fee: `${formatUSD(1)} + 1%`,
-    },
-    {
-      title: t('send.options.blockchain.title'),
-      description: t('send.options.blockchain.description'),
-      icon: Wallet,
-      onClick: () => toast.info(t('send.options.blockchain.comingSoon')),
     },
   ];
 
