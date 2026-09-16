@@ -419,7 +419,8 @@
         "destinationBank": "Destination bank",
         "owner": "Account holder"
       }
-    }
+    },
+    "feeInfo": "This fee covers processing your transfer through this method."
   },
   "topup": {
     "title": "Top up balance",
@@ -581,7 +582,8 @@
         "noPocketsAvailable": "You already have a US bank linked to every pocket."
       }
     },
-    "pseTitle": "Top up with PSE from Colombia"
+    "pseTitle": "Top up with PSE from Colombia",
+    "feeInfo": "This fee covers processing your top-up through this method."
   },
   "convert": {
     "title": "Convert",

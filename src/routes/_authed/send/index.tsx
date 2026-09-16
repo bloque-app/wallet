@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { Building2, KeyRound, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { BackButton } from '~/components/back-button';
+import { FeeInfo } from '~/components/fee-info';
 import { formatCOP, formatUSD } from '~/lib/formatters';
 import { cn } from '~/lib/utils';
 
@@ -27,6 +28,7 @@ type SendOption = {
   search?: Record<string, string>;
   group?: 'colombia' | 'us';
   fee?: string;
+  hasFeeInfo?: boolean;
 } & ({ to: string; onClick?: never } | { to?: never; onClick: () => void });
 
 function RouteComponent() {
@@ -50,6 +52,7 @@ function RouteComponent() {
       icon: KeyRound,
       group: 'colombia',
       fee: `${formatCOP(500)} + 0.4%`,
+      hasFeeInfo: true,
     },
     {
       title: t('send.options.colombianBanks.title'),
@@ -58,6 +61,7 @@ function RouteComponent() {
       icon: Building2,
       group: 'colombia',
       fee: `${formatCOP(5500)} + 0.2%`,
+      hasFeeInfo: true,
     },
     {
       title: t('send.options.usBanks.title'),
@@ -66,6 +70,7 @@ function RouteComponent() {
       icon: Building2,
       group: 'us',
       fee: `${formatUSD(1)} + 1%`,
+      hasFeeInfo: true,
     },
   ];
 
@@ -74,6 +79,7 @@ function RouteComponent() {
     (option) => option.group === 'colombia',
   );
   const usOptions = options.filter((option) => option.group === 'us');
+  const feeInfoDescription = t('send.feeInfo');
 
   return (
     <div className="flex flex-col gap-5">
@@ -89,36 +95,37 @@ function RouteComponent() {
       </div>
 
       <section className="flex flex-col gap-3">
-        {ungrouped.map((option) => renderSendOption(option))}
+        {ungrouped.map((option) =>
+          renderSendOption(option, feeInfoDescription),
+        )}
       </section>
 
       <section className="flex flex-col gap-3">
         <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {t('send.groups.colombia')}
         </h2>
-        {colombiaOptions.map((option) => renderSendOption(option))}
+        {colombiaOptions.map((option) =>
+          renderSendOption(option, feeInfoDescription),
+        )}
       </section>
 
       <section className="flex flex-col gap-3">
         <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {t('send.groups.us')}
         </h2>
-        {usOptions.map((option) => renderSendOption(option))}
+        {usOptions.map((option) =>
+          renderSendOption(option, feeInfoDescription),
+        )}
       </section>
     </div>
   );
 }
 
-function renderSendOption(option: SendOption) {
+function renderSendOption(option: SendOption, feeInfoDescription: string) {
   const Icon = option.icon;
   const isDisabled = !option.to;
-  const content = (
-    <div
-      className={cn(
-        'flex items-start gap-3 rounded-2xl border border-border/75 bg-card/80 p-4 transition-all',
-        isDisabled ? 'opacity-60' : 'hover:bg-muted/70',
-      )}
-    >
+  const inner = (
+    <>
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
         <Icon className="h-4 w-4 text-primary" />
       </div>
@@ -126,30 +133,44 @@ function renderSendOption(option: SendOption) {
         <p className="text-sm font-medium text-foreground">{option.title}</p>
         <p className="text-xs text-muted-foreground">{option.description}</p>
       </div>
-      {option.fee && (
+      {option.fee && !option.hasFeeInfo && (
         <span className="shrink-0 text-[11px] font-medium text-primary">
           {option.fee}
         </span>
       )}
-    </div>
+    </>
   );
 
-  if (option.to) {
-    return (
-      <Link key={option.title} to={option.to} search={option.search}>
-        {content}
-      </Link>
-    );
-  }
-
-  return (
+  const clickable = option.to ? (
+    <Link
+      to={option.to}
+      search={option.search}
+      className="flex flex-1 items-start gap-3"
+    >
+      {inner}
+    </Link>
+  ) : (
     <button
-      key={option.title}
       type="button"
       onClick={option.onClick}
-      className="text-left"
+      className="flex flex-1 items-start gap-3 text-left"
     >
-      {content}
+      {inner}
     </button>
+  );
+
+  return (
+    <div
+      key={option.title}
+      className={cn(
+        'flex items-start gap-3 rounded-2xl border border-border/75 bg-card/80 p-4 transition-all',
+        isDisabled ? 'opacity-60' : 'hover:bg-muted/70',
+      )}
+    >
+      {clickable}
+      {option.fee && option.hasFeeInfo && (
+        <FeeInfo fee={option.fee} description={feeInfoDescription} />
+      )}
+    </div>
   );
 }

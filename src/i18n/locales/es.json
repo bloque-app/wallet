@@ -419,7 +419,8 @@
         "destinationBank": "Banco destino",
         "owner": "Titular"
       }
-    }
+    },
+    "feeInfo": "Este cobro cubre el procesamiento de tu envío por este medio."
   },
   "topup": {
     "title": "Recargar saldo",
@@ -581,7 +582,8 @@
         "noPocketsAvailable": "Ya tienes un banco de EE.UU. vinculado en todos tus bolsillos."
       }
     },
-    "pseTitle": "Recarga con PSE desde Colombia"
+    "pseTitle": "Recarga con PSE desde Colombia",
+    "feeInfo": "Este cobro cubre el procesamiento de tu recarga por este medio."
   },
   "convert": {
     "title": "Convertir",

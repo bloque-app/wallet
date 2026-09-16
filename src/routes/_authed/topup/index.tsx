@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { AccountCarousel } from '~/components/account/account-carousel';
 import { BackButton } from '~/components/back-button';
+import { FeeInfo } from '~/components/fee-info';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
@@ -385,32 +386,34 @@ function RouteComponent() {
           const renderMethod = (option: (typeof methods)[number]) => {
             const Icon = option.icon;
             return (
-              <button
+              <div
                 key={option.title}
-                type="button"
-                onClick={option.onClick}
                 className={cn(
-                  'flex w-full items-start gap-3 rounded-2xl border border-border/75 bg-card/80 p-4 text-left transition-all',
+                  'flex w-full items-start gap-3 rounded-2xl border border-border/75 bg-card/80 p-4 transition-all',
                   option.enabled ? 'hover:bg-muted/70' : 'opacity-60',
                 )}
               >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
-                  <Icon className="h-4 w-4 text-primary" />
-                </div>
-                <div className="flex flex-1 flex-col">
-                  <p className="text-sm font-medium text-foreground">
-                    {option.title}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {option.subtitle}
-                  </p>
-                </div>
+                <button
+                  type="button"
+                  onClick={option.onClick}
+                  className="flex flex-1 items-start gap-3 text-left"
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
+                    <Icon className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="flex flex-1 flex-col">
+                    <p className="text-sm font-medium text-foreground">
+                      {option.title}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {option.subtitle}
+                    </p>
+                  </div>
+                </button>
                 {option.fee && (
-                  <span className="shrink-0 text-[11px] font-medium text-primary">
-                    {option.fee}
-                  </span>
+                  <FeeInfo fee={option.fee} description={t('topup.feeInfo')} />
                 )}
-              </button>
+              </div>
             );
           };
 
