@@ -115,13 +115,12 @@ function RouteComponent() {
       ? sourceBankProduct.urn
       : '';
 
-  const { accounts: destinationAccounts } = useAccountPicker({
-    requireProductKind: 'pocket',
-  });
-  const ledgerAccountId = destinationAccounts[0]?.ledgerId ?? '';
+  // Recharged money lands on the same pocket the linked bank belongs to —
+  // no separate destination picker, so it can't drift from the account
+  // `ledgerId` was chosen for when the link was created (see below).
+  const ledgerAccountId = activeBankAccounts[0]?.ledgerId ?? '';
 
-  // Which pocket the new Plaid link itself gets associated with — distinct
-  // from `ledgerAccountId` above (where recharged money lands). Only one
+  // Which pocket the new Plaid link itself gets associated with. Only one
   // `external-us-bank` product per pocket, same rule as card/BRE-B.
   const { ledgerId: contextLedgerId } = Route.useSearch();
   const [selectedLinkLedgerId, setSelectedLinkLedgerId] = useState<
