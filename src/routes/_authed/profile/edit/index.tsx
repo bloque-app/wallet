@@ -1,9 +1,10 @@
 import type { IdentityMeProfile } from '@bloque/sdk-identity';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { ArrowLeft, LoaderCircle } from 'lucide-react';
+import { LoaderCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { BackButton } from '~/components/back-button';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
@@ -210,14 +211,7 @@ function RouteComponent() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => navigate({ to: '/profile' })}
-          className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          {t('common.back')}
-        </button>
+        <BackButton onClick={() => navigate({ to: '/profile' })} />
       </div>
 
       <div className="flex flex-col gap-2">

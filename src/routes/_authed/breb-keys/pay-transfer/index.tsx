@@ -1,9 +1,10 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router';
-import { ArrowLeft, Landmark, Send } from 'lucide-react';
+import { Landmark, Send } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { AccountCarousel } from '~/components/account/account-carousel';
+import { BackButton } from '~/components/back-button';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,7 +25,6 @@ import { useResolveBrebKey } from '~/hooks/accounts/use-breb-keys';
 import { useCreateBrebOrder } from '~/hooks/payments/use-breb-order';
 import { useRates } from '~/hooks/payments/use-rates';
 import { formatCOP, getAssetPrecision } from '~/lib/formatters';
-import { goBackOrFallback } from '~/lib/navigation';
 import { TopUpErrorStep } from '../../topup/-components/error-step';
 import { ExecutionOutcomeStep } from '../../topup/-components/execution-outcome-step';
 import {
@@ -266,21 +266,14 @@ function RouteComponent() {
     !createOrderMutation.isPending;
 
   const handleBack = () => {
-    goBackOrFallback(() => history.push(from));
+    history.push(from);
   };
 
   if (view === 'pending') {
     return (
       <div className="flex flex-col gap-5">
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handleBack}
-            className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            {t('common.back')}
-          </button>
+          <BackButton onClick={handleBack} />
           <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
             {t('brebKeys.payTransfer.title')}
           </h1>
@@ -300,14 +293,7 @@ function RouteComponent() {
     return (
       <div className="flex flex-col gap-5">
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handleBack}
-            className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            {t('common.back')}
-          </button>
+          <BackButton onClick={handleBack} />
           <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
             {t('brebKeys.payTransfer.title')}
           </h1>
@@ -320,14 +306,7 @@ function RouteComponent() {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={handleBack}
-          className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          {t('common.back')}
-        </button>
+        <BackButton onClick={handleBack} />
         <div>
           <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
             {t('brebKeys.payTransfer.title')}

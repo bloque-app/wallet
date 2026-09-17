@@ -65,7 +65,7 @@ function RouteComponent() {
       navigate({ to: '/kyc' });
       return;
     }
-    navigate({ to: '/accounts' });
+    navigate({ to: '/accounts', search: { from: 'card' } });
   };
 
   const handleQuickViewCard = async (cardUrn: string) => {

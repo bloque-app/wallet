@@ -1,10 +1,11 @@
 import type { Alias } from '@bloque/sdk-identity';
 import { useMutation } from '@tanstack/react-query';
-import { createFileRoute, Link } from '@tanstack/react-router';
-import { ArrowLeft, Send, Users } from 'lucide-react';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { Send, Users } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { BackButton } from '~/components/back-button';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -56,6 +57,7 @@ function getAliasDisplayName(aliasResult: Alias) {
 
 function RouteComponent() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [view, setView] = useState<ViewState>('form');
   const [selectedAsset, setSelectedAsset] = useState<AssetOption>('USD');
   const [alias, setAlias] = useState('');
@@ -181,13 +183,7 @@ function RouteComponent() {
     return (
       <div className="flex flex-col gap-5">
         <div className="flex items-center gap-2">
-          <Link
-            to="/send"
-            className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            {t('common.back')}
-          </Link>
+          <BackButton onClick={() => void navigate({ to: '/send' })} />
           <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
             {t('send.options.bloqueFriends.title')}
           </h1>
@@ -211,13 +207,7 @@ function RouteComponent() {
     return (
       <div className="flex flex-col gap-5">
         <div className="flex items-center gap-2">
-          <Link
-            to="/send"
-            className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            {t('common.back')}
-          </Link>
+          <BackButton onClick={() => void navigate({ to: '/send' })} />
           <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
             {t('send.options.bloqueFriends.title')}
           </h1>
@@ -241,13 +231,7 @@ function RouteComponent() {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center gap-2">
-        <Link
-          to="/send"
-          className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          {t('common.back')}
-        </Link>
+        <BackButton onClick={() => void navigate({ to: '/send' })} />
         <div>
           <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
             {t('send.options.bloqueFriends.title')}

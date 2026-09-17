@@ -1,5 +1,4 @@
 import type {
-  BrebDecodedQr,
   BrebKeyType,
   BrebResolvedKey,
   SupportedAsset,
@@ -69,6 +68,8 @@ export type CreateExternalUsBankAccountInput = {
   returnUrl: string;
   /** Opaque correlator echoed back on `returnUrl` as `state`. */
   state?: string;
+  /** Bloque account this linked bank is associated with. */
+  ledgerId?: string;
 };
 
 export type TransferInput = {
@@ -94,10 +95,10 @@ export type TransferOutcome = {
  * all-functional style; there's no DI container, callers just import the
  * adapter singleton (the same way `bloque` itself is already consumed).
  *
- * `resolveBrebKey`/`decodeBrebQr` return rich BRE-B-specific recipient/QR
- * shapes with no meaningful domain abstraction beyond what the SDK already
- * models — reusing its types here directly is a deliberate, narrow
- * exception to "no SDK types past the port," not a precedent to generalize.
+ * `resolveBrebKey` returns a rich BRE-B-specific recipient shape with no
+ * meaningful domain abstraction beyond what the SDK already models —
+ * reusing its types here directly is a deliberate, narrow exception to
+ * "no SDK types past the port," not a precedent to generalize.
  *
  * `transfer` wraps `bloque.accounts.transfer` — a plain account-to-account
  * ledger transfer with no rate/order/execution involved, so it lives here
@@ -123,7 +124,6 @@ export type AccountsRepository = {
     keyType: string;
     key: string;
   }): Promise<BrebResolvedKey>;
-  decodeBrebQr(qrCodeData: string): Promise<BrebDecodedQr>;
   suspendBrebKey(urn: string): Promise<void>;
   activateBrebKey(urn: string): Promise<void>;
   deleteBrebKey(urn: string): Promise<void>;

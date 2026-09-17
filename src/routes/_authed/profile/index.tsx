@@ -4,19 +4,13 @@ import {
   ChevronRight,
   FileText,
   Globe,
-  HelpCircle,
   Landmark,
-  LoaderCircle,
   Lock,
   LogOut,
   Mail,
-  MessageSquare,
   Moon,
   Pencil,
-  Plus,
   Shield,
-  Smartphone,
-  UserCircle,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '~/components/ui/button';
@@ -24,14 +18,21 @@ import { Separator } from '~/components/ui/separator';
 import { Switch } from '~/components/ui/switch';
 import { useTheme } from '~/components/ui/theme-provider';
 import { useAuth } from '~/contexts/auth/auth-context';
-import type { PolygonProduct } from '~/domain/accounts/types';
-import { useAccounts } from '~/hooks/accounts/use-accounts';
 import { type SupportedLanguage, setLanguage } from '~/i18n/config';
-import { formatPolygonAddress } from '~/lib/formatters';
 
 export const Route = createFileRoute('/_authed/profile/')({
   component: RouteComponent,
 });
+
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  return (
+    parts
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? '')
+      .join('') || '?'
+  );
+}
 
 function RouteComponent() {
   const { t, i18n } = useTranslation();
@@ -44,15 +45,6 @@ function RouteComponent() {
   const currentLanguage = (
     i18n.language === 'en' ? 'en' : 'es'
   ) satisfies SupportedLanguage;
-
-  const accountsQuery = useAccounts();
-  const isLoadingPolygon = accountsQuery.isLoading;
-  const polygonAccounts =
-    accountsQuery.data?.flatMap((account) =>
-      account.products.filter(
-        (product): product is PolygonProduct => product.kind === 'polygon',
-      ),
-    ) ?? [];
 
   const kycLabel =
     user?.kycStatus === 'approved'
@@ -76,7 +68,9 @@ function RouteComponent() {
 
       <div className="flex items-center gap-4 rounded-2xl border border-border/80 bg-card/90 p-4 shadow-[0_16px_30px_-34px_color-mix(in_oklch,var(--foreground)_55%,transparent)]">
         <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
-          <UserCircle className="h-6 w-6 text-primary" strokeWidth={1.5} />
+          <span className="text-sm font-semibold text-primary">
+            {getInitials(profileName)}
+          </span>
         </div>
         <div className="flex flex-col gap-0.5">
           <p className="text-sm font-semibold text-foreground">{profileName}</p>
@@ -104,7 +98,7 @@ function RouteComponent() {
             value={t('profile.rows.view')}
             chevron
             onClick={() => {
-              navigate({ to: '/accounts' });
+              navigate({ to: '/accounts', search: { from: 'profile' } });
             }}
           />
           <Separator />
@@ -115,47 +109,6 @@ function RouteComponent() {
             chevron
             onClick={() => {
               navigate({ to: '/kyc' });
-            }}
-          />
-          <Separator />
-          <ProfileRow
-            icon={Smartphone}
-            label={t('profile.rows.devicesAndSessions')}
-            value={t('profile.rows.oneActive')}
-            chevron
-          />
-        </div>
-      </section>
-
-      <section className="flex flex-col gap-1">
-        <p className="mb-1 px-1 text-xs font-medium tracking-wider text-muted-foreground uppercase">
-          {t('profile.sections.polygonAccounts')}
-        </p>
-        <div className="overflow-hidden rounded-2xl border border-border/85 bg-card/85">
-          {isLoadingPolygon ? (
-            <div className="flex items-center justify-center px-4 py-4">
-              <LoaderCircle className="h-4 w-4 animate-spin text-muted-foreground" />
-            </div>
-          ) : (
-            polygonAccounts.map((account, index) => (
-              <div key={account.urn}>
-                <ProfileRow
-                  icon={Landmark}
-                  label={account.label}
-                  value={formatPolygonAddress(account.address)}
-                  chevron
-                />
-                {index < polygonAccounts.length - 1 && <Separator />}
-              </div>
-            ))
-          )}
-          {polygonAccounts.length > 0 && !isLoadingPolygon && <Separator />}
-          <ProfileRow
-            icon={Plus}
-            label={t('profile.rows.addAccount')}
-            chevron
-            onClick={() => {
-              navigate({ to: '/accounts' });
             }}
           />
         </div>
@@ -221,18 +174,6 @@ function RouteComponent() {
           {t('profile.sections.support')}
         </p>
         <div className="overflow-hidden rounded-2xl border border-border/85 bg-card/85">
-          <ProfileRow
-            icon={MessageSquare}
-            label={t('profile.rows.supportChat')}
-            chevron
-          />
-          <Separator />
-          <ProfileRow
-            icon={HelpCircle}
-            label={t('profile.rows.helpCenter')}
-            chevron
-          />
-          <Separator />
           <ProfileRow
             icon={Mail}
             label={t('profile.rows.contact')}

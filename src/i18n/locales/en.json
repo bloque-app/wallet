@@ -30,81 +30,76 @@
     "notifications": "Notifications"
   },
   "accountCarousel": {
-    "accountAria": "{{label}} account, available {{balance}}",
+    "accountAria": "{{label}} pocket, available {{balance}}",
     "selected": "Selected",
-    "defaultLabel": "Account",
-    "availableAccountsAria": "Available accounts"
+    "defaultLabel": "Pocket",
+    "availableAccountsAria": "Available pockets"
   },
   "accountsCarousel": {
-    "accountAria": "{{label}} account",
+    "accountAria": "{{label}} pocket",
     "noBalance": "No balance",
-    "myAccountsAria": "My accounts",
-    "createNewAria": "Create new account",
-    "newAccount": "New account"
+    "myAccountsAria": "My pockets",
+    "createNewAria": "Create new pocket",
+    "newAccount": "New pocket"
   },
   "createAccountDrawer": {
-    "createdToast": "Account created successfully",
-    "createErrorToast": "Couldn't create the account. Please try again.",
+    "createdToast": "Pocket created successfully",
+    "createErrorToast": "Couldn't create the pocket. Please try again.",
     "namePlaceholder": "Savings, Business...",
-    "createAccount": "Create account"
+    "createAccount": "Create pocket"
   },
   "accounts": {
-    "title": "Accounts",
-    "loading": "Loading accounts...",
-    "empty": "We couldn't find any accounts for this user.",
-    "createNew": "Create New Account",
+    "title": "Pockets",
+    "loading": "Loading pockets...",
+    "empty": "We couldn't find any pockets for this user.",
+    "createNew": "Create New Pocket",
     "noAssociatedProducts": "No associated products",
     "productKind": {
       "card": "Card",
       "breb": "BRE-B",
       "polygon": "Polygon",
-      "pocket": "Account",
+      "pocket": "Pocket",
       "other": "Other"
     },
     "detail": {
-      "title": "Account details",
-      "loadingAccount": "Loading account...",
-      "notFound": "We couldn't find this account.",
+      "title": "Pocket details",
+      "loadingAccount": "Loading pocket...",
+      "notFound": "We couldn't find this pocket.",
       "noStatus": "no status",
       "balances": "Balances",
-      "noBalances": "This account has no balances available.",
+      "noBalances": "This pocket has no balances available.",
       "available": "Available",
       "associatedProducts": "Associated products",
       "addProduct": "Add product",
-      "noAssociatedProducts": "This account doesn't have other associated products yet.",
+      "noAssociatedProducts": "This pocket doesn't have other associated products yet.",
       "movements": "Movements",
-      "noMovements": "There are no movements for this account.",
+      "noMovements": "There are no movements for this pocket.",
       "brebKeyLabel": "BRE-B key",
       "newCard": "New card",
-      "polygonAccount": "Polygon account",
-      "newVirtualAccount": "New account",
       "cardNameLabel": "Card name",
       "optionalNameLabel": "Name (optional)",
       "cardNamePlaceholder": "Personal",
-      "polygonNamePlaceholder": "Main",
-      "virtualAccountNamePlaceholder": "Personal",
       "sharesBalanceOf": "It will share the balance of {{label}}.",
       "defaultCardName": "Card",
       "cardCreatedToast": "Card created successfully",
-      "polygonCreatedToast": "Polygon account created",
-      "virtualAccountCreatedToast": "Account created successfully",
       "createProductErrorToast": "Couldn't create the product. Please try again.",
-      "transferToOwnAccount": "Transfer to another account",
+      "transferToOwnAccount": "Transfer to another pocket",
       "transferDrawerTitle": "Transfer funds",
-      "transferDestinationLabel": "Destination account",
+      "transferDestinationLabel": "Destination pocket",
       "transferAmountLabel": "Amount to transfer",
       "transferAvailable": "Available: {{amount}}",
       "transferInsufficientBalance": "Insufficient balance for this transfer.",
       "transferSubmit": "Transfer",
       "transferring": "Transferring...",
       "transferSuccessToast": "Transfer completed successfully",
-      "transferErrorToast": "Couldn't complete the transfer. Please try again."
+      "transferErrorToast": "Couldn't complete the transfer. Please try again.",
+      "addProductCardLabel": "Card (Global)",
+      "addProductBrebLabel": "BRE-B key (COP)",
+      "addProductPlaidLabel": "Plaid (USD)"
     }
   },
   "brebKeys": {
     "subtitle": "Send and receive instantly from any bank",
-    "cameraOpenError": "Couldn't open the camera.",
-    "qrReadError": "Couldn't read the BRE-B QR code.",
     "menu": {
       "sendWithKeys": {
         "title": "Send with keys",
@@ -117,25 +112,12 @@
       "yourKeys": {
         "title": "Your keys",
         "description": "Manage your registered keys"
-      },
-      "qrCode": {
-        "title": "QR code",
-        "description": "Scan a BRE-B QR code to transfer"
       }
     },
     "discoverZone": {
       "title": "Discover your BRE-B zone",
       "description": "Register and manage your keys. Send money for free, instantly. All from one place.",
       "cta": "Go to your keys"
-    },
-    "scanner": {
-      "title": "Scan QR code",
-      "description": "Align the BRE-B QR within the frame.",
-      "permissionHint": "If the camera takes a while to open, check your browser permissions."
-    },
-    "decoding": {
-      "title": "Processing BRE-B QR",
-      "description": "Validating recipient information."
     },
     "deposit": {
       "keyCopiedToast": "Key copied",
@@ -193,10 +175,10 @@
       "deleteKey": "Delete key",
       "keyDeletedToast": "Key deleted.",
       "deleteErrorToast": "Couldn't delete the key.",
-      "chooseAccountTitle": "Choose the account for your new key",
+      "chooseAccountTitle": "Choose the pocket for your new key",
       "chooseAccountDescriptionPrefix": "The key",
-      "chooseAccountDescriptionSuffix": "will share the balance of the account you choose.",
-      "linkedAccountLabel": "Account to link to",
+      "chooseAccountDescriptionSuffix": "will share the balance of the pocket you choose.",
+      "linkedAccountLabel": "Pocket to link to",
       "confirm": "Confirm"
     },
     "payTransfer": {
@@ -220,7 +202,7 @@
       "key": "Key",
       "from": "From",
       "noFundedAccounts": "You don't have available balance in any active BRE-B key.",
-      "selectSourceAccount": "Select the BRE-B account you want to send from.",
+      "selectSourceAccount": "Select the BRE-B pocket you want to send from.",
       "invalidKey": "Enter a valid BRE-B key, e.g. an alias like @MBP313.",
       "onlyAlphaKeysSupported": "For now you can only send to a BRE-B alias (starts with @), like @MBP313. Phone, ID, email, and BCODE aren't enabled for sending yet.",
       "minAmount": "The minimum amount is $10 COP.",
@@ -229,15 +211,6 @@
       "transferSentToast": "BRE-B transfer sent successfully.",
       "transferErrorToast": "Couldn't send the BRE-B transfer.",
       "keyValidationErrorToast": "Couldn't validate the BRE-B key."
-    },
-    "payTransferQr": {
-      "noResolution": "We couldn't find the BRE-B QR resolution.",
-      "noValidKeyInQr": "We couldn't find a valid BRE-B key in the QR.",
-      "completeAmount": "Complete the amount for the BRE-B QR",
-      "paymentStartedFromQr": "Payment started from BRE-B QR",
-      "qrReference": "QR reference",
-      "aboutToSend": "You're about to send money to {{recipient}}.",
-      "checkingRateToOpenConfirmation": "Checking the rate to open the confirmation."
     }
   },
   "card": {
@@ -310,7 +283,7 @@
   },
   "home": {
     "availableBalance": "Available balance",
-    "accounts": "Accounts",
+    "accounts": "Pockets",
     "viewAll": "View all",
     "recentMovements": "Recent movements",
     "viewMore": "View more",
@@ -332,7 +305,7 @@
       "title": "Quick actions",
       "topup": "Top up",
       "send": "Send",
-      "needsAccount": "Create an account first to use this."
+      "needsAccount": "Create a pocket first to use this."
     }
   },
   "send": {
@@ -358,15 +331,10 @@
       "usBanks": {
         "title": "Banks/wallets",
         "description": "Send USD via RTP to banks and wallets."
-      },
-      "blockchain": {
-        "title": "Blockchain addresses",
-        "description": "Send funds to external wallets.",
-        "comingSoon": "Sending to blockchain coming soon."
       }
     },
     "bloqueFriends": {
-      "noSourceAccount": "We couldn't find an available source account.",
+      "noSourceAccount": "We couldn't find an available source pocket.",
       "invalidAlias": "Enter a valid alias.",
       "invalidAmount": "Enter a valid amount.",
       "aliasNotFound": "We couldn't find that alias.",
@@ -395,11 +363,11 @@
     },
     "colombianBanks": {
       "title": "Send to Colombian banks",
-      "stepAccount": "Account",
+      "stepAccount": "Pocket",
       "noRateForOrder": "No rate selected to create the order.",
       "invalidAmountForOrder": "Invalid amount to create the order.",
-      "noSourceAccount": "No source account available.",
-      "sourceAccountLabel": "Source account",
+      "noSourceAccount": "No source pocket available.",
+      "sourceAccountLabel": "Source pocket",
       "selectDestinationBank": "Select a destination bank.",
       "unsupportedBank": "The selected bank isn't valid for this transfer.",
       "minAmountToast": "The minimum amount is $10,000 COP.",
@@ -415,8 +383,8 @@
       "stepBank": "Bank",
       "noRateForOrder": "No rate selected to create the order.",
       "invalidAmountForOrder": "Invalid amount to create the order.",
-      "noSourceAccount": "No source account available.",
-      "sourceAccountLabel": "Source account",
+      "noSourceAccount": "No source pocket available.",
+      "sourceAccountLabel": "Source pocket",
       "kycRejectedError": "Your identity verification wasn't approved, so we can't complete this operation. Retry verification from your profile.",
       "minAmountToast": "The minimum amount is $10 USD.",
       "noRateToContinue": "No rate available to continue.",
@@ -439,7 +407,8 @@
         "destinationBank": "Destination bank",
         "owner": "Account holder"
       }
-    }
+    },
+    "feeInfo": "This fee covers processing your transfer through this method."
   },
   "topup": {
     "title": "Top up balance",
@@ -447,8 +416,8 @@
     "stepDetails": "Details",
     "stepConfirm": "Confirm",
     "bankFallback": "Bank",
-    "noDestinationAccount": "We couldn't find an available destination account.",
-    "noDestinationAccountShort": "No destination account available.",
+    "noDestinationAccount": "We couldn't find an available destination pocket.",
+    "noDestinationAccountShort": "No destination pocket available.",
     "noRateForOrder": "No rate is available to create the order.",
     "pseStartedToast": "PSE top-up started successfully.",
     "rateExpiredToast": "The rate expired. Recalculating...",
@@ -470,20 +439,9 @@
       "usBanks": {
         "title": "From banks",
         "subtitle": "ACH"
-      },
-      "blockchain": {
-        "title": "From blockchain addresses",
-        "subtitle": "External wallets",
-        "comingSoon": "Top-up from blockchain coming soon."
-      },
-      "card": {
-        "title": "With card",
-        "subtitle": "Visa, Mastercard, etc",
-        "comingSoon": "Top-up with card coming soon."
       }
     },
-    "destinationAccountLabel": "Destination account",
-    "iWantToReceive": "I want to receive",
+    "destinationAccountLabel": "Destination pocket",
     "pseAmountLabel": "Amount to pay via PSE (COP)",
     "minAmount": "Minimum amount: $5,000 COP",
     "youPay": "You pay",
@@ -584,7 +542,7 @@
       "noRateForOrder": "No rate selected to create the order.",
       "invalidAmountForOrder": "Invalid amount to create the order.",
       "noSourceAccount": "We couldn't find a linked bank account to pull from.",
-      "noDestinationAccount": "We couldn't find an available destination account.",
+      "noDestinationAccount": "We couldn't find an available destination pocket.",
       "kycRejectedError": "Your identity verification wasn't approved, so we can't complete this operation. Retry verification from your profile.",
       "minAmountToast": "The minimum amount is $10 USD.",
       "noRateToContinue": "No rate available to continue.",
@@ -607,9 +565,14 @@
         "needsUpdate": "Your linked bank needs to be reconnected.",
         "startErrorToast": "Couldn't start bank linking. Please try again.",
         "missingProfileToast": "We need to complete your profile before linking your bank.",
-        "timeoutToast": "We couldn't confirm the bank link in time. Please try again."
-      }
-    }
+        "timeoutToast": "We couldn't confirm the bank link in time. Please try again.",
+        "chooseAccountLabel": "Choose the pocket to link this bank to",
+        "noPocketsAvailable": "You already have a US bank linked to every pocket."
+      },
+      "chooseSourceLabel": "Choose which bank you want to recharge from"
+    },
+    "pseTitle": "Top up with PSE from Colombia",
+    "feeInfo": "This fee covers processing your top-up through this method."
   },
   "convert": {
     "title": "Convert",
@@ -693,7 +656,7 @@
   "nav": {
     "ariaLabel": "Main navigation",
     "home": "Home",
-    "accounts": "Accounts",
+    "accounts": "Pockets",
     "movements": "Movements",
     "card": "Card",
     "profile": "Profile"
@@ -707,20 +670,16 @@
       "notVerified": "Not verified"
     },
     "sections": {
-      "account": "Account",
-      "polygonAccounts": "Polygon accounts",
+      "account": "Pocket",
       "settings": "Settings",
       "legal": "Legal",
       "support": "Support"
     },
     "rows": {
       "editProfile": "Edit profile",
-      "allAccounts": "All accounts",
+      "allAccounts": "All pockets",
       "view": "View",
       "kycVerification": "KYC verification",
-      "devicesAndSessions": "Devices and sessions",
-      "oneActive": "1 active",
-      "addAccount": "Add account",
       "language": "Language",
       "pushNotifications": "Push notifications",
       "pushNotificationsSublabel": "Get alerts about your movements",
@@ -729,8 +688,6 @@
       "termsAndConditions": "Terms and conditions",
       "privacyPolicy": "Privacy policy",
       "feesAndCommissions": "Fees and commissions",
-      "supportChat": "Support chat",
-      "helpCenter": "Help center",
       "contact": "Contact"
     },
     "settings": {
