@@ -568,7 +568,8 @@
         "timeoutToast": "We couldn't confirm the bank link in time. Please try again.",
         "chooseAccountLabel": "Choose the pocket to link this bank to",
         "noPocketsAvailable": "You already have a US bank linked to every pocket."
-      }
+      },
+      "chooseSourceLabel": "Choose which bank you want to recharge from"
     },
     "pseTitle": "Top up with PSE from Colombia",
     "feeInfo": "This fee covers processing your top-up through this method."

@@ -97,16 +97,37 @@ function RouteComponent() {
       : window.sessionStorage.getItem(PENDING_URN_KEY),
   );
 
-  // requireActive:false here is deliberate — this only needs to find *which*
-  // pocket owns the linked bank, regardless of that pocket's own status, so
-  // the "needs re-link" / "link failed" states below still render for a
-  // suspended pocket instead of silently looking unlinked.
-  const { accounts: activeBankAccounts } = useAccountPicker({
+  // Which pocket a *new* Plaid link gets associated with, when arriving from
+  // account-detail's add-product picker for a pocket that has no bank yet.
+  const { ledgerId: contextLedgerId } = Route.useSearch();
+
+  // Pockets whose linked US bank is active *and* whose own status is active —
+  // the only accounts eligible to source or receive an ACH recharge. A
+  // suspended pocket's linked bank is deliberately excluded here, not just
+  // for the deposit destination: it isn't a selectable option at all.
+  const { accounts: linkedActivePockets } = useAccountPicker({
     requireProductKind: 'external-us-bank',
-    requireActive: false,
     requireLinkStatus: 'active',
   });
-  const sourceBankProduct = activeBankAccounts[0]?.products.find(
+
+  // With more than one eligible pocket, the user must pick which linked bank
+  // to use for this recharge; with exactly one, it's the obvious default.
+  // While `contextLedgerId` is set, the user explicitly came here to link a
+  // *new* bank to a specific pocket — any already-linked pocket must be
+  // ignored until that new link resolves, or this would silently redirect
+  // them into recharging from an unrelated existing bank instead.
+  const [selectedSourceLedgerId, setSelectedSourceLedgerId] = useState<
+    string | null
+  >(null);
+  const chosenSourceAccount = contextLedgerId
+    ? null
+    : linkedActivePockets.length === 1
+      ? linkedActivePockets[0]
+      : (linkedActivePockets.find(
+          (account) => account.ledgerId === selectedSourceLedgerId,
+        ) ?? null);
+
+  const sourceBankProduct = chosenSourceAccount?.products.find(
     (p) => p.kind === 'external-us-bank',
   );
   // A linked bank can be `linkStatus: 'active'` yet still need Plaid
@@ -119,19 +140,11 @@ function RouteComponent() {
       ? sourceBankProduct.urn
       : '';
 
-  // Recharged money lands on the same pocket the linked bank belongs to —
-  // but unlike the lookup above, this one keeps the default requireActive
-  // check: a suspended pocket must not receive a deposit just because it
-  // happens to hold the linked bank.
-  const { accounts: activeDestinationPockets } = useAccountPicker({
-    requireProductKind: 'external-us-bank',
-    requireLinkStatus: 'active',
-  });
-  const ledgerAccountId = activeDestinationPockets[0]?.ledgerId ?? '';
+  // Recharged money lands on the same pocket the linked bank belongs to.
+  const ledgerAccountId = chosenSourceAccount?.ledgerId ?? '';
 
   // Which pocket the new Plaid link itself gets associated with. Only one
   // `external-us-bank` product per pocket, same rule as card/BRE-B.
-  const { ledgerId: contextLedgerId } = Route.useSearch();
   const [selectedLinkLedgerId, setSelectedLinkLedgerId] = useState<
     string | null
   >(null);
@@ -435,7 +448,7 @@ function RouteComponent() {
   const sourceBankLabel =
     sourceBankProduct?.kind === 'external-us-bank'
       ? (sourceBankProduct.bankName ??
-        activeBankAccounts[0]?.label ??
+        chosenSourceAccount?.label ??
         t('topup.usBanks.linkedBankLabel'))
       : t('topup.usBanks.linkedBankLabel');
 
@@ -484,32 +497,48 @@ function RouteComponent() {
 
       {step === 'link' && (
         <div className="flex flex-col gap-5">
-          {linkStepStatus === 'idle' &&
-            !contextLedgerId &&
-            (linkablePockets.length > 1 ? (
-              <AccountCarousel
-                accounts={linkablePockets}
-                asset="COPM/2"
-                precision={2}
-                unit="COP"
-                value={selectedLinkLedgerId}
-                onChange={setSelectedLinkLedgerId}
-                label={t('topup.usBanks.linkStep.chooseAccountLabel')}
-              />
-            ) : linkablePockets.length === 0 ? (
-              <p className="rounded-2xl border border-border/75 bg-card/80 p-4 text-sm text-muted-foreground">
-                {t('topup.usBanks.linkStep.noPocketsAvailable')}
-              </p>
-            ) : null)}
+          {linkedActivePockets.length > 1 &&
+          !chosenSourceAccount &&
+          !contextLedgerId ? (
+            <AccountCarousel
+              accounts={linkedActivePockets}
+              asset="COPM/2"
+              precision={2}
+              unit="COP"
+              value={selectedSourceLedgerId}
+              onChange={setSelectedSourceLedgerId}
+              label={t('topup.usBanks.chooseSourceLabel')}
+            />
+          ) : (
+            <>
+              {linkStepStatus === 'idle' &&
+                !contextLedgerId &&
+                (linkablePockets.length > 1 ? (
+                  <AccountCarousel
+                    accounts={linkablePockets}
+                    asset="COPM/2"
+                    precision={2}
+                    unit="COP"
+                    value={selectedLinkLedgerId}
+                    onChange={setSelectedLinkLedgerId}
+                    label={t('topup.usBanks.linkStep.chooseAccountLabel')}
+                  />
+                ) : linkablePockets.length === 0 ? (
+                  <p className="rounded-2xl border border-border/75 bg-card/80 p-4 text-sm text-muted-foreground">
+                    {t('topup.usBanks.linkStep.noPocketsAvailable')}
+                  </p>
+                ) : null)}
 
-          <LinkBankStep
-            status={linkStepStatus}
-            isStarting={createLinkMutation.isPending}
-            disabled={!linkLedgerId}
-            onStartLink={handleStartLink}
-            onCheckAgain={() => void accountsQuery.refetch()}
-            onCancel={resetPendingLink}
-          />
+              <LinkBankStep
+                status={linkStepStatus}
+                isStarting={createLinkMutation.isPending}
+                disabled={!linkLedgerId}
+                onStartLink={handleStartLink}
+                onCheckAgain={() => void accountsQuery.refetch()}
+                onCancel={resetPendingLink}
+              />
+            </>
+          )}
         </div>
       )}
 

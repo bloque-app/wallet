@@ -568,7 +568,8 @@
         "timeoutToast": "No pudimos confirmar la vinculación bancaria a tiempo. Intenta de nuevo.",
         "chooseAccountLabel": "Elige el bolsillo al que quieres vincular este banco",
         "noPocketsAvailable": "Ya tienes un banco de EE.UU. vinculado en todos tus bolsillos."
-      }
+      },
+      "chooseSourceLabel": "Elige con cuál banco quieres recargar"
     },
     "pseTitle": "Recarga con PSE desde Colombia",
     "feeInfo": "Este cobro cubre el procesamiento de tu recarga por este medio."
