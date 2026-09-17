@@ -6,18 +6,9 @@ import { FeeInfo } from '~/components/fee-info';
 import { formatCOP, formatUSD } from '~/lib/formatters';
 import { cn } from '~/lib/utils';
 
-type SendOrigin = 'breb-keys' | 'convert';
-
-const ORIGIN_ROUTES: Record<SendOrigin, string> = {
-  'breb-keys': '/breb-keys',
-  convert: '/convert',
-};
-
 export const Route = createFileRoute('/_authed/send/')({
-  validateSearch: (search: Record<string, unknown>): { from?: SendOrigin } =>
-    search.from === 'breb-keys' || search.from === 'convert'
-      ? { from: search.from }
-      : {},
+  validateSearch: (search: Record<string, unknown>): { from?: 'convert' } =>
+    search.from === 'convert' ? { from: 'convert' } : {},
   component: RouteComponent,
 });
 
@@ -86,7 +77,7 @@ function RouteComponent() {
       <div className="flex items-center gap-2">
         <BackButton
           onClick={() =>
-            void navigate({ to: from ? ORIGIN_ROUTES[from] : '/' })
+            void navigate({ to: from === 'convert' ? '/convert' : '/' })
           }
         />
         <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">

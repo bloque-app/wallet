@@ -33,7 +33,6 @@ import {
 } from '~/hooks/accounts/use-breb-keys';
 import i18n from '~/i18n/config';
 import { getAssetPrecision } from '~/lib/formatters';
-import { goBackOrFallback } from '~/lib/navigation';
 import {
   BrebKeyError,
   type BrebKeyType,
@@ -202,9 +201,7 @@ function RouteComponent() {
     deleteMutation.isPending;
 
   const handleBack = () => {
-    goBackOrFallback(() => {
-      void navigate({ to: '/breb-keys' });
-    });
+    void navigate({ to: '/breb-keys' });
   };
 
   const registerKey = (

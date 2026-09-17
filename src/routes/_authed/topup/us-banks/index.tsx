@@ -97,6 +97,10 @@ function RouteComponent() {
       : window.sessionStorage.getItem(PENDING_URN_KEY),
   );
 
+  // requireActive:false here is deliberate — this only needs to find *which*
+  // pocket owns the linked bank, regardless of that pocket's own status, so
+  // the "needs re-link" / "link failed" states below still render for a
+  // suspended pocket instead of silently looking unlinked.
   const { accounts: activeBankAccounts } = useAccountPicker({
     requireProductKind: 'external-us-bank',
     requireActive: false,
@@ -116,9 +120,14 @@ function RouteComponent() {
       : '';
 
   // Recharged money lands on the same pocket the linked bank belongs to —
-  // no separate destination picker, so it can't drift from the account
-  // `ledgerId` was chosen for when the link was created (see below).
-  const ledgerAccountId = activeBankAccounts[0]?.ledgerId ?? '';
+  // but unlike the lookup above, this one keeps the default requireActive
+  // check: a suspended pocket must not receive a deposit just because it
+  // happens to hold the linked bank.
+  const { accounts: activeDestinationPockets } = useAccountPicker({
+    requireProductKind: 'external-us-bank',
+    requireLinkStatus: 'active',
+  });
+  const ledgerAccountId = activeDestinationPockets[0]?.ledgerId ?? '';
 
   // Which pocket the new Plaid link itself gets associated with. Only one
   // `external-us-bank` product per pocket, same rule as card/BRE-B.

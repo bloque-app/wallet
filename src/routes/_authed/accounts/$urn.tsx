@@ -36,7 +36,7 @@ import { useCreateCard } from '~/hooks/accounts/use-cards';
 import { useTransfer } from '~/hooks/accounts/use-transfer';
 import type { Asset, Movement } from '~/lib/formatters';
 import { formatCOP, formatUSD, sortBalancesForDisplay } from '~/lib/formatters';
-import { goBackOrFallback, skipDrawerHistoryOnce } from '~/lib/navigation';
+import { skipDrawerHistoryOnce } from '~/lib/navigation';
 import { cn } from '~/lib/utils';
 
 export const Route = createFileRoute('/_authed/accounts/$urn')({
@@ -251,13 +251,7 @@ function RouteComponent() {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center gap-2">
-        <BackButton
-          onClick={() =>
-            goBackOrFallback(() => {
-              void navigate({ to: '/accounts' });
-            })
-          }
-        />
+        <BackButton onClick={() => void navigate({ to: '/accounts' })} />
         <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
           {t('accounts.detail.title')}
         </h1>

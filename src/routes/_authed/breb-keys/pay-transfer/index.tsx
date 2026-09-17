@@ -25,7 +25,6 @@ import { useResolveBrebKey } from '~/hooks/accounts/use-breb-keys';
 import { useCreateBrebOrder } from '~/hooks/payments/use-breb-order';
 import { useRates } from '~/hooks/payments/use-rates';
 import { formatCOP, getAssetPrecision } from '~/lib/formatters';
-import { goBackOrFallback } from '~/lib/navigation';
 import { TopUpErrorStep } from '../../topup/-components/error-step';
 import { ExecutionOutcomeStep } from '../../topup/-components/execution-outcome-step';
 import {
@@ -267,7 +266,7 @@ function RouteComponent() {
     !createOrderMutation.isPending;
 
   const handleBack = () => {
-    goBackOrFallback(() => history.push(from));
+    history.push(from);
   };
 
   if (view === 'pending') {

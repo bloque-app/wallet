@@ -1,12 +1,3 @@
-export function goBackOrFallback(fallback: () => void) {
-  if (typeof window !== 'undefined' && window.history.length > 1) {
-    window.history.back();
-    return;
-  }
-
-  fallback();
-}
-
 /**
  * The `Drawer` wrapper (`~/components/ui/drawer.tsx`) pushes a history entry
  * on open so a mobile back-gesture closes it, then rewinds that entry on

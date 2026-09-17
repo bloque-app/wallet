@@ -14,9 +14,20 @@ import { useAccounts } from '~/hooks/accounts/use-accounts';
 import i18n from '~/i18n/config';
 import { formatCOP, formatUSD, sortBalancesForDisplay } from '~/lib/formatters';
 
+type AccountsOrigin = 'profile' | 'card';
+
+const ORIGIN_ROUTES: Record<AccountsOrigin, string> = {
+  profile: '/profile',
+  card: '/card',
+};
+
 export const Route = createFileRoute('/_authed/accounts/')({
-  validateSearch: (search: Record<string, unknown>): { from?: 'profile' } =>
-    search.from === 'profile' ? { from: 'profile' } : {},
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { from?: AccountsOrigin } =>
+    search.from === 'profile' || search.from === 'card'
+      ? { from: search.from }
+      : {},
   component: RouteComponent,
 });
 
@@ -78,7 +89,7 @@ function RouteComponent() {
       <div className="flex items-center gap-2">
         <BackButton
           onClick={() =>
-            void navigate({ to: from === 'profile' ? '/profile' : '/' })
+            void navigate({ to: from ? ORIGIN_ROUTES[from] : '/' })
           }
         />
         <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
