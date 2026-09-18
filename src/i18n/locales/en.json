@@ -365,6 +365,7 @@
       "invalidAlias": "Enter a valid alias.",
       "invalidAmount": "Enter a valid amount.",
       "aliasNotFound": "We couldn't find that alias.",
+      "recipientNoAccount": "This friend can't receive money via Bloque Friends yet.",
       "aliasValidationError": "Couldn't validate the alias.",
       "noConfirmedRecipient": "There's no confirmed recipient.",
       "invalidTransferAmount": "Invalid amount to transfer.",
@@ -688,6 +689,12 @@
   },
   "profile": {
     "title": "Profile",
+    "myAlias": {
+      "title": "Your Bloque Friends alias",
+      "description": "Share it so your friends can send you money",
+      "copiedToast": "Alias copied",
+      "copyErrorToast": "Couldn't copy the alias"
+    },
     "kyc": {
       "approved": "Verified",
       "awaitingVerification": "Under review",

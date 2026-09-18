@@ -45,6 +45,17 @@ function majorToMinor(amountMajor: number, precision: number) {
   return (BigInt(amountMajor) * 10n ** BigInt(precision)).toString();
 }
 
+/**
+ * TEMPORARY: `@bloque/sdk-identity@0.13.0` doesn't type these fields yet —
+ * added server-side in payment-rails#975, typed in sdk#78 (unpublished at
+ * time of writing). Drop this intersection once that SDK version ships and
+ * `Alias` carries them natively.
+ */
+type AliasWithAccountResolution = Alias & {
+  account_urn?: string;
+  account_resolution_error?: 'NO_ACCOUNT';
+};
+
 /** `metadata` is an `{ [key: string]: unknown }` bag — validate `name` before use. */
 function getAliasDisplayName(aliasResult: Alias) {
   const metadataName = aliasResult.metadata.name;
@@ -62,7 +73,8 @@ function RouteComponent() {
   const [amount, setAmount] = useState('');
   const [message, setMessage] = useState('');
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [recipientPreview, setRecipientPreview] = useState<Alias | null>(null);
+  const [recipientPreview, setRecipientPreview] =
+    useState<AliasWithAccountResolution | null>(null);
   const [lastTransfer, setLastTransfer] = useState<{
     destinationUrn: string;
     amount: number;
@@ -103,10 +115,17 @@ function RouteComponent() {
   ]);
 
   const validateAliasMutation = useMutation({
-    mutationFn: async () => await bloque.identity.aliases.get(normalizedAlias),
+    mutationFn: async () =>
+      (await bloque.identity.aliases.get(
+        normalizedAlias,
+      )) as AliasWithAccountResolution,
     onSuccess: (result) => {
       if (!result?.urn) {
         toast.error(t('send.bloqueFriends.aliasNotFound'));
+        return;
+      }
+      if (!result.account_urn) {
+        toast.error(t('send.bloqueFriends.recipientNoAccount'));
         return;
       }
       setRecipientPreview(result);
@@ -128,7 +147,7 @@ function RouteComponent() {
       toast.error(t('send.bloqueFriends.noSourceAccount'));
       return;
     }
-    if (!recipientPreview?.urn) {
+    if (!recipientPreview?.account_urn) {
       toast.error(t('send.bloqueFriends.noConfirmedRecipient'));
       return;
     }
@@ -140,7 +159,7 @@ function RouteComponent() {
     transferMutation.mutate(
       {
         sourceUrn: sourceAccount.primaryUrn,
-        destinationUrn: recipientPreview.urn,
+        destinationUrn: recipientPreview.account_urn,
         amount: amountMinor,
         asset: selectedAssetConfig.sdkAsset,
         metadata: {
@@ -152,7 +171,7 @@ function RouteComponent() {
         onSuccess: () => {
           setConfirmOpen(false);
           setLastTransfer({
-            destinationUrn: recipientPreview.urn,
+            destinationUrn: recipientPreview.account_urn as string,
             amount: parsedAmount,
           });
           setView('pending');
