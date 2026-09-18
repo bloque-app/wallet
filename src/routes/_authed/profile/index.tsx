@@ -1,7 +1,9 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router';
 import {
   Bell,
+  Check,
   ChevronRight,
+  Copy,
   FileText,
   Globe,
   Landmark,
@@ -12,7 +14,9 @@ import {
   Pencil,
   Shield,
 } from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import { Button } from '~/components/ui/button';
 import { Separator } from '~/components/ui/separator';
 import { Switch } from '~/components/ui/switch';
@@ -41,6 +45,18 @@ function RouteComponent() {
   const { navigate } = useRouter();
   const profileName = user.name;
   const profileEmail = user.email;
+  const [aliasCopied, setAliasCopied] = useState(false);
+
+  const copyMyAlias = async () => {
+    try {
+      await navigator.clipboard.writeText(profileEmail);
+      setAliasCopied(true);
+      toast.success(t('profile.myAlias.copiedToast'));
+      setTimeout(() => setAliasCopied(false), 2000);
+    } catch {
+      toast.error(t('profile.myAlias.copyErrorToast'));
+    }
+  };
   const selectedTheme = theme === 'light' ? 'light' : 'dark';
   const currentLanguage = (
     i18n.language === 'en' ? 'en' : 'es'
@@ -76,6 +92,33 @@ function RouteComponent() {
           <p className="text-sm font-semibold text-foreground">{profileName}</p>
           <p className="text-xs text-muted-foreground">{profileEmail}</p>
         </div>
+      </div>
+
+      <div className="flex items-center gap-3 rounded-2xl border border-primary/20 bg-primary/[0.06] p-4">
+        <div className="flex flex-1 flex-col gap-0.5">
+          <p className="text-sm font-semibold text-foreground">
+            {t('profile.myAlias.title')}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {t('profile.myAlias.description')}
+          </p>
+          <p className="mt-1 text-sm font-medium text-foreground">
+            {profileEmail}
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          onClick={copyMyAlias}
+          className="h-9 w-9 shrink-0 rounded-xl bg-transparent"
+        >
+          {aliasCopied ? (
+            <Check className="h-4 w-4" />
+          ) : (
+            <Copy className="h-4 w-4" />
+          )}
+        </Button>
       </div>
 
       <section className="flex flex-col gap-1">
