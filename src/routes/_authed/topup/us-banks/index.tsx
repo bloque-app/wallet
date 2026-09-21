@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { AccountCarousel } from '~/components/account/account-carousel';
 import { useAuth } from '~/contexts/auth/auth-context';
 import type { ExecutionOutcome } from '~/domain/payments/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
@@ -66,8 +67,14 @@ function getMissingProfileField(
 }
 
 export const Route = createFileRoute('/_authed/topup/us-banks/')({
-  validateSearch: (search: Record<string, unknown>): { status?: string } =>
-    typeof search.status === 'string' ? { status: search.status } : {},
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { status?: string; ledgerId?: string } => ({
+    ...(typeof search.status === 'string' ? { status: search.status } : {}),
+    ...(typeof search.ledgerId === 'string'
+      ? { ledgerId: search.ledgerId }
+      : {}),
+  }),
   component: RouteComponent,
 });
 
@@ -90,12 +97,37 @@ function RouteComponent() {
       : window.sessionStorage.getItem(PENDING_URN_KEY),
   );
 
-  const { accounts: activeBankAccounts } = useAccountPicker({
+  // Which pocket a *new* Plaid link gets associated with, when arriving from
+  // account-detail's add-product picker for a pocket that has no bank yet.
+  const { ledgerId: contextLedgerId } = Route.useSearch();
+
+  // Pockets whose linked US bank is active *and* whose own status is active —
+  // the only accounts eligible to source or receive an ACH recharge. A
+  // suspended pocket's linked bank is deliberately excluded here, not just
+  // for the deposit destination: it isn't a selectable option at all.
+  const { accounts: linkedActivePockets } = useAccountPicker({
     requireProductKind: 'external-us-bank',
-    requireActive: false,
     requireLinkStatus: 'active',
   });
-  const sourceBankProduct = activeBankAccounts[0]?.products.find(
+
+  // With more than one eligible pocket, the user must pick which linked bank
+  // to use for this recharge; with exactly one, it's the obvious default.
+  // While `contextLedgerId` is set, the user explicitly came here to link a
+  // *new* bank to a specific pocket — any already-linked pocket must be
+  // ignored until that new link resolves, or this would silently redirect
+  // them into recharging from an unrelated existing bank instead.
+  const [selectedSourceLedgerId, setSelectedSourceLedgerId] = useState<
+    string | null
+  >(null);
+  const chosenSourceAccount = contextLedgerId
+    ? null
+    : linkedActivePockets.length === 1
+      ? linkedActivePockets[0]
+      : (linkedActivePockets.find(
+          (account) => account.ledgerId === selectedSourceLedgerId,
+        ) ?? null);
+
+  const sourceBankProduct = chosenSourceAccount?.products.find(
     (p) => p.kind === 'external-us-bank',
   );
   // A linked bank can be `linkStatus: 'active'` yet still need Plaid
@@ -108,10 +140,28 @@ function RouteComponent() {
       ? sourceBankProduct.urn
       : '';
 
-  const { accounts: destinationAccounts } = useAccountPicker({
-    requireProductKind: 'pocket',
-  });
-  const ledgerAccountId = destinationAccounts[0]?.ledgerId ?? '';
+  // Recharged money lands on the same pocket the linked bank belongs to.
+  const ledgerAccountId = chosenSourceAccount?.ledgerId ?? '';
+
+  // Which pocket the new Plaid link itself gets associated with. Only one
+  // `external-us-bank` product per pocket, same rule as card/BRE-B.
+  const [selectedLinkLedgerId, setSelectedLinkLedgerId] = useState<
+    string | null
+  >(null);
+  const { accounts: allPockets } = useAccountPicker();
+  const linkablePockets = useMemo(
+    () =>
+      allPockets.filter(
+        (account) =>
+          !account.products.some((p) => p.kind === 'external-us-bank'),
+      ),
+    [allPockets],
+  );
+  const linkLedgerId =
+    contextLedgerId ||
+    selectedLinkLedgerId ||
+    (linkablePockets.length === 1 ? linkablePockets[0]?.ledgerId : null) ||
+    '';
 
   // Function form (not a static boolean): must inspect the *freshest* fetched
   // data on every tick to know when to stop — a value computed once per
@@ -207,8 +257,12 @@ function RouteComponent() {
   const createLinkMutation = useCreateExternalUsBankAccount();
 
   const handleStartLink = () => {
+    if (!linkLedgerId) return;
     createLinkMutation.mutate(
-      { returnUrl: `${window.location.origin}/topup/us-banks` },
+      {
+        returnUrl: `${window.location.origin}/topup/us-banks`,
+        ledgerId: linkLedgerId,
+      },
       {
         onSuccess: (product) => {
           if (product.kind !== 'external-us-bank' || !product.linkUrl) {
@@ -394,7 +448,7 @@ function RouteComponent() {
   const sourceBankLabel =
     sourceBankProduct?.kind === 'external-us-bank'
       ? (sourceBankProduct.bankName ??
-        activeBankAccounts[0]?.label ??
+        chosenSourceAccount?.label ??
         t('topup.usBanks.linkedBankLabel'))
       : t('topup.usBanks.linkedBankLabel');
 
@@ -442,13 +496,50 @@ function RouteComponent() {
       )}
 
       {step === 'link' && (
-        <LinkBankStep
-          status={linkStepStatus}
-          isStarting={createLinkMutation.isPending}
-          onStartLink={handleStartLink}
-          onCheckAgain={() => void accountsQuery.refetch()}
-          onCancel={resetPendingLink}
-        />
+        <div className="flex flex-col gap-5">
+          {linkedActivePockets.length > 1 &&
+          !chosenSourceAccount &&
+          !contextLedgerId ? (
+            <AccountCarousel
+              accounts={linkedActivePockets}
+              asset="COPM/2"
+              precision={2}
+              unit="COP"
+              value={selectedSourceLedgerId}
+              onChange={setSelectedSourceLedgerId}
+              label={t('topup.usBanks.chooseSourceLabel')}
+            />
+          ) : (
+            <>
+              {linkStepStatus === 'idle' &&
+                !contextLedgerId &&
+                (linkablePockets.length > 1 ? (
+                  <AccountCarousel
+                    accounts={linkablePockets}
+                    asset="COPM/2"
+                    precision={2}
+                    unit="COP"
+                    value={selectedLinkLedgerId}
+                    onChange={setSelectedLinkLedgerId}
+                    label={t('topup.usBanks.linkStep.chooseAccountLabel')}
+                  />
+                ) : linkablePockets.length === 0 ? (
+                  <p className="rounded-2xl border border-border/75 bg-card/80 p-4 text-sm text-muted-foreground">
+                    {t('topup.usBanks.linkStep.noPocketsAvailable')}
+                  </p>
+                ) : null)}
+
+              <LinkBankStep
+                status={linkStepStatus}
+                isStarting={createLinkMutation.isPending}
+                disabled={!linkLedgerId}
+                onStartLink={handleStartLink}
+                onCheckAgain={() => void accountsQuery.refetch()}
+                onCancel={resetPendingLink}
+              />
+            </>
+          )}
+        </div>
       )}
 
       {step === 'amount' && (

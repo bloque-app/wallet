@@ -63,7 +63,7 @@ describe('AccountCarousel', () => {
       />,
     );
 
-    fireEvent.click(screen.getByLabelText(/Cuenta PawHaus/));
+    fireEvent.click(screen.getByLabelText(/Bolsillo PawHaus/));
 
     expect(onChange).toHaveBeenCalledWith('ledger-2');
     expect(onChange).toHaveBeenCalledTimes(1);
@@ -87,11 +87,11 @@ describe('AccountCarousel', () => {
     );
 
     expect(screen.getByText('Seleccionada')).toBeInTheDocument();
-    expect(screen.getByLabelText(/Cuenta PawHaus/)).toHaveAttribute(
+    expect(screen.getByLabelText(/Bolsillo PawHaus/)).toHaveAttribute(
       'aria-pressed',
       'true',
     );
-    expect(screen.getByLabelText(/Cuenta Main/)).toHaveAttribute(
+    expect(screen.getByLabelText(/Bolsillo Main/)).toHaveAttribute(
       'aria-pressed',
       'false',
     );
@@ -117,6 +117,6 @@ describe('AccountCarousel', () => {
       />,
     );
 
-    expect(screen.getByText('1500.50 COP')).toBeInTheDocument();
+    expect(screen.getByText('$ 1.501')).toBeInTheDocument();
   });
 });

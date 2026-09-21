@@ -1,30 +1,17 @@
 'use client';
 
 import { Link, useLocation } from '@tanstack/react-router';
-import {
-  ArrowLeftRight,
-  CreditCard,
-  Home,
-  Landmark,
-  UserCircle,
-} from 'lucide-react';
+import { ArrowLeftRight, CreditCard, Home, UserCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useAccounts } from '~/hooks/accounts/use-accounts';
 import { cn } from '~/lib/utils';
 
 export function BottomNav() {
   const { t } = useTranslation();
   const { pathname } = useLocation();
-  const accountsQuery = useAccounts();
-  const hasMultipleAccounts = (accountsQuery.data?.length ?? 0) > 1;
-
-  const secondItem = hasMultipleAccounts
-    ? { href: '/accounts', label: t('nav.accounts'), icon: Landmark }
-    : { href: '/movements', label: t('nav.movements'), icon: ArrowLeftRight };
 
   const navItems = [
     { href: '/', label: t('nav.home'), icon: Home },
-    secondItem,
+    { href: '/movements', label: t('nav.movements'), icon: ArrowLeftRight },
     { href: '/card', label: t('nav.card'), icon: CreditCard },
     { href: '/profile', label: t('nav.profile'), icon: UserCircle },
   ];

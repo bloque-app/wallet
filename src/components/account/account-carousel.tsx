@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Label } from '~/components/ui/label';
 import type { Account } from '~/domain/accounts/types';
+import { type Asset, formatAmount } from '~/lib/formatters';
 import { cn } from '~/lib/utils';
 import { getProductKindIcon } from './product-presentation';
 
@@ -13,11 +14,12 @@ function formatAccountBalance(
   account: Account,
   asset: string,
   precision: number,
+  unit: Asset,
 ): string {
   const entry = account.balances.find((balance) => balance.asset === asset);
   const parsed = entry ? Number.parseInt(entry.current, 10) : Number.NaN;
   const amount = Number.isNaN(parsed) ? 0 : parsed / 10 ** precision;
-  return amount.toFixed(2);
+  return formatAmount(unit, amount);
 }
 
 function AccountCard({
@@ -31,7 +33,7 @@ function AccountCard({
   account: Account;
   asset: string;
   precision: number;
-  unit: string;
+  unit: Asset;
   isActive: boolean;
   onClick: () => void;
 }) {
@@ -40,7 +42,7 @@ function AccountCard({
     (product) => product.urn === account.primaryUrn,
   );
   const Icon = getProductKindIcon(primary?.kind ?? 'other');
-  const balanceLabel = `${formatAccountBalance(account, asset, precision)} ${unit}`;
+  const balanceLabel = formatAccountBalance(account, asset, precision, unit);
 
   return (
     <button
@@ -102,7 +104,7 @@ export function AccountCarousel({
   accounts: Account[];
   asset: string;
   precision: number;
-  unit: string;
+  unit: Asset;
   value: string | null;
   onChange: (ledgerId: string) => void;
   label?: string;

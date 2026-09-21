@@ -1,8 +1,11 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { Building2, CreditCard, KeyRound, Wallet } from 'lucide-react';
+import { Building2, KeyRound } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { AccountCarousel } from '~/components/account/account-carousel';
+import { BackButton } from '~/components/back-button';
+import { FeeInfo } from '~/components/fee-info';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
@@ -18,7 +21,7 @@ import type { ExecutionOutcome } from '~/domain/payments/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useCreatePseOrder, usePseBanks } from '~/hooks/payments/use-pse-topup';
 import { useRates } from '~/hooks/payments/use-rates';
-import { formatAmount, formatCOP } from '~/lib/formatters';
+import { formatAmount, formatCOP, formatUSD } from '~/lib/formatters';
 import { cn } from '~/lib/utils';
 import { TopUpErrorStep } from './-components/error-step';
 import { ExecutionOutcomeStep } from './-components/execution-outcome-step';
@@ -30,7 +33,6 @@ type TopUpStep =
   | 'confirm'
   | 'pending'
   | 'error';
-type ReceiveAsset = 'COP' | 'USD';
 
 type PseForm = {
   bankCode: string;
@@ -46,15 +48,8 @@ const MIN_TOPUP_AMOUNT = 5_000;
 const FROM_ASSET = 'COP/2';
 const FROM_MEDIUM = 'pse';
 const TO_MEDIUM = 'kusama';
-
-const RECEIVE_ASSETS: Array<{
-  value: ReceiveAsset;
-  sdkAsset: 'COPM/2' | 'DUSD/6';
-  precision: number;
-}> = [
-  { value: 'COP', sdkAsset: 'COPM/2', precision: 2 },
-  { value: 'USD', sdkAsset: 'DUSD/6', precision: 6 },
-];
+const RECEIVE_SDK_ASSET = 'COPM/2';
+const RECEIVE_PRECISION = 2;
 
 function majorToMinor(amountMajor: number, precision: number) {
   return (BigInt(amountMajor) * 10n ** BigInt(precision)).toString();
@@ -80,15 +75,17 @@ function toColombianE164(phoneNumber: string): string {
 }
 
 export const Route = createFileRoute('/_authed/topup/')({
+  validateSearch: (search: Record<string, unknown>): { from?: 'convert' } =>
+    search.from === 'convert' ? { from: 'convert' } : {},
   component: RouteComponent,
 });
 
 function RouteComponent() {
   const { t } = useTranslation();
+  const { from } = Route.useSearch();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [step, setStep] = useState<TopUpStep>('method');
-  const [receiveAsset, setReceiveAsset] = useState<ReceiveAsset>('COP');
   const [amount, setAmount] = useState('');
   const [form, setForm] = useState<PseForm>({
     bankCode: '',
@@ -106,9 +103,6 @@ function RouteComponent() {
   const [autoRetry, setAutoRetry] = useState(false);
 
   const parsedAmount = Number.parseInt(amount.replace(/\D/g, ''), 10) || 0;
-  const selectedReceiveAsset = RECEIVE_ASSETS.find(
-    (asset) => asset.value === receiveAsset,
-  )!;
   const amountSrc = useMemo(() => {
     if (parsedAmount <= 0) return '';
     return majorToMinor(parsedAmount, 2);
@@ -116,7 +110,28 @@ function RouteComponent() {
 
   const { accounts: destinationAccounts, isLoading: isLoadingAccounts } =
     useAccountPicker();
-  const destinationAccountUrn = destinationAccounts[0]?.primaryUrn;
+  const [destinationLedgerId, setDestinationLedgerId] = useState<string | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (destinationAccounts.length === 1 && destinationAccounts[0]) {
+      setDestinationLedgerId(destinationAccounts[0].ledgerId);
+      return;
+    }
+    setDestinationLedgerId((current) =>
+      current &&
+      destinationAccounts.some((account) => account.ledgerId === current)
+        ? current
+        : null,
+    );
+  }, [destinationAccounts]);
+
+  const destinationAccount =
+    destinationAccounts.find(
+      (account) => account.ledgerId === destinationLedgerId,
+    ) ?? null;
+  const destinationAccountUrn = destinationAccount?.primaryUrn;
 
   const banksQuery = usePseBanks();
 
@@ -124,7 +139,7 @@ function RouteComponent() {
     parsedAmount >= MIN_TOPUP_AMOUNT && amountSrc && destinationAccountUrn
       ? {
           fromAsset: FROM_ASSET,
-          toAsset: selectedReceiveAsset.sdkAsset,
+          toAsset: RECEIVE_SDK_ASSET,
           fromMediums: [FROM_MEDIUM],
           toMediums: [TO_MEDIUM],
           amountSrc,
@@ -142,8 +157,8 @@ function RouteComponent() {
       return parsedAmount * selectedRate.ratio;
     }
     const dstAmountMinor = selectedRate.rate?.[1] ?? 0;
-    return minorToMajor(dstAmountMinor, selectedReceiveAsset.precision);
-  }, [selectedRate, amountSrc, parsedAmount, selectedReceiveAsset.precision]);
+    return minorToMajor(dstAmountMinor, RECEIVE_PRECISION);
+  }, [selectedRate, amountSrc, parsedAmount]);
 
   const rateError = useMemo(() => {
     if (parsedAmount < MIN_TOPUP_AMOUNT) return null;
@@ -271,8 +286,18 @@ function RouteComponent() {
 
   return (
     <div className="flex flex-col gap-5">
+      {step === 'method' && (
+        <div className="flex items-center gap-2">
+          <BackButton
+            onClick={() =>
+              void navigate({ to: from === 'convert' ? '/convert' : '/' })
+            }
+          />
+        </div>
+      )}
+
       <h1 className="text-2xl font-bold tracking-[-0.025em] text-foreground">
-        {t('topup.title')}
+        {step === 'method' ? t('topup.title') : t('topup.pseTitle')}
       </h1>
 
       {step !== 'method' && (
@@ -314,15 +339,25 @@ function RouteComponent() {
         </div>
       )}
 
-      {step === 'method' && (
-        <section className="flex flex-col gap-3">
-          {[
+      {step === 'method' &&
+        (() => {
+          const methods: Array<{
+            title: string;
+            subtitle: string;
+            icon: typeof Building2;
+            enabled: boolean;
+            onClick: () => void;
+            group?: 'colombia' | 'us';
+            fee?: string;
+          }> = [
             {
               title: t('topup.methods.colombianBanks.title'),
               subtitle: t('topup.methods.colombianBanks.subtitle'),
               icon: Building2,
               enabled: true,
               onClick: () => setStep('amount'),
+              group: 'colombia',
+              fee: `${formatCOP(2500)} + 1%`,
             },
             {
               title: t('topup.methods.brebKeys.title'),
@@ -334,6 +369,8 @@ function RouteComponent() {
                   to: '/breb-keys/deposit',
                   search: { from: '/topup' },
                 }),
+              group: 'colombia',
+              fee: `${formatCOP(500)} + 0.2%`,
             },
             {
               title: t('topup.methods.usBanks.title'),
@@ -341,73 +378,81 @@ function RouteComponent() {
               icon: Building2,
               enabled: true,
               onClick: () => navigate({ to: '/topup/us-banks' }),
+              group: 'us',
+              fee: `${formatUSD(0.25)} + 1%`,
             },
-            {
-              title: t('topup.methods.blockchain.title'),
-              subtitle: t('topup.methods.blockchain.subtitle'),
-              icon: Wallet,
-              enabled: false,
-              onClick: () =>
-                toast.info(t('topup.methods.blockchain.comingSoon')),
-            },
-            {
-              title: t('topup.methods.card.title'),
-              subtitle: t('topup.methods.card.subtitle'),
-              icon: CreditCard,
-              enabled: false,
-              onClick: () => toast.info(t('topup.methods.card.comingSoon')),
-            },
-          ].map((option) => {
+          ];
+
+          const renderMethod = (option: (typeof methods)[number]) => {
             const Icon = option.icon;
             return (
-              <button
+              <div
                 key={option.title}
-                type="button"
-                onClick={option.onClick}
                 className={cn(
-                  'flex w-full items-start gap-3 rounded-2xl border border-border/75 bg-card/80 p-4 text-left transition-all',
+                  'flex w-full items-start gap-3 rounded-2xl border border-border/75 bg-card/80 p-4 transition-all',
                   option.enabled ? 'hover:bg-muted/70' : 'opacity-60',
                 )}
               >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
-                  <Icon className="h-4 w-4 text-primary" />
-                </div>
-                <div className="flex flex-col">
-                  <p className="text-sm font-medium text-foreground">
-                    {option.title}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {option.subtitle}
-                  </p>
-                </div>
-              </button>
+                <button
+                  type="button"
+                  onClick={option.onClick}
+                  className="flex flex-1 items-start gap-3 text-left"
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
+                    <Icon className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="flex flex-1 flex-col">
+                    <p className="text-sm font-medium text-foreground">
+                      {option.title}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {option.subtitle}
+                    </p>
+                  </div>
+                </button>
+                {option.fee && (
+                  <FeeInfo fee={option.fee} description={t('topup.feeInfo')} />
+                )}
+              </div>
             );
-          })}
-        </section>
-      )}
+          };
+
+          const colombiaMethods = methods.filter((m) => m.group === 'colombia');
+          const usMethods = methods.filter((m) => m.group === 'us');
+
+          return (
+            <>
+              <section className="flex flex-col gap-3">
+                <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t('topup.groups.colombia')}
+                </h2>
+                {colombiaMethods.map(renderMethod)}
+              </section>
+
+              <section className="flex flex-col gap-3">
+                <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t('topup.groups.us')}
+                </h2>
+                {usMethods.map(renderMethod)}
+              </section>
+            </>
+          );
+        })()}
 
       {step === 'amount' && (
         <section className="rounded-3xl border border-border/75 bg-card/80 p-5">
           <div className="flex flex-col gap-5">
-            <div className="flex flex-col gap-2">
-              <Label>{t('topup.iWantToReceive')}</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {RECEIVE_ASSETS.map((asset) => (
-                  <button
-                    key={asset.value}
-                    type="button"
-                    onClick={() => setReceiveAsset(asset.value)}
-                    className={`rounded-2xl border px-3 py-3 text-sm transition-all ${
-                      receiveAsset === asset.value
-                        ? 'border-foreground bg-foreground text-background'
-                        : 'border-border bg-background/70 text-foreground hover:bg-muted/70'
-                    }`}
-                  >
-                    {asset.value}
-                  </button>
-                ))}
-              </div>
-            </div>
+            {destinationAccounts.length > 0 && (
+              <AccountCarousel
+                accounts={destinationAccounts}
+                asset={RECEIVE_SDK_ASSET}
+                precision={RECEIVE_PRECISION}
+                unit="COP"
+                value={destinationLedgerId}
+                onChange={setDestinationLedgerId}
+                label={t('topup.destinationAccountLabel')}
+              />
+            )}
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="topup-amount">{t('topup.pseAmountLabel')}</Label>
@@ -445,7 +490,7 @@ function RouteComponent() {
                     </span>
                     <span className="font-medium text-foreground">
                       {selectedRate
-                        ? formatAmount(receiveAsset, receiveAmount)
+                        ? formatAmount('COP', receiveAmount)
                         : t('convert.querying')}
                     </span>
                   </div>
@@ -484,13 +529,7 @@ function RouteComponent() {
       {step === 'details' && (
         <section className="rounded-3xl border border-border/75 bg-card/80 p-5">
           <div className="flex flex-col gap-5">
-            <button
-              type="button"
-              onClick={() => setStep('amount')}
-              className="text-left text-sm text-muted-foreground hover:text-foreground"
-            >
-              {t('common.back')}
-            </button>
+            <BackButton onClick={() => setStep('amount')} />
 
             <div className="flex flex-col gap-2">
               <Label>{t('topup.pseBank')}</Label>
@@ -645,13 +684,7 @@ function RouteComponent() {
       {step === 'confirm' && (
         <section className="rounded-3xl border border-border/75 bg-card/80 p-5">
           <div className="flex flex-col gap-5">
-            <button
-              type="button"
-              onClick={() => setStep('details')}
-              className="text-left text-sm text-muted-foreground hover:text-foreground"
-            >
-              {t('common.back')}
-            </button>
+            <BackButton onClick={() => setStep('details')} />
 
             <div className="rounded-2xl border border-border/85 bg-background/70 p-4">
               <div className="flex flex-col gap-3">
@@ -668,7 +701,7 @@ function RouteComponent() {
                     {t('topup.youReceive')}
                   </span>
                   <span className="font-medium text-foreground">
-                    {formatAmount(receiveAsset, receiveAmount)}
+                    {formatAmount('COP', receiveAmount)}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">

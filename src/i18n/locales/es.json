@@ -30,81 +30,76 @@
     "notifications": "Notificaciones"
   },
   "accountCarousel": {
-    "accountAria": "Cuenta {{label}}, disponible {{balance}}",
+    "accountAria": "Bolsillo {{label}}, disponible {{balance}}",
     "selected": "Seleccionada",
-    "defaultLabel": "Cuenta",
-    "availableAccountsAria": "Cuentas disponibles"
+    "defaultLabel": "Bolsillo",
+    "availableAccountsAria": "Bolsillos disponibles"
   },
   "accountsCarousel": {
-    "accountAria": "Cuenta {{label}}",
+    "accountAria": "Bolsillo {{label}}",
     "noBalance": "Sin saldo",
-    "myAccountsAria": "Mis cuentas",
-    "createNewAria": "Crear nueva cuenta",
-    "newAccount": "Nueva cuenta"
+    "myAccountsAria": "Mis bolsillos",
+    "createNewAria": "Crear nuevo bolsillo",
+    "newAccount": "Nuevo bolsillo"
   },
   "createAccountDrawer": {
-    "createdToast": "Cuenta creada correctamente",
-    "createErrorToast": "No se pudo crear la cuenta. Intenta de nuevo.",
+    "createdToast": "Bolsillo creado correctamente",
+    "createErrorToast": "No se pudo crear el bolsillo. Intenta de nuevo.",
     "namePlaceholder": "Ahorros, Negocio...",
-    "createAccount": "Crear cuenta"
+    "createAccount": "Crear bolsillo"
   },
   "accounts": {
-    "title": "Cuentas",
-    "loading": "Cargando cuentas...",
-    "empty": "No encontramos cuentas para este usuario.",
-    "createNew": "Crear Nueva Cuenta",
+    "title": "Bolsillos",
+    "loading": "Cargando bolsillos...",
+    "empty": "No encontramos bolsillos para este usuario.",
+    "createNew": "Crear Nuevo Bolsillo",
     "noAssociatedProducts": "Sin productos asociados",
     "productKind": {
       "card": "Tarjeta",
       "breb": "BRE-B",
       "polygon": "Polygon",
-      "pocket": "Cuenta",
+      "pocket": "Bolsillo",
       "other": "Otro"
     },
     "detail": {
-      "title": "Detalle de cuenta",
-      "loadingAccount": "Cargando cuenta...",
-      "notFound": "No encontramos esta cuenta.",
+      "title": "Detalle del bolsillo",
+      "loadingAccount": "Cargando bolsillo...",
+      "notFound": "No encontramos este bolsillo.",
       "noStatus": "sin estado",
       "balances": "Balances",
-      "noBalances": "Esta cuenta no tiene balances disponibles.",
+      "noBalances": "Este bolsillo no tiene balances disponibles.",
       "available": "Disponible",
       "associatedProducts": "Productos asociados",
       "addProduct": "Agregar producto",
-      "noAssociatedProducts": "Esta cuenta aún no tiene otros productos asociados.",
+      "noAssociatedProducts": "Este bolsillo aún no tiene otros productos asociados.",
       "movements": "Movimientos",
-      "noMovements": "No hay movimientos para esta cuenta.",
+      "noMovements": "No hay movimientos para este bolsillo.",
       "brebKeyLabel": "Llave BRE-B",
       "newCard": "Nueva tarjeta",
-      "polygonAccount": "Cuenta Polygon",
-      "newVirtualAccount": "Nueva cuenta",
       "cardNameLabel": "Nombre de la tarjeta",
       "optionalNameLabel": "Nombre (opcional)",
       "cardNamePlaceholder": "Personal",
-      "polygonNamePlaceholder": "Principal",
-      "virtualAccountNamePlaceholder": "Personal",
       "sharesBalanceOf": "Compartirá el saldo de {{label}}.",
       "defaultCardName": "Tarjeta",
       "cardCreatedToast": "Tarjeta creada exitosamente",
-      "polygonCreatedToast": "Cuenta Polygon creada",
-      "virtualAccountCreatedToast": "Cuenta creada exitosamente",
       "createProductErrorToast": "No se pudo crear el producto. Intenta de nuevo.",
-      "transferToOwnAccount": "Transferir a otra cuenta",
+      "transferToOwnAccount": "Transferir a otro bolsillo",
       "transferDrawerTitle": "Transferir fondos",
-      "transferDestinationLabel": "Cuenta destino",
+      "transferDestinationLabel": "Bolsillo destino",
       "transferAmountLabel": "Monto a transferir",
       "transferAvailable": "Disponible: {{amount}}",
       "transferInsufficientBalance": "Saldo insuficiente para esta transferencia.",
       "transferSubmit": "Transferir",
       "transferring": "Transfiriendo...",
       "transferSuccessToast": "Transferencia realizada exitosamente",
-      "transferErrorToast": "No se pudo completar la transferencia. Intenta de nuevo."
+      "transferErrorToast": "No se pudo completar la transferencia. Intenta de nuevo.",
+      "addProductCardLabel": "Tarjeta (Global)",
+      "addProductBrebLabel": "Llave BRE-B (COP)",
+      "addProductPlaidLabel": "Plaid (USD)"
     }
   },
   "brebKeys": {
     "subtitle": "Envía y recibe al instante desde cualquier banco",
-    "cameraOpenError": "No se pudo abrir la cámara.",
-    "qrReadError": "No se pudo leer el QR BRE-B.",
     "menu": {
       "sendWithKeys": {
         "title": "Enviar con llaves",
@@ -117,25 +112,12 @@
       "yourKeys": {
         "title": "Tus llaves",
         "description": "Gestiona tus llaves registradas"
-      },
-      "qrCode": {
-        "title": "Código QR",
-        "description": "Escanea un QR BRE-B para transferir"
       }
     },
     "discoverZone": {
       "title": "Descubre tu zona BRE-B",
       "description": "Registra y gestiona tus llaves. Envía dinero gratis de forma instantánea. Todo desde un solo lugar.",
       "cta": "Ir a tus llaves"
-    },
-    "scanner": {
-      "title": "Escanear codigo QR",
-      "description": "Alinea el QR BRE-B dentro del recuadro.",
-      "permissionHint": "Si la cámara tarda en abrir, revisa los permisos del navegador."
-    },
-    "decoding": {
-      "title": "Procesando QR BRE-B",
-      "description": "Validando la información del destinatario."
     },
     "deposit": {
       "keyCopiedToast": "Llave copiada",
@@ -193,10 +175,10 @@
       "deleteKey": "Eliminar llave",
       "keyDeletedToast": "Llave eliminada.",
       "deleteErrorToast": "No se pudo eliminar la llave.",
-      "chooseAccountTitle": "Elige la cuenta para tu nueva llave",
+      "chooseAccountTitle": "Elige el bolsillo para tu nueva llave",
       "chooseAccountDescriptionPrefix": "La llave",
-      "chooseAccountDescriptionSuffix": "compartirá el saldo de la cuenta que elijas.",
-      "linkedAccountLabel": "Cuenta a la que se vincula",
+      "chooseAccountDescriptionSuffix": "compartirá el saldo del bolsillo que elijas.",
+      "linkedAccountLabel": "Bolsillo al que se vincula",
       "confirm": "Confirmar"
     },
     "payTransfer": {
@@ -220,7 +202,7 @@
       "key": "Llave",
       "from": "Desde",
       "noFundedAccounts": "No tienes saldo disponible en ninguna llave BRE-B activa.",
-      "selectSourceAccount": "Selecciona la cuenta BRE-B desde la que quieres enviar.",
+      "selectSourceAccount": "Selecciona el bolsillo BRE-B desde el que quieres enviar.",
       "invalidKey": "Ingresa una llave BRE-B valida, por ejemplo un alias como @MBP313.",
       "onlyAlphaKeysSupported": "Por ahora solo puedes enviar a un alias BRE-B (empieza con @), como @MBP313. Celular, cédula, email y BCODE no están habilitados todavía para envíos.",
       "minAmount": "El monto mínimo es $10 COP.",
@@ -229,15 +211,6 @@
       "transferSentToast": "Transferencia BRE-B enviada correctamente.",
       "transferErrorToast": "No se pudo enviar la transferencia BRE-B.",
       "keyValidationErrorToast": "No se pudo validar la llave BRE-B."
-    },
-    "payTransferQr": {
-      "noResolution": "No encontramos la resolución del QR BRE-B.",
-      "noValidKeyInQr": "No encontramos una llave BRE-B válida en el QR.",
-      "completeAmount": "Completa el monto para el QR BRE-B",
-      "paymentStartedFromQr": "Pago iniciado desde QR BRE-B",
-      "qrReference": "Referencia QR",
-      "aboutToSend": "Vas a enviar dinero a {{recipient}}.",
-      "checkingRateToOpenConfirmation": "Consultando la tasa para abrir la confirmación."
     }
   },
   "card": {
@@ -310,7 +283,7 @@
   },
   "home": {
     "availableBalance": "Saldo disponible",
-    "accounts": "Cuentas",
+    "accounts": "Bolsillos",
     "viewAll": "Ver todas",
     "recentMovements": "Movimientos recientes",
     "viewMore": "Ver más",
@@ -332,36 +305,36 @@
       "title": "Acciones rápidas",
       "topup": "Recargar",
       "send": "Enviar",
-      "needsAccount": "Crea una cuenta primero para poder usar esta opción."
+      "needsAccount": "Crea un bolsillo primero para poder usar esta opción."
     }
   },
   "send": {
     "title": "Enviar",
+    "noFee": "Sin costo",
+    "groups": {
+      "colombia": "Colombia",
+      "us": "Estados Unidos"
+    },
     "options": {
       "brebKeys": {
         "title": "Llaves BRE-B",
         "description": "Envia a cualquier banco colombiano al instante."
       },
       "colombianBanks": {
-        "title": "Bancos colombianos",
-        "description": "Transfiere a cuentas bancarias en Colombia."
+        "title": "Bancos",
+        "description": "Transfiere a cuentas bancarias."
       },
       "bloqueFriends": {
         "title": "Amigos en bloque",
         "description": "Envia a contactos dentro de Bloque."
       },
       "usBanks": {
-        "title": "Bancos/billeteras en EE.UU.",
-        "description": "Envia USD a bancos y wallets en Estados Unidos."
-      },
-      "blockchain": {
-        "title": "Direcciones blockchain",
-        "description": "Envia fondos a wallets externas.",
-        "comingSoon": "Envío a blockchain disponible próximamente."
+        "title": "Bancos/billeteras",
+        "description": "Envia USD vía RTP a bancos y wallets."
       }
     },
     "bloqueFriends": {
-      "noSourceAccount": "No encontramos una cuenta origen disponible.",
+      "noSourceAccount": "No encontramos un bolsillo origen disponible.",
       "invalidAlias": "Ingresa un alias valido.",
       "invalidAmount": "Ingresa un monto valido.",
       "aliasNotFound": "No encontramos ese alias.",
@@ -390,10 +363,11 @@
     },
     "colombianBanks": {
       "title": "Enviar a bancos colombianos",
-      "stepAccount": "Cuenta",
+      "stepAccount": "Bolsillo",
       "noRateForOrder": "No hay tasa seleccionada para crear la orden.",
       "invalidAmountForOrder": "Monto inválido para crear la orden.",
-      "noSourceAccount": "No hay cuenta origen disponible.",
+      "noSourceAccount": "No hay bolsillo origen disponible.",
+      "sourceAccountLabel": "Bolsillo origen",
       "selectDestinationBank": "Selecciona un banco destino.",
       "unsupportedBank": "El banco seleccionado no es válido para esta transferencia.",
       "minAmountToast": "El monto mínimo es $10,000 COP.",
@@ -409,7 +383,8 @@
       "stepBank": "Banco",
       "noRateForOrder": "No hay tasa seleccionada para crear la orden.",
       "invalidAmountForOrder": "Monto inválido para crear la orden.",
-      "noSourceAccount": "No hay cuenta origen disponible.",
+      "noSourceAccount": "No hay bolsillo origen disponible.",
+      "sourceAccountLabel": "Bolsillo origen",
       "kycRejectedError": "Tu verificación de identidad no fue aprobada, por eso no podemos completar esta operación. Vuelve a intentar la verificación desde tu perfil.",
       "minAmountToast": "El monto mínimo es $10 USD.",
       "noRateToContinue": "No hay tasa disponible para continuar.",
@@ -432,7 +407,8 @@
         "destinationBank": "Banco destino",
         "owner": "Titular"
       }
-    }
+    },
+    "feeInfo": "Este cobro cubre el procesamiento de tu envío por este medio."
   },
   "topup": {
     "title": "Recargar saldo",
@@ -440,16 +416,20 @@
     "stepDetails": "Datos",
     "stepConfirm": "Confirmar",
     "bankFallback": "Banco",
-    "noDestinationAccount": "No encontramos una cuenta destino disponible.",
-    "noDestinationAccountShort": "No hay cuenta destino disponible.",
+    "noDestinationAccount": "No encontramos un bolsillo destino disponible.",
+    "noDestinationAccountShort": "No hay bolsillo destino disponible.",
     "noRateForOrder": "No hay tasa disponible para crear la orden.",
     "pseStartedToast": "Recarga PSE iniciada correctamente.",
     "rateExpiredToast": "La tasa expiró. Recalculando...",
     "startErrorToast": "No se pudo iniciar la recarga.",
     "noRateRetryToast": "No hay tasa disponible. Intenta de nuevo.",
+    "groups": {
+      "colombia": "Colombia",
+      "us": "Estados Unidos"
+    },
     "methods": {
       "colombianBanks": {
-        "title": "Bancos colombianos",
+        "title": "Bancos",
         "subtitle": "PSE"
       },
       "brebKeys": {
@@ -457,21 +437,11 @@
         "subtitle": "Registra y gestiona tus llaves"
       },
       "usBanks": {
-        "title": "Desde bancos en EE.UU.",
-        "subtitle": "ACH / Wire"
-      },
-      "blockchain": {
-        "title": "Desde direcciones blockchain",
-        "subtitle": "Wallets externas",
-        "comingSoon": "Recarga desde blockchain disponible próximamente."
-      },
-      "card": {
-        "title": "Con tarjeta",
-        "subtitle": "Visa, Mastercard, etc",
-        "comingSoon": "Recarga con tarjeta disponible próximamente."
+        "title": "Desde bancos",
+        "subtitle": "ACH"
       }
     },
-    "iWantToReceive": "Quiero recibir",
+    "destinationAccountLabel": "Bolsillo destino",
     "pseAmountLabel": "Monto a pagar por PSE (COP)",
     "minAmount": "Monto minimo: $5,000 COP",
     "youPay": "Pagas",
@@ -572,7 +542,7 @@
       "noRateForOrder": "No hay tasa seleccionada para crear la orden.",
       "invalidAmountForOrder": "Monto inválido para crear la orden.",
       "noSourceAccount": "No encontramos una cuenta bancaria vinculada desde donde recargar.",
-      "noDestinationAccount": "No encontramos una cuenta destino disponible.",
+      "noDestinationAccount": "No encontramos un bolsillo destino disponible.",
       "kycRejectedError": "Tu verificación de identidad no fue aprobada, por eso no podemos completar esta operación. Vuelve a intentar la verificación desde tu perfil.",
       "minAmountToast": "El monto mínimo es $10 USD.",
       "noRateToContinue": "No hay tasa disponible para continuar.",
@@ -595,9 +565,14 @@
         "needsUpdate": "Tu banco vinculado necesita reconectarse.",
         "startErrorToast": "No se pudo iniciar la vinculación bancaria. Intenta de nuevo.",
         "missingProfileToast": "Necesitamos completar tu perfil antes de vincular tu banco.",
-        "timeoutToast": "No pudimos confirmar la vinculación bancaria a tiempo. Intenta de nuevo."
-      }
-    }
+        "timeoutToast": "No pudimos confirmar la vinculación bancaria a tiempo. Intenta de nuevo.",
+        "chooseAccountLabel": "Elige el bolsillo al que quieres vincular este banco",
+        "noPocketsAvailable": "Ya tienes un banco de EE.UU. vinculado en todos tus bolsillos."
+      },
+      "chooseSourceLabel": "Elige con cuál banco quieres recargar"
+    },
+    "pseTitle": "Recarga con PSE desde Colombia",
+    "feeInfo": "Este cobro cubre el procesamiento de tu recarga por este medio."
   },
   "convert": {
     "title": "Convertir",
@@ -681,7 +656,7 @@
   "nav": {
     "ariaLabel": "Navegación principal",
     "home": "Inicio",
-    "accounts": "Cuentas",
+    "accounts": "Bolsillos",
     "movements": "Movimientos",
     "card": "Tarjeta",
     "profile": "Perfil"
@@ -695,20 +670,16 @@
       "notVerified": "Sin verificar"
     },
     "sections": {
-      "account": "Cuenta",
-      "polygonAccounts": "Cuentas Polygon",
+      "account": "Bolsillo",
       "settings": "Configuración",
       "legal": "Legal",
       "support": "Soporte"
     },
     "rows": {
       "editProfile": "Editar perfil",
-      "allAccounts": "Todas las cuentas",
+      "allAccounts": "Todos los bolsillos",
       "view": "Ver",
       "kycVerification": "Verificación KYC",
-      "devicesAndSessions": "Dispositivos y sesiones",
-      "oneActive": "1 activo",
-      "addAccount": "Agregar cuenta",
       "language": "Idioma",
       "pushNotifications": "Notificaciones push",
       "pushNotificationsSublabel": "Recibe alertas de movimientos",
@@ -717,8 +688,6 @@
       "termsAndConditions": "Términos y condiciones",
       "privacyPolicy": "Política de privacidad",
       "feesAndCommissions": "Tarifas y comisiones",
-      "supportChat": "Chat de soporte",
-      "helpCenter": "Centro de ayuda",
       "contact": "Contacto"
     },
     "settings": {

@@ -292,11 +292,11 @@ function RouteComponent() {
 
       <p className="text-center text-[10px] text-muted-foreground leading-relaxed">
         {t('convert.disclaimer')}{' '}
-        <Link to="/send" className="underline">
+        <Link to="/send" search={{ from: 'convert' }} className="underline">
           {t('home.quickActions.send')}
         </Link>{' '}
         {t('convert.and')}{' '}
-        <Link to="/topup" className="underline">
+        <Link to="/topup" search={{ from: 'convert' }} className="underline">
           {t('home.quickActions.topup')}
         </Link>{' '}
         {t('convert.stillAvailable')}

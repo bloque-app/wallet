@@ -1,10 +1,11 @@
 import type { SupportedAsset } from '@bloque/sdk-accounts';
 import { useQueryClient } from '@tanstack/react-query';
-import { createFileRoute, Link } from '@tanstack/react-router';
-import { ArrowLeft, EyeOff, Lock, Pencil, Unlock } from 'lucide-react';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
+import { EyeOff, Lock, Pencil, Unlock } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { BackButton } from '~/components/back-button';
 import { MovementDetailDrawer } from '~/components/movement-detail-drawer';
 import { MovementRow } from '~/components/movement-row';
 import {
@@ -50,6 +51,7 @@ const ASSET_LOGO_MAP: Record<string, string> = {
 function RouteComponent() {
   const { t } = useTranslation();
   const { urn } = Route.useParams();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const {
     isLoadingCard,
@@ -190,13 +192,7 @@ function RouteComponent() {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center gap-2">
-        <Link
-          to="/card"
-          className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          {t('common.back')}
-        </Link>
+        <BackButton onClick={() => void navigate({ to: '/card' })} />
         <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
           {t('card.detail.title')}
         </h1>
