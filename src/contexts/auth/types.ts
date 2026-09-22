@@ -12,9 +12,12 @@ export type LoginData = (LoginEmail | LoginPhone) & {
 
 export type LoginMethod = 'email' | 'phone';
 
+export const WALLET_ORIGIN = '30m' as const;
+export type WalletOrigin = typeof WALLET_ORIGIN;
+
 export interface PendingOnboarding {
   method: LoginMethod;
-  origin: 'bloque-email' | 'bloque-whatsapp';
+  origin: WalletOrigin;
   alias: string;
   code: string;
 }
@@ -26,7 +29,7 @@ export interface OnboardingProfile {
 
 export interface PendingProfileOnboarding {
   method: LoginMethod;
-  origin: 'bloque-email' | 'bloque-whatsapp';
+  origin: WalletOrigin;
   alias: string;
   profile: OnboardingProfile;
 }
