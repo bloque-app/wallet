@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query';
 import { createFileRoute, useRouter } from '@tanstack/react-router';
 import {
   Bell,
@@ -23,6 +24,11 @@ import { Switch } from '~/components/ui/switch';
 import { useTheme } from '~/components/ui/theme-provider';
 import { useAuth } from '~/contexts/auth/auth-context';
 import { type SupportedLanguage, setLanguage } from '~/i18n/config';
+import { bloque } from '~/lib/bloque';
+import {
+  type ShareableAlias,
+  selectShareableAlias,
+} from '~/lib/identity-alias';
 
 export const Route = createFileRoute('/_authed/profile/')({
   component: RouteComponent,
@@ -44,12 +50,20 @@ function RouteComponent() {
   const { theme, setTheme } = useTheme();
   const { navigate } = useRouter();
   const profileName = user.name;
-  const profileEmail = user.email;
+  const profileContact = user.email || user.phone;
   const [aliasCopied, setAliasCopied] = useState(false);
 
+  const aliasesQuery = useQuery({
+    queryKey: ['identity', 'my-aliases'],
+    queryFn: () =>
+      bloque.identity.myAliases() as unknown as Promise<ShareableAlias[]>,
+  });
+  const profileAlias = selectShareableAlias(aliasesQuery.data ?? []);
+
   const copyMyAlias = async () => {
+    if (!profileAlias) return;
     try {
-      await navigator.clipboard.writeText(profileEmail);
+      await navigator.clipboard.writeText(profileAlias);
       setAliasCopied(true);
       toast.success(t('profile.myAlias.copiedToast'));
       setTimeout(() => setAliasCopied(false), 2000);
@@ -90,7 +104,7 @@ function RouteComponent() {
         </div>
         <div className="flex flex-col gap-0.5">
           <p className="text-sm font-semibold text-foreground">{profileName}</p>
-          <p className="text-xs text-muted-foreground">{profileEmail}</p>
+          <p className="text-xs text-muted-foreground">{profileContact}</p>
         </div>
       </div>
 
@@ -103,7 +117,7 @@ function RouteComponent() {
             {t('profile.myAlias.description')}
           </p>
           <p className="mt-1 text-sm font-medium text-foreground">
-            {profileEmail}
+            {profileAlias || t('profile.myAlias.unavailable')}
           </p>
         </div>
         <Button
@@ -111,6 +125,8 @@ function RouteComponent() {
           variant="outline"
           size="icon"
           onClick={copyMyAlias}
+          disabled={!profileAlias}
+          aria-label={t('profile.myAlias.copyAria')}
           className="h-9 w-9 shrink-0 rounded-xl bg-transparent"
         >
           {aliasCopied ? (
