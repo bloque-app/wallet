@@ -19,7 +19,6 @@ import { makeLatestWins } from './latest-wins';
 import { deriveTosStatus } from './tos-status';
 import {
   type AliasCheckResult,
-  isWalletOriginAlias,
   type LoginData,
   type LoginMethod,
   type LoginResult,
@@ -144,10 +143,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const identitySdk = sdk as unknown as AliasLookupApi;
 
       try {
-        const existingAlias = await identitySdk.identity.aliases.get(alias);
-        return isWalletOriginAlias(existingAlias)
-          ? { status: 'registered' }
-          : { status: 'not_registered' };
+        await identitySdk.identity.aliases.get(alias);
+        return { status: 'registered' };
       } catch (error) {
         if (isNotFoundError(error)) {
           return { status: 'not_registered' };
@@ -463,7 +460,7 @@ type OnboardingSession = {
 type AliasLookupApi = {
   identity: {
     aliases: {
-      get: (alias: string) => Promise<{ origin?: string }>;
+      get: (alias: string) => Promise<unknown>;
     };
   };
 };

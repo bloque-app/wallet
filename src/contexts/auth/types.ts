@@ -15,10 +15,6 @@ export type LoginMethod = 'email' | 'phone';
 export const WALLET_ORIGIN = '30m' as const;
 export type WalletOrigin = typeof WALLET_ORIGIN;
 
-export function isWalletOriginAlias(alias: { origin?: string }): boolean {
-  return alias.origin === WALLET_ORIGIN;
-}
-
 export interface PendingOnboarding {
   method: LoginMethod;
   origin: WalletOrigin;
