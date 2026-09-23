@@ -46,12 +46,6 @@ function majorToMinor(amountMajor: number, precision: number) {
   return (BigInt(amountMajor) * 10n ** BigInt(precision)).toString();
 }
 
-/** Alias fields awaiting the next SDK release. */
-type AliasWithAccountResolution = Alias & {
-  account_urn?: string;
-  account_resolution_error?: 'NO_ACCOUNT' | 'RESOLUTION_UNAVAILABLE';
-};
-
 /** `metadata` is an `{ [key: string]: unknown }` bag — validate `name` before use. */
 function getAliasDisplayName(aliasResult: Alias) {
   const metadataName = aliasResult.metadata.name;
@@ -70,8 +64,7 @@ function RouteComponent() {
   const [amount, setAmount] = useState('');
   const [message, setMessage] = useState('');
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [recipientPreview, setRecipientPreview] =
-    useState<AliasWithAccountResolution | null>(null);
+  const [recipientPreview, setRecipientPreview] = useState<Alias | null>(null);
   const [lastTransfer, setLastTransfer] = useState<{
     destinationUrn: string;
     amount: number;
@@ -112,10 +105,7 @@ function RouteComponent() {
   ]);
 
   const validateAliasMutation = useMutation({
-    mutationFn: async () =>
-      (await bloque.identity.aliases.get(
-        normalizedAlias,
-      )) as AliasWithAccountResolution,
+    mutationFn: async () => bloque.identity.aliases.get(normalizedAlias),
     onSuccess: (result) => {
       if (!result?.urn) {
         toast.error(t('send.bloqueFriends.aliasNotFound'));
