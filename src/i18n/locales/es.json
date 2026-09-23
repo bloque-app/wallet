@@ -338,6 +338,8 @@
       "invalidAlias": "Ingresa un alias valido.",
       "invalidAmount": "Ingresa un monto valido.",
       "aliasNotFound": "No encontramos ese alias.",
+      "recipientNoAccount": "Este amigo todavia no puede recibir dinero por Bloque Friends.",
+      "recipientResolutionUnavailable": "No pudimos verificar el bolsillo receptor de este amigo. Intenta nuevamente.",
       "aliasValidationError": "No se pudo validar el alias.",
       "noConfirmedRecipient": "No hay destinatario confirmado.",
       "invalidTransferAmount": "Monto invalido para transferir.",
@@ -663,6 +665,14 @@
   },
   "profile": {
     "title": "Perfil",
+    "myAlias": {
+      "title": "Tu alias de Bloque Friends",
+      "description": "Compartelo para que tus amigos te envien dinero",
+      "copiedToast": "Alias copiado",
+      "copyErrorToast": "No se pudo copiar el alias",
+      "copyAria": "Copiar alias de Bloque Friends",
+      "unavailable": "No hay un alias activo disponible"
+    },
     "kyc": {
       "approved": "Verificado",
       "awaitingVerification": "En revisión",

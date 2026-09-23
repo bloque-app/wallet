@@ -1,7 +1,10 @@
+import { useQuery } from '@tanstack/react-query';
 import { createFileRoute, useRouter } from '@tanstack/react-router';
 import {
   Bell,
+  Check,
   ChevronRight,
+  Copy,
   FileText,
   Globe,
   Landmark,
@@ -12,13 +15,20 @@ import {
   Pencil,
   Shield,
 } from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import { Button } from '~/components/ui/button';
 import { Separator } from '~/components/ui/separator';
 import { Switch } from '~/components/ui/switch';
 import { useTheme } from '~/components/ui/theme-provider';
 import { useAuth } from '~/contexts/auth/auth-context';
 import { type SupportedLanguage, setLanguage } from '~/i18n/config';
+import { bloque } from '~/lib/bloque';
+import {
+  type ShareableAlias,
+  selectShareableAlias,
+} from '~/lib/identity-alias';
 
 export const Route = createFileRoute('/_authed/profile/')({
   component: RouteComponent,
@@ -40,7 +50,27 @@ function RouteComponent() {
   const { theme, setTheme } = useTheme();
   const { navigate } = useRouter();
   const profileName = user.name;
-  const profileEmail = user.email;
+  const profileContact = user.email || user.phone;
+  const [aliasCopied, setAliasCopied] = useState(false);
+
+  const aliasesQuery = useQuery({
+    queryKey: ['identity', 'my-aliases'],
+    queryFn: () =>
+      bloque.identity.myAliases() as unknown as Promise<ShareableAlias[]>,
+  });
+  const profileAlias = selectShareableAlias(aliasesQuery.data ?? []);
+
+  const copyMyAlias = async () => {
+    if (!profileAlias) return;
+    try {
+      await navigator.clipboard.writeText(profileAlias);
+      setAliasCopied(true);
+      toast.success(t('profile.myAlias.copiedToast'));
+      setTimeout(() => setAliasCopied(false), 2000);
+    } catch {
+      toast.error(t('profile.myAlias.copyErrorToast'));
+    }
+  };
   const selectedTheme = theme === 'light' ? 'light' : 'dark';
   const currentLanguage = (
     i18n.language === 'en' ? 'en' : 'es'
@@ -74,8 +104,37 @@ function RouteComponent() {
         </div>
         <div className="flex flex-col gap-0.5">
           <p className="text-sm font-semibold text-foreground">{profileName}</p>
-          <p className="text-xs text-muted-foreground">{profileEmail}</p>
+          <p className="text-xs text-muted-foreground">{profileContact}</p>
         </div>
+      </div>
+
+      <div className="flex items-center gap-3 rounded-2xl border border-primary/20 bg-primary/[0.06] p-4">
+        <div className="flex flex-1 flex-col gap-0.5">
+          <p className="text-sm font-semibold text-foreground">
+            {t('profile.myAlias.title')}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {t('profile.myAlias.description')}
+          </p>
+          <p className="mt-1 text-sm font-medium text-foreground">
+            {profileAlias || t('profile.myAlias.unavailable')}
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          onClick={copyMyAlias}
+          disabled={!profileAlias}
+          aria-label={t('profile.myAlias.copyAria')}
+          className="h-9 w-9 shrink-0 rounded-xl bg-transparent"
+        >
+          {aliasCopied ? (
+            <Check className="h-4 w-4" />
+          ) : (
+            <Copy className="h-4 w-4" />
+          )}
+        </Button>
       </div>
 
       <section className="flex flex-col gap-1">

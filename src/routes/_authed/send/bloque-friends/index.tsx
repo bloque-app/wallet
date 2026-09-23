@@ -105,10 +105,18 @@ function RouteComponent() {
   ]);
 
   const validateAliasMutation = useMutation({
-    mutationFn: async () => await bloque.identity.aliases.get(normalizedAlias),
+    mutationFn: async () => bloque.identity.aliases.get(normalizedAlias),
     onSuccess: (result) => {
       if (!result?.urn) {
         toast.error(t('send.bloqueFriends.aliasNotFound'));
+        return;
+      }
+      if (!result.account_urn) {
+        toast.error(
+          result.account_resolution_error === 'NO_ACCOUNT'
+            ? t('send.bloqueFriends.recipientNoAccount')
+            : t('send.bloqueFriends.recipientResolutionUnavailable'),
+        );
         return;
       }
       setRecipientPreview(result);
@@ -130,7 +138,7 @@ function RouteComponent() {
       toast.error(t('send.bloqueFriends.noSourceAccount'));
       return;
     }
-    if (!recipientPreview?.urn) {
+    if (!recipientPreview?.account_urn) {
       toast.error(t('send.bloqueFriends.noConfirmedRecipient'));
       return;
     }
@@ -142,7 +150,7 @@ function RouteComponent() {
     transferMutation.mutate(
       {
         sourceUrn: sourceAccount.primaryUrn,
-        destinationUrn: recipientPreview.urn,
+        destinationUrn: recipientPreview.account_urn,
         amount: amountMinor,
         asset: selectedAssetConfig.sdkAsset,
         metadata: {
@@ -154,7 +162,7 @@ function RouteComponent() {
         onSuccess: () => {
           setConfirmOpen(false);
           setLastTransfer({
-            destinationUrn: recipientPreview.urn,
+            destinationUrn: recipientPreview.account_urn as string,
             amount: parsedAmount,
           });
           setView('pending');
