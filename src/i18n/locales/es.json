@@ -750,8 +750,13 @@
     },
     "fees": {
       "description": "Estos son los costos vigentes por cada operación en tu wallet. El costo final se confirma siempre antes de enviar o recargar.",
-      "sendSection": "Enviar",
-      "topupSection": "Recargar"
+      "generalSection": "General",
+      "colombiaSection": "Colombia",
+      "usSection": "Estados Unidos",
+      "direction": {
+        "send": "Enviar",
+        "topup": "Recargar"
+      }
     }
   },
   "tos": {
