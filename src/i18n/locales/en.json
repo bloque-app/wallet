@@ -750,8 +750,13 @@
     },
     "fees": {
       "description": "These are the current costs for each operation in your wallet. The final cost is always confirmed before you send or top up.",
-      "sendSection": "Send",
-      "topupSection": "Top up"
+      "generalSection": "General",
+      "colombiaSection": "Colombia",
+      "usSection": "United States",
+      "direction": {
+        "send": "Send",
+        "topup": "Top up"
+      }
     }
   },
   "tos": {
