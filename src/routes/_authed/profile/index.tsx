@@ -212,18 +212,27 @@ function RouteComponent() {
             icon={FileText}
             label={t('profile.rows.termsAndConditions')}
             chevron
+            onClick={() => {
+              navigate({ to: '/legal/terms' });
+            }}
           />
           <Separator />
           <ProfileRow
             icon={Lock}
             label={t('profile.rows.privacyPolicy')}
             chevron
+            onClick={() => {
+              navigate({ to: '/legal/privacy' });
+            }}
           />
           <Separator />
           <ProfileRow
             icon={FileText}
             label={t('profile.rows.feesAndCommissions')}
             chevron
+            onClick={() => {
+              navigate({ to: '/legal/fees' });
+            }}
           />
         </div>
       </section>

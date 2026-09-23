@@ -28,6 +28,9 @@ import { Route as AuthedSendUsBanksIndexRouteImport } from './routes/_authed/sen
 import { Route as AuthedSendColombianBanksIndexRouteImport } from './routes/_authed/send/colombian-banks/index'
 import { Route as AuthedSendBloqueFriendsIndexRouteImport } from './routes/_authed/send/bloque-friends/index'
 import { Route as AuthedProfileEditIndexRouteImport } from './routes/_authed/profile/edit/index'
+import { Route as AuthedLegalTermsIndexRouteImport } from './routes/_authed/legal/terms/index'
+import { Route as AuthedLegalPrivacyIndexRouteImport } from './routes/_authed/legal/privacy/index'
+import { Route as AuthedLegalFeesIndexRouteImport } from './routes/_authed/legal/fees/index'
 import { Route as AuthedBrebKeysPayTransferIndexRouteImport } from './routes/_authed/breb-keys/pay-transfer/index'
 import { Route as AuthedBrebKeysManageKeysIndexRouteImport } from './routes/_authed/breb-keys/manage-keys/index'
 import { Route as AuthedBrebKeysDepositIndexRouteImport } from './routes/_authed/breb-keys/deposit/index'
@@ -128,6 +131,21 @@ const AuthedProfileEditIndexRoute = AuthedProfileEditIndexRouteImport.update({
   path: '/profile/edit/',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedLegalTermsIndexRoute = AuthedLegalTermsIndexRouteImport.update({
+  id: '/legal/terms/',
+  path: '/legal/terms/',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedLegalPrivacyIndexRoute = AuthedLegalPrivacyIndexRouteImport.update({
+  id: '/legal/privacy/',
+  path: '/legal/privacy/',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedLegalFeesIndexRoute = AuthedLegalFeesIndexRouteImport.update({
+  id: '/legal/fees/',
+  path: '/legal/fees/',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const AuthedBrebKeysPayTransferIndexRoute =
   AuthedBrebKeysPayTransferIndexRouteImport.update({
     id: '/breb-keys/pay-transfer/',
@@ -169,6 +187,9 @@ export interface FileRoutesByFullPath {
   '/breb-keys/deposit/': typeof AuthedBrebKeysDepositIndexRoute
   '/breb-keys/manage-keys/': typeof AuthedBrebKeysManageKeysIndexRoute
   '/breb-keys/pay-transfer/': typeof AuthedBrebKeysPayTransferIndexRoute
+  '/legal/fees/': typeof AuthedLegalFeesIndexRoute
+  '/legal/privacy/': typeof AuthedLegalPrivacyIndexRoute
+  '/legal/terms/': typeof AuthedLegalTermsIndexRoute
   '/profile/edit/': typeof AuthedProfileEditIndexRoute
   '/send/bloque-friends/': typeof AuthedSendBloqueFriendsIndexRoute
   '/send/colombian-banks/': typeof AuthedSendColombianBanksIndexRoute
@@ -192,6 +213,9 @@ export interface FileRoutesByTo {
   '/breb-keys/deposit': typeof AuthedBrebKeysDepositIndexRoute
   '/breb-keys/manage-keys': typeof AuthedBrebKeysManageKeysIndexRoute
   '/breb-keys/pay-transfer': typeof AuthedBrebKeysPayTransferIndexRoute
+  '/legal/fees': typeof AuthedLegalFeesIndexRoute
+  '/legal/privacy': typeof AuthedLegalPrivacyIndexRoute
+  '/legal/terms': typeof AuthedLegalTermsIndexRoute
   '/profile/edit': typeof AuthedProfileEditIndexRoute
   '/send/bloque-friends': typeof AuthedSendBloqueFriendsIndexRoute
   '/send/colombian-banks': typeof AuthedSendColombianBanksIndexRoute
@@ -218,6 +242,9 @@ export interface FileRoutesById {
   '/_authed/breb-keys/deposit/': typeof AuthedBrebKeysDepositIndexRoute
   '/_authed/breb-keys/manage-keys/': typeof AuthedBrebKeysManageKeysIndexRoute
   '/_authed/breb-keys/pay-transfer/': typeof AuthedBrebKeysPayTransferIndexRoute
+  '/_authed/legal/fees/': typeof AuthedLegalFeesIndexRoute
+  '/_authed/legal/privacy/': typeof AuthedLegalPrivacyIndexRoute
+  '/_authed/legal/terms/': typeof AuthedLegalTermsIndexRoute
   '/_authed/profile/edit/': typeof AuthedProfileEditIndexRoute
   '/_authed/send/bloque-friends/': typeof AuthedSendBloqueFriendsIndexRoute
   '/_authed/send/colombian-banks/': typeof AuthedSendColombianBanksIndexRoute
@@ -243,6 +270,9 @@ export interface FileRouteTypes {
     | '/breb-keys/deposit/'
     | '/breb-keys/manage-keys/'
     | '/breb-keys/pay-transfer/'
+    | '/legal/fees/'
+    | '/legal/privacy/'
+    | '/legal/terms/'
     | '/profile/edit/'
     | '/send/bloque-friends/'
     | '/send/colombian-banks/'
@@ -266,6 +296,9 @@ export interface FileRouteTypes {
     | '/breb-keys/deposit'
     | '/breb-keys/manage-keys'
     | '/breb-keys/pay-transfer'
+    | '/legal/fees'
+    | '/legal/privacy'
+    | '/legal/terms'
     | '/profile/edit'
     | '/send/bloque-friends'
     | '/send/colombian-banks'
@@ -291,6 +324,9 @@ export interface FileRouteTypes {
     | '/_authed/breb-keys/deposit/'
     | '/_authed/breb-keys/manage-keys/'
     | '/_authed/breb-keys/pay-transfer/'
+    | '/_authed/legal/fees/'
+    | '/_authed/legal/privacy/'
+    | '/_authed/legal/terms/'
     | '/_authed/profile/edit/'
     | '/_authed/send/bloque-friends/'
     | '/_authed/send/colombian-banks/'
@@ -438,6 +474,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedProfileEditIndexRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/legal/terms/': {
+      id: '/_authed/legal/terms/'
+      path: '/legal/terms'
+      fullPath: '/legal/terms/'
+      preLoaderRoute: typeof AuthedLegalTermsIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/legal/privacy/': {
+      id: '/_authed/legal/privacy/'
+      path: '/legal/privacy'
+      fullPath: '/legal/privacy/'
+      preLoaderRoute: typeof AuthedLegalPrivacyIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/legal/fees/': {
+      id: '/_authed/legal/fees/'
+      path: '/legal/fees'
+      fullPath: '/legal/fees/'
+      preLoaderRoute: typeof AuthedLegalFeesIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/breb-keys/pay-transfer/': {
       id: '/_authed/breb-keys/pay-transfer/'
       path: '/breb-keys/pay-transfer'
@@ -485,6 +542,9 @@ interface AuthedRouteChildren {
   AuthedBrebKeysDepositIndexRoute: typeof AuthedBrebKeysDepositIndexRoute
   AuthedBrebKeysManageKeysIndexRoute: typeof AuthedBrebKeysManageKeysIndexRoute
   AuthedBrebKeysPayTransferIndexRoute: typeof AuthedBrebKeysPayTransferIndexRoute
+  AuthedLegalFeesIndexRoute: typeof AuthedLegalFeesIndexRoute
+  AuthedLegalPrivacyIndexRoute: typeof AuthedLegalPrivacyIndexRoute
+  AuthedLegalTermsIndexRoute: typeof AuthedLegalTermsIndexRoute
   AuthedProfileEditIndexRoute: typeof AuthedProfileEditIndexRoute
   AuthedSendBloqueFriendsIndexRoute: typeof AuthedSendBloqueFriendsIndexRoute
   AuthedSendColombianBanksIndexRoute: typeof AuthedSendColombianBanksIndexRoute
@@ -508,6 +568,9 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedBrebKeysDepositIndexRoute: AuthedBrebKeysDepositIndexRoute,
   AuthedBrebKeysManageKeysIndexRoute: AuthedBrebKeysManageKeysIndexRoute,
   AuthedBrebKeysPayTransferIndexRoute: AuthedBrebKeysPayTransferIndexRoute,
+  AuthedLegalFeesIndexRoute: AuthedLegalFeesIndexRoute,
+  AuthedLegalPrivacyIndexRoute: AuthedLegalPrivacyIndexRoute,
+  AuthedLegalTermsIndexRoute: AuthedLegalTermsIndexRoute,
   AuthedProfileEditIndexRoute: AuthedProfileEditIndexRoute,
   AuthedSendBloqueFriendsIndexRoute: AuthedSendBloqueFriendsIndexRoute,
   AuthedSendColombianBanksIndexRoute: AuthedSendColombianBanksIndexRoute,
