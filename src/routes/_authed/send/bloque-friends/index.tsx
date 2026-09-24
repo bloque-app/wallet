@@ -46,13 +46,8 @@ function majorToMinor(amountMajor: number, precision: number) {
   return (BigInt(amountMajor) * 10n ** BigInt(precision)).toString();
 }
 
-/** `metadata` is an `{ [key: string]: unknown }` bag — validate `name` before use. */
 function getAliasDisplayName(aliasResult: Alias) {
-  const metadataName = aliasResult.metadata.name;
-  if (typeof metadataName === 'string' && metadataName.trim()) {
-    return metadataName;
-  }
-  return aliasResult.metadata.alias || aliasResult.alias;
+  return aliasResult.display_name?.trim() || aliasResult.alias;
 }
 
 function RouteComponent() {
