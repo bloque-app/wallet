@@ -123,16 +123,43 @@ function RouteComponent() {
     requireLinkStatus: 'active',
   });
 
+  // Which pocket the new Plaid link itself gets associated with. Only one
+  // `external-us-bank` product per pocket, same rule as card/BRE-B.
+  const [selectedLinkLedgerId, setSelectedLinkLedgerId] = useState<
+    string | null
+  >(null);
+  const { accounts: allPockets } = useAccountPicker({
+    requireVirtualAccount: true,
+  });
+  const linkablePockets = useMemo(
+    () =>
+      allPockets.filter(
+        (account) =>
+          !account.products.some((p) => p.kind === 'external-us-bank'),
+      ),
+    [allPockets],
+  );
+  const contextLinkLedgerId = allPockets.some(
+    (account) => account.ledgerId === contextLedgerId,
+  )
+    ? contextLedgerId
+    : undefined;
+  const linkLedgerId =
+    contextLinkLedgerId ||
+    selectedLinkLedgerId ||
+    (linkablePockets.length === 1 ? linkablePockets[0]?.ledgerId : null) ||
+    '';
+
   // With more than one eligible pocket, the user must pick which linked bank
   // to use for this recharge; with exactly one, it's the obvious default.
-  // While `contextLedgerId` is set, the user explicitly came here to link a
+  // While `contextLinkLedgerId` is set, the user explicitly came here to link a
   // *new* bank to a specific pocket — any already-linked pocket must be
   // ignored until that new link resolves, or this would silently redirect
   // them into recharging from an unrelated existing bank instead.
   const [selectedSourceLedgerId, setSelectedSourceLedgerId] = useState<
     string | null
   >(null);
-  const chosenSourceAccount = contextLedgerId
+  const chosenSourceAccount = contextLinkLedgerId
     ? null
     : linkedActivePockets.length === 1
       ? linkedActivePockets[0]
@@ -155,26 +182,6 @@ function RouteComponent() {
 
   // Recharged money lands on the same pocket the linked bank belongs to.
   const ledgerAccountId = chosenSourceAccount?.ledgerId ?? '';
-
-  // Which pocket the new Plaid link itself gets associated with. Only one
-  // `external-us-bank` product per pocket, same rule as card/BRE-B.
-  const [selectedLinkLedgerId, setSelectedLinkLedgerId] = useState<
-    string | null
-  >(null);
-  const { accounts: allPockets } = useAccountPicker();
-  const linkablePockets = useMemo(
-    () =>
-      allPockets.filter(
-        (account) =>
-          !account.products.some((p) => p.kind === 'external-us-bank'),
-      ),
-    [allPockets],
-  );
-  const linkLedgerId =
-    contextLedgerId ||
-    selectedLinkLedgerId ||
-    (linkablePockets.length === 1 ? linkablePockets[0]?.ledgerId : null) ||
-    '';
 
   // Function form (not a static boolean): must inspect the *freshest* fetched
   // data on every tick to know when to stop — a value computed once per
@@ -512,7 +519,7 @@ function RouteComponent() {
         <div className="flex flex-col gap-5">
           {linkedActivePockets.length > 1 &&
           !chosenSourceAccount &&
-          !contextLedgerId ? (
+          !contextLinkLedgerId ? (
             <AccountCarousel
               accounts={linkedActivePockets}
               asset="COPM/2"
@@ -525,7 +532,7 @@ function RouteComponent() {
           ) : (
             <>
               {linkStepStatus === 'idle' &&
-                !contextLedgerId &&
+                !contextLinkLedgerId &&
                 (linkablePockets.length > 1 ? (
                   <AccountCarousel
                     accounts={linkablePockets}
