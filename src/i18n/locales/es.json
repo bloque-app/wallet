@@ -316,7 +316,8 @@
     "noFee": "Sin costo",
     "groups": {
       "colombia": "Colombia",
-      "us": "Estados Unidos"
+      "us": "Estados Unidos",
+      "mexico": "México"
     },
     "options": {
       "brebKeys": {
@@ -334,6 +335,10 @@
       "usBanks": {
         "title": "Bancos/billeteras",
         "description": "Envia USD vía RTP a bancos y wallets."
+      },
+      "spei": {
+        "title": "SPEI",
+        "description": "Envía pesos mexicanos a bancos en México."
       }
     },
     "bloqueFriends": {
@@ -431,7 +436,8 @@
     "noRateRetryToast": "No hay tasa disponible. Intenta de nuevo.",
     "groups": {
       "colombia": "Colombia",
-      "us": "Estados Unidos"
+      "us": "Estados Unidos",
+      "mexico": "México"
     },
     "methods": {
       "colombianBanks": {
@@ -445,6 +451,10 @@
       "usBanks": {
         "title": "Desde bancos",
         "subtitle": "ACH"
+      },
+      "spei": {
+        "title": "SPEI",
+        "subtitle": "Recarga desde bancos en México."
       }
     },
     "destinationAccountLabel": "Bolsillo destino",

@@ -19,7 +19,7 @@ type SendOption = {
   description: string;
   icon: React.ComponentType<{ className?: string }>;
   search?: Record<string, string>;
-  group?: 'colombia' | 'us';
+  group?: 'colombia' | 'us' | 'mexico';
   fee?: string;
   hasFeeInfo?: boolean;
   comingSoon?: boolean;
@@ -67,6 +67,14 @@ function RouteComponent() {
       hasFeeInfo: true,
       comingSoon: !US_RAILS_ENABLED,
     },
+    {
+      title: t('send.options.spei.title'),
+      description: t('send.options.spei.description'),
+      onClick: () => {},
+      icon: Building2,
+      group: 'mexico',
+      comingSoon: true,
+    },
   ];
 
   const ungrouped = options.filter((option) => !option.group);
@@ -74,6 +82,7 @@ function RouteComponent() {
     (option) => option.group === 'colombia',
   );
   const usOptions = options.filter((option) => option.group === 'us');
+  const mexicoOptions = options.filter((option) => option.group === 'mexico');
   const feeInfoDescription = t('send.feeInfo');
 
   return (
@@ -109,6 +118,15 @@ function RouteComponent() {
           {t('send.groups.us')}
         </h2>
         {usOptions.map((option) =>
+          renderSendOption(option, feeInfoDescription),
+        )}
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          {t('send.groups.mexico')}
+        </h2>
+        {mexicoOptions.map((option) =>
           renderSendOption(option, feeInfoDescription),
         )}
       </section>

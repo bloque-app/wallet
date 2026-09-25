@@ -316,7 +316,8 @@
     "noFee": "No cost",
     "groups": {
       "colombia": "Colombia",
-      "us": "United States"
+      "us": "United States",
+      "mexico": "Mexico"
     },
     "options": {
       "brebKeys": {
@@ -334,6 +335,10 @@
       "usBanks": {
         "title": "Banks/wallets",
         "description": "Send USD via RTP to banks and wallets."
+      },
+      "spei": {
+        "title": "SPEI",
+        "description": "Send Mexican pesos to banks in Mexico."
       }
     },
     "bloqueFriends": {
@@ -431,7 +436,8 @@
     "noRateRetryToast": "No rate available. Please try again.",
     "groups": {
       "colombia": "Colombia",
-      "us": "United States"
+      "us": "United States",
+      "mexico": "Mexico"
     },
     "methods": {
       "colombianBanks": {
@@ -445,6 +451,10 @@
       "usBanks": {
         "title": "From banks",
         "subtitle": "ACH"
+      },
+      "spei": {
+        "title": "SPEI",
+        "subtitle": "Top up from banks in Mexico."
       }
     },
     "destinationAccountLabel": "Destination pocket",

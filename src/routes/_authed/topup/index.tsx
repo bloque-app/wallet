@@ -349,7 +349,7 @@ function RouteComponent() {
             icon: typeof Building2;
             enabled: boolean;
             onClick: () => void;
-            group?: 'colombia' | 'us';
+            group?: 'colombia' | 'us' | 'mexico';
             fee?: string;
           }> = [
             {
@@ -382,6 +382,14 @@ function RouteComponent() {
               onClick: () => navigate({ to: '/topup/us-banks' }),
               group: 'us',
               fee: `${formatUSD(0.25)} + 1%`,
+            },
+            {
+              title: t('topup.methods.spei.title'),
+              subtitle: t('topup.methods.spei.subtitle'),
+              icon: Building2,
+              enabled: false,
+              onClick: () => {},
+              group: 'mexico',
             },
           ];
 
@@ -429,6 +437,7 @@ function RouteComponent() {
 
           const colombiaMethods = methods.filter((m) => m.group === 'colombia');
           const usMethods = methods.filter((m) => m.group === 'us');
+          const mexicoMethods = methods.filter((m) => m.group === 'mexico');
 
           return (
             <>
@@ -444,6 +453,13 @@ function RouteComponent() {
                   {t('topup.groups.us')}
                 </h2>
                 {usMethods.map(renderMethod)}
+              </section>
+
+              <section className="flex flex-col gap-3">
+                <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t('topup.groups.mexico')}
+                </h2>
+                {mexicoMethods.map(renderMethod)}
               </section>
             </>
           );

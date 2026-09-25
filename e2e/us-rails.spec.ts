@@ -46,3 +46,29 @@ test('legal fees no longer list a US section', async ({ page }) => {
     0,
   );
 });
+
+test('send lists Mexico SPEI as coming soon without a link', async ({
+  page,
+}) => {
+  await page.goto('/send');
+
+  await expect(page.getByText('México', { exact: true })).toBeVisible();
+  const spei = page
+    .getByText('Envía pesos mexicanos a bancos en México.')
+    .locator('xpath=ancestor::div[contains(@class,"rounded-2xl")][1]');
+  await expect(spei).toContainText('Próximamente');
+  await expect(spei.getByRole('link')).toHaveCount(0);
+});
+
+test('top-up disables the Mexico SPEI method as coming soon', async ({
+  page,
+}) => {
+  await page.goto('/topup');
+
+  await expect(page.getByText('México', { exact: true })).toBeVisible();
+  const spei = page.getByRole('button', { name: /SPEI/ });
+  await expect(spei).toBeDisabled();
+  await expect(
+    spei.locator('xpath=..').getByText('Próximamente'),
+  ).toBeVisible();
+});
