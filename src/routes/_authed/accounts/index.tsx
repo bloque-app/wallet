@@ -13,21 +13,19 @@ import type { Account } from '~/domain/accounts/types';
 import { useAccounts } from '~/hooks/accounts/use-accounts';
 import i18n from '~/i18n/config';
 import { formatCOP, formatUSD, sortBalancesForDisplay } from '~/lib/formatters';
-
-type AccountsOrigin = 'profile' | 'card';
-
-const ORIGIN_ROUTES: Record<AccountsOrigin, string> = {
-  profile: '/profile',
-  card: '/card',
-};
+import {
+  ACCOUNTS_ORIGIN_ROUTES,
+  type AccountsOrigin,
+  parseAccountsOrigin,
+} from './-lib/origin';
 
 export const Route = createFileRoute('/_authed/accounts/')({
   validateSearch: (
     search: Record<string, unknown>,
-  ): { from?: AccountsOrigin } =>
-    search.from === 'profile' || search.from === 'card'
-      ? { from: search.from }
-      : {},
+  ): { from?: AccountsOrigin } => {
+    const from = parseAccountsOrigin(search.from);
+    return from ? { from } : {};
+  },
   component: RouteComponent,
 });
 
@@ -75,10 +73,11 @@ function RouteComponent() {
       navigate({
         to: '/accounts/$urn',
         params: { urn: accounts[0].primaryUrn },
+        search: { from: from ?? 'home' },
         replace: true,
       });
     }
-  }, [accounts, navigate]);
+  }, [accounts, from, navigate]);
 
   if (accounts.length === 1) {
     return null;
@@ -89,7 +88,7 @@ function RouteComponent() {
       <div className="flex items-center gap-2">
         <BackButton
           onClick={() =>
-            void navigate({ to: from ? ORIGIN_ROUTES[from] : '/' })
+            void navigate({ to: ACCOUNTS_ORIGIN_ROUTES[from ?? 'home'] })
           }
         />
         <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
@@ -119,6 +118,7 @@ function RouteComponent() {
                 key={account.ledgerId}
                 to="/accounts/$urn"
                 params={{ urn: account.primaryUrn }}
+                search={{ from: from ?? 'home', list: true }}
                 className="flex items-center gap-3 rounded-2xl border border-border/75 bg-card/80 p-4 transition-colors hover:bg-muted/60"
               >
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">

@@ -130,8 +130,12 @@ function RouteComponent() {
     [accountsQuery.data],
   );
 
-  const accountPicker = useAccountPicker();
+  const accountPicker = useAccountPicker({ requireVirtualAccount: true });
   const pickerAccounts = accountPicker.accounts;
+  const contextAccount = contextLedgerId
+    ? (pickerAccounts.find((account) => account.ledgerId === contextLedgerId) ??
+      null)
+    : null;
   const selectedAccount =
     pickerAccounts.find((account) => account.ledgerId === selectedLedgerId) ??
     null;
@@ -206,7 +210,7 @@ function RouteComponent() {
 
   const registerKey = (
     option: { keyType: BrebKeyType; value: string },
-    ledgerId?: string,
+    ledgerId: string,
   ) => {
     createMutation.mutate(
       {
@@ -337,8 +341,12 @@ function RouteComponent() {
                           createMutation.isPending || accountPicker.isLoading
                         }
                         onClick={() => {
-                          if (contextLedgerId) {
-                            registerKey(option, contextLedgerId);
+                          if (contextAccount) {
+                            registerKey(option, contextAccount.ledgerId);
+                            return;
+                          }
+                          if (pickerAccounts.length === 0) {
+                            toast.info(t('home.quickActions.needsAccount'));
                             return;
                           }
                           if (pickerAccounts.length > 1) {
@@ -350,7 +358,7 @@ function RouteComponent() {
                             });
                             return;
                           }
-                          registerKey(option, pickerAccounts[0]?.ledgerId);
+                          registerKey(option, pickerAccounts[0].ledgerId);
                         }}
                       >
                         {isPending

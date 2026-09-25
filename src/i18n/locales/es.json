@@ -23,7 +23,9 @@
     "search": "Buscar",
     "optional": "Opcional",
     "yes": "Sí",
-    "no": "No"
+    "no": "No",
+    "comingSoon": "Próximamente",
+    "comingSoonDescription": "Esta opción estará disponible muy pronto."
   },
   "appHeader": {
     "logoAlt": "Logo",
@@ -95,7 +97,8 @@
       "transferErrorToast": "No se pudo completar la transferencia. Intenta de nuevo.",
       "addProductCardLabel": "Tarjeta (Global)",
       "addProductBrebLabel": "Llave BRE-B (COP)",
-      "addProductPlaidLabel": "Plaid (USD)"
+      "addProductPlaidLabel": "Plaid (USD)",
+      "addProductNeedsVirtualAccount": "Solo puedes agregar productos a un bolsillo activo."
     }
   },
   "brebKeys": {
@@ -313,7 +316,8 @@
     "noFee": "Sin costo",
     "groups": {
       "colombia": "Colombia",
-      "us": "Estados Unidos"
+      "us": "Estados Unidos",
+      "mexico": "México"
     },
     "options": {
       "brebKeys": {
@@ -331,6 +335,10 @@
       "usBanks": {
         "title": "Bancos/billeteras",
         "description": "Envia USD vía RTP a bancos y wallets."
+      },
+      "spei": {
+        "title": "SPEI",
+        "description": "Envía pesos mexicanos a bancos en México."
       }
     },
     "bloqueFriends": {
@@ -361,7 +369,8 @@
       "sendMoney": "Enviar dinero",
       "confirmSend": "Confirmar envio",
       "confirmSendDescription": "Verifica la persona antes de enviar el dinero.",
-      "recipient": "Destinatario"
+      "recipient": "Destinatario",
+      "sourceAccountLabel": "Bolsillo origen"
     },
     "colombianBanks": {
       "title": "Enviar a bancos colombianos",
@@ -427,7 +436,8 @@
     "noRateRetryToast": "No hay tasa disponible. Intenta de nuevo.",
     "groups": {
       "colombia": "Colombia",
-      "us": "Estados Unidos"
+      "us": "Estados Unidos",
+      "mexico": "México"
     },
     "methods": {
       "colombianBanks": {
@@ -441,6 +451,10 @@
       "usBanks": {
         "title": "Desde bancos",
         "subtitle": "ACH"
+      },
+      "spei": {
+        "title": "SPEI",
+        "subtitle": "Recarga desde bancos en México."
       }
     },
     "destinationAccountLabel": "Bolsillo destino",
@@ -765,5 +779,10 @@
       "description": "Para seguir usando tu cuenta, necesitamos que revises y aceptes los términos y condiciones vigentes.",
       "cta": "Revisar y aceptar"
     }
+  },
+  "virtualAccountGate": {
+    "title": "Necesitas un bolsillo",
+    "description": "Crea un bolsillo para poder recargar, enviar dinero, usar BRE-B y crear tarjetas.",
+    "loadError": "No pudimos cargar tus bolsillos."
   }
 }

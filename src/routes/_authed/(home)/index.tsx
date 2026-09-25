@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { AccountsCarousel } from '~/components/account/accounts-carousel';
 import { CreateAccountDrawer } from '~/components/account/create-account-drawer';
 import { MovementRow } from '~/components/movement-row';
+import { hasActiveVirtualAccount } from '~/domain/accounts/virtual-account';
 import { useAccounts } from '~/hooks/accounts/use-accounts';
 import { useGlobalTransactions } from '~/hooks/accounts/use-global-transactions';
 import { type Asset, formatAmount, type Movement } from '~/lib/formatters';
@@ -81,9 +82,10 @@ function RouteComponent() {
 
   const accounts = accountsQuery.data ?? [];
   // While the accounts query is still resolving, `accounts` is `[]` — that
-  // must not read as "no accounts" and disable the quick actions for a user
-  // who actually has one; only a *settled* empty list means that.
-  const hasAccount = accountsQuery.isLoading || accounts.length > 0;
+  // must not read as "no virtual account" and disable the quick actions for a
+  // user who actually has one; only a *settled* list means that.
+  const hasVirtualAccount =
+    accountsQuery.isLoading || hasActiveVirtualAccount(accounts);
   const assets: Asset[] = ['USD', 'COP'];
   const selectedBalance = parsedBalances[selectedAsset] ?? 0;
 
@@ -134,7 +136,7 @@ function RouteComponent() {
         </div>
       </section>
 
-      <QuickActions hasAccount={hasAccount} />
+      <QuickActions hasVirtualAccount={hasVirtualAccount} />
 
       <div className="my-1 h-px w-full bg-gradient-to-r from-transparent via-border to-transparent" />
 
@@ -153,10 +155,14 @@ function RouteComponent() {
         <AccountsCarousel
           accounts={accounts}
           onSelectAccount={(urn) =>
-            navigate({ to: '/accounts/$urn', params: { urn } })
+            navigate({
+              to: '/accounts/$urn',
+              params: { urn },
+              search: { from: 'home' },
+            })
           }
           onAddAccount={() => setShowCreateAccount(true)}
-          highlightAdd={!accountsQuery.isLoading && accounts.length === 0}
+          highlightAdd={!hasVirtualAccount}
         />
       </section>
 

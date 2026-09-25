@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { BackButton } from '~/components/back-button';
+import { US_RAILS_ENABLED } from '~/config/features';
 import { formatCOP, formatUSD } from '~/lib/formatters';
 
 export const Route = createFileRoute('/_authed/legal/fees/')({
@@ -88,7 +89,9 @@ function RouteComponent() {
       rows: generalFees,
     },
     { key: 'co', title: t('legal.fees.colombiaSection'), rows: colombiaFees },
-    { key: 'us', title: t('legal.fees.usSection'), rows: usFees },
+    ...(US_RAILS_ENABLED
+      ? [{ key: 'us', title: t('legal.fees.usSection'), rows: usFees }]
+      : []),
   ];
 
   return (

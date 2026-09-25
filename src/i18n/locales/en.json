@@ -23,7 +23,9 @@
     "search": "Search",
     "optional": "Optional",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "comingSoon": "Coming soon",
+    "comingSoonDescription": "This option will be available very soon."
   },
   "appHeader": {
     "logoAlt": "Logo",
@@ -95,7 +97,8 @@
       "transferErrorToast": "Couldn't complete the transfer. Please try again.",
       "addProductCardLabel": "Card (Global)",
       "addProductBrebLabel": "BRE-B key (COP)",
-      "addProductPlaidLabel": "Plaid (USD)"
+      "addProductPlaidLabel": "Plaid (USD)",
+      "addProductNeedsVirtualAccount": "You can only add products to an active pocket."
     }
   },
   "brebKeys": {
@@ -313,7 +316,8 @@
     "noFee": "No cost",
     "groups": {
       "colombia": "Colombia",
-      "us": "United States"
+      "us": "United States",
+      "mexico": "Mexico"
     },
     "options": {
       "brebKeys": {
@@ -331,6 +335,10 @@
       "usBanks": {
         "title": "Banks/wallets",
         "description": "Send USD via RTP to banks and wallets."
+      },
+      "spei": {
+        "title": "SPEI",
+        "description": "Send Mexican pesos to banks in Mexico."
       }
     },
     "bloqueFriends": {
@@ -361,7 +369,8 @@
       "sendMoney": "Send money",
       "confirmSend": "Confirm send",
       "confirmSendDescription": "Verify the person before sending the money.",
-      "recipient": "Recipient"
+      "recipient": "Recipient",
+      "sourceAccountLabel": "Source pocket"
     },
     "colombianBanks": {
       "title": "Send to Colombian banks",
@@ -427,7 +436,8 @@
     "noRateRetryToast": "No rate available. Please try again.",
     "groups": {
       "colombia": "Colombia",
-      "us": "United States"
+      "us": "United States",
+      "mexico": "Mexico"
     },
     "methods": {
       "colombianBanks": {
@@ -441,6 +451,10 @@
       "usBanks": {
         "title": "From banks",
         "subtitle": "ACH"
+      },
+      "spei": {
+        "title": "SPEI",
+        "subtitle": "Top up from banks in Mexico."
       }
     },
     "destinationAccountLabel": "Destination pocket",
@@ -765,5 +779,10 @@
       "description": "To keep using your account, please review and accept the current terms and conditions.",
       "cta": "Review and accept"
     }
+  },
+  "virtualAccountGate": {
+    "title": "You need a pocket",
+    "description": "Create a pocket to top up, send money, use BRE-B and create cards.",
+    "loadError": "We couldn't load your pockets."
   }
 }

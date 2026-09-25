@@ -7,6 +7,7 @@ import {
   formatUSD,
   getAssetPrecision,
   getMovementLabel,
+  isUsdAsset,
   sortBalancesForDisplay,
 } from './formatters';
 
@@ -119,5 +120,17 @@ describe('sortBalancesForDisplay', () => {
     ]);
 
     expect(result.map((b) => b.asset)).toEqual(['COPM/2']);
+  });
+});
+
+describe('isUsdAsset', () => {
+  test('matches USD-denominated assets', () => {
+    expect(isUsdAsset('DUSD/6')).toBe(true);
+    expect(isUsdAsset('USD/2')).toBe(true);
+  });
+
+  test('rejects other assets', () => {
+    expect(isUsdAsset('COPM/2')).toBe(false);
+    expect(isUsdAsset('KSM/12')).toBe(false);
   });
 });
