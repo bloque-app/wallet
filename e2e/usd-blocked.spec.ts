@@ -47,15 +47,3 @@ test('own-account transfer stays available for COP', async ({ page }) => {
     page.getByRole('button', { name: /Transferir a otro bolsillo/ }),
   ).toBeEnabled();
 });
-
-test('card cannot switch its preferred asset to USD', async ({ page }) => {
-  await installMockApi(page);
-  await page.goto('/card/details/urn%3Acard-pawhaus-1');
-
-  const section = page
-    .getByText('Activo de pago preferido')
-    .locator('xpath=ancestor::section[1]');
-  const usd = section.getByRole('button', { name: /USD/ });
-  await expect(usd).toBeDisabled();
-  await expect(usd).toContainText('Próximamente');
-});

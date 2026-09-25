@@ -29,7 +29,11 @@ import {
 } from '~/components/ui/drawer';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
-import { US_RAILS_ENABLED, USD_MOVEMENTS_ENABLED } from '~/config/features';
+import {
+  CARDS_ENABLED,
+  US_RAILS_ENABLED,
+  USD_MOVEMENTS_ENABLED,
+} from '~/config/features';
 import type { AssetBalance, Product } from '~/domain/accounts/types';
 import { isActiveVirtualAccount } from '~/domain/accounts/virtual-account';
 import { useAccountMovements } from '~/hooks/accounts/use-account-movements';
@@ -196,6 +200,7 @@ function RouteComponent() {
 
   const handlePickProductKind = (kind: 'card' | 'breb' | 'plaid') => {
     if (!account || !canAddProduct) return;
+    if (kind === 'card' && !CARDS_ENABLED) return;
     if (kind === 'breb') {
       setAddProductStep('closed');
       skipDrawerHistoryOnce();
@@ -543,6 +548,7 @@ function RouteComponent() {
                     matchKind: 'card',
                     label: t('accounts.detail.addProductCardLabel'),
                     icon: CreditCard,
+                    comingSoon: !CARDS_ENABLED,
                   },
                   {
                     kind: 'breb' as const,

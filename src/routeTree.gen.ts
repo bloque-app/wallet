@@ -13,6 +13,7 @@ import { Route as PublicRouteImport } from './routes/_public'
 import { Route as AuthedRouteImport } from './routes/_authed'
 import { Route as AuthedTopupRouteRouteImport } from './routes/_authed/topup/route'
 import { Route as AuthedSendRouteRouteImport } from './routes/_authed/send/route'
+import { Route as AuthedCardRouteRouteImport } from './routes/_authed/card/route'
 import { Route as AuthedBrebKeysRouteRouteImport } from './routes/_authed/breb-keys/route'
 import { Route as PublicLoginIndexRouteImport } from './routes/_public/login/index'
 import { Route as AuthedTopupIndexRouteImport } from './routes/_authed/topup/index'
@@ -57,6 +58,11 @@ const AuthedSendRouteRoute = AuthedSendRouteRouteImport.update({
   path: '/send',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AuthedCardRouteRoute = AuthedCardRouteRouteImport.update({
+  id: '/card',
+  path: '/card',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const AuthedBrebKeysRouteRoute = AuthedBrebKeysRouteRouteImport.update({
   id: '/breb-keys',
   path: '/breb-keys',
@@ -98,9 +104,9 @@ const AuthedConvertIndexRoute = AuthedConvertIndexRouteImport.update({
   getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedCardIndexRoute = AuthedCardIndexRouteImport.update({
-  id: '/card/',
-  path: '/card/',
-  getParentRoute: () => AuthedRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthedCardRouteRoute,
 } as any)
 const AuthedBrebKeysIndexRoute = AuthedBrebKeysIndexRouteImport.update({
   id: '/',
@@ -183,14 +189,15 @@ const AuthedBrebKeysDepositIndexRoute =
     getParentRoute: () => AuthedBrebKeysRouteRoute,
   } as any)
 const AuthedCardDetailsUrnRoute = AuthedCardDetailsUrnRouteImport.update({
-  id: '/card/details/$urn',
-  path: '/card/details/$urn',
-  getParentRoute: () => AuthedRoute,
+  id: '/details/$urn',
+  path: '/details/$urn',
+  getParentRoute: () => AuthedCardRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthedhomeIndexRoute
   '/breb-keys': typeof AuthedBrebKeysRouteRouteWithChildren
+  '/card': typeof AuthedCardRouteRouteWithChildren
   '/send': typeof AuthedSendRouteRouteWithChildren
   '/topup': typeof AuthedTopupRouteRouteWithChildren
   '/accounts/$urn': typeof AuthedAccountsUrnRoute
@@ -248,6 +255,7 @@ export interface FileRoutesById {
   '/_authed': typeof AuthedRouteWithChildren
   '/_public': typeof PublicRouteWithChildren
   '/_authed/breb-keys': typeof AuthedBrebKeysRouteRouteWithChildren
+  '/_authed/card': typeof AuthedCardRouteRouteWithChildren
   '/_authed/send': typeof AuthedSendRouteRouteWithChildren
   '/_authed/topup': typeof AuthedTopupRouteRouteWithChildren
   '/_authed/accounts/$urn': typeof AuthedAccountsUrnRoute
@@ -280,6 +288,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/breb-keys'
+    | '/card'
     | '/send'
     | '/topup'
     | '/accounts/$urn'
@@ -336,6 +345,7 @@ export interface FileRouteTypes {
     | '/_authed'
     | '/_public'
     | '/_authed/breb-keys'
+    | '/_authed/card'
     | '/_authed/send'
     | '/_authed/topup'
     | '/_authed/accounts/$urn'
@@ -399,6 +409,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedSendRouteRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/_authed/card': {
+      id: '/_authed/card'
+      path: '/card'
+      fullPath: '/card'
+      preLoaderRoute: typeof AuthedCardRouteRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_authed/breb-keys': {
       id: '/_authed/breb-keys'
       path: '/breb-keys'
@@ -457,10 +474,10 @@ declare module '@tanstack/react-router' {
     }
     '/_authed/card/': {
       id: '/_authed/card/'
-      path: '/card'
+      path: '/'
       fullPath: '/card/'
       preLoaderRoute: typeof AuthedCardIndexRouteImport
-      parentRoute: typeof AuthedRoute
+      parentRoute: typeof AuthedCardRouteRoute
     }
     '/_authed/breb-keys/': {
       id: '/_authed/breb-keys/'
@@ -569,10 +586,10 @@ declare module '@tanstack/react-router' {
     }
     '/_authed/card/details/$urn': {
       id: '/_authed/card/details/$urn'
-      path: '/card/details/$urn'
+      path: '/details/$urn'
       fullPath: '/card/details/$urn'
       preLoaderRoute: typeof AuthedCardDetailsUrnRouteImport
-      parentRoute: typeof AuthedRoute
+      parentRoute: typeof AuthedCardRouteRoute
     }
   }
 }
@@ -593,6 +610,20 @@ const AuthedBrebKeysRouteRouteChildren: AuthedBrebKeysRouteRouteChildren = {
 
 const AuthedBrebKeysRouteRouteWithChildren =
   AuthedBrebKeysRouteRoute._addFileChildren(AuthedBrebKeysRouteRouteChildren)
+
+interface AuthedCardRouteRouteChildren {
+  AuthedCardIndexRoute: typeof AuthedCardIndexRoute
+  AuthedCardDetailsUrnRoute: typeof AuthedCardDetailsUrnRoute
+}
+
+const AuthedCardRouteRouteChildren: AuthedCardRouteRouteChildren = {
+  AuthedCardIndexRoute: AuthedCardIndexRoute,
+  AuthedCardDetailsUrnRoute: AuthedCardDetailsUrnRoute,
+}
+
+const AuthedCardRouteRouteWithChildren = AuthedCardRouteRoute._addFileChildren(
+  AuthedCardRouteRouteChildren,
+)
 
 interface AuthedSendRouteRouteChildren {
   AuthedSendIndexRoute: typeof AuthedSendIndexRoute
@@ -627,17 +658,16 @@ const AuthedTopupRouteRouteWithChildren =
 
 interface AuthedRouteChildren {
   AuthedBrebKeysRouteRoute: typeof AuthedBrebKeysRouteRouteWithChildren
+  AuthedCardRouteRoute: typeof AuthedCardRouteRouteWithChildren
   AuthedSendRouteRoute: typeof AuthedSendRouteRouteWithChildren
   AuthedTopupRouteRoute: typeof AuthedTopupRouteRouteWithChildren
   AuthedAccountsUrnRoute: typeof AuthedAccountsUrnRoute
   AuthedhomeIndexRoute: typeof AuthedhomeIndexRoute
   AuthedAccountsIndexRoute: typeof AuthedAccountsIndexRoute
-  AuthedCardIndexRoute: typeof AuthedCardIndexRoute
   AuthedConvertIndexRoute: typeof AuthedConvertIndexRoute
   AuthedKycIndexRoute: typeof AuthedKycIndexRoute
   AuthedMovementsIndexRoute: typeof AuthedMovementsIndexRoute
   AuthedProfileIndexRoute: typeof AuthedProfileIndexRoute
-  AuthedCardDetailsUrnRoute: typeof AuthedCardDetailsUrnRoute
   AuthedLegalFeesIndexRoute: typeof AuthedLegalFeesIndexRoute
   AuthedLegalPrivacyIndexRoute: typeof AuthedLegalPrivacyIndexRoute
   AuthedLegalTermsIndexRoute: typeof AuthedLegalTermsIndexRoute
@@ -646,17 +676,16 @@ interface AuthedRouteChildren {
 
 const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedBrebKeysRouteRoute: AuthedBrebKeysRouteRouteWithChildren,
+  AuthedCardRouteRoute: AuthedCardRouteRouteWithChildren,
   AuthedSendRouteRoute: AuthedSendRouteRouteWithChildren,
   AuthedTopupRouteRoute: AuthedTopupRouteRouteWithChildren,
   AuthedAccountsUrnRoute: AuthedAccountsUrnRoute,
   AuthedhomeIndexRoute: AuthedhomeIndexRoute,
   AuthedAccountsIndexRoute: AuthedAccountsIndexRoute,
-  AuthedCardIndexRoute: AuthedCardIndexRoute,
   AuthedConvertIndexRoute: AuthedConvertIndexRoute,
   AuthedKycIndexRoute: AuthedKycIndexRoute,
   AuthedMovementsIndexRoute: AuthedMovementsIndexRoute,
   AuthedProfileIndexRoute: AuthedProfileIndexRoute,
-  AuthedCardDetailsUrnRoute: AuthedCardDetailsUrnRoute,
   AuthedLegalFeesIndexRoute: AuthedLegalFeesIndexRoute,
   AuthedLegalPrivacyIndexRoute: AuthedLegalPrivacyIndexRoute,
   AuthedLegalTermsIndexRoute: AuthedLegalTermsIndexRoute,
