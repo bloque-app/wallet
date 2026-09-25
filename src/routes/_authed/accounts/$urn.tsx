@@ -31,15 +31,29 @@ import { Label } from '~/components/ui/label';
 import type { AssetBalance, Product } from '~/domain/accounts/types';
 import { useAccountMovements } from '~/hooks/accounts/use-account-movements';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
-import { useAccount } from '~/hooks/accounts/use-accounts';
+import { useAccount, useAccounts } from '~/hooks/accounts/use-accounts';
 import { useCreateCard } from '~/hooks/accounts/use-cards';
 import { useTransfer } from '~/hooks/accounts/use-transfer';
 import type { Asset, Movement } from '~/lib/formatters';
 import { formatCOP, formatUSD, sortBalancesForDisplay } from '~/lib/formatters';
 import { skipDrawerHistoryOnce } from '~/lib/navigation';
 import { cn } from '~/lib/utils';
+import {
+  ACCOUNTS_ORIGIN_ROUTES,
+  type AccountsOrigin,
+  parseAccountsOrigin,
+} from './-lib/origin';
 
 export const Route = createFileRoute('/_authed/accounts/$urn')({
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { from?: AccountsOrigin; list?: boolean } => {
+    const from = parseAccountsOrigin(search.from);
+    return {
+      ...(from ? { from } : {}),
+      ...(search.list === true || search.list === 'true' ? { list: true } : {}),
+    };
+  },
   component: RouteComponent,
 });
 
@@ -118,7 +132,9 @@ function getProductLink(
 function RouteComponent() {
   const { t } = useTranslation();
   const { urn } = Route.useParams();
+  const { from = 'home', list } = Route.useSearch();
   const navigate = useNavigate();
+  const accountsCount = useAccounts().data?.length ?? 0;
   const [selectedAsset, setSelectedAsset] = useState<string>('');
   const [selectedMovement, setSelectedMovement] = useState<Movement | null>(
     null,
@@ -248,10 +264,21 @@ function RouteComponent() {
     }
   };
 
+  const handleBack = () => {
+    if (list && accountsCount > 1) {
+      void navigate({
+        to: '/accounts',
+        search: from === 'home' ? {} : { from },
+      });
+      return;
+    }
+    void navigate({ to: ACCOUNTS_ORIGIN_ROUTES[from] });
+  };
+
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center gap-2">
-        <BackButton onClick={() => void navigate({ to: '/accounts' })} />
+        <BackButton onClick={handleBack} />
         <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
           {t('accounts.detail.title')}
         </h1>

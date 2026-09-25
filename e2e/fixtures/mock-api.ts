@@ -231,6 +231,8 @@ export type MockApiOptions = {
    * "no verification started".
    */
   kycWireStatus?: 'awaiting_compliance_verification' | 'approved' | 'rejected';
+  /** Wire accounts served by `GET /api/accounts`. Defaults to `mockAccounts`. */
+  accounts?: unknown[];
 };
 
 /**
@@ -318,7 +320,9 @@ export async function installMockApi(
     }
 
     if (pathname === '/api/accounts') {
-      return route.fulfill({ json: { accounts: mockAccounts } });
+      return route.fulfill({
+        json: { accounts: options.accounts ?? mockAccounts },
+      });
     }
 
     if (pathname.endsWith('/movements')) {

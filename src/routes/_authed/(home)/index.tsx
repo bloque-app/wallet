@@ -153,7 +153,11 @@ function RouteComponent() {
         <AccountsCarousel
           accounts={accounts}
           onSelectAccount={(urn) =>
-            navigate({ to: '/accounts/$urn', params: { urn } })
+            navigate({
+              to: '/accounts/$urn',
+              params: { urn },
+              search: { from: 'home' },
+            })
           }
           onAddAccount={() => setShowCreateAccount(true)}
           highlightAdd={!accountsQuery.isLoading && accounts.length === 0}
