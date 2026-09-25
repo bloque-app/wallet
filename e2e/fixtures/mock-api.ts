@@ -201,6 +201,20 @@ export const mockAccounts = [
   }),
 ];
 
+export const mockFriendAlias = {
+  id: 'alias-friend',
+  alias: 'friend@bloque.team',
+  type: 'email',
+  urn: 'did:bloque:bloque-email:friend@bloque.team',
+  origin: 'bloque-email',
+  details: {},
+  metadata: { alias: 'friend@bloque.team' },
+  status: 'active',
+  is_primary: true,
+  display_name: 'Friend',
+  account_urn: 'urn:pocket-friend',
+};
+
 export const mockIdentity = {
   urn: OWNER_URN,
   origin: 'bloque-email',
@@ -326,6 +340,9 @@ export async function installMockApi(
     }
 
     if (pathname === '/api/aliases') {
+      if (url.searchParams.get('alias') === mockFriendAlias.alias) {
+        return route.fulfill({ json: mockFriendAlias });
+      }
       return route.fulfill({
         status: 404,
         json: { message: 'E_ALIAS_NOT_FOUND' },

@@ -364,7 +364,8 @@
       "sendMoney": "Enviar dinero",
       "confirmSend": "Confirmar envio",
       "confirmSendDescription": "Verifica la persona antes de enviar el dinero.",
-      "recipient": "Destinatario"
+      "recipient": "Destinatario",
+      "sourceAccountLabel": "Bolsillo origen"
     },
     "colombianBanks": {
       "title": "Enviar a bancos colombianos",

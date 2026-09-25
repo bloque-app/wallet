@@ -364,7 +364,8 @@
       "sendMoney": "Send money",
       "confirmSend": "Confirm send",
       "confirmSendDescription": "Verify the person before sending the money.",
-      "recipient": "Recipient"
+      "recipient": "Recipient",
+      "sourceAccountLabel": "Source pocket"
     },
     "colombianBanks": {
       "title": "Send to Colombian banks",

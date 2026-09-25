@@ -2,9 +2,10 @@ import type { Alias } from '@bloque/sdk-identity';
 import { useMutation } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Send, Users } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { AccountCarousel } from '~/components/account/account-carousel';
 import { BackButton } from '~/components/back-button';
 import {
   AlertDialog,
@@ -68,7 +69,23 @@ function RouteComponent() {
 
   const { accounts: sourceAccounts, isLoading: isLoadingAccounts } =
     useAccountPicker({ requireVirtualAccount: true });
-  const sourceAccount = sourceAccounts[0];
+  const [sourceLedgerId, setSourceLedgerId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (sourceAccounts.length === 1 && sourceAccounts[0]) {
+      setSourceLedgerId(sourceAccounts[0].ledgerId);
+      return;
+    }
+    setSourceLedgerId((current) =>
+      current && sourceAccounts.some((account) => account.ledgerId === current)
+        ? current
+        : null,
+    );
+  }, [sourceAccounts]);
+
+  const sourceAccount =
+    sourceAccounts.find((account) => account.ledgerId === sourceLedgerId) ??
+    null;
 
   const selectedAssetConfig = ASSET_OPTIONS.find(
     (asset) => asset.value === selectedAsset,
@@ -81,7 +98,7 @@ function RouteComponent() {
   }, [parsedAmount, selectedAssetConfig.precision]);
 
   const formError = useMemo(() => {
-    if (!sourceAccount && !isLoadingAccounts) {
+    if (sourceAccounts.length === 0 && !isLoadingAccounts) {
       return t('send.bloqueFriends.noSourceAccount');
     }
     if (!normalizedAlias && alias.length > 0) {
@@ -96,7 +113,7 @@ function RouteComponent() {
     alias.length,
     normalizedAlias,
     parsedAmount,
-    sourceAccount,
+    sourceAccounts.length,
     t,
   ]);
 
@@ -282,6 +299,18 @@ function RouteComponent() {
               ))}
             </div>
           </div>
+
+          {sourceAccounts.length > 0 && (
+            <AccountCarousel
+              accounts={sourceAccounts}
+              asset={selectedAssetConfig.sdkAsset}
+              precision={selectedAssetConfig.precision}
+              unit={selectedAsset}
+              value={sourceLedgerId}
+              onChange={setSourceLedgerId}
+              label={t('send.bloqueFriends.sourceAccountLabel')}
+            />
+          )}
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="friend-alias">
