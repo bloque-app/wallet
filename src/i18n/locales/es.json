@@ -758,10 +758,6 @@
     "version": "Wallet Bloque v{{version}}"
   },
   "legal": {
-    "privacy": {
-      "comingSoonTitle": "Próximamente",
-      "comingSoonDescription": "Estamos preparando esta política. Muy pronto vas a poder consultarla aquí."
-    },
     "fees": {
       "description": "Estos son los costos vigentes por cada operación en tu wallet. El costo final se confirma siempre antes de enviar o recargar.",
       "generalSection": "General",

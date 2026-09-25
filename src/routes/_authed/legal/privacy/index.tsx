@@ -1,11 +1,17 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { Clock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { BackButton } from '~/components/back-button';
+import { LegalMarkdown } from '~/routes/_authed/legal/-components/legal-markdown';
+import { PRIVACY_CONTENT_ES } from '~/routes/_authed/legal/-content/privacy';
 
 export const Route = createFileRoute('/_authed/legal/privacy/')({
   component: RouteComponent,
 });
+
+// Body without the document's leading title.
+const PRIVACY_BODY = PRIVACY_CONTENT_ES.slice(
+  PRIVACY_CONTENT_ES.indexOf('\n\n') + 2,
+);
 
 function RouteComponent() {
   const { t } = useTranslation();
@@ -21,15 +27,7 @@ function RouteComponent() {
         {t('profile.rows.privacyPolicy')}
       </h1>
 
-      <div className="flex flex-col items-center gap-3 rounded-2xl border border-border/85 bg-card/85 px-6 py-12 text-center">
-        <Clock className="h-6 w-6 text-muted-foreground" strokeWidth={1.5} />
-        <p className="text-sm font-semibold text-foreground">
-          {t('legal.privacy.comingSoonTitle')}
-        </p>
-        <p className="text-xs text-muted-foreground">
-          {t('legal.privacy.comingSoonDescription')}
-        </p>
-      </div>
+      <LegalMarkdown content={PRIVACY_BODY} />
     </div>
   );
 }
