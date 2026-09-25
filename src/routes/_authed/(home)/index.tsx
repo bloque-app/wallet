@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { AccountsCarousel } from '~/components/account/accounts-carousel';
 import { CreateAccountDrawer } from '~/components/account/create-account-drawer';
 import { MovementRow } from '~/components/movement-row';
+import { USD_ENABLED } from '~/config/features';
 import { hasActiveVirtualAccount } from '~/domain/accounts/virtual-account';
 import { useAccounts } from '~/hooks/accounts/use-accounts';
 import { useGlobalTransactions } from '~/hooks/accounts/use-global-transactions';
@@ -77,7 +78,9 @@ function RouteComponent() {
   const [selectedMovement, setSelectedMovement] = useState<Movement | null>(
     null,
   );
-  const [selectedAsset, setSelectedAsset] = useState<Asset>('USD');
+  const [selectedAsset, setSelectedAsset] = useState<Asset>(
+    USD_ENABLED ? 'USD' : 'COP',
+  );
   const [showCreateAccount, setShowCreateAccount] = useState(false);
 
   const accounts = accountsQuery.data ?? [];
@@ -86,7 +89,7 @@ function RouteComponent() {
   // user who actually has one; only a *settled* list means that.
   const hasVirtualAccount =
     accountsQuery.isLoading || hasActiveVirtualAccount(accounts);
-  const assets: Asset[] = ['USD', 'COP'];
+  const assets: Asset[] = USD_ENABLED ? ['USD', 'COP'] : ['COP', 'USD'];
   const selectedBalance = parsedBalances[selectedAsset] ?? 0;
 
   const recentMovements = transactionsData?.movements ?? [];
@@ -97,12 +100,14 @@ function RouteComponent() {
         <div className="mb-4 flex gap-2">
           {assets.map((asset) => {
             const isActive = selectedAsset === asset;
+            const isBlocked = asset === 'USD' && !USD_ENABLED;
             return (
               <button
                 key={asset}
                 type="button"
                 onClick={() => setSelectedAsset(asset)}
-                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                disabled={isBlocked}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
                   isActive
                     ? 'border-primary/40 bg-primary/10 text-primary'
                     : 'border-border/60 bg-background/70 text-muted-foreground hover:text-foreground'
@@ -114,6 +119,11 @@ function RouteComponent() {
                   className="h-3.5 w-3.5 rounded-full object-cover"
                 />
                 {asset}
+                {isBlocked ? (
+                  <span className="text-[10px] font-normal">
+                    · {t('common.comingSoon')}
+                  </span>
+                ) : null}
               </button>
             );
           })}

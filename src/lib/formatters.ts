@@ -1,3 +1,4 @@
+import { USD_ENABLED } from '~/config/features';
 import i18n from '~/i18n/config';
 
 export type LoginMethod = 'email' | 'phone';
@@ -60,14 +61,15 @@ export function formatAmount(asset: Asset, amount: number): string {
  */
 export function sortBalancesForDisplay<T extends { asset: string }>(
   balances: T[],
+  primary: 'USD' | 'COP' = USD_ENABLED ? 'USD' : 'COP',
 ): T[] {
   return balances
     .filter((balance) => !balance.asset.startsWith('KSM'))
     .sort((a, b) => {
-      const aIsUsd = a.asset.startsWith('DUSD') || a.asset.startsWith('USD');
-      const bIsUsd = b.asset.startsWith('DUSD') || b.asset.startsWith('USD');
+      const aIsUsd = isUsdAsset(a.asset);
+      const bIsUsd = isUsdAsset(b.asset);
       if (aIsUsd === bIsUsd) return 0;
-      return aIsUsd ? -1 : 1;
+      return aIsUsd === (primary === 'USD') ? -1 : 1;
     });
 }
 
