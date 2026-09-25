@@ -26,7 +26,7 @@ import {
 } from '~/components/ui/drawer';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
-import { USD_MOVEMENTS_ENABLED } from '~/config/features';
+import { USD_ENABLED } from '~/config/features';
 import {
   useCardDetailsUrl,
   useCardToggleFreeze,
@@ -133,8 +133,7 @@ function RouteComponent() {
     }
   };
 
-  const isUsdBlocked = (asset: string) =>
-    !USD_MOVEMENTS_ENABLED && isUsdAsset(asset);
+  const isUsdBlocked = (asset: string) => !USD_ENABLED && isUsdAsset(asset);
 
   const handleSetPreferredAsset = async (asset: SupportedAsset) => {
     if (!selectedCard || selectedCard.preferredAsset === asset) return;

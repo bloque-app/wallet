@@ -21,7 +21,7 @@ import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { Textarea } from '~/components/ui/textarea';
-import { USD_MOVEMENTS_ENABLED } from '~/config/features';
+import { USD_ENABLED } from '~/config/features';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useTransfer } from '~/hooks/accounts/use-transfer';
 import { isAliasNotFoundError, userFacingErrorMessage } from '~/lib/api-errors';
@@ -50,7 +50,7 @@ function majorToMinor(amountMajor: number, precision: number) {
 }
 
 function isAssetBlocked(asset: AssetOption): boolean {
-  return asset === 'USD' && !USD_MOVEMENTS_ENABLED;
+  return asset === 'USD' && !USD_ENABLED;
 }
 
 function getAliasDisplayName(aliasResult: Alias) {
@@ -62,7 +62,7 @@ function RouteComponent() {
   const navigate = useNavigate();
   const [view, setView] = useState<ViewState>('form');
   const [selectedAsset, setSelectedAsset] = useState<AssetOption>(
-    USD_MOVEMENTS_ENABLED ? 'USD' : 'COP',
+    USD_ENABLED ? 'USD' : 'COP',
   );
   const [alias, setAlias] = useState('');
   const [amount, setAmount] = useState('');

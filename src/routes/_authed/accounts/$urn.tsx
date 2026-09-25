@@ -32,7 +32,7 @@ import { Label } from '~/components/ui/label';
 import {
   CARDS_ENABLED,
   US_RAILS_ENABLED,
-  USD_MOVEMENTS_ENABLED,
+  USD_ENABLED,
 } from '~/config/features';
 import type { AssetBalance, Product } from '~/domain/accounts/types';
 import { isActiveVirtualAccount } from '~/domain/accounts/virtual-account';
@@ -248,8 +248,7 @@ function RouteComponent() {
     ? parseAmount(transferAssetBalance.current, transferAssetBalance.asset)
     : 0;
   const parsedTransferAmount = Number.parseFloat(transferAmount) || 0;
-  const isTransferAssetBlocked =
-    !USD_MOVEMENTS_ENABLED && isUsdAsset(selectedAsset);
+  const isTransferAssetBlocked = !USD_ENABLED && isUsdAsset(selectedAsset);
 
   const handleOpenTransferDrawer = () => {
     setTransferDestinationId('');
