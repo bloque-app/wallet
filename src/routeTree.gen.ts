@@ -11,6 +11,9 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as PublicRouteImport } from './routes/_public'
 import { Route as AuthedRouteImport } from './routes/_authed'
+import { Route as AuthedTopupRouteRouteImport } from './routes/_authed/topup/route'
+import { Route as AuthedSendRouteRouteImport } from './routes/_authed/send/route'
+import { Route as AuthedBrebKeysRouteRouteImport } from './routes/_authed/breb-keys/route'
 import { Route as PublicLoginIndexRouteImport } from './routes/_public/login/index'
 import { Route as AuthedTopupIndexRouteImport } from './routes/_authed/topup/index'
 import { Route as AuthedSendIndexRouteImport } from './routes/_authed/send/index'
@@ -44,20 +47,35 @@ const AuthedRoute = AuthedRouteImport.update({
   id: '/_authed',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthedTopupRouteRoute = AuthedTopupRouteRouteImport.update({
+  id: '/topup',
+  path: '/topup',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedSendRouteRoute = AuthedSendRouteRouteImport.update({
+  id: '/send',
+  path: '/send',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedBrebKeysRouteRoute = AuthedBrebKeysRouteRouteImport.update({
+  id: '/breb-keys',
+  path: '/breb-keys',
+  getParentRoute: () => AuthedRoute,
+} as any)
 const PublicLoginIndexRoute = PublicLoginIndexRouteImport.update({
   id: '/login/',
   path: '/login/',
   getParentRoute: () => PublicRoute,
 } as any)
 const AuthedTopupIndexRoute = AuthedTopupIndexRouteImport.update({
-  id: '/topup/',
-  path: '/topup/',
-  getParentRoute: () => AuthedRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthedTopupRouteRoute,
 } as any)
 const AuthedSendIndexRoute = AuthedSendIndexRouteImport.update({
-  id: '/send/',
-  path: '/send/',
-  getParentRoute: () => AuthedRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthedSendRouteRoute,
 } as any)
 const AuthedProfileIndexRoute = AuthedProfileIndexRouteImport.update({
   id: '/profile/',
@@ -85,9 +103,9 @@ const AuthedCardIndexRoute = AuthedCardIndexRouteImport.update({
   getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedBrebKeysIndexRoute = AuthedBrebKeysIndexRouteImport.update({
-  id: '/breb-keys/',
-  path: '/breb-keys/',
-  getParentRoute: () => AuthedRoute,
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthedBrebKeysRouteRoute,
 } as any)
 const AuthedAccountsIndexRoute = AuthedAccountsIndexRouteImport.update({
   id: '/accounts/',
@@ -105,26 +123,26 @@ const AuthedAccountsUrnRoute = AuthedAccountsUrnRouteImport.update({
   getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedTopupUsBanksIndexRoute = AuthedTopupUsBanksIndexRouteImport.update({
-  id: '/topup/us-banks/',
-  path: '/topup/us-banks/',
-  getParentRoute: () => AuthedRoute,
+  id: '/us-banks/',
+  path: '/us-banks/',
+  getParentRoute: () => AuthedTopupRouteRoute,
 } as any)
 const AuthedSendUsBanksIndexRoute = AuthedSendUsBanksIndexRouteImport.update({
-  id: '/send/us-banks/',
-  path: '/send/us-banks/',
-  getParentRoute: () => AuthedRoute,
+  id: '/us-banks/',
+  path: '/us-banks/',
+  getParentRoute: () => AuthedSendRouteRoute,
 } as any)
 const AuthedSendColombianBanksIndexRoute =
   AuthedSendColombianBanksIndexRouteImport.update({
-    id: '/send/colombian-banks/',
-    path: '/send/colombian-banks/',
-    getParentRoute: () => AuthedRoute,
+    id: '/colombian-banks/',
+    path: '/colombian-banks/',
+    getParentRoute: () => AuthedSendRouteRoute,
   } as any)
 const AuthedSendBloqueFriendsIndexRoute =
   AuthedSendBloqueFriendsIndexRouteImport.update({
-    id: '/send/bloque-friends/',
-    path: '/send/bloque-friends/',
-    getParentRoute: () => AuthedRoute,
+    id: '/bloque-friends/',
+    path: '/bloque-friends/',
+    getParentRoute: () => AuthedSendRouteRoute,
   } as any)
 const AuthedProfileEditIndexRoute = AuthedProfileEditIndexRouteImport.update({
   id: '/profile/edit/',
@@ -148,21 +166,21 @@ const AuthedLegalFeesIndexRoute = AuthedLegalFeesIndexRouteImport.update({
 } as any)
 const AuthedBrebKeysPayTransferIndexRoute =
   AuthedBrebKeysPayTransferIndexRouteImport.update({
-    id: '/breb-keys/pay-transfer/',
-    path: '/breb-keys/pay-transfer/',
-    getParentRoute: () => AuthedRoute,
+    id: '/pay-transfer/',
+    path: '/pay-transfer/',
+    getParentRoute: () => AuthedBrebKeysRouteRoute,
   } as any)
 const AuthedBrebKeysManageKeysIndexRoute =
   AuthedBrebKeysManageKeysIndexRouteImport.update({
-    id: '/breb-keys/manage-keys/',
-    path: '/breb-keys/manage-keys/',
-    getParentRoute: () => AuthedRoute,
+    id: '/manage-keys/',
+    path: '/manage-keys/',
+    getParentRoute: () => AuthedBrebKeysRouteRoute,
   } as any)
 const AuthedBrebKeysDepositIndexRoute =
   AuthedBrebKeysDepositIndexRouteImport.update({
-    id: '/breb-keys/deposit/',
-    path: '/breb-keys/deposit/',
-    getParentRoute: () => AuthedRoute,
+    id: '/deposit/',
+    path: '/deposit/',
+    getParentRoute: () => AuthedBrebKeysRouteRoute,
   } as any)
 const AuthedCardDetailsUrnRoute = AuthedCardDetailsUrnRouteImport.update({
   id: '/card/details/$urn',
@@ -172,6 +190,9 @@ const AuthedCardDetailsUrnRoute = AuthedCardDetailsUrnRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthedhomeIndexRoute
+  '/breb-keys': typeof AuthedBrebKeysRouteRouteWithChildren
+  '/send': typeof AuthedSendRouteRouteWithChildren
+  '/topup': typeof AuthedTopupRouteRouteWithChildren
   '/accounts/$urn': typeof AuthedAccountsUrnRoute
   '/accounts/': typeof AuthedAccountsIndexRoute
   '/breb-keys/': typeof AuthedBrebKeysIndexRoute
@@ -226,6 +247,9 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authed': typeof AuthedRouteWithChildren
   '/_public': typeof PublicRouteWithChildren
+  '/_authed/breb-keys': typeof AuthedBrebKeysRouteRouteWithChildren
+  '/_authed/send': typeof AuthedSendRouteRouteWithChildren
+  '/_authed/topup': typeof AuthedTopupRouteRouteWithChildren
   '/_authed/accounts/$urn': typeof AuthedAccountsUrnRoute
   '/_authed/(home)/': typeof AuthedhomeIndexRoute
   '/_authed/accounts/': typeof AuthedAccountsIndexRoute
@@ -255,6 +279,9 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/breb-keys'
+    | '/send'
+    | '/topup'
     | '/accounts/$urn'
     | '/accounts/'
     | '/breb-keys/'
@@ -308,6 +335,9 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_authed'
     | '/_public'
+    | '/_authed/breb-keys'
+    | '/_authed/send'
+    | '/_authed/topup'
     | '/_authed/accounts/$urn'
     | '/_authed/(home)/'
     | '/_authed/accounts/'
@@ -355,6 +385,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authed/topup': {
+      id: '/_authed/topup'
+      path: '/topup'
+      fullPath: '/topup'
+      preLoaderRoute: typeof AuthedTopupRouteRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/send': {
+      id: '/_authed/send'
+      path: '/send'
+      fullPath: '/send'
+      preLoaderRoute: typeof AuthedSendRouteRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/breb-keys': {
+      id: '/_authed/breb-keys'
+      path: '/breb-keys'
+      fullPath: '/breb-keys'
+      preLoaderRoute: typeof AuthedBrebKeysRouteRouteImport
+      parentRoute: typeof AuthedRoute
+    }
     '/_public/login/': {
       id: '/_public/login/'
       path: '/login'
@@ -364,17 +415,17 @@ declare module '@tanstack/react-router' {
     }
     '/_authed/topup/': {
       id: '/_authed/topup/'
-      path: '/topup'
+      path: '/'
       fullPath: '/topup/'
       preLoaderRoute: typeof AuthedTopupIndexRouteImport
-      parentRoute: typeof AuthedRoute
+      parentRoute: typeof AuthedTopupRouteRoute
     }
     '/_authed/send/': {
       id: '/_authed/send/'
-      path: '/send'
+      path: '/'
       fullPath: '/send/'
       preLoaderRoute: typeof AuthedSendIndexRouteImport
-      parentRoute: typeof AuthedRoute
+      parentRoute: typeof AuthedSendRouteRoute
     }
     '/_authed/profile/': {
       id: '/_authed/profile/'
@@ -413,10 +464,10 @@ declare module '@tanstack/react-router' {
     }
     '/_authed/breb-keys/': {
       id: '/_authed/breb-keys/'
-      path: '/breb-keys'
+      path: '/'
       fullPath: '/breb-keys/'
       preLoaderRoute: typeof AuthedBrebKeysIndexRouteImport
-      parentRoute: typeof AuthedRoute
+      parentRoute: typeof AuthedBrebKeysRouteRoute
     }
     '/_authed/accounts/': {
       id: '/_authed/accounts/'
@@ -441,31 +492,31 @@ declare module '@tanstack/react-router' {
     }
     '/_authed/topup/us-banks/': {
       id: '/_authed/topup/us-banks/'
-      path: '/topup/us-banks'
+      path: '/us-banks'
       fullPath: '/topup/us-banks/'
       preLoaderRoute: typeof AuthedTopupUsBanksIndexRouteImport
-      parentRoute: typeof AuthedRoute
+      parentRoute: typeof AuthedTopupRouteRoute
     }
     '/_authed/send/us-banks/': {
       id: '/_authed/send/us-banks/'
-      path: '/send/us-banks'
+      path: '/us-banks'
       fullPath: '/send/us-banks/'
       preLoaderRoute: typeof AuthedSendUsBanksIndexRouteImport
-      parentRoute: typeof AuthedRoute
+      parentRoute: typeof AuthedSendRouteRoute
     }
     '/_authed/send/colombian-banks/': {
       id: '/_authed/send/colombian-banks/'
-      path: '/send/colombian-banks'
+      path: '/colombian-banks'
       fullPath: '/send/colombian-banks/'
       preLoaderRoute: typeof AuthedSendColombianBanksIndexRouteImport
-      parentRoute: typeof AuthedRoute
+      parentRoute: typeof AuthedSendRouteRoute
     }
     '/_authed/send/bloque-friends/': {
       id: '/_authed/send/bloque-friends/'
-      path: '/send/bloque-friends'
+      path: '/bloque-friends'
       fullPath: '/send/bloque-friends/'
       preLoaderRoute: typeof AuthedSendBloqueFriendsIndexRouteImport
-      parentRoute: typeof AuthedRoute
+      parentRoute: typeof AuthedSendRouteRoute
     }
     '/_authed/profile/edit/': {
       id: '/_authed/profile/edit/'
@@ -497,24 +548,24 @@ declare module '@tanstack/react-router' {
     }
     '/_authed/breb-keys/pay-transfer/': {
       id: '/_authed/breb-keys/pay-transfer/'
-      path: '/breb-keys/pay-transfer'
+      path: '/pay-transfer'
       fullPath: '/breb-keys/pay-transfer/'
       preLoaderRoute: typeof AuthedBrebKeysPayTransferIndexRouteImport
-      parentRoute: typeof AuthedRoute
+      parentRoute: typeof AuthedBrebKeysRouteRoute
     }
     '/_authed/breb-keys/manage-keys/': {
       id: '/_authed/breb-keys/manage-keys/'
-      path: '/breb-keys/manage-keys'
+      path: '/manage-keys'
       fullPath: '/breb-keys/manage-keys/'
       preLoaderRoute: typeof AuthedBrebKeysManageKeysIndexRouteImport
-      parentRoute: typeof AuthedRoute
+      parentRoute: typeof AuthedBrebKeysRouteRoute
     }
     '/_authed/breb-keys/deposit/': {
       id: '/_authed/breb-keys/deposit/'
-      path: '/breb-keys/deposit'
+      path: '/deposit'
       fullPath: '/breb-keys/deposit/'
       preLoaderRoute: typeof AuthedBrebKeysDepositIndexRouteImport
-      parentRoute: typeof AuthedRoute
+      parentRoute: typeof AuthedBrebKeysRouteRoute
     }
     '/_authed/card/details/$urn': {
       id: '/_authed/card/details/$urn'
@@ -526,56 +577,90 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthedBrebKeysRouteRouteChildren {
+  AuthedBrebKeysIndexRoute: typeof AuthedBrebKeysIndexRoute
+  AuthedBrebKeysDepositIndexRoute: typeof AuthedBrebKeysDepositIndexRoute
+  AuthedBrebKeysManageKeysIndexRoute: typeof AuthedBrebKeysManageKeysIndexRoute
+  AuthedBrebKeysPayTransferIndexRoute: typeof AuthedBrebKeysPayTransferIndexRoute
+}
+
+const AuthedBrebKeysRouteRouteChildren: AuthedBrebKeysRouteRouteChildren = {
+  AuthedBrebKeysIndexRoute: AuthedBrebKeysIndexRoute,
+  AuthedBrebKeysDepositIndexRoute: AuthedBrebKeysDepositIndexRoute,
+  AuthedBrebKeysManageKeysIndexRoute: AuthedBrebKeysManageKeysIndexRoute,
+  AuthedBrebKeysPayTransferIndexRoute: AuthedBrebKeysPayTransferIndexRoute,
+}
+
+const AuthedBrebKeysRouteRouteWithChildren =
+  AuthedBrebKeysRouteRoute._addFileChildren(AuthedBrebKeysRouteRouteChildren)
+
+interface AuthedSendRouteRouteChildren {
+  AuthedSendIndexRoute: typeof AuthedSendIndexRoute
+  AuthedSendBloqueFriendsIndexRoute: typeof AuthedSendBloqueFriendsIndexRoute
+  AuthedSendColombianBanksIndexRoute: typeof AuthedSendColombianBanksIndexRoute
+  AuthedSendUsBanksIndexRoute: typeof AuthedSendUsBanksIndexRoute
+}
+
+const AuthedSendRouteRouteChildren: AuthedSendRouteRouteChildren = {
+  AuthedSendIndexRoute: AuthedSendIndexRoute,
+  AuthedSendBloqueFriendsIndexRoute: AuthedSendBloqueFriendsIndexRoute,
+  AuthedSendColombianBanksIndexRoute: AuthedSendColombianBanksIndexRoute,
+  AuthedSendUsBanksIndexRoute: AuthedSendUsBanksIndexRoute,
+}
+
+const AuthedSendRouteRouteWithChildren = AuthedSendRouteRoute._addFileChildren(
+  AuthedSendRouteRouteChildren,
+)
+
+interface AuthedTopupRouteRouteChildren {
+  AuthedTopupIndexRoute: typeof AuthedTopupIndexRoute
+  AuthedTopupUsBanksIndexRoute: typeof AuthedTopupUsBanksIndexRoute
+}
+
+const AuthedTopupRouteRouteChildren: AuthedTopupRouteRouteChildren = {
+  AuthedTopupIndexRoute: AuthedTopupIndexRoute,
+  AuthedTopupUsBanksIndexRoute: AuthedTopupUsBanksIndexRoute,
+}
+
+const AuthedTopupRouteRouteWithChildren =
+  AuthedTopupRouteRoute._addFileChildren(AuthedTopupRouteRouteChildren)
+
 interface AuthedRouteChildren {
+  AuthedBrebKeysRouteRoute: typeof AuthedBrebKeysRouteRouteWithChildren
+  AuthedSendRouteRoute: typeof AuthedSendRouteRouteWithChildren
+  AuthedTopupRouteRoute: typeof AuthedTopupRouteRouteWithChildren
   AuthedAccountsUrnRoute: typeof AuthedAccountsUrnRoute
   AuthedhomeIndexRoute: typeof AuthedhomeIndexRoute
   AuthedAccountsIndexRoute: typeof AuthedAccountsIndexRoute
-  AuthedBrebKeysIndexRoute: typeof AuthedBrebKeysIndexRoute
   AuthedCardIndexRoute: typeof AuthedCardIndexRoute
   AuthedConvertIndexRoute: typeof AuthedConvertIndexRoute
   AuthedKycIndexRoute: typeof AuthedKycIndexRoute
   AuthedMovementsIndexRoute: typeof AuthedMovementsIndexRoute
   AuthedProfileIndexRoute: typeof AuthedProfileIndexRoute
-  AuthedSendIndexRoute: typeof AuthedSendIndexRoute
-  AuthedTopupIndexRoute: typeof AuthedTopupIndexRoute
   AuthedCardDetailsUrnRoute: typeof AuthedCardDetailsUrnRoute
-  AuthedBrebKeysDepositIndexRoute: typeof AuthedBrebKeysDepositIndexRoute
-  AuthedBrebKeysManageKeysIndexRoute: typeof AuthedBrebKeysManageKeysIndexRoute
-  AuthedBrebKeysPayTransferIndexRoute: typeof AuthedBrebKeysPayTransferIndexRoute
   AuthedLegalFeesIndexRoute: typeof AuthedLegalFeesIndexRoute
   AuthedLegalPrivacyIndexRoute: typeof AuthedLegalPrivacyIndexRoute
   AuthedLegalTermsIndexRoute: typeof AuthedLegalTermsIndexRoute
   AuthedProfileEditIndexRoute: typeof AuthedProfileEditIndexRoute
-  AuthedSendBloqueFriendsIndexRoute: typeof AuthedSendBloqueFriendsIndexRoute
-  AuthedSendColombianBanksIndexRoute: typeof AuthedSendColombianBanksIndexRoute
-  AuthedSendUsBanksIndexRoute: typeof AuthedSendUsBanksIndexRoute
-  AuthedTopupUsBanksIndexRoute: typeof AuthedTopupUsBanksIndexRoute
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
+  AuthedBrebKeysRouteRoute: AuthedBrebKeysRouteRouteWithChildren,
+  AuthedSendRouteRoute: AuthedSendRouteRouteWithChildren,
+  AuthedTopupRouteRoute: AuthedTopupRouteRouteWithChildren,
   AuthedAccountsUrnRoute: AuthedAccountsUrnRoute,
   AuthedhomeIndexRoute: AuthedhomeIndexRoute,
   AuthedAccountsIndexRoute: AuthedAccountsIndexRoute,
-  AuthedBrebKeysIndexRoute: AuthedBrebKeysIndexRoute,
   AuthedCardIndexRoute: AuthedCardIndexRoute,
   AuthedConvertIndexRoute: AuthedConvertIndexRoute,
   AuthedKycIndexRoute: AuthedKycIndexRoute,
   AuthedMovementsIndexRoute: AuthedMovementsIndexRoute,
   AuthedProfileIndexRoute: AuthedProfileIndexRoute,
-  AuthedSendIndexRoute: AuthedSendIndexRoute,
-  AuthedTopupIndexRoute: AuthedTopupIndexRoute,
   AuthedCardDetailsUrnRoute: AuthedCardDetailsUrnRoute,
-  AuthedBrebKeysDepositIndexRoute: AuthedBrebKeysDepositIndexRoute,
-  AuthedBrebKeysManageKeysIndexRoute: AuthedBrebKeysManageKeysIndexRoute,
-  AuthedBrebKeysPayTransferIndexRoute: AuthedBrebKeysPayTransferIndexRoute,
   AuthedLegalFeesIndexRoute: AuthedLegalFeesIndexRoute,
   AuthedLegalPrivacyIndexRoute: AuthedLegalPrivacyIndexRoute,
   AuthedLegalTermsIndexRoute: AuthedLegalTermsIndexRoute,
   AuthedProfileEditIndexRoute: AuthedProfileEditIndexRoute,
-  AuthedSendBloqueFriendsIndexRoute: AuthedSendBloqueFriendsIndexRoute,
-  AuthedSendColombianBanksIndexRoute: AuthedSendColombianBanksIndexRoute,
-  AuthedSendUsBanksIndexRoute: AuthedSendUsBanksIndexRoute,
-  AuthedTopupUsBanksIndexRoute: AuthedTopupUsBanksIndexRoute,
 }
 
 const AuthedRouteWithChildren =

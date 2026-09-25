@@ -97,7 +97,8 @@
       "transferErrorToast": "No se pudo completar la transferencia. Intenta de nuevo.",
       "addProductCardLabel": "Tarjeta (Global)",
       "addProductBrebLabel": "Llave BRE-B (COP)",
-      "addProductPlaidLabel": "Plaid (USD)"
+      "addProductPlaidLabel": "Plaid (USD)",
+      "addProductNeedsVirtualAccount": "Solo puedes agregar productos a un bolsillo activo."
     }
   },
   "brebKeys": {
@@ -767,5 +768,10 @@
       "description": "Para seguir usando tu cuenta, necesitamos que revises y aceptes los términos y condiciones vigentes.",
       "cta": "Revisar y aceptar"
     }
+  },
+  "virtualAccountGate": {
+    "title": "Necesitas un bolsillo",
+    "description": "Crea un bolsillo para poder recargar, enviar dinero, usar BRE-B y crear tarjetas.",
+    "loadError": "No pudimos cargar tus bolsillos."
   }
 }

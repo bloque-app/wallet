@@ -97,7 +97,8 @@
       "transferErrorToast": "Couldn't complete the transfer. Please try again.",
       "addProductCardLabel": "Card (Global)",
       "addProductBrebLabel": "BRE-B key (COP)",
-      "addProductPlaidLabel": "Plaid (USD)"
+      "addProductPlaidLabel": "Plaid (USD)",
+      "addProductNeedsVirtualAccount": "You can only add products to an active pocket."
     }
   },
   "brebKeys": {
@@ -767,5 +768,10 @@
       "description": "To keep using your account, please review and accept the current terms and conditions.",
       "cta": "Review and accept"
     }
+  },
+  "virtualAccountGate": {
+    "title": "You need a pocket",
+    "description": "Create a pocket to top up, send money, use BRE-B and create cards.",
+    "loadError": "We couldn't load your pockets."
   }
 }

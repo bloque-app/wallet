@@ -31,6 +31,7 @@ import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { US_RAILS_ENABLED } from '~/config/features';
 import type { AssetBalance, Product } from '~/domain/accounts/types';
+import { isActiveVirtualAccount } from '~/domain/accounts/virtual-account';
 import { useAccountMovements } from '~/hooks/accounts/use-account-movements';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useAccount, useAccounts } from '~/hooks/accounts/use-accounts';
@@ -184,9 +185,10 @@ function RouteComponent() {
     account?.products.filter((product) => product.urn !== account.primaryUrn) ??
     [];
   const Icon = getProductKindIcon(primaryProduct?.kind ?? 'other');
+  const canAddProduct = !!account && isActiveVirtualAccount(account);
 
   const handlePickProductKind = (kind: 'card' | 'breb' | 'plaid') => {
-    if (!account) return;
+    if (!account || !canAddProduct) return;
     if (kind === 'breb') {
       setAddProductStep('closed');
       skipDrawerHistoryOnce();
@@ -210,7 +212,7 @@ function RouteComponent() {
   };
 
   const handleCreateProduct = async () => {
-    if (!account) return;
+    if (!account || !canAddProduct) return;
     try {
       if (addProductStep === 'card') {
         await createCardMutation.mutateAsync({
@@ -388,11 +390,18 @@ function RouteComponent() {
                 variant="outline"
                 className="h-8 gap-1.5 rounded-xl px-3 text-xs font-medium"
                 onClick={() => setAddProductStep('pick')}
+                disabled={!canAddProduct}
               >
                 <Plus className="h-3.5 w-3.5" />
                 {t('accounts.detail.addProduct')}
               </Button>
             </div>
+
+            {canAddProduct ? null : (
+              <p className="text-xs text-muted-foreground">
+                {t('accounts.detail.addProductNeedsVirtualAccount')}
+              </p>
+            )}
 
             {associatedProducts.length === 0 ? (
               <p className="text-sm text-muted-foreground">

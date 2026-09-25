@@ -7,12 +7,14 @@ import { toast } from 'sonner';
 import { cn } from '~/lib/utils';
 
 /**
- * `topup`/`send`/BRE-B all fail deep inside their own flow with a confusing
- * "no destination account" error when the user has no account at all yet
- * (see BQE-2653) — disabling them up front, before that flow is ever
- * reached, is cheaper to understand than any error message once inside it.
+ * `topup`/`send`/BRE-B all require an active virtual account (pocket);
+ * without one they are disabled up front instead of failing inside the flow.
  */
-export function QuickActions({ hasAccount }: { hasAccount: boolean }) {
+export function QuickActions({
+  hasVirtualAccount,
+}: {
+  hasVirtualAccount: boolean;
+}) {
   const { t } = useTranslation();
   const actions = [
     {
@@ -44,7 +46,7 @@ export function QuickActions({ hasAccount }: { hasAccount: boolean }) {
             <div
               className={cn(
                 'flex flex-col items-center gap-1.5 rounded-2xl border border-border/85 px-2 py-3.5 transition-all duration-200',
-                hasAccount
+                hasVirtualAccount
                   ? 'bg-card shadow-[0_14px_28px_-30px_color-mix(in_oklch,var(--foreground)_55%,transparent)] dark:shadow-[0_14px_28px_-30px_rgb(0_0_0_/_0.7)] hover:bg-muted/70 cursor-pointer'
                   : 'bg-card/50 opacity-50 cursor-not-allowed',
               )}
@@ -58,7 +60,7 @@ export function QuickActions({ hasAccount }: { hasAccount: boolean }) {
             </div>
           );
 
-          if (!hasAccount) {
+          if (!hasVirtualAccount) {
             return (
               <button
                 key={action.label}
