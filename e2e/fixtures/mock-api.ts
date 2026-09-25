@@ -325,6 +325,13 @@ export async function installMockApi(
       });
     }
 
+    if (pathname === '/api/aliases') {
+      return route.fulfill({
+        status: 404,
+        json: { message: 'E_ALIAS_NOT_FOUND' },
+      });
+    }
+
     if (pathname.endsWith('/movements')) {
       return route.fulfill({
         json: { data: [], page_size: 10, has_more: false, next: null },

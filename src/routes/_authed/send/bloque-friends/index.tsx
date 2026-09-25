@@ -22,6 +22,7 @@ import { Label } from '~/components/ui/label';
 import { Textarea } from '~/components/ui/textarea';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useTransfer } from '~/hooks/accounts/use-transfer';
+import { isAliasNotFoundError, userFacingErrorMessage } from '~/lib/api-errors';
 import { bloque } from '~/lib/bloque';
 import { formatAmount } from '~/lib/formatters';
 
@@ -119,9 +120,12 @@ function RouteComponent() {
     },
     onError: (error) => {
       toast.error(
-        error instanceof Error
-          ? error.message
-          : t('send.bloqueFriends.aliasValidationError'),
+        isAliasNotFoundError(error)
+          ? t('send.bloqueFriends.aliasNotFound')
+          : userFacingErrorMessage(
+              error,
+              t('send.bloqueFriends.aliasValidationError'),
+            ),
       );
     },
   });
@@ -165,9 +169,10 @@ function RouteComponent() {
         },
         onError: (error) => {
           toast.error(
-            error instanceof Error
-              ? error.message
-              : t('send.bloqueFriends.transferErrorToast'),
+            userFacingErrorMessage(
+              error,
+              t('send.bloqueFriends.transferErrorToast'),
+            ),
           );
           setView('error');
         },
