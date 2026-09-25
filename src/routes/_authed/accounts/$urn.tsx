@@ -155,7 +155,9 @@ function RouteComponent() {
 
   const createCardMutation = useCreateCard();
   const transferMutation = useTransfer();
-  const { accounts: ownAccounts } = useAccountPicker();
+  const { accounts: ownAccounts } = useAccountPicker({
+    requireVirtualAccount: true,
+  });
   const transferDestinations = ownAccounts.filter(
     (candidate) => candidate.ledgerId !== account?.ledgerId,
   );

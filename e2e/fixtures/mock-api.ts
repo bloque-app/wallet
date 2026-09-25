@@ -66,7 +66,7 @@ function card(opts: {
   };
 }
 
-function brebKey(opts: {
+export function brebKey(opts: {
   urn: string;
   ledgerId: string;
   keyType: string;

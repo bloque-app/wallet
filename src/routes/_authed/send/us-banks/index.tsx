@@ -80,7 +80,10 @@ function RouteComponent() {
   } | null>(null);
   const [autoRetry, setAutoRetry] = useState(false);
   const { accounts: sourceAccounts, isLoading: isLoadingAccounts } =
-    useAccountPicker({ asset: FROM_ASSET });
+    useAccountPicker({
+      asset: FROM_ASSET,
+      requireVirtualAccount: true,
+    });
   const [sourceLedgerId, setSourceLedgerId] = useState<string | null>(null);
 
   useEffect(() => {

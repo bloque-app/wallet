@@ -121,6 +121,7 @@ function RouteComponent() {
   const { accounts: linkedActivePockets } = useAccountPicker({
     requireProductKind: 'external-us-bank',
     requireLinkStatus: 'active',
+    requireVirtualAccount: true,
   });
 
   // Which pocket the new Plaid link itself gets associated with. Only one

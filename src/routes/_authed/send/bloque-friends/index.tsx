@@ -67,7 +67,7 @@ function RouteComponent() {
   } | null>(null);
 
   const { accounts: sourceAccounts, isLoading: isLoadingAccounts } =
-    useAccountPicker();
+    useAccountPicker({ requireVirtualAccount: true });
   const sourceAccount = sourceAccounts[0];
 
   const selectedAssetConfig = ASSET_OPTIONS.find(
