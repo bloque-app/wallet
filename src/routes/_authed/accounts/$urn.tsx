@@ -29,7 +29,7 @@ import {
 } from '~/components/ui/drawer';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
-import { US_RAILS_ENABLED } from '~/config/features';
+import { US_RAILS_ENABLED, USD_MOVEMENTS_ENABLED } from '~/config/features';
 import type { AssetBalance, Product } from '~/domain/accounts/types';
 import { isActiveVirtualAccount } from '~/domain/accounts/virtual-account';
 import { useAccountMovements } from '~/hooks/accounts/use-account-movements';
@@ -38,7 +38,12 @@ import { useAccount, useAccounts } from '~/hooks/accounts/use-accounts';
 import { useCreateCard } from '~/hooks/accounts/use-cards';
 import { useTransfer } from '~/hooks/accounts/use-transfer';
 import type { Asset, Movement } from '~/lib/formatters';
-import { formatCOP, formatUSD, sortBalancesForDisplay } from '~/lib/formatters';
+import {
+  formatCOP,
+  formatUSD,
+  isUsdAsset,
+  sortBalancesForDisplay,
+} from '~/lib/formatters';
 import { skipDrawerHistoryOnce } from '~/lib/navigation';
 import { cn } from '~/lib/utils';
 import {
@@ -238,6 +243,8 @@ function RouteComponent() {
     ? parseAmount(transferAssetBalance.current, transferAssetBalance.asset)
     : 0;
   const parsedTransferAmount = Number.parseFloat(transferAmount) || 0;
+  const isTransferAssetBlocked =
+    !USD_MOVEMENTS_ENABLED && isUsdAsset(selectedAsset);
 
   const handleOpenTransferDrawer = () => {
     setTransferDestinationId('');
@@ -246,7 +253,7 @@ function RouteComponent() {
   };
 
   const handleSubmitTransfer = async () => {
-    if (!account || !transferDestination) return;
+    if (!account || !transferDestination || isTransferAssetBlocked) return;
     if (
       parsedTransferAmount <= 0 ||
       parsedTransferAmount > transferAvailableMajor
@@ -373,9 +380,11 @@ function RouteComponent() {
                     variant="outline"
                     className="h-10 w-full gap-1.5 rounded-xl text-xs font-medium"
                     onClick={handleOpenTransferDrawer}
+                    disabled={isTransferAssetBlocked}
                   >
                     <ArrowRightLeft className="h-3.5 w-3.5" />
                     {t('accounts.detail.transferToOwnAccount')}
+                    {isTransferAssetBlocked ? <ComingSoonBadge /> : null}
                   </Button>
                 )}
               </>

@@ -126,3 +126,9 @@ export function generateRandomPolygonAddress(): string {
   }
   return addr;
 }
+
+/** True for USD-denominated SDK assets, e.g. 'DUSD/6' or 'USD/2'. */
+export function isUsdAsset(sdkAsset: string): boolean {
+  const [code] = sdkAsset.split('/');
+  return code === 'DUSD' || code === 'USD';
+}

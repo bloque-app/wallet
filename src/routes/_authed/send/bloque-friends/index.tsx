@@ -21,6 +21,7 @@ import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { Textarea } from '~/components/ui/textarea';
+import { USD_MOVEMENTS_ENABLED } from '~/config/features';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useTransfer } from '~/hooks/accounts/use-transfer';
 import { isAliasNotFoundError, userFacingErrorMessage } from '~/lib/api-errors';
@@ -48,6 +49,10 @@ function majorToMinor(amountMajor: number, precision: number) {
   return (BigInt(amountMajor) * 10n ** BigInt(precision)).toString();
 }
 
+function isAssetBlocked(asset: AssetOption): boolean {
+  return asset === 'USD' && !USD_MOVEMENTS_ENABLED;
+}
+
 function getAliasDisplayName(aliasResult: Alias) {
   return aliasResult.display_name?.trim() || aliasResult.alias;
 }
@@ -56,7 +61,9 @@ function RouteComponent() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [view, setView] = useState<ViewState>('form');
-  const [selectedAsset, setSelectedAsset] = useState<AssetOption>('USD');
+  const [selectedAsset, setSelectedAsset] = useState<AssetOption>(
+    USD_MOVEMENTS_ENABLED ? 'USD' : 'COP',
+  );
   const [alias, setAlias] = useState('');
   const [amount, setAmount] = useState('');
   const [message, setMessage] = useState('');
@@ -87,9 +94,9 @@ function RouteComponent() {
     sourceAccounts.find((account) => account.ledgerId === sourceLedgerId) ??
     null;
 
-  const selectedAssetConfig = ASSET_OPTIONS.find(
-    (asset) => asset.value === selectedAsset,
-  )!;
+  const selectedAssetConfig =
+    ASSET_OPTIONS.find((asset) => asset.value === selectedAsset) ??
+    ASSET_OPTIONS[1];
   const normalizedAlias = alias.trim();
   const parsedAmount = Number.parseInt(amount.replace(/\D/g, ''), 10) || 0;
   const amountMinor = useMemo(() => {
@@ -288,13 +295,19 @@ function RouteComponent() {
                   key={asset.value}
                   type="button"
                   onClick={() => setSelectedAsset(asset.value)}
-                  className={`rounded-2xl border px-3 py-3 text-sm transition-all ${
+                  disabled={isAssetBlocked(asset.value)}
+                  className={`flex flex-col items-center rounded-2xl border px-3 py-3 text-sm transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
                     selectedAsset === asset.value
                       ? 'border-foreground bg-foreground text-background'
                       : 'border-border bg-background/70 text-foreground hover:bg-muted/70'
                   }`}
                 >
                   {asset.value}
+                  {isAssetBlocked(asset.value) ? (
+                    <span className="text-[10px]">
+                      {t('common.comingSoon')}
+                    </span>
+                  ) : null}
                 </button>
               ))}
             </div>

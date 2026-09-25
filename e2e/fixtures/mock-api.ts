@@ -356,7 +356,19 @@ export async function installMockApi(
     }
 
     if (pathname.endsWith('/balance')) {
-      return route.fulfill({ json: { balance: {} } });
+      const accounts = (options.accounts ?? mockAccounts) as Array<{
+        urn: string;
+        ledger_account_id: string;
+        balance?: Record<string, unknown>;
+      }>;
+      const urn = decodeURIComponent(pathname.split('/')[3] ?? '');
+      const ledgerId = accounts.find((a) => a.urn === urn)?.ledger_account_id;
+      const withBalance = accounts.find(
+        (a) =>
+          a.ledger_account_id === ledgerId &&
+          Object.keys(a.balance ?? {}).length > 0,
+      );
+      return route.fulfill({ json: { balance: withBalance?.balance ?? {} } });
     }
 
     return route.fulfill({
