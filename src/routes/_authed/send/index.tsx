@@ -2,7 +2,9 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { Building2, KeyRound, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { BackButton } from '~/components/back-button';
+import { ComingSoonBadge } from '~/components/coming-soon';
 import { FeeInfo } from '~/components/fee-info';
+import { US_RAILS_ENABLED } from '~/config/features';
 import { formatCOP, formatUSD } from '~/lib/formatters';
 import { cn } from '~/lib/utils';
 
@@ -20,6 +22,7 @@ type SendOption = {
   group?: 'colombia' | 'us';
   fee?: string;
   hasFeeInfo?: boolean;
+  comingSoon?: boolean;
 } & ({ to: string; onClick?: never } | { to?: never; onClick: () => void });
 
 function RouteComponent() {
@@ -62,6 +65,7 @@ function RouteComponent() {
       group: 'us',
       fee: `${formatUSD(1)} + 1%`,
       hasFeeInfo: true,
+      comingSoon: !US_RAILS_ENABLED,
     },
   ];
 
@@ -114,7 +118,7 @@ function RouteComponent() {
 
 function renderSendOption(option: SendOption, feeInfoDescription: string) {
   const Icon = option.icon;
-  const isDisabled = !option.to;
+  const isDisabled = !option.to || option.comingSoon;
   const inner = (
     <>
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
@@ -132,7 +136,9 @@ function renderSendOption(option: SendOption, feeInfoDescription: string) {
     </>
   );
 
-  const clickable = option.to ? (
+  const clickable = option.comingSoon ? (
+    <div className="flex flex-1 items-start gap-3">{inner}</div>
+  ) : option.to ? (
     <Link
       to={option.to}
       search={option.search}
@@ -159,8 +165,13 @@ function renderSendOption(option: SendOption, feeInfoDescription: string) {
       )}
     >
       {clickable}
-      {option.fee && option.hasFeeInfo && (
-        <FeeInfo fee={option.fee} description={feeInfoDescription} />
+      {option.comingSoon ? (
+        <ComingSoonBadge />
+      ) : (
+        option.fee &&
+        option.hasFeeInfo && (
+          <FeeInfo fee={option.fee} description={feeInfoDescription} />
+        )
       )}
     </div>
   );

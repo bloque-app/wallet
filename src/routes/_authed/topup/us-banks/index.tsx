@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { AccountCarousel } from '~/components/account/account-carousel';
+import { ComingSoonScreen } from '~/components/coming-soon';
+import { US_RAILS_ENABLED } from '~/config/features';
 import { useAuth } from '~/contexts/auth/auth-context';
 import type { ExecutionOutcome } from '~/domain/payments/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
@@ -75,8 +77,19 @@ export const Route = createFileRoute('/_authed/topup/us-banks/')({
       ? { ledgerId: search.ledgerId }
       : {}),
   }),
-  component: RouteComponent,
+  component: US_RAILS_ENABLED ? RouteComponent : UsRailsComingSoon,
 });
+
+function UsRailsComingSoon() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  return (
+    <ComingSoonScreen
+      title={t('topup.usBanks.title')}
+      onBack={() => void navigate({ to: '/topup' })}
+    />
+  );
+}
 
 function RouteComponent() {
   const { t } = useTranslation();

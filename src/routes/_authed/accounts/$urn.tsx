@@ -16,6 +16,7 @@ import {
   getProductKindLabel,
 } from '~/components/account/product-presentation';
 import { BackButton } from '~/components/back-button';
+import { ComingSoonBadge } from '~/components/coming-soon';
 import { MovementDetailDrawer } from '~/components/movement-detail-drawer';
 import { MovementRow } from '~/components/movement-row';
 import { Button } from '~/components/ui/button';
@@ -28,6 +29,7 @@ import {
 } from '~/components/ui/drawer';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
+import { US_RAILS_ENABLED } from '~/config/features';
 import type { AssetBalance, Product } from '~/domain/accounts/types';
 import { useAccountMovements } from '~/hooks/accounts/use-account-movements';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
@@ -533,6 +535,7 @@ function RouteComponent() {
                     matchKind: 'external-us-bank',
                     label: t('accounts.detail.addProductPlaidLabel'),
                     icon: Landmark,
+                    comingSoon: !US_RAILS_ENABLED,
                   },
                 ]
                   .filter(
@@ -546,14 +549,16 @@ function RouteComponent() {
                       key={option.kind}
                       type="button"
                       onClick={() => handlePickProductKind(option.kind)}
-                      className="flex items-center gap-3 rounded-2xl border border-border/75 bg-background/70 px-4 py-3.5 text-left transition-colors hover:bg-muted/60"
+                      disabled={option.comingSoon}
+                      className="flex items-center gap-3 rounded-2xl border border-border/75 bg-background/70 px-4 py-3.5 text-left transition-colors hover:bg-muted/60 disabled:opacity-60 disabled:hover:bg-background/70"
                     >
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
                         <option.icon className="h-4 w-4 text-primary" />
                       </div>
-                      <span className="text-sm font-medium text-foreground">
+                      <span className="flex-1 text-sm font-medium text-foreground">
                         {option.label}
                       </span>
+                      {option.comingSoon ? <ComingSoonBadge /> : null}
                     </button>
                   ))}
               </div>

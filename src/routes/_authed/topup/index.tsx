@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { AccountCarousel } from '~/components/account/account-carousel';
 import { BackButton } from '~/components/back-button';
+import { ComingSoonBadge } from '~/components/coming-soon';
 import { FeeInfo } from '~/components/fee-info';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
@@ -16,6 +17,7 @@ import {
   SelectTrigger,
 } from '~/components/ui/select';
 import { Separator } from '~/components/ui/separator';
+import { US_RAILS_ENABLED } from '~/config/features';
 import { useAuth } from '~/contexts/auth/auth-context';
 import type { ExecutionOutcome } from '~/domain/payments/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
@@ -376,7 +378,7 @@ function RouteComponent() {
               title: t('topup.methods.usBanks.title'),
               subtitle: t('topup.methods.usBanks.subtitle'),
               icon: Building2,
-              enabled: true,
+              enabled: US_RAILS_ENABLED,
               onClick: () => navigate({ to: '/topup/us-banks' }),
               group: 'us',
               fee: `${formatUSD(0.25)} + 1%`,
@@ -396,6 +398,7 @@ function RouteComponent() {
                 <button
                   type="button"
                   onClick={option.onClick}
+                  disabled={!option.enabled}
                   className="flex flex-1 items-start gap-3 text-left"
                 >
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
@@ -410,8 +413,15 @@ function RouteComponent() {
                     </p>
                   </div>
                 </button>
-                {option.fee && (
-                  <FeeInfo fee={option.fee} description={t('topup.feeInfo')} />
+                {!option.enabled ? (
+                  <ComingSoonBadge />
+                ) : (
+                  option.fee && (
+                    <FeeInfo
+                      fee={option.fee}
+                      description={t('topup.feeInfo')}
+                    />
+                  )
                 )}
               </div>
             );

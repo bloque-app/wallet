@@ -23,7 +23,9 @@
     "search": "Buscar",
     "optional": "Opcional",
     "yes": "Sí",
-    "no": "No"
+    "no": "No",
+    "comingSoon": "Próximamente",
+    "comingSoonDescription": "Esta opción estará disponible muy pronto."
   },
   "appHeader": {
     "logoAlt": "Logo",

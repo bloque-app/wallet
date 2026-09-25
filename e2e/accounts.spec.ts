@@ -104,7 +104,7 @@ test.describe('accounts', () => {
    * hadn't, since navigate() hadn't committed. No console error, no failed
    * request, just a click that visibly did nothing.
    */
-  test('picking BRE-B key or Plaid from add-product navigates away instead of silently no-op-ing', async ({
+  test('picking BRE-B key from add-product navigates away instead of silently no-op-ing', async ({
     page,
   }) => {
     await page.goto('/accounts/urn%3Apocket-orphan');
@@ -112,10 +112,14 @@ test.describe('accounts', () => {
     await page.getByRole('button', { name: 'Agregar producto' }).click();
     await page.getByRole('button', { name: /Llave BRE-B/ }).click();
     await expect(page).toHaveURL(/breb-keys\/manage-keys/);
+  });
 
+  test('Plaid in add-product is disabled as coming soon', async ({ page }) => {
     await page.goto('/accounts/urn%3Apocket-orphan');
+
     await page.getByRole('button', { name: 'Agregar producto' }).click();
-    await page.getByRole('button', { name: /Plaid/ }).click();
-    await expect(page).toHaveURL(/topup\/us-banks/);
+    const plaid = page.getByRole('button', { name: /Plaid/ });
+    await expect(plaid).toBeDisabled();
+    await expect(plaid).toContainText('Próximamente');
   });
 });
