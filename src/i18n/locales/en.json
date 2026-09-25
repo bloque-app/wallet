@@ -758,10 +758,6 @@
     "version": "Wallet Bloque v{{version}}"
   },
   "legal": {
-    "privacy": {
-      "comingSoonTitle": "Coming soon",
-      "comingSoonDescription": "We're preparing this policy. You'll be able to read it here soon."
-    },
     "fees": {
       "description": "These are the current costs for each operation in your wallet. The final cost is always confirmed before you send or top up.",
       "generalSection": "General",
