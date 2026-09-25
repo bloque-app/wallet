@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { CARDS_ENABLED } from '../src/config/features';
 import { installMockApi, mockAccounts } from './fixtures/mock-api';
 
 const singlePocket = mockAccounts.filter(
@@ -46,4 +47,17 @@ test('own-account transfer stays available for COP', async ({ page }) => {
   await expect(
     page.getByRole('button', { name: /Transferir a otro bolsillo/ }),
   ).toBeEnabled();
+});
+
+test('card cannot switch its preferred asset to USD', async ({ page }) => {
+  test.skip(!CARDS_ENABLED, 'cards section is coming soon');
+  await installMockApi(page);
+  await page.goto('/card/details/urn%3Acard-pawhaus-1');
+
+  const section = page
+    .getByText('Activo de pago preferido')
+    .locator('xpath=ancestor::section[1]');
+  const usd = section.getByRole('button', { name: /USD/ });
+  await expect(usd).toBeDisabled();
+  await expect(usd).toContainText('Próximamente');
 });
