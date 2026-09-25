@@ -7,6 +7,7 @@ import {
   formatUSD,
   getAssetPrecision,
   getMovementLabel,
+  isUsdAsset,
   sortBalancesForDisplay,
 } from './formatters';
 
@@ -95,13 +96,25 @@ describe('sortBalancesForDisplay', () => {
     expect(result.map((b) => b.asset)).not.toContain('KSM/12');
   });
 
-  test('puts USD first, keeping the rest in their original relative order', () => {
-    const result = sortBalancesForDisplay([
-      { asset: 'COPM/2', current: '500000', pending: '0' },
-      { asset: 'DUSD/6', current: '10000000', pending: '0' },
-    ]);
+  test('puts USD first when USD is the primary balance', () => {
+    const result = sortBalancesForDisplay(
+      [
+        { asset: 'COPM/2', current: '500000', pending: '0' },
+        { asset: 'DUSD/6', current: '10000000', pending: '0' },
+      ],
+      'USD',
+    );
 
     expect(result.map((b) => b.asset)).toEqual(['DUSD/6', 'COPM/2']);
+  });
+
+  test('puts COP first by default while USD is disabled', () => {
+    const result = sortBalancesForDisplay([
+      { asset: 'DUSD/6', current: '10000000', pending: '0' },
+      { asset: 'COPM/2', current: '500000', pending: '0' },
+    ]);
+
+    expect(result.map((b) => b.asset)).toEqual(['COPM/2', 'DUSD/6']);
   });
 
   test('an all-KSM balance list collapses to empty', () => {
@@ -119,5 +132,17 @@ describe('sortBalancesForDisplay', () => {
     ]);
 
     expect(result.map((b) => b.asset)).toEqual(['COPM/2']);
+  });
+});
+
+describe('isUsdAsset', () => {
+  test('matches USD-denominated assets', () => {
+    expect(isUsdAsset('DUSD/6')).toBe(true);
+    expect(isUsdAsset('USD/2')).toBe(true);
+  });
+
+  test('rejects other assets', () => {
+    expect(isUsdAsset('COPM/2')).toBe(false);
+    expect(isUsdAsset('KSM/12')).toBe(false);
   });
 });

@@ -13,6 +13,7 @@ import {
 } from '~/components/ui/drawer';
 import { useAuth } from '~/contexts/auth/auth-context';
 import type { CardProduct } from '~/domain/accounts/types';
+import { hasActiveVirtualAccount } from '~/domain/accounts/virtual-account';
 import { useAccounts } from '~/hooks/accounts/use-accounts';
 import {
   useCardDetailsUrl,
@@ -63,6 +64,10 @@ function RouteComponent() {
   const handleAddCard = () => {
     if (kycStatus !== 'approved') {
       navigate({ to: '/kyc' });
+      return;
+    }
+    if (!hasActiveVirtualAccount(accountsQuery.data ?? [])) {
+      toast.info(t('home.quickActions.needsAccount'));
       return;
     }
     navigate({ to: '/accounts', search: { from: 'card' } });
