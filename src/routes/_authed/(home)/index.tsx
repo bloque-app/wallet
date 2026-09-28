@@ -13,6 +13,7 @@ import { useShowBalances } from '~/lib/show-balances';
 import { MovementDetailDrawer } from '../../../components/movement-detail-drawer';
 import { BalanceToggle } from './-components/currency-balance-card';
 import { QuickActions } from './-components/quick-actions';
+import { WhatsAppCard } from './-components/whatsapp-card';
 import { useBalance } from './-hooks/use-balance';
 
 export const Route = createFileRoute('/_authed/(home)/')({
@@ -147,6 +148,8 @@ function RouteComponent() {
       </section>
 
       <QuickActions hasVirtualAccount={hasVirtualAccount} />
+
+      <WhatsAppCard />
 
       <div className="my-1 h-px w-full bg-gradient-to-r from-transparent via-border to-transparent" />
 

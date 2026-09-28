@@ -16,6 +16,7 @@ import { Route as AuthedSendRouteRouteImport } from './routes/_authed/send/route
 import { Route as AuthedCardRouteRouteImport } from './routes/_authed/card/route'
 import { Route as AuthedBrebKeysRouteRouteImport } from './routes/_authed/breb-keys/route'
 import { Route as PublicLoginIndexRouteImport } from './routes/_public/login/index'
+import { Route as AuthedWhatsappIndexRouteImport } from './routes/_authed/whatsapp/index'
 import { Route as AuthedTopupIndexRouteImport } from './routes/_authed/topup/index'
 import { Route as AuthedSendIndexRouteImport } from './routes/_authed/send/index'
 import { Route as AuthedProfileIndexRouteImport } from './routes/_authed/profile/index'
@@ -72,6 +73,11 @@ const PublicLoginIndexRoute = PublicLoginIndexRouteImport.update({
   id: '/login/',
   path: '/login/',
   getParentRoute: () => PublicRoute,
+} as any)
+const AuthedWhatsappIndexRoute = AuthedWhatsappIndexRouteImport.update({
+  id: '/whatsapp/',
+  path: '/whatsapp/',
+  getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedTopupIndexRoute = AuthedTopupIndexRouteImport.update({
   id: '/',
@@ -210,6 +216,7 @@ export interface FileRoutesByFullPath {
   '/profile/': typeof AuthedProfileIndexRoute
   '/send/': typeof AuthedSendIndexRoute
   '/topup/': typeof AuthedTopupIndexRoute
+  '/whatsapp/': typeof AuthedWhatsappIndexRoute
   '/login/': typeof PublicLoginIndexRoute
   '/card/details/$urn': typeof AuthedCardDetailsUrnRoute
   '/breb-keys/deposit/': typeof AuthedBrebKeysDepositIndexRoute
@@ -236,6 +243,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthedProfileIndexRoute
   '/send': typeof AuthedSendIndexRoute
   '/topup': typeof AuthedTopupIndexRoute
+  '/whatsapp': typeof AuthedWhatsappIndexRoute
   '/login': typeof PublicLoginIndexRoute
   '/card/details/$urn': typeof AuthedCardDetailsUrnRoute
   '/breb-keys/deposit': typeof AuthedBrebKeysDepositIndexRoute
@@ -269,6 +277,7 @@ export interface FileRoutesById {
   '/_authed/profile/': typeof AuthedProfileIndexRoute
   '/_authed/send/': typeof AuthedSendIndexRoute
   '/_authed/topup/': typeof AuthedTopupIndexRoute
+  '/_authed/whatsapp/': typeof AuthedWhatsappIndexRoute
   '/_public/login/': typeof PublicLoginIndexRoute
   '/_authed/card/details/$urn': typeof AuthedCardDetailsUrnRoute
   '/_authed/breb-keys/deposit/': typeof AuthedBrebKeysDepositIndexRoute
@@ -301,6 +310,7 @@ export interface FileRouteTypes {
     | '/profile/'
     | '/send/'
     | '/topup/'
+    | '/whatsapp/'
     | '/login/'
     | '/card/details/$urn'
     | '/breb-keys/deposit/'
@@ -327,6 +337,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/send'
     | '/topup'
+    | '/whatsapp'
     | '/login'
     | '/card/details/$urn'
     | '/breb-keys/deposit'
@@ -359,6 +370,7 @@ export interface FileRouteTypes {
     | '/_authed/profile/'
     | '/_authed/send/'
     | '/_authed/topup/'
+    | '/_authed/whatsapp/'
     | '/_public/login/'
     | '/_authed/card/details/$urn'
     | '/_authed/breb-keys/deposit/'
@@ -429,6 +441,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/login/'
       preLoaderRoute: typeof PublicLoginIndexRouteImport
       parentRoute: typeof PublicRoute
+    }
+    '/_authed/whatsapp/': {
+      id: '/_authed/whatsapp/'
+      path: '/whatsapp'
+      fullPath: '/whatsapp/'
+      preLoaderRoute: typeof AuthedWhatsappIndexRouteImport
+      parentRoute: typeof AuthedRoute
     }
     '/_authed/topup/': {
       id: '/_authed/topup/'
@@ -668,6 +687,7 @@ interface AuthedRouteChildren {
   AuthedKycIndexRoute: typeof AuthedKycIndexRoute
   AuthedMovementsIndexRoute: typeof AuthedMovementsIndexRoute
   AuthedProfileIndexRoute: typeof AuthedProfileIndexRoute
+  AuthedWhatsappIndexRoute: typeof AuthedWhatsappIndexRoute
   AuthedLegalFeesIndexRoute: typeof AuthedLegalFeesIndexRoute
   AuthedLegalPrivacyIndexRoute: typeof AuthedLegalPrivacyIndexRoute
   AuthedLegalTermsIndexRoute: typeof AuthedLegalTermsIndexRoute
@@ -686,6 +706,7 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedKycIndexRoute: AuthedKycIndexRoute,
   AuthedMovementsIndexRoute: AuthedMovementsIndexRoute,
   AuthedProfileIndexRoute: AuthedProfileIndexRoute,
+  AuthedWhatsappIndexRoute: AuthedWhatsappIndexRoute,
   AuthedLegalFeesIndexRoute: AuthedLegalFeesIndexRoute,
   AuthedLegalPrivacyIndexRoute: AuthedLegalPrivacyIndexRoute,
   AuthedLegalTermsIndexRoute: AuthedLegalTermsIndexRoute,

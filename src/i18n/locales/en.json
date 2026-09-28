@@ -309,6 +309,10 @@
       "topup": "Top up",
       "send": "Send",
       "needsAccount": "Create a pocket first to use this."
+    },
+    "whatsappCard": {
+      "title": "Use your wallet on WhatsApp",
+      "description": "Send and top up money by chatting."
     }
   },
   "send": {
@@ -674,6 +678,7 @@
     "home": "Home",
     "accounts": "Pockets",
     "movements": "Movements",
+    "whatsapp": "WhatsApp",
     "card": "Card",
     "profile": "Profile"
   },
@@ -780,5 +785,64 @@
     "title": "You need a pocket",
     "description": "Create a pocket to top up, send money, use BRE-B and create cards.",
     "loadError": "We couldn't load your pockets."
+  },
+  "whatsapp": {
+    "title": "WhatsApp",
+    "cta": "Open WhatsApp",
+    "prefilled": "Hi Bloque, I want to use my wallet on WhatsApp.",
+    "prefilledWithAlias": "Hi Bloque, I want to use my wallet on WhatsApp. My alias is {{alias}}.",
+    "hero": {
+      "title": "Your wallet on WhatsApp",
+      "subtitle": "Send and top up money by chatting, without opening the app."
+    },
+    "chat": {
+      "ariaLabel": "Sample conversation with Bloque on WhatsApp",
+      "user1": "Send 50,000 to the key @juan",
+      "bloque1": "You're sending $50,000 COP to Juan Pérez via BRE-B. To confirm, type the code we sent you.",
+      "user2": "482913",
+      "bloque2": "Done! Your transfer was successful ✅"
+    },
+    "operations": {
+      "title": "What you can do",
+      "brebSend": {
+        "title": "Send via BRE-B",
+        "description": "To any BRE-B key, instantly."
+      },
+      "banks": {
+        "title": "Send to banks",
+        "description": "To Colombian bank accounts."
+      },
+      "brebTopup": {
+        "title": "Top up via BRE-B",
+        "description": "Receive money in your wallet with your key."
+      },
+      "pseTopup": {
+        "title": "Top up via PSE",
+        "description": "Top up from your online banking."
+      }
+    },
+    "steps": {
+      "title": "How it works",
+      "open": {
+        "title": "Open the chat",
+        "description": "Tap the button and message us on WhatsApp."
+      },
+      "ask": {
+        "title": "Ask for what you need",
+        "description": "Write the way you talk: “top up 100,000 via PSE”."
+      },
+      "confirm": {
+        "title": "Confirm the transaction",
+        "description": "We'll ask for an OTP code and some details before moving your money."
+      }
+    },
+    "alias": {
+      "title": "Identify yourself with your alias",
+      "description": "Use the same email or phone you sign in to the wallet with."
+    },
+    "security": {
+      "title": "Your money, protected",
+      "description": "To move money we'll ask for an OTP code and confirmation details. Share them only in Bloque's official chat and never with anyone else."
+    }
   }
 }
