@@ -1,3 +1,4 @@
+import { USD_ENABLED } from '~/config/features';
 import i18n from '~/i18n/config';
 
 export type LoginMethod = 'email' | 'phone';
@@ -60,14 +61,15 @@ export function formatAmount(asset: Asset, amount: number): string {
  */
 export function sortBalancesForDisplay<T extends { asset: string }>(
   balances: T[],
+  primary: 'USD' | 'COP' = USD_ENABLED ? 'USD' : 'COP',
 ): T[] {
   return balances
     .filter((balance) => !balance.asset.startsWith('KSM'))
     .sort((a, b) => {
-      const aIsUsd = a.asset.startsWith('DUSD') || a.asset.startsWith('USD');
-      const bIsUsd = b.asset.startsWith('DUSD') || b.asset.startsWith('USD');
+      const aIsUsd = isUsdAsset(a.asset);
+      const bIsUsd = isUsdAsset(b.asset);
       if (aIsUsd === bIsUsd) return 0;
-      return aIsUsd ? -1 : 1;
+      return aIsUsd === (primary === 'USD') ? -1 : 1;
     });
 }
 
@@ -125,4 +127,10 @@ export function generateRandomPolygonAddress(): string {
     addr += hex[Math.floor(Math.random() * 16)];
   }
   return addr;
+}
+
+/** True for USD-denominated SDK assets, e.g. 'DUSD/6' or 'USD/2'. */
+export function isUsdAsset(sdkAsset: string): boolean {
+  const [code] = sdkAsset.split('/');
+  return code === 'DUSD' || code === 'USD';
 }

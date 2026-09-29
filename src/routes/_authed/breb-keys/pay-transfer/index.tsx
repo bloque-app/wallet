@@ -102,7 +102,11 @@ function RouteComponent() {
   const resolveBrebKey = useResolveBrebKey();
 
   const { accounts: fundedAccounts, isLoading: isLoadingFundedAccounts } =
-    useAccountPicker({ asset: FROM_ASSET, requireProductKind: 'breb' });
+    useAccountPicker({
+      asset: FROM_ASSET,
+      requireProductKind: 'breb',
+      requireVirtualAccount: true,
+    });
 
   useEffect(() => {
     if (fundedAccounts.length === 1 && fundedAccounts[0]) {

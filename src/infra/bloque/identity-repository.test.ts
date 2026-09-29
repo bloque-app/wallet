@@ -23,7 +23,10 @@ const updateMeMock = mock((params: { profile?: Record<string, unknown> }) =>
 
 const bloqueClient = { identity: { me: meMock, updateMe: updateMeMock } };
 
-mock.module('~/lib/bloque', () => ({ bloque: bloqueClient }));
+mock.module('~/lib/bloque', () => ({
+  bloque: bloqueClient,
+  initBloque: async () => bloqueClient,
+}));
 
 const { bloqueIdentityRepository } = await import('./identity-repository');
 

@@ -66,7 +66,7 @@ function card(opts: {
   };
 }
 
-function brebKey(opts: {
+export function brebKey(opts: {
   urn: string;
   ledgerId: string;
   keyType: string;
@@ -201,6 +201,20 @@ export const mockAccounts = [
   }),
 ];
 
+export const mockFriendAlias = {
+  id: 'alias-friend',
+  alias: 'friend@bloque.team',
+  type: 'email',
+  urn: 'did:bloque:bloque-email:friend@bloque.team',
+  origin: 'bloque-email',
+  details: {},
+  metadata: { alias: 'friend@bloque.team' },
+  status: 'active',
+  is_primary: true,
+  display_name: 'Friend',
+  account_urn: 'urn:pocket-friend',
+};
+
 export const mockIdentity = {
   urn: OWNER_URN,
   origin: 'bloque-email',
@@ -231,6 +245,8 @@ export type MockApiOptions = {
    * "no verification started".
    */
   kycWireStatus?: 'awaiting_compliance_verification' | 'approved' | 'rejected';
+  /** Wire accounts served by `GET /api/accounts`. Defaults to `mockAccounts`. */
+  accounts?: unknown[];
 };
 
 /**
@@ -318,7 +334,19 @@ export async function installMockApi(
     }
 
     if (pathname === '/api/accounts') {
-      return route.fulfill({ json: { accounts: mockAccounts } });
+      return route.fulfill({
+        json: { accounts: options.accounts ?? mockAccounts },
+      });
+    }
+
+    if (pathname === '/api/aliases') {
+      if (url.searchParams.get('alias') === mockFriendAlias.alias) {
+        return route.fulfill({ json: mockFriendAlias });
+      }
+      return route.fulfill({
+        status: 404,
+        json: { message: 'E_ALIAS_NOT_FOUND' },
+      });
     }
 
     if (pathname.endsWith('/movements')) {
@@ -328,7 +356,19 @@ export async function installMockApi(
     }
 
     if (pathname.endsWith('/balance')) {
-      return route.fulfill({ json: { balance: {} } });
+      const accounts = (options.accounts ?? mockAccounts) as Array<{
+        urn: string;
+        ledger_account_id: string;
+        balance?: Record<string, unknown>;
+      }>;
+      const urn = decodeURIComponent(pathname.split('/')[3] ?? '');
+      const ledgerId = accounts.find((a) => a.urn === urn)?.ledger_account_id;
+      const withBalance = accounts.find(
+        (a) =>
+          a.ledger_account_id === ledgerId &&
+          Object.keys(a.balance ?? {}).length > 0,
+      );
+      return route.fulfill({ json: { balance: withBalance?.balance ?? {} } });
     }
 
     return route.fulfill({

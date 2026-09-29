@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { BackButton } from '~/components/back-button';
 import type { BrebKeyProduct } from '~/domain/accounts/types';
+import { isActiveVirtualAccount } from '~/domain/accounts/virtual-account';
 import { useAccounts } from '~/hooks/accounts/use-accounts';
 
 export const Route = createFileRoute('/_authed/breb-keys/deposit/')({
@@ -23,11 +24,13 @@ function RouteComponent() {
   const accountsQuery = useAccounts();
   const brebProducts = useMemo(
     () =>
-      (accountsQuery.data ?? []).flatMap((account) =>
-        account.products.filter(
-          (product): product is BrebKeyProduct => product.kind === 'breb',
+      (accountsQuery.data ?? [])
+        .filter(isActiveVirtualAccount)
+        .flatMap((account) =>
+          account.products.filter(
+            (product): product is BrebKeyProduct => product.kind === 'breb',
+          ),
         ),
-      ),
     [accountsQuery.data],
   );
 

@@ -2,9 +2,10 @@ import type { Alias } from '@bloque/sdk-identity';
 import { useMutation } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Send, Users } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { AccountCarousel } from '~/components/account/account-carousel';
 import { BackButton } from '~/components/back-button';
 import {
   AlertDialog,
@@ -20,8 +21,10 @@ import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { Textarea } from '~/components/ui/textarea';
+import { USD_ENABLED } from '~/config/features';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useTransfer } from '~/hooks/accounts/use-transfer';
+import { isAliasNotFoundError, userFacingErrorMessage } from '~/lib/api-errors';
 import { bloque } from '~/lib/bloque';
 import { formatAmount } from '~/lib/formatters';
 
@@ -46,20 +49,21 @@ function majorToMinor(amountMajor: number, precision: number) {
   return (BigInt(amountMajor) * 10n ** BigInt(precision)).toString();
 }
 
-/** `metadata` is an `{ [key: string]: unknown }` bag — validate `name` before use. */
+function isAssetBlocked(asset: AssetOption): boolean {
+  return asset === 'USD' && !USD_ENABLED;
+}
+
 function getAliasDisplayName(aliasResult: Alias) {
-  const metadataName = aliasResult.metadata.name;
-  if (typeof metadataName === 'string' && metadataName.trim()) {
-    return metadataName;
-  }
-  return aliasResult.metadata.alias || aliasResult.alias;
+  return aliasResult.display_name?.trim() || aliasResult.alias;
 }
 
 function RouteComponent() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [view, setView] = useState<ViewState>('form');
-  const [selectedAsset, setSelectedAsset] = useState<AssetOption>('USD');
+  const [selectedAsset, setSelectedAsset] = useState<AssetOption>(
+    USD_ENABLED ? 'USD' : 'COP',
+  );
   const [alias, setAlias] = useState('');
   const [amount, setAmount] = useState('');
   const [message, setMessage] = useState('');
@@ -71,12 +75,28 @@ function RouteComponent() {
   } | null>(null);
 
   const { accounts: sourceAccounts, isLoading: isLoadingAccounts } =
-    useAccountPicker();
-  const sourceAccount = sourceAccounts[0];
+    useAccountPicker({ requireVirtualAccount: true });
+  const [sourceLedgerId, setSourceLedgerId] = useState<string | null>(null);
 
-  const selectedAssetConfig = ASSET_OPTIONS.find(
-    (asset) => asset.value === selectedAsset,
-  )!;
+  useEffect(() => {
+    if (sourceAccounts.length === 1 && sourceAccounts[0]) {
+      setSourceLedgerId(sourceAccounts[0].ledgerId);
+      return;
+    }
+    setSourceLedgerId((current) =>
+      current && sourceAccounts.some((account) => account.ledgerId === current)
+        ? current
+        : null,
+    );
+  }, [sourceAccounts]);
+
+  const sourceAccount =
+    sourceAccounts.find((account) => account.ledgerId === sourceLedgerId) ??
+    null;
+
+  const selectedAssetConfig =
+    ASSET_OPTIONS.find((asset) => asset.value === selectedAsset) ??
+    ASSET_OPTIONS[1];
   const normalizedAlias = alias.trim();
   const parsedAmount = Number.parseInt(amount.replace(/\D/g, ''), 10) || 0;
   const amountMinor = useMemo(() => {
@@ -85,7 +105,7 @@ function RouteComponent() {
   }, [parsedAmount, selectedAssetConfig.precision]);
 
   const formError = useMemo(() => {
-    if (!sourceAccount && !isLoadingAccounts) {
+    if (sourceAccounts.length === 0 && !isLoadingAccounts) {
       return t('send.bloqueFriends.noSourceAccount');
     }
     if (!normalizedAlias && alias.length > 0) {
@@ -100,15 +120,23 @@ function RouteComponent() {
     alias.length,
     normalizedAlias,
     parsedAmount,
-    sourceAccount,
+    sourceAccounts.length,
     t,
   ]);
 
   const validateAliasMutation = useMutation({
-    mutationFn: async () => await bloque.identity.aliases.get(normalizedAlias),
+    mutationFn: async () => bloque.identity.aliases.get(normalizedAlias),
     onSuccess: (result) => {
       if (!result?.urn) {
         toast.error(t('send.bloqueFriends.aliasNotFound'));
+        return;
+      }
+      if (!result.account_urn) {
+        toast.error(
+          result.account_resolution_error === 'NO_ACCOUNT'
+            ? t('send.bloqueFriends.recipientNoAccount')
+            : t('send.bloqueFriends.recipientResolutionUnavailable'),
+        );
         return;
       }
       setRecipientPreview(result);
@@ -116,9 +144,12 @@ function RouteComponent() {
     },
     onError: (error) => {
       toast.error(
-        error instanceof Error
-          ? error.message
-          : t('send.bloqueFriends.aliasValidationError'),
+        isAliasNotFoundError(error)
+          ? t('send.bloqueFriends.aliasNotFound')
+          : userFacingErrorMessage(
+              error,
+              t('send.bloqueFriends.aliasValidationError'),
+            ),
       );
     },
   });
@@ -130,7 +161,7 @@ function RouteComponent() {
       toast.error(t('send.bloqueFriends.noSourceAccount'));
       return;
     }
-    if (!recipientPreview?.urn) {
+    if (!recipientPreview?.account_urn) {
       toast.error(t('send.bloqueFriends.noConfirmedRecipient'));
       return;
     }
@@ -142,7 +173,7 @@ function RouteComponent() {
     transferMutation.mutate(
       {
         sourceUrn: sourceAccount.primaryUrn,
-        destinationUrn: recipientPreview.urn,
+        destinationUrn: recipientPreview.account_urn,
         amount: amountMinor,
         asset: selectedAssetConfig.sdkAsset,
         metadata: {
@@ -154,7 +185,7 @@ function RouteComponent() {
         onSuccess: () => {
           setConfirmOpen(false);
           setLastTransfer({
-            destinationUrn: recipientPreview.urn,
+            destinationUrn: recipientPreview.account_urn as string,
             amount: parsedAmount,
           });
           setView('pending');
@@ -162,9 +193,10 @@ function RouteComponent() {
         },
         onError: (error) => {
           toast.error(
-            error instanceof Error
-              ? error.message
-              : t('send.bloqueFriends.transferErrorToast'),
+            userFacingErrorMessage(
+              error,
+              t('send.bloqueFriends.transferErrorToast'),
+            ),
           );
           setView('error');
         },
@@ -263,17 +295,35 @@ function RouteComponent() {
                   key={asset.value}
                   type="button"
                   onClick={() => setSelectedAsset(asset.value)}
-                  className={`rounded-2xl border px-3 py-3 text-sm transition-all ${
+                  disabled={isAssetBlocked(asset.value)}
+                  className={`flex flex-col items-center rounded-2xl border px-3 py-3 text-sm transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
                     selectedAsset === asset.value
                       ? 'border-foreground bg-foreground text-background'
                       : 'border-border bg-background/70 text-foreground hover:bg-muted/70'
                   }`}
                 >
                   {asset.value}
+                  {isAssetBlocked(asset.value) ? (
+                    <span className="text-[10px]">
+                      {t('common.comingSoon')}
+                    </span>
+                  ) : null}
                 </button>
               ))}
             </div>
           </div>
+
+          {sourceAccounts.length > 0 && (
+            <AccountCarousel
+              accounts={sourceAccounts}
+              asset={selectedAssetConfig.sdkAsset}
+              precision={selectedAssetConfig.precision}
+              unit={selectedAsset}
+              value={sourceLedgerId}
+              onChange={setSourceLedgerId}
+              label={t('send.bloqueFriends.sourceAccountLabel')}
+            />
+          )}
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="friend-alias">

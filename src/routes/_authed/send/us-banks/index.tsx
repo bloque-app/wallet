@@ -1,8 +1,10 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { AccountCarousel } from '~/components/account/account-carousel';
+import { ComingSoonScreen } from '~/components/coming-soon';
+import { US_RAILS_ENABLED } from '~/config/features';
 import { useAuth } from '~/contexts/auth/auth-context';
 import type { ExecutionOutcome } from '~/domain/payments/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
@@ -50,8 +52,19 @@ const DEFAULT_BANK_FORM: UsBankAccountData = {
 };
 
 export const Route = createFileRoute('/_authed/send/us-banks/')({
-  component: RouteComponent,
+  component: US_RAILS_ENABLED ? RouteComponent : UsRailsComingSoon,
 });
+
+function UsRailsComingSoon() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  return (
+    <ComingSoonScreen
+      title={t('send.usBanks.title')}
+      onBack={() => void navigate({ to: '/send' })}
+    />
+  );
+}
 
 function RouteComponent() {
   const { t } = useTranslation();
@@ -67,7 +80,10 @@ function RouteComponent() {
   } | null>(null);
   const [autoRetry, setAutoRetry] = useState(false);
   const { accounts: sourceAccounts, isLoading: isLoadingAccounts } =
-    useAccountPicker({ asset: FROM_ASSET });
+    useAccountPicker({
+      asset: FROM_ASSET,
+      requireVirtualAccount: true,
+    });
   const [sourceLedgerId, setSourceLedgerId] = useState<string | null>(null);
 
   useEffect(() => {

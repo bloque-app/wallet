@@ -16,6 +16,7 @@ import {
   getProductKindLabel,
 } from '~/components/account/product-presentation';
 import { BackButton } from '~/components/back-button';
+import { ComingSoonBadge } from '~/components/coming-soon';
 import { MovementDetailDrawer } from '~/components/movement-detail-drawer';
 import { MovementRow } from '~/components/movement-row';
 import { Button } from '~/components/ui/button';
@@ -28,18 +29,43 @@ import {
 } from '~/components/ui/drawer';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
+import {
+  CARDS_ENABLED,
+  US_RAILS_ENABLED,
+  USD_ENABLED,
+} from '~/config/features';
 import type { AssetBalance, Product } from '~/domain/accounts/types';
+import { isActiveVirtualAccount } from '~/domain/accounts/virtual-account';
 import { useAccountMovements } from '~/hooks/accounts/use-account-movements';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
-import { useAccount } from '~/hooks/accounts/use-accounts';
+import { useAccount, useAccounts } from '~/hooks/accounts/use-accounts';
 import { useCreateCard } from '~/hooks/accounts/use-cards';
 import { useTransfer } from '~/hooks/accounts/use-transfer';
 import type { Asset, Movement } from '~/lib/formatters';
-import { formatCOP, formatUSD, sortBalancesForDisplay } from '~/lib/formatters';
+import {
+  formatCOP,
+  formatUSD,
+  isUsdAsset,
+  sortBalancesForDisplay,
+} from '~/lib/formatters';
 import { skipDrawerHistoryOnce } from '~/lib/navigation';
 import { cn } from '~/lib/utils';
+import {
+  ACCOUNTS_ORIGIN_ROUTES,
+  type AccountsOrigin,
+  parseAccountsOrigin,
+} from './-lib/origin';
 
 export const Route = createFileRoute('/_authed/accounts/$urn')({
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { from?: AccountsOrigin; list?: boolean } => {
+    const from = parseAccountsOrigin(search.from);
+    return {
+      ...(from ? { from } : {}),
+      ...(search.list === true || search.list === 'true' ? { list: true } : {}),
+    };
+  },
   component: RouteComponent,
 });
 
@@ -118,7 +144,9 @@ function getProductLink(
 function RouteComponent() {
   const { t } = useTranslation();
   const { urn } = Route.useParams();
+  const { from = 'home', list } = Route.useSearch();
   const navigate = useNavigate();
+  const accountsCount = useAccounts().data?.length ?? 0;
   const [selectedAsset, setSelectedAsset] = useState<string>('');
   const [selectedMovement, setSelectedMovement] = useState<Movement | null>(
     null,
@@ -136,7 +164,9 @@ function RouteComponent() {
 
   const createCardMutation = useCreateCard();
   const transferMutation = useTransfer();
-  const { accounts: ownAccounts } = useAccountPicker();
+  const { accounts: ownAccounts } = useAccountPicker({
+    requireVirtualAccount: true,
+  });
   const transferDestinations = ownAccounts.filter(
     (candidate) => candidate.ledgerId !== account?.ledgerId,
   );
@@ -166,9 +196,11 @@ function RouteComponent() {
     account?.products.filter((product) => product.urn !== account.primaryUrn) ??
     [];
   const Icon = getProductKindIcon(primaryProduct?.kind ?? 'other');
+  const canAddProduct = !!account && isActiveVirtualAccount(account);
 
   const handlePickProductKind = (kind: 'card' | 'breb' | 'plaid') => {
-    if (!account) return;
+    if (!account || !canAddProduct) return;
+    if (kind === 'card' && !CARDS_ENABLED) return;
     if (kind === 'breb') {
       setAddProductStep('closed');
       skipDrawerHistoryOnce();
@@ -192,7 +224,7 @@ function RouteComponent() {
   };
 
   const handleCreateProduct = async () => {
-    if (!account) return;
+    if (!account || !canAddProduct) return;
     try {
       if (addProductStep === 'card') {
         await createCardMutation.mutateAsync({
@@ -216,6 +248,7 @@ function RouteComponent() {
     ? parseAmount(transferAssetBalance.current, transferAssetBalance.asset)
     : 0;
   const parsedTransferAmount = Number.parseFloat(transferAmount) || 0;
+  const isTransferAssetBlocked = !USD_ENABLED && isUsdAsset(selectedAsset);
 
   const handleOpenTransferDrawer = () => {
     setTransferDestinationId('');
@@ -224,7 +257,7 @@ function RouteComponent() {
   };
 
   const handleSubmitTransfer = async () => {
-    if (!account || !transferDestination) return;
+    if (!account || !transferDestination || isTransferAssetBlocked) return;
     if (
       parsedTransferAmount <= 0 ||
       parsedTransferAmount > transferAvailableMajor
@@ -248,10 +281,21 @@ function RouteComponent() {
     }
   };
 
+  const handleBack = () => {
+    if (list && accountsCount > 1) {
+      void navigate({
+        to: '/accounts',
+        search: from === 'home' ? {} : { from },
+      });
+      return;
+    }
+    void navigate({ to: ACCOUNTS_ORIGIN_ROUTES[from] });
+  };
+
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center gap-2">
-        <BackButton onClick={() => void navigate({ to: '/accounts' })} />
+        <BackButton onClick={handleBack} />
         <h1 className="text-xl font-bold tracking-[-0.025em] text-foreground">
           {t('accounts.detail.title')}
         </h1>
@@ -340,9 +384,11 @@ function RouteComponent() {
                     variant="outline"
                     className="h-10 w-full gap-1.5 rounded-xl text-xs font-medium"
                     onClick={handleOpenTransferDrawer}
+                    disabled={isTransferAssetBlocked}
                   >
                     <ArrowRightLeft className="h-3.5 w-3.5" />
                     {t('accounts.detail.transferToOwnAccount')}
+                    {isTransferAssetBlocked ? <ComingSoonBadge /> : null}
                   </Button>
                 )}
               </>
@@ -359,11 +405,18 @@ function RouteComponent() {
                 variant="outline"
                 className="h-8 gap-1.5 rounded-xl px-3 text-xs font-medium"
                 onClick={() => setAddProductStep('pick')}
+                disabled={!canAddProduct}
               >
                 <Plus className="h-3.5 w-3.5" />
                 {t('accounts.detail.addProduct')}
               </Button>
             </div>
+
+            {canAddProduct ? null : (
+              <p className="text-xs text-muted-foreground">
+                {t('accounts.detail.addProductNeedsVirtualAccount')}
+              </p>
+            )}
 
             {associatedProducts.length === 0 ? (
               <p className="text-sm text-muted-foreground">
@@ -494,6 +547,7 @@ function RouteComponent() {
                     matchKind: 'card',
                     label: t('accounts.detail.addProductCardLabel'),
                     icon: CreditCard,
+                    comingSoon: !CARDS_ENABLED,
                   },
                   {
                     kind: 'breb' as const,
@@ -506,6 +560,7 @@ function RouteComponent() {
                     matchKind: 'external-us-bank',
                     label: t('accounts.detail.addProductPlaidLabel'),
                     icon: Landmark,
+                    comingSoon: !US_RAILS_ENABLED,
                   },
                 ]
                   .filter(
@@ -519,14 +574,16 @@ function RouteComponent() {
                       key={option.kind}
                       type="button"
                       onClick={() => handlePickProductKind(option.kind)}
-                      className="flex items-center gap-3 rounded-2xl border border-border/75 bg-background/70 px-4 py-3.5 text-left transition-colors hover:bg-muted/60"
+                      disabled={option.comingSoon}
+                      className="flex items-center gap-3 rounded-2xl border border-border/75 bg-background/70 px-4 py-3.5 text-left transition-colors hover:bg-muted/60 disabled:opacity-60 disabled:hover:bg-background/70"
                     >
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
                         <option.icon className="h-4 w-4 text-primary" />
                       </div>
-                      <span className="text-sm font-medium text-foreground">
+                      <span className="flex-1 text-sm font-medium text-foreground">
                         {option.label}
                       </span>
+                      {option.comingSoon ? <ComingSoonBadge /> : null}
                     </button>
                   ))}
               </div>

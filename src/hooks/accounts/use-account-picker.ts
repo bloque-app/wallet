@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import type { Account, Product } from '~/domain/accounts/types';
+import { isActiveVirtualAccount } from '~/domain/accounts/virtual-account';
 import { useAccounts } from './use-accounts';
 
 type AccountPickerOptions = {
@@ -18,6 +19,8 @@ type AccountPickerOptions = {
     Product,
     { kind: 'external-us-bank' }
   >['linkStatus'];
+  /** Only include accounts anchored by an active pocket (virtual account). */
+  requireVirtualAccount?: boolean;
 };
 
 function hasPositiveBalance(account: Account, asset: string): boolean {
@@ -43,6 +46,7 @@ export function useAccountPicker(options: AccountPickerOptions = {}) {
     asset,
     requireProductKind,
     requireLinkStatus,
+    requireVirtualAccount = false,
   } = options;
 
   const accounts = useMemo(() => {
@@ -52,6 +56,9 @@ export function useAccountPicker(options: AccountPickerOptions = {}) {
       );
 
       if (requireActive && primary?.status !== 'active') return false;
+      if (requireVirtualAccount && !isActiveVirtualAccount(account)) {
+        return false;
+      }
       if (asset && !hasPositiveBalance(account, asset)) return false;
       if (
         requireProductKind &&
@@ -78,6 +85,7 @@ export function useAccountPicker(options: AccountPickerOptions = {}) {
     asset,
     requireProductKind,
     requireLinkStatus,
+    requireVirtualAccount,
   ]);
 
   return { accounts, isLoading: accountsQuery.isLoading };

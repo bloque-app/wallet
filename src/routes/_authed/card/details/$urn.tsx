@@ -26,13 +26,19 @@ import {
 } from '~/components/ui/drawer';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
+import { USD_ENABLED } from '~/config/features';
 import {
   useCardDetailsUrl,
   useCardToggleFreeze,
   useCardUpdateName,
   useCardUpdatePreferredAsset,
 } from '~/hooks/accounts/use-cards';
-import { formatAmount, formatDate, type Movement } from '~/lib/formatters';
+import {
+  formatAmount,
+  formatDate,
+  isUsdAsset,
+  type Movement,
+} from '~/lib/formatters';
 import { cn } from '~/lib/utils';
 import { BalanceSkeleton } from './-components/balance-skeleton';
 import { CardInfoSkeleton } from './-components/card-info-skeleton';
@@ -127,8 +133,11 @@ function RouteComponent() {
     }
   };
 
+  const isUsdBlocked = (asset: string) => !USD_ENABLED && isUsdAsset(asset);
+
   const handleSetPreferredAsset = async (asset: SupportedAsset) => {
     if (!selectedCard || selectedCard.preferredAsset === asset) return;
+    if (isUsdBlocked(asset)) return;
 
     try {
       await updatePreferredAssetMutation.mutateAsync({ urn, asset });
@@ -363,7 +372,10 @@ function RouteComponent() {
                 onClick={() =>
                   handleSetPreferredAsset(asset.sdkKey as SupportedAsset)
                 }
-                disabled={updatePreferredAssetMutation.isPending}
+                disabled={
+                  updatePreferredAssetMutation.isPending ||
+                  isUsdBlocked(asset.sdkKey)
+                }
                 className={cn(
                   'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors disabled:opacity-50',
                   selectedCard?.preferredAsset === asset.sdkKey
@@ -379,6 +391,11 @@ function RouteComponent() {
                   />
                 )}
                 {asset.code}
+                {isUsdBlocked(asset.sdkKey) ? (
+                  <span className="text-[10px] font-normal">
+                    · {t('common.comingSoon')}
+                  </span>
+                ) : null}
               </button>
             ))}
           </div>

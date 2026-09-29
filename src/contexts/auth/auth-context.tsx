@@ -17,14 +17,16 @@ import { queryClient, SESSION_EXPIRED_EVENT } from '~/lib/query-client';
 import { deriveKycStatus } from './kyc-status';
 import { makeLatestWins } from './latest-wins';
 import { deriveTosStatus } from './tos-status';
-import type {
-  AliasCheckResult,
-  LoginData,
-  LoginMethod,
-  LoginResult,
-  OnboardingProfile,
-  PendingOnboarding,
-  PendingProfileOnboarding,
+import {
+  type AliasCheckResult,
+  type LoginData,
+  type LoginMethod,
+  type LoginResult,
+  type OnboardingProfile,
+  type PendingOnboarding,
+  type PendingProfileOnboarding,
+  WALLET_ORIGIN,
+  type WalletOrigin,
 } from './types';
 
 interface User {
@@ -63,12 +65,6 @@ export type AuthContextProps = {
   refreshTosStatus: () => Promise<void>;
   user: User;
 };
-
-function originForMethod(
-  method: LoginMethod,
-): 'bloque-whatsapp' | 'bloque-email' {
-  return method === 'phone' ? 'bloque-whatsapp' : 'bloque-email';
-}
 
 export const AuthContext = createContext<AuthContextProps | null>(null);
 
@@ -141,8 +137,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const checkAlias = useCallback(
-    async (method: LoginMethod, alias: string): Promise<AliasCheckResult> => {
-      const origin = originForMethod(method);
+    async (_method: LoginMethod, alias: string): Promise<AliasCheckResult> => {
+      const origin = WALLET_ORIGIN;
       const sdk = createBloqueSdk(origin);
       const identitySdk = sdk as unknown as AliasLookupApi;
 
@@ -161,7 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const sendOTP = useCallback(
     async (method: 'email' | 'phone', alias: string) => {
-      const origin = originForMethod(method);
+      const origin = WALLET_ORIGIN;
       const sdk = createBloqueSdk(origin);
 
       const result = await sdk.assert(origin, alias);
@@ -188,7 +184,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (data: LoginData): Promise<LoginResult> => {
       const alias = 'phone' in data ? data.phone : data.email;
       const method = 'phone' in data ? 'phone' : 'email';
-      const origin = originForMethod(method);
+      const origin = WALLET_ORIGIN;
       const sdk = createBloqueSdk(origin);
       const registerApi = sdk as unknown as OriginRegisterApi;
 
@@ -474,7 +470,7 @@ type OriginRegisterApi = {
     origins: {
       register: (
         alias: string,
-        origin: 'bloque-email' | 'bloque-whatsapp',
+        origin: WalletOrigin,
         params: {
           type: 'individual';
           profile: {

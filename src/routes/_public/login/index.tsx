@@ -1,10 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
 import { useAuth } from '~/contexts/auth/auth-context';
-import type {
-  LoginMethod,
-  OnboardingProfile as OnboardingProfileData,
-  PendingOnboarding,
+import {
+  type OnboardingProfile as OnboardingProfileData,
+  type PendingOnboarding,
+  WALLET_ORIGIN,
 } from '~/contexts/auth/types';
 import { LoginMethodSelect } from './-components/login-method-select';
 import { OnboardingProfile } from './-components/onboarding-profile';
@@ -66,7 +66,7 @@ function RouteComponent() {
   }
 
   async function handleProfileSubmit(profile: OnboardingProfileData) {
-    const origin = getOriginFromMethod(method);
+    const origin = WALLET_ORIGIN;
     const pending = { method, alias: contact, origin, profile };
     setPendingProfileOnboarding(pending);
     await sendOTP(method, contact);
@@ -139,10 +139,4 @@ function RouteComponent() {
       </div>
     </div>
   );
-}
-
-function getOriginFromMethod(
-  method: LoginMethod,
-): 'bloque-email' | 'bloque-whatsapp' {
-  return method === 'phone' ? 'bloque-whatsapp' : 'bloque-email';
 }
