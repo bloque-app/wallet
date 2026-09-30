@@ -7,6 +7,11 @@ import { AccountCarousel } from '~/components/account/account-carousel';
 import { ComingSoonScreen } from '~/components/coming-soon';
 import { US_RAILS_ENABLED } from '~/config/features';
 import { useAuth } from '~/contexts/auth/auth-context';
+import {
+  isFailedUsBank,
+  isUsableUsBank,
+  isUsBankLinkSettled,
+} from '~/domain/accounts/external-us-bank';
 import type { ExecutionOutcome } from '~/domain/payments/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useAccounts } from '~/hooks/accounts/use-accounts';
@@ -119,13 +124,13 @@ function RouteComponent() {
   // suspended pocket's linked bank is deliberately excluded here, not just
   // for the deposit destination: it isn't a selectable option at all.
   const { accounts: linkedActivePockets } = useAccountPicker({
-    requireProductKind: 'external-us-bank',
-    requireLinkStatus: 'active',
+    requireUsableUsBank: true,
     requireVirtualAccount: true,
   });
 
   // Which pocket the new Plaid link itself gets associated with. Only one
-  // `external-us-bank` product per pocket, same rule as card/BRE-B.
+  // `external-us-bank` product per pocket, same rule as card/BRE-B — a failed
+  // link doesn't count, so the pocket can be linked again.
   const [selectedLinkLedgerId, setSelectedLinkLedgerId] = useState<
     string | null
   >(null);
@@ -136,7 +141,9 @@ function RouteComponent() {
     () =>
       allPockets.filter(
         (account) =>
-          !account.products.some((p) => p.kind === 'external-us-bank'),
+          !account.products.some(
+            (p) => p.kind === 'external-us-bank' && !isFailedUsBank(p),
+          ),
       ),
     [allPockets],
   );
@@ -168,9 +175,7 @@ function RouteComponent() {
           (account) => account.ledgerId === selectedSourceLedgerId,
         ) ?? null);
 
-  const sourceBankProduct = chosenSourceAccount?.products.find(
-    (p) => p.kind === 'external-us-bank',
-  );
+  const sourceBankProduct = chosenSourceAccount?.products.find(isUsableUsBank);
   // A linked bank can be `linkStatus: 'active'` yet still need Plaid
   // re-authentication (`needsUpdate`) — not a usable ACH source until relinked.
   const bankNeedsUpdate =
@@ -188,18 +193,14 @@ function RouteComponent() {
   // data on every tick to know when to stop — a value computed once per
   // render would keep re-scheduling forever once the account settles into
   // `link_failed` without any further data change to trigger a re-render.
+  // Keeps polling past Plaid's `active` until the account itself is active.
   const accountsQuery = useAccounts({
     refetchInterval: (query) => {
       if (!pendingUrn) return false;
       const product = (query.state.data ?? [])
         .flatMap((account) => account.products)
         .find((p) => p.urn === pendingUrn);
-      if (
-        product?.kind === 'external-us-bank' &&
-        product.linkStatus !== 'pending_link'
-      ) {
-        return false;
-      }
+      if (product && isUsBankLinkSettled(product)) return false;
       return 3000;
     },
   });
@@ -211,8 +212,7 @@ function RouteComponent() {
     : undefined;
 
   const linkStepStatus: 'idle' | 'linking' | 'failed' | 'needs_update' =
-    pendingProduct?.kind === 'external-us-bank' &&
-    pendingProduct.linkStatus === 'link_failed'
+    pendingProduct && isFailedUsBank(pendingProduct)
       ? 'failed'
       : pendingUrn
         ? 'linking'

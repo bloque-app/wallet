@@ -98,7 +98,8 @@
       "addProductCardLabel": "Card (Global)",
       "addProductBrebLabel": "BRE-B key (COP)",
       "addProductPlaidLabel": "Plaid (USD)",
-      "addProductNeedsVirtualAccount": "You can only add products to an active pocket."
+      "addProductNeedsVirtualAccount": "You can only add products to an active pocket.",
+      "usBankLinking": "Linking in progress"
     }
   },
   "brebKeys": {
