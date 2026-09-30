@@ -9,6 +9,7 @@ import { US_RAILS_ENABLED } from '~/config/features';
 import { useAuth } from '~/contexts/auth/auth-context';
 import {
   isFailedUsBank,
+  isLinkingUsBank,
   isUsableUsBank,
   isUsBankLinkSettled,
 } from '~/domain/accounts/external-us-bank';
@@ -34,6 +35,9 @@ const PENDING_URN_STARTED_AT_KEY = 'bloque:pendingExternalUsBankUrnStartedAt';
 // from `pending_link` (there's no "user exited" event) — without this cap the
 // 3s poll below would run forever with no way out.
 const LINK_TIMEOUT_MS = 5 * 60 * 1000;
+// Once Plaid is done, account activation has no known upper bound — poll
+// slower and never time out.
+const ACTIVATION_POLL_MS = 10_000;
 const MIN_TOPUP_AMOUNT_USD = 10;
 const FROM_ASSET = 'USD/2';
 const TO_ASSET = 'DUSD/6';
@@ -201,6 +205,7 @@ function RouteComponent() {
         .flatMap((account) => account.products)
         .find((p) => p.urn === pendingUrn);
       if (product && isUsBankLinkSettled(product)) return false;
+      if (product && isLinkingUsBank(product)) return ACTIVATION_POLL_MS;
       return 3000;
     },
   });
@@ -211,14 +216,32 @@ function RouteComponent() {
         .find((product) => product.urn === pendingUrn)
     : undefined;
 
-  const linkStepStatus: 'idle' | 'linking' | 'failed' | 'needs_update' =
+  // With nothing usable and nothing left to link, a bank still activating is
+  // the only thing to wait on — even after leaving and coming back.
+  const hasActivatingBank =
+    !contextLinkLedgerId &&
+    linkedActivePockets.length === 0 &&
+    linkablePockets.length === 0 &&
+    allPockets.some((account) => account.products.some(isLinkingUsBank));
+
+  const linkStepStatus:
+    | 'idle'
+    | 'linking'
+    | 'activating'
+    | 'failed'
+    | 'needs_update' =
     pendingProduct && isFailedUsBank(pendingProduct)
       ? 'failed'
-      : pendingUrn
-        ? 'linking'
-        : bankNeedsUpdate
-          ? 'needs_update'
-          : 'idle';
+      : pendingProduct && isLinkingUsBank(pendingProduct)
+        ? 'activating'
+        : pendingUrn
+          ? 'linking'
+          : bankNeedsUpdate
+            ? 'needs_update'
+            : hasActivatingBank
+              ? 'activating'
+              : 'idle';
+  const isActivating = linkStepStatus === 'activating';
 
   const resetPendingLink = useCallback(() => {
     window.sessionStorage.removeItem(PENDING_URN_KEY);
@@ -246,7 +269,7 @@ function RouteComponent() {
   // Safety net for a cancelled/abandoned Plaid session: the backend has no
   // "user exited" signal, so without this the poll above runs forever.
   useEffect(() => {
-    if (!pendingUrn) return;
+    if (!pendingUrn || isActivating) return;
     const startedAtRaw = window.sessionStorage.getItem(
       PENDING_URN_STARTED_AT_KEY,
     );
@@ -262,7 +285,7 @@ function RouteComponent() {
       toast.error(t('topup.usBanks.linkStep.timeoutToast'));
     }, remaining);
     return () => window.clearTimeout(timer);
-  }, [pendingUrn, resetPendingLink, t]);
+  }, [pendingUrn, isActivating, resetPendingLink, t]);
 
   // Plaid's hosted page echoes `?status=...` on redirect back — check
   // immediately instead of waiting for the first 3s poll tick. Only on

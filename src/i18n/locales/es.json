@@ -575,6 +575,8 @@
         "cta": "Vincular cuenta bancaria",
         "linking": "Vinculando tu cuenta bancaria…",
         "linkingDescription": "Esto puede tardar unos segundos. Continuaremos automáticamente cuando termine.",
+        "activating": "Tu banco quedó vinculado",
+        "activatingDescription": "Estamos activando tu cuenta. Puede tardar un poco; puedes salir y volver más tarde.",
         "checkAgain": "Verificar de nuevo",
         "cancel": "Cancelar y volver a empezar",
         "failed": "No pudimos vincular tu cuenta bancaria.",

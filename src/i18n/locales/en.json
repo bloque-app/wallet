@@ -575,6 +575,8 @@
         "cta": "Link bank account",
         "linking": "Linking your bank account…",
         "linkingDescription": "This can take a few seconds. We'll continue automatically once it's done.",
+        "activating": "Your bank is linked",
+        "activatingDescription": "We’re activating your account. This can take a while; you can leave and come back later.",
         "checkAgain": "Check again",
         "cancel": "Cancel and start over",
         "failed": "We couldn't link your bank account.",
