@@ -9,6 +9,7 @@ import {
 } from '~/components/account/product-presentation';
 import { BackButton } from '~/components/back-button';
 import { Button } from '~/components/ui/button';
+import { visibleProducts } from '~/domain/accounts/external-us-bank';
 import type { Account } from '~/domain/accounts/types';
 import { useAccounts } from '~/hooks/accounts/use-accounts';
 import i18n from '~/i18n/config';
@@ -42,7 +43,7 @@ function formatAssetBalanceChip(asset: string, current: string): string {
 }
 
 function getCompositionLabel(account: Account) {
-  const associated = account.products.filter(
+  const associated = visibleProducts(account.products).filter(
     (product) => product.urn !== account.primaryUrn,
   );
 

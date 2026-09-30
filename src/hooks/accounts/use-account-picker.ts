@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { isUsableUsBank } from '~/domain/accounts/external-us-bank';
 import type { Account, Product } from '~/domain/accounts/types';
 import { isActiveVirtualAccount } from '~/domain/accounts/virtual-account';
 import { useAccounts } from './use-accounts';
@@ -11,14 +12,11 @@ type AccountPickerOptions = {
   /** Only include accounts that have at least one product of this kind. */
   requireProductKind?: Product['kind'];
   /**
-   * Only include accounts with an `external-us-bank` product in this Plaid
-   * `linkStatus` — distinct from `requireActive`, which checks the primary
-   * product's top-level `status`, not Plaid's linking state.
+   * Only include accounts with a linked US bank that is both active and
+   * Plaid-linked — distinct from `requireActive`, which checks the primary
+   * product's `status`, not the bank's.
    */
-  requireLinkStatus?: Extract<
-    Product,
-    { kind: 'external-us-bank' }
-  >['linkStatus'];
+  requireUsableUsBank?: boolean;
   /** Only include accounts anchored by an active pocket (virtual account). */
   requireVirtualAccount?: boolean;
 };
@@ -45,7 +43,7 @@ export function useAccountPicker(options: AccountPickerOptions = {}) {
     requireActive = true,
     asset,
     requireProductKind,
-    requireLinkStatus,
+    requireUsableUsBank = false,
     requireVirtualAccount = false,
   } = options;
 
@@ -66,14 +64,7 @@ export function useAccountPicker(options: AccountPickerOptions = {}) {
       ) {
         return false;
       }
-      if (
-        requireLinkStatus &&
-        !account.products.some(
-          (product) =>
-            product.kind === 'external-us-bank' &&
-            product.linkStatus === requireLinkStatus,
-        )
-      ) {
+      if (requireUsableUsBank && !account.products.some(isUsableUsBank)) {
         return false;
       }
 
@@ -84,7 +75,7 @@ export function useAccountPicker(options: AccountPickerOptions = {}) {
     requireActive,
     asset,
     requireProductKind,
-    requireLinkStatus,
+    requireUsableUsBank,
     requireVirtualAccount,
   ]);
 

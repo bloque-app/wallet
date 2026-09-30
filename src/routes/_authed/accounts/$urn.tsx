@@ -34,6 +34,10 @@ import {
   US_RAILS_ENABLED,
   USD_ENABLED,
 } from '~/config/features';
+import {
+  isLinkingUsBank,
+  visibleProducts,
+} from '~/domain/accounts/external-us-bank';
 import type { AssetBalance, Product } from '~/domain/accounts/types';
 import { isActiveVirtualAccount } from '~/domain/accounts/virtual-account';
 import { useAccountMovements } from '~/hooks/accounts/use-account-movements';
@@ -192,9 +196,10 @@ function RouteComponent() {
   const primaryProduct = account?.products.find(
     (product) => product.urn === account.primaryUrn,
   );
-  const associatedProducts =
-    account?.products.filter((product) => product.urn !== account.primaryUrn) ??
-    [];
+  const shownProducts = visibleProducts(account?.products ?? []);
+  const associatedProducts = shownProducts.filter(
+    (product) => product.urn !== account?.primaryUrn,
+  );
   const Icon = getProductKindIcon(primaryProduct?.kind ?? 'other');
   const canAddProduct = !!account && isActiveVirtualAccount(account);
 
@@ -437,7 +442,10 @@ function RouteComponent() {
                           {product.label}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {getProductKindLabel(product.kind)} • {product.status}
+                          {getProductKindLabel(product.kind)} •{' '}
+                          {isLinkingUsBank(product)
+                            ? t('accounts.detail.usBankLinking')
+                            : product.status}
                         </p>
                       </div>
                       {link ? (
@@ -565,7 +573,7 @@ function RouteComponent() {
                 ]
                   .filter(
                     (option) =>
-                      !(account?.products ?? []).some(
+                      !shownProducts.some(
                         (product) => product.kind === option.matchKind,
                       ),
                   )
