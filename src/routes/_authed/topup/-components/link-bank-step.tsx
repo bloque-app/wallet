@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '~/components/ui/button';
 
 interface LinkBankStepProps {
-  status: 'idle' | 'linking' | 'failed' | 'needs_update';
+  status: 'idle' | 'linking' | 'activating' | 'failed' | 'needs_update';
   isStarting: boolean;
   /** Disables the idle-state CTA only — e.g. no destination pocket chosen yet. */
   disabled?: boolean;
@@ -56,6 +56,32 @@ export function LinkBankStep({
           className="h-auto p-0 text-sm font-medium text-muted-foreground underline-offset-4 hover:underline"
         >
           {t('topup.usBanks.linkStep.cancel')}
+        </Button>
+      </div>
+    );
+  }
+
+  if (status === 'activating') {
+    return (
+      <div className="flex flex-col items-center gap-6 py-8">
+        <div className="flex h-16 w-16 items-center justify-center rounded-3xl border border-primary/25 bg-primary/[0.06]">
+          <Building2 className="h-7 w-7 text-primary" strokeWidth={1.5} />
+        </div>
+        <div className="flex flex-col items-center gap-2 text-center">
+          <h2 className="text-lg font-bold text-foreground">
+            {t('topup.usBanks.linkStep.activating')}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {t('topup.usBanks.linkStep.activatingDescription')}
+          </p>
+        </div>
+        <Button
+          onClick={onCheckAgain}
+          variant="outline"
+          className="h-12 w-full gap-2 rounded-2xl text-sm font-medium bg-transparent"
+        >
+          <RefreshCw className="h-4 w-4" />
+          {t('topup.usBanks.linkStep.checkAgain')}
         </Button>
       </div>
     );
