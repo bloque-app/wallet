@@ -8,6 +8,7 @@ import { ComingSoonScreen } from '~/components/coming-soon';
 import { US_RAILS_ENABLED } from '~/config/features';
 import { useAuth } from '~/contexts/auth/auth-context';
 import {
+  blocksUsBankLink,
   isFailedUsBank,
   isLinkingUsBank,
   isUsableUsBank,
@@ -134,7 +135,7 @@ function RouteComponent() {
 
   // Which pocket the new Plaid link itself gets associated with. Only one
   // `external-us-bank` product per pocket, same rule as card/BRE-B — a failed
-  // link doesn't count, so the pocket can be linked again.
+  // or unfinished link doesn't count, so the pocket can be linked again.
   const [selectedLinkLedgerId, setSelectedLinkLedgerId] = useState<
     string | null
   >(null);
@@ -143,12 +144,7 @@ function RouteComponent() {
   });
   const linkablePockets = useMemo(
     () =>
-      allPockets.filter(
-        (account) =>
-          !account.products.some(
-            (p) => p.kind === 'external-us-bank' && !isFailedUsBank(p),
-          ),
-      ),
+      allPockets.filter((account) => !account.products.some(blocksUsBankLink)),
     [allPockets],
   );
   const contextLinkLedgerId = allPockets.some(

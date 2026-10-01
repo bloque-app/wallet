@@ -35,7 +35,9 @@ import {
   USD_ENABLED,
 } from '~/config/features';
 import {
+  blocksUsBankLink,
   isLinkingUsBank,
+  isPendingLinkUsBank,
   visibleProducts,
 } from '~/domain/accounts/external-us-bank';
 import type { AssetBalance, Product } from '~/domain/accounts/types';
@@ -445,7 +447,9 @@ function RouteComponent() {
                           {getProductKindLabel(product.kind)} •{' '}
                           {isLinkingUsBank(product)
                             ? t('accounts.detail.usBankLinking')
-                            : product.status}
+                            : isPendingLinkUsBank(product)
+                              ? t('accounts.detail.usBankPendingLink')
+                              : product.status}
                         </p>
                       </div>
                       {link ? (
@@ -573,8 +577,10 @@ function RouteComponent() {
                 ]
                   .filter(
                     (option) =>
-                      !shownProducts.some(
-                        (product) => product.kind === option.matchKind,
+                      !shownProducts.some((product) =>
+                        option.matchKind === 'external-us-bank'
+                          ? blocksUsBankLink(product)
+                          : product.kind === option.matchKind,
                       ),
                   )
                   .map((option) => (

@@ -31,6 +31,28 @@ export function isLinkingUsBank(product: Product): boolean {
   );
 }
 
+/** A linking attempt whose Plaid flow was opened but never finished. */
+export function isPendingLinkUsBank(product: Product): boolean {
+  return (
+    isExternalUsBank(product) &&
+    product.status === 'creation_in_progress' &&
+    product.linkStatus === 'pending_link'
+  );
+}
+
+/**
+ * A US bank that keeps its pocket from starting a new link. Failed and
+ * unfinished attempts don't: retrying on the same pocket reuses or replaces
+ * the unfinished attempt instead of adding another one.
+ */
+export function blocksUsBankLink(product: Product): boolean {
+  return (
+    isExternalUsBank(product) &&
+    !isFailedUsBank(product) &&
+    !isPendingLinkUsBank(product)
+  );
+}
+
 /** A linking attempt that won't change state anymore without user action. */
 export function isUsBankLinkSettled(product: Product): boolean {
   return isUsableUsBank(product) || isFailedUsBank(product);

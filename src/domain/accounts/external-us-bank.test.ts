@@ -1,7 +1,9 @@
 import { describe, expect, test } from 'bun:test';
 import {
+  blocksUsBankLink,
   isFailedUsBank,
   isLinkingUsBank,
+  isPendingLinkUsBank,
   isUsableUsBank,
   isUsBankLinkSettled,
   visibleProducts,
@@ -115,5 +117,44 @@ describe('visibleProducts', () => {
       usable,
       linking,
     ]);
+  });
+});
+
+describe('isPendingLinkUsBank', () => {
+  test('accepts an account whose link was never finished', () => {
+    expect(
+      isPendingLinkUsBank(bank('creation_in_progress', 'pending_link')),
+    ).toBe(true);
+  });
+
+  test('rejects a link waiting on activation', () => {
+    expect(isPendingLinkUsBank(bank('creation_in_progress', 'active'))).toBe(
+      false,
+    );
+  });
+
+  test('rejects other product kinds', () => {
+    expect(isPendingLinkUsBank(pocket)).toBe(false);
+  });
+});
+
+describe('blocksUsBankLink', () => {
+  test('blocks while a bank is usable or activating', () => {
+    expect(blocksUsBankLink(bank('active', 'active'))).toBe(true);
+    expect(blocksUsBankLink(bank('creation_in_progress', 'active'))).toBe(true);
+  });
+
+  test('does not block on failed or unfinished links', () => {
+    expect(blocksUsBankLink(bank('creation_failed', 'pending_link'))).toBe(
+      false,
+    );
+    expect(blocksUsBankLink(bank('active', 'link_failed'))).toBe(false);
+    expect(blocksUsBankLink(bank('creation_in_progress', 'pending_link'))).toBe(
+      false,
+    );
+  });
+
+  test('ignores other product kinds', () => {
+    expect(blocksUsBankLink(pocket)).toBe(false);
   });
 });
