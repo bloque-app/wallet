@@ -99,7 +99,8 @@
       "addProductBrebLabel": "Llave BRE-B (COP)",
       "addProductPlaidLabel": "Plaid (USD)",
       "addProductNeedsVirtualAccount": "Solo puedes agregar productos a un bolsillo activo.",
-      "usBankLinking": "Vinculación en proceso"
+      "usBankLinking": "Vinculación en proceso",
+      "usBankPendingLink": "Vinculación sin terminar"
     }
   },
   "brebKeys": {
