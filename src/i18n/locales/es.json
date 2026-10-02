@@ -311,6 +311,10 @@
       "topup": "Recargar",
       "send": "Enviar",
       "needsAccount": "Crea un bolsillo primero para poder usar esta opción."
+    },
+    "whatsappCard": {
+      "title": "Usa tu wallet por WhatsApp",
+      "description": "Envía y recarga dinero chateando."
     }
   },
   "send": {
@@ -678,6 +682,7 @@
     "home": "Inicio",
     "accounts": "Bolsillos",
     "movements": "Movimientos",
+    "whatsapp": "WhatsApp",
     "card": "Tarjeta",
     "profile": "Perfil"
   },
@@ -784,5 +789,64 @@
     "title": "Necesitas un bolsillo",
     "description": "Crea un bolsillo para poder recargar, enviar dinero, usar BRE-B y crear tarjetas.",
     "loadError": "No pudimos cargar tus bolsillos."
+  },
+  "whatsapp": {
+    "title": "WhatsApp",
+    "cta": "Abrir WhatsApp",
+    "prefilled": "Hola Bloque, quiero usar mi wallet por WhatsApp.",
+    "prefilledWithAlias": "Hola Bloque, quiero usar mi wallet por WhatsApp. Mi alias es {{alias}}.",
+    "hero": {
+      "title": "Tu wallet en WhatsApp",
+      "subtitle": "Envía y recarga dinero chateando, sin abrir la app."
+    },
+    "chat": {
+      "ariaLabel": "Ejemplo de conversación con Bloque en WhatsApp",
+      "user1": "Envía 50.000 a la llave @juan",
+      "bloque1": "Vas a enviar $50.000 COP a Juan Pérez por BRE-B. Para confirmar, escribe el código que te enviamos.",
+      "user2": "482913",
+      "bloque2": "¡Listo! Tu envío fue exitoso ✅"
+    },
+    "operations": {
+      "title": "Qué puedes hacer",
+      "brebSend": {
+        "title": "Enviar por BRE-B",
+        "description": "A cualquier llave BRE-B, al instante."
+      },
+      "banks": {
+        "title": "Enviar a bancos",
+        "description": "A cuentas de bancos colombianos."
+      },
+      "brebTopup": {
+        "title": "Recargar por BRE-B",
+        "description": "Recibe dinero en tu wallet con tu llave."
+      },
+      "pseTopup": {
+        "title": "Recargar por PSE",
+        "description": "Recarga desde tu banco en línea."
+      }
+    },
+    "steps": {
+      "title": "Cómo funciona",
+      "open": {
+        "title": "Abre el chat",
+        "description": "Toca el botón y escríbenos desde WhatsApp."
+      },
+      "ask": {
+        "title": "Pide lo que necesitas",
+        "description": "Escribe como hablas: «recarga 100.000 por PSE»."
+      },
+      "confirm": {
+        "title": "Confirma el movimiento",
+        "description": "Te pediremos un código OTP y algunos datos antes de mover tu dinero."
+      }
+    },
+    "alias": {
+      "title": "Identifícate con tu alias",
+      "description": "Usa el mismo correo o teléfono con el que ingresas a la wallet."
+    },
+    "security": {
+      "title": "Tu dinero, protegido",
+      "description": "Para mover dinero te pediremos un código OTP y datos de confirmación. Compártelos solo en el chat oficial de Bloque y nunca con otras personas."
+    }
   }
 }

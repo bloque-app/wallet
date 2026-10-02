@@ -3,6 +3,7 @@
 import { Link, useLocation } from '@tanstack/react-router';
 import { ArrowLeftRight, CreditCard, Home, UserCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { WhatsAppIcon } from '~/components/whatsapp-icon';
 import { cn } from '~/lib/utils';
 
 export function BottomNav() {
@@ -12,6 +13,12 @@ export function BottomNav() {
   const navItems = [
     { href: '/', label: t('nav.home'), icon: Home },
     { href: '/movements', label: t('nav.movements'), icon: ArrowLeftRight },
+    {
+      href: '/whatsapp',
+      label: t('nav.whatsapp'),
+      icon: WhatsAppIcon,
+      highlight: true,
+    },
     { href: '/card', label: t('nav.card'), icon: CreditCard },
     { href: '/profile', label: t('nav.profile'), icon: UserCircle },
   ];
@@ -25,6 +32,35 @@ export function BottomNav() {
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;
+          if (item.highlight) {
+            return (
+              <Link
+                key={item.href}
+                to={item.href}
+                className="flex min-w-[58px] flex-col items-center gap-0.5 px-1 text-center"
+                aria-current={isActive ? 'page' : undefined}
+              >
+                <span
+                  className={cn(
+                    '-mt-6 flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366] text-white shadow-[0_12px_24px_-10px_rgb(37_211_102_/_0.8)] ring-4 ring-background transition-transform',
+                    isActive ? 'scale-105' : 'hover:scale-105',
+                  )}
+                >
+                  <Icon className="h-6 w-6" />
+                </span>
+                <span
+                  className={cn(
+                    'text-[10px] leading-tight',
+                    isActive
+                      ? 'font-semibold text-foreground'
+                      : 'text-muted-foreground',
+                  )}
+                >
+                  {item.label}
+                </span>
+              </Link>
+            );
+          }
           return (
             <Link
               key={item.href}
