@@ -40,7 +40,7 @@ export function getBrebKeyTypes(): Array<{
     {
       value: 'ALPHA',
       label: i18n.t('brebKeys.keyTypes.alpha'),
-      placeholder: 'nestor.bloque',
+      placeholder: '@MBP313',
     },
     {
       value: 'BCODE',
