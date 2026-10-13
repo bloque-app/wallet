@@ -18,7 +18,18 @@ import {
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from '~/components/ui/select';
 import { Textarea } from '~/components/ui/textarea';
+import {
+  inferBrebKeyType,
+  isValidBrebKeyValue,
+  normalizeBrebKeyValue,
+} from '~/domain/payments/breb-key';
 import type { ExecutionOutcome } from '~/domain/payments/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useResolveBrebKey } from '~/hooks/accounts/use-breb-keys';
@@ -29,6 +40,7 @@ import { TopUpErrorStep } from '../../topup/-components/error-step';
 import { ExecutionOutcomeStep } from '../../topup/-components/execution-outcome-step';
 import {
   type BrebKeyType,
+  getBrebKeyTypes,
   getRecipientName,
   type ResolvedRecipient,
 } from '../-lib/breb';
@@ -47,21 +59,6 @@ function majorToMinor(amountMajor: number, precision: number) {
 
 const FROM_PRECISION = getAssetPrecision(FROM_ASSET);
 
-function normalizeBrebKey(value: string) {
-  return value.trim();
-}
-
-function inferBrebKeyType(value: string): BrebKeyType | null {
-  const normalized = normalizeBrebKey(value);
-
-  if (!normalized) return null;
-  if (normalized.includes('@') && !normalized.startsWith('@')) return 'EMAIL';
-  if (normalized.startsWith('@')) return 'ALPHA';
-  if (/^\d{10}$/.test(normalized)) return 'PHONE';
-  if (/^\d+$/.test(normalized)) return 'ID';
-  return 'ALPHA';
-}
-
 export const Route = createFileRoute('/_authed/breb-keys/pay-transfer/')({
   validateSearch: (search: Record<string, unknown>) => ({
     from: (search.from as string | undefined) ?? '/breb-keys',
@@ -75,6 +72,9 @@ function RouteComponent() {
   const { history } = useRouter();
   const [view, setView] = useState<ViewState>('form');
   const [key, setKey] = useState('');
+  const [keyTypeOverride, setKeyTypeOverride] = useState<BrebKeyType | null>(
+    null,
+  );
   const [amount, setAmount] = useState('');
   const [message, setMessage] = useState('');
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -87,18 +87,18 @@ function RouteComponent() {
   const [autoRetry, setAutoRetry] = useState(false);
   const [selectedLedgerId, setSelectedLedgerId] = useState<string | null>(null);
 
-  const normalizedKey = normalizeBrebKey(key);
-  const inferredKeyType = inferBrebKeyType(normalizedKey);
+  const keyTypes = getBrebKeyTypes();
+  const keyType = keyTypeOverride ?? inferBrebKeyType(key);
+  const keyTypeOption = keyTypes.find((option) => option.value === keyType);
+  const normalizedKey = keyType ? normalizeBrebKeyValue(keyType, key) : '';
   const parsedAmount = Number.parseInt(amount.replace(/\D/g, ''), 10) || 0;
   const amountSrc = useMemo(() => {
     if (parsedAmount <= 0) return '';
     return majorToMinor(parsedAmount, FROM_PRECISION);
   }, [parsedAmount]);
 
-  const hasValidKey = inferredKeyType !== null;
-  // Cobre — the active BRE-B provider — only has ALPHA (@alias) keys
-  // operationally verified for payouts today.
-  const isAlphaKey = inferredKeyType === 'ALPHA';
+  const hasValidKey =
+    keyType !== null && isValidBrebKeyValue(keyType, normalizedKey);
   const resolveBrebKey = useResolveBrebKey();
 
   const { accounts: fundedAccounts, isLoading: isLoadingFundedAccounts } =
@@ -154,9 +154,6 @@ function RouteComponent() {
     if (key.length > 0 && !hasValidKey) {
       return t('brebKeys.payTransfer.invalidKey');
     }
-    if (key.length > 0 && hasValidKey && !isAlphaKey) {
-      return t('brebKeys.payTransfer.onlyAlphaKeysSupported');
-    }
     if (parsedAmount > 0 && parsedAmount < MIN_TRANSFER_AMOUNT) {
       return t('brebKeys.payTransfer.minAmount');
     }
@@ -175,7 +172,6 @@ function RouteComponent() {
     isLoadingFundedAccounts,
     fundedAccounts.length,
     hasValidKey,
-    isAlphaKey,
     key.length,
     parsedAmount,
     ratesQuery.isError,
@@ -264,7 +260,7 @@ function RouteComponent() {
 
   const canSubmit =
     !!selectedSourceBrebUrn &&
-    isAlphaKey &&
+    hasValidKey &&
     parsedAmount >= MIN_TRANSFER_AMOUNT &&
     !!selectedRate &&
     !createOrderMutation.isPending;
@@ -335,13 +331,45 @@ function RouteComponent() {
           </div>
 
           <div className="flex flex-col gap-2">
+            <Label htmlFor="breb-key-type">
+              {t('brebKeys.payTransfer.keyTypeLabel')}
+            </Label>
+            <Select
+              value={keyType}
+              onValueChange={(value) =>
+                setKeyTypeOverride((value as BrebKeyType | null) ?? null)
+              }
+            >
+              <SelectTrigger id="breb-key-type" className="h-12 rounded-2xl">
+                {keyTypeOption ? (
+                  <span>{keyTypeOption.label}</span>
+                ) : (
+                  <span className="text-muted-foreground">
+                    {t('brebKeys.payTransfer.keyTypePlaceholder')}
+                  </span>
+                )}
+              </SelectTrigger>
+              <SelectContent>
+                {keyTypes.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex flex-col gap-2">
             <Label htmlFor="breb-key">
               {t('brebKeys.payTransfer.keyLabel')}
             </Label>
             <Input
               id="breb-key"
               inputMode="text"
-              placeholder={t('brebKeys.payTransfer.keyPlaceholder')}
+              placeholder={
+                keyTypeOption?.placeholder ??
+                t('brebKeys.payTransfer.keyPlaceholder')
+              }
               value={key}
               onChange={(event) => setKey(event.target.value)}
               className="h-12 rounded-2xl"
@@ -425,9 +453,9 @@ function RouteComponent() {
 
           <Button
             onClick={() => {
-              if (!inferredKeyType) return;
+              if (!keyType) return;
               resolveBrebKey.mutate(
-                { keyType: inferredKeyType, key: normalizedKey },
+                { keyType, key: normalizedKey },
                 {
                   onSuccess: (resolved) => {
                     setRecipientPreview(resolved);
