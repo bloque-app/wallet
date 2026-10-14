@@ -27,11 +27,7 @@ import { useRates } from '~/hooks/payments/use-rates';
 import { formatCOP, getAssetPrecision } from '~/lib/formatters';
 import { TopUpErrorStep } from '../../topup/-components/error-step';
 import { ExecutionOutcomeStep } from '../../topup/-components/execution-outcome-step';
-import {
-  type BrebKeyType,
-  getRecipientName,
-  type ResolvedRecipient,
-} from '../-lib/breb';
+import { getRecipientName, type ResolvedRecipient } from '../-lib/breb';
 
 type ViewState = 'form' | 'pending' | 'error';
 
@@ -46,21 +42,6 @@ function majorToMinor(amountMajor: number, precision: number) {
 }
 
 const FROM_PRECISION = getAssetPrecision(FROM_ASSET);
-
-function normalizeBrebKey(value: string) {
-  return value.trim();
-}
-
-function inferBrebKeyType(value: string): BrebKeyType | null {
-  const normalized = normalizeBrebKey(value);
-
-  if (!normalized) return null;
-  if (normalized.includes('@') && !normalized.startsWith('@')) return 'EMAIL';
-  if (normalized.startsWith('@')) return 'ALPHA';
-  if (/^\d{10}$/.test(normalized)) return 'PHONE';
-  if (/^\d+$/.test(normalized)) return 'ID';
-  return 'ALPHA';
-}
 
 export const Route = createFileRoute('/_authed/breb-keys/pay-transfer/')({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -87,18 +68,14 @@ function RouteComponent() {
   const [autoRetry, setAutoRetry] = useState(false);
   const [selectedLedgerId, setSelectedLedgerId] = useState<string | null>(null);
 
-  const normalizedKey = normalizeBrebKey(key);
-  const inferredKeyType = inferBrebKeyType(normalizedKey);
+  const normalizedKey = key.trim();
   const parsedAmount = Number.parseInt(amount.replace(/\D/g, ''), 10) || 0;
   const amountSrc = useMemo(() => {
     if (parsedAmount <= 0) return '';
     return majorToMinor(parsedAmount, FROM_PRECISION);
   }, [parsedAmount]);
 
-  const hasValidKey = inferredKeyType !== null;
-  // Cobre — the active BRE-B provider — only has ALPHA (@alias) keys
-  // operationally verified for payouts today.
-  const isAlphaKey = inferredKeyType === 'ALPHA';
+  const hasValidKey = normalizedKey.length > 0;
   const resolveBrebKey = useResolveBrebKey();
 
   const { accounts: fundedAccounts, isLoading: isLoadingFundedAccounts } =
@@ -154,9 +131,6 @@ function RouteComponent() {
     if (key.length > 0 && !hasValidKey) {
       return t('brebKeys.payTransfer.invalidKey');
     }
-    if (key.length > 0 && hasValidKey && !isAlphaKey) {
-      return t('brebKeys.payTransfer.onlyAlphaKeysSupported');
-    }
     if (parsedAmount > 0 && parsedAmount < MIN_TRANSFER_AMOUNT) {
       return t('brebKeys.payTransfer.minAmount');
     }
@@ -175,7 +149,6 @@ function RouteComponent() {
     isLoadingFundedAccounts,
     fundedAccounts.length,
     hasValidKey,
-    isAlphaKey,
     key.length,
     parsedAmount,
     ratesQuery.isError,
@@ -210,7 +183,6 @@ function RouteComponent() {
             resolutionId: recipientPreview.resolutionId,
             destinationKey: {
               keyValue: recipientPreview.key.keyValue,
-              keyType: recipientPreview.key.keyType,
             },
           },
           args: { sourceAccountUrn: selectedSourceBrebUrn },
@@ -264,7 +236,7 @@ function RouteComponent() {
 
   const canSubmit =
     !!selectedSourceBrebUrn &&
-    isAlphaKey &&
+    hasValidKey &&
     parsedAmount >= MIN_TRANSFER_AMOUNT &&
     !!selectedRate &&
     !createOrderMutation.isPending;
@@ -425,9 +397,9 @@ function RouteComponent() {
 
           <Button
             onClick={() => {
-              if (!inferredKeyType) return;
+              if (!hasValidKey) return;
               resolveBrebKey.mutate(
-                { keyType: inferredKeyType, key: normalizedKey },
+                { key: normalizedKey },
                 {
                   onSuccess: (resolved) => {
                     setRecipientPreview(resolved);

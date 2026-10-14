@@ -16,6 +16,7 @@ import type {
   GetTransactionsParams,
   MovementEntry,
   MovementsPage,
+  ResolveBrebKeyInput,
   TransferInput,
   TransferOutcome,
 } from '~/domain/accounts/ports';
@@ -402,10 +403,8 @@ async function createBrebKey(input: CreateBrebKeyInput): Promise<Product> {
   return mapToProduct(result.data as ListedAccount);
 }
 
-async function resolveBrebKey(input: { keyType: string; key: string }) {
-  const result = await bloque.accounts.breb.resolveKey(
-    input as Parameters<typeof bloque.accounts.breb.resolveKey>[0],
-  );
+async function resolveBrebKey(input: ResolveBrebKeyInput) {
+  const result = await bloque.accounts.breb.resolveKey(input);
   if (result.error || !result.data) {
     throw new Error(
       result.error?.message ?? 'No se pudo resolver la llave BRE-B.',
