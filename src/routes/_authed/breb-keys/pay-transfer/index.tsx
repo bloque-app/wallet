@@ -18,18 +18,7 @@ import {
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-} from '~/components/ui/select';
 import { Textarea } from '~/components/ui/textarea';
-import {
-  inferBrebKeyType,
-  isValidBrebKeyValue,
-  normalizeBrebKeyValue,
-} from '~/domain/payments/breb-key';
 import type { ExecutionOutcome } from '~/domain/payments/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useResolveBrebKey } from '~/hooks/accounts/use-breb-keys';
@@ -38,12 +27,7 @@ import { useRates } from '~/hooks/payments/use-rates';
 import { formatCOP, getAssetPrecision } from '~/lib/formatters';
 import { TopUpErrorStep } from '../../topup/-components/error-step';
 import { ExecutionOutcomeStep } from '../../topup/-components/execution-outcome-step';
-import {
-  type BrebKeyType,
-  getBrebKeyTypes,
-  getRecipientName,
-  type ResolvedRecipient,
-} from '../-lib/breb';
+import { getRecipientName, type ResolvedRecipient } from '../-lib/breb';
 
 type ViewState = 'form' | 'pending' | 'error';
 
@@ -72,9 +56,6 @@ function RouteComponent() {
   const { history } = useRouter();
   const [view, setView] = useState<ViewState>('form');
   const [key, setKey] = useState('');
-  const [keyTypeOverride, setKeyTypeOverride] = useState<BrebKeyType | null>(
-    null,
-  );
   const [amount, setAmount] = useState('');
   const [message, setMessage] = useState('');
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -87,18 +68,14 @@ function RouteComponent() {
   const [autoRetry, setAutoRetry] = useState(false);
   const [selectedLedgerId, setSelectedLedgerId] = useState<string | null>(null);
 
-  const keyTypes = getBrebKeyTypes();
-  const keyType = keyTypeOverride ?? inferBrebKeyType(key);
-  const keyTypeOption = keyTypes.find((option) => option.value === keyType);
-  const normalizedKey = keyType ? normalizeBrebKeyValue(keyType, key) : '';
+  const normalizedKey = key.trim();
   const parsedAmount = Number.parseInt(amount.replace(/\D/g, ''), 10) || 0;
   const amountSrc = useMemo(() => {
     if (parsedAmount <= 0) return '';
     return majorToMinor(parsedAmount, FROM_PRECISION);
   }, [parsedAmount]);
 
-  const hasValidKey =
-    keyType !== null && isValidBrebKeyValue(keyType, normalizedKey);
+  const hasValidKey = normalizedKey.length > 0;
   const resolveBrebKey = useResolveBrebKey();
 
   const { accounts: fundedAccounts, isLoading: isLoadingFundedAccounts } =
@@ -206,7 +183,6 @@ function RouteComponent() {
             resolutionId: recipientPreview.resolutionId,
             destinationKey: {
               keyValue: recipientPreview.key.keyValue,
-              keyType: recipientPreview.key.keyType,
             },
           },
           args: { sourceAccountUrn: selectedSourceBrebUrn },
@@ -331,45 +307,13 @@ function RouteComponent() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="breb-key-type">
-              {t('brebKeys.payTransfer.keyTypeLabel')}
-            </Label>
-            <Select
-              value={keyType}
-              onValueChange={(value) =>
-                setKeyTypeOverride((value as BrebKeyType | null) ?? null)
-              }
-            >
-              <SelectTrigger id="breb-key-type" className="h-12 rounded-2xl">
-                {keyTypeOption ? (
-                  <span>{keyTypeOption.label}</span>
-                ) : (
-                  <span className="text-muted-foreground">
-                    {t('brebKeys.payTransfer.keyTypePlaceholder')}
-                  </span>
-                )}
-              </SelectTrigger>
-              <SelectContent>
-                {keyTypes.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex flex-col gap-2">
             <Label htmlFor="breb-key">
               {t('brebKeys.payTransfer.keyLabel')}
             </Label>
             <Input
               id="breb-key"
               inputMode="text"
-              placeholder={
-                keyTypeOption?.placeholder ??
-                t('brebKeys.payTransfer.keyPlaceholder')
-              }
+              placeholder={t('brebKeys.payTransfer.keyPlaceholder')}
               value={key}
               onChange={(event) => setKey(event.target.value)}
               className="h-12 rounded-2xl"
@@ -453,9 +397,9 @@ function RouteComponent() {
 
           <Button
             onClick={() => {
-              if (!keyType) return;
+              if (!hasValidKey) return;
               resolveBrebKey.mutate(
-                { keyType, key: normalizedKey },
+                { key: normalizedKey },
                 {
                   onSuccess: (resolved) => {
                     setRecipientPreview(resolved);

@@ -4,17 +4,63 @@ const listMock = mock(() => Promise.resolve({ accounts: [] as unknown[] }));
 const transactionsMock = mock((_params?: { asset?: string }) =>
   Promise.resolve({ data: [] as unknown[], pageSize: 0, hasMore: false }),
 );
+const resolveBrebKeyMock = mock((params: { key: string }) =>
+  Promise.resolve({
+    data: {
+      id: 'resolution-1',
+      resolutionId: 'resolution-1',
+      customerId: 'customer-1',
+      key: { keyType: 'ALPHA', keyValue: params.key },
+      owner: null,
+      participant: null,
+      account: null,
+    },
+    error: null,
+  }),
+);
 
 mock.module('~/lib/bloque', () => ({
   bloque: {
     accounts: {
       list: listMock,
       transactions: transactionsMock,
+      breb: {
+        resolveKey: resolveBrebKeyMock,
+      },
     },
   },
 }));
 
 const { bloqueAccountsRepository } = await import('./accounts-repository');
+
+describe('bloqueAccountsRepository.resolveBrebKey', () => {
+  beforeEach(() => {
+    resolveBrebKeyMock.mockClear();
+  });
+
+  test('forwards ambiguous and alphanumeric keys without guessing a key type', async () => {
+    const keys = [
+      '0016027228',
+      '3001234567',
+      'PA12345678',
+      'user@example.com',
+      '@BR0283',
+      'BR0283',
+    ];
+
+    for (const key of keys) {
+      await bloqueAccountsRepository.resolveBrebKey({ key });
+    }
+
+    expect(resolveBrebKeyMock).toHaveBeenCalledTimes(keys.length);
+    keys.forEach((key, index) => {
+      expect(resolveBrebKeyMock).toHaveBeenNthCalledWith(index + 1, { key });
+      expect(resolveBrebKeyMock.mock.calls[index]?.[0]).not.toHaveProperty(
+        'keyType',
+      );
+    });
+  });
+});
 
 describe('bloqueAccountsRepository.listProducts — medium duck-typing', () => {
   beforeEach(() => {
