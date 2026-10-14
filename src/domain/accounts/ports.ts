@@ -1,6 +1,7 @@
 import type {
   BrebKeyType,
   BrebResolvedKey,
+  ResolveBrebKeyParams,
   SupportedAsset,
 } from '@bloque/sdk-accounts';
 import type { AssetBalance, Product } from './types';
@@ -58,6 +59,8 @@ export type CreateBrebKeyInput = {
   ledgerId?: string;
   metadata?: Record<string, unknown>;
 };
+
+export type ResolveBrebKeyInput = ResolveBrebKeyParams;
 
 export type CreatePolygonAccountInput = { name?: string; ledgerId?: string };
 
@@ -120,10 +123,7 @@ export type AccountsRepository = {
   getCardDetailsUrl(urn: string): Promise<string>;
 
   createBrebKey(input: CreateBrebKeyInput): Promise<Product>;
-  resolveBrebKey(input: {
-    keyType: string;
-    key: string;
-  }): Promise<BrebResolvedKey>;
+  resolveBrebKey(input: ResolveBrebKeyInput): Promise<BrebResolvedKey>;
   suspendBrebKey(urn: string): Promise<void>;
   activateBrebKey(urn: string): Promise<void>;
   deleteBrebKey(urn: string): Promise<void>;

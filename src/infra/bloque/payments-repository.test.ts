@@ -7,8 +7,16 @@ const pseCreateMock = mock(() =>
 const bankTransferCreateMock = mock(() =>
   Promise.resolve({ order: baseOrder(), requestId: 'req-2' }),
 );
-const brebCreateMock = mock(() =>
-  Promise.resolve({ order: baseOrder(), requestId: 'req-3' }),
+const brebCreateMock = mock(
+  (_params?: {
+    rateSig: string;
+    amountSrc: string;
+    depositInformation: {
+      resolutionId: string;
+      destinationKey: { keyValue: string };
+    };
+    args: { sourceAccountUrn: string };
+  }) => Promise.resolve({ order: baseOrder(), requestId: 'req-3' }),
 );
 const rtpCreateMock = mock(() =>
   Promise.resolve({ order: baseOrder(), requestId: 'req-4' }),
@@ -206,10 +214,23 @@ describe('bloquePaymentsRepository order creation — execution outcome mapping'
       amountSrc: '5000000',
       depositInformation: {
         resolutionId: 'resolution-1',
-        destinationKey: { keyValue: '@one-time-key', keyType: 'ALPHA' },
+        destinationKey: { keyValue: '@one-time-key' },
       },
       args: { sourceAccountUrn: 'did:bloque:account:card:source' },
     });
+
+    expect(brebCreateMock.mock.calls[0]?.[0]).toEqual({
+      rateSig: 'rate-sig-1',
+      amountSrc: '5000000',
+      depositInformation: {
+        resolutionId: 'resolution-1',
+        destinationKey: { keyValue: '@one-time-key' },
+      },
+      args: { sourceAccountUrn: 'did:bloque:account:card:source' },
+    });
+    expect(
+      brebCreateMock.mock.calls[0]?.[0]?.depositInformation.destinationKey,
+    ).not.toHaveProperty('keyType');
 
     expect(result.execution).toEqual({
       kind: 'breb-deposit',

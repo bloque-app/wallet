@@ -1,5 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { CreateBrebKeyInput } from '~/domain/accounts/ports';
+import type {
+  CreateBrebKeyInput,
+  ResolveBrebKeyInput,
+} from '~/domain/accounts/ports';
 import { bloqueAccountsRepository } from '~/infra/bloque/accounts-repository';
 
 export function useCreateBrebKey() {
@@ -13,7 +16,7 @@ export function useCreateBrebKey() {
 
 export function useResolveBrebKey() {
   return useMutation({
-    mutationFn: (input: { keyType: string; key: string }) =>
+    mutationFn: (input: ResolveBrebKeyInput) =>
       bloqueAccountsRepository.resolveBrebKey(input),
   });
 }
