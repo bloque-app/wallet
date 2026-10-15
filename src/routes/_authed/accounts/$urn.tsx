@@ -49,8 +49,7 @@ import { useCreateCard } from '~/hooks/accounts/use-cards';
 import { useTransfer } from '~/hooks/accounts/use-transfer';
 import type { Asset, Movement } from '~/lib/formatters';
 import {
-  formatCOP,
-  formatUSD,
+  formatAmount,
   isUsdAsset,
   sortBalancesForDisplay,
 } from '~/lib/formatters';
@@ -79,6 +78,10 @@ const ASSET_LABELS: Record<string, Asset> = {
   COP: 'COP',
   COPM: 'COP',
   DUSD: 'USD',
+  MXN: 'MXN',
+  MXNB: 'MXN',
+  BRL: 'BRL',
+  BRLB: 'BRL',
   USD: 'USD',
   KSM: 'KSM',
 };
@@ -130,9 +133,7 @@ function sanitizeTransferAmountInput(raw: string, rawAsset: string): string {
 function formatAssetBalance(balance: AssetBalance) {
   const asset = getAssetLabel(balance.asset);
   const amount = parseAmount(balance.current, balance.asset);
-
-  if (asset === 'USD') return formatUSD(amount);
-  return formatCOP(amount);
+  return asset ? formatAmount(asset, amount) : balance.asset;
 }
 
 function getProductLink(

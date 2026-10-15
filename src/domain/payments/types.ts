@@ -24,6 +24,14 @@ export type Rate = {
   toAsset: string;
   /** Timestamp until which this rate is valid. */
   until: string;
+  fee?: {
+    formula: string;
+    components: Array<{
+      name: string;
+      type: string;
+      value: number | string;
+    }>;
+  };
 };
 
 /**
@@ -73,5 +81,19 @@ export type ExecutionOutcome =
       amount: string;
       depositAccountUrn: string;
       depositStatus: string;
+    }
+  | {
+      kind: 'spei-deposit';
+      clabe: string;
+      amount: string;
+      reference: string;
+      expiresAt?: string;
+    }
+  | {
+      kind: 'pix-deposit';
+      qrCodePayload: string;
+      amount: string;
+      reference: string;
+      expiresAt?: string;
     }
   | { kind: 'none' };

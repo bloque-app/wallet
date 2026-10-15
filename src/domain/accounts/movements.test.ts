@@ -50,6 +50,15 @@ describe('toDomainMovement', () => {
     expect(movement?.amount).toBe(25);
   });
 
+  test('maps MXNB and BRLB movements to presentable currencies', () => {
+    expect(
+      toDomainMovement(raw({ asset: 'MXNB/2', amount: '12345' }))?.asset,
+    ).toBe('MXN');
+    expect(
+      toDomainMovement(raw({ asset: 'BRLB/2', amount: '6789' }))?.asset,
+    ).toBe('BRL');
+  });
+
   test('a card payment recognized only via railName (no matching `type`) maps to type=card', () => {
     const movement = toDomainMovement(
       raw({

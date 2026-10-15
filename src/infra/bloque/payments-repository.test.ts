@@ -24,6 +24,18 @@ const rtpCreateMock = mock(() =>
 const externalUsBankCreateMock = mock(() =>
   Promise.resolve({ order: baseOrder(), requestId: 'req-5' }),
 );
+const speiCreateMock = mock(() =>
+  Promise.resolve({ order: baseOrder(), requestId: 'req-6' }),
+);
+const speiDepositCreateMock = mock(() =>
+  Promise.resolve({ order: baseOrder(), requestId: 'req-7' }),
+);
+const pixCreateMock = mock(() =>
+  Promise.resolve({ order: baseOrder(), requestId: 'req-8' }),
+);
+const pixDepositCreateMock = mock(() =>
+  Promise.resolve({ order: baseOrder(), requestId: 'req-9' }),
+);
 const pseBanksMock = mock(() =>
   Promise.resolve({ banks: [{ code: '1', name: 'Bancolombia' }] }),
 );
@@ -73,6 +85,14 @@ mock.module('~/lib/bloque', () => ({
       },
       externalUsBank: {
         create: externalUsBankCreateMock,
+      },
+      spei: {
+        create: speiCreateMock,
+        createDeposit: speiDepositCreateMock,
+      },
+      pix: {
+        create: pixCreateMock,
+        createDeposit: pixDepositCreateMock,
       },
     },
   },
@@ -127,10 +147,10 @@ describe('bloquePaymentsRepository.findRates', () => {
         fromAsset: 'COP/2',
         toAsset: 'COPM/2',
         until: '2026-01-01T00:05:00.000Z',
+        fee: { formula: '', components: [] },
       },
     ]);
     // Internal-only SDK fields must not leak into the domain type.
-    expect(rates[0]).not.toHaveProperty('fee');
     expect(rates[0]).not.toHaveProperty('maker');
   });
 });

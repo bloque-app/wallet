@@ -80,7 +80,7 @@ export type TransferInput = {
   destinationUrn: string;
   /** Bigint string, scaled by the asset's precision. */
   amount: string;
-  asset: SupportedAsset;
+  asset: SupportedAsset | 'MXNB/2' | 'BRLB/2';
   metadata?: Record<string, unknown>;
 };
 

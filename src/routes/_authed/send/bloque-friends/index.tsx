@@ -33,8 +33,8 @@ export const Route = createFileRoute('/_authed/send/bloque-friends/')({
 });
 
 type ViewState = 'form' | 'pending' | 'error';
-type AssetOption = 'USD' | 'COP';
-type TransferAsset = 'DUSD/6' | 'COPM/2';
+type AssetOption = 'USD' | 'COP' | 'MXN' | 'BRL';
+type TransferAsset = 'DUSD/6' | 'COPM/2' | 'MXNB/2' | 'BRLB/2';
 
 const ASSET_OPTIONS: Array<{
   value: AssetOption;
@@ -43,6 +43,8 @@ const ASSET_OPTIONS: Array<{
 }> = [
   { value: 'USD', sdkAsset: 'DUSD/6', precision: 6 },
   { value: 'COP', sdkAsset: 'COPM/2', precision: 2 },
+  { value: 'MXN', sdkAsset: 'MXNB/2', precision: 2 },
+  { value: 'BRL', sdkAsset: 'BRLB/2', precision: 2 },
 ];
 
 function majorToMinor(amountMajor: number, precision: number) {
@@ -289,7 +291,7 @@ function RouteComponent() {
 
           <div className="flex flex-col gap-2">
             <Label>{t('send.bloqueFriends.currency')}</Label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {ASSET_OPTIONS.map((asset) => (
                 <button
                   key={asset.value}

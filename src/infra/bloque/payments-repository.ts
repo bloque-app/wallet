@@ -3,8 +3,12 @@ import type {
   CreateBankTransferOrderParams,
   CreateBrebOrderParams,
   CreateExternalUsBankOrderParams,
+  CreatePixDepositParams,
+  CreatePixOrderParams,
   CreatePseOrderParams,
   CreateRtpOrderParams,
+  CreateSpeiDepositParams,
+  CreateSpeiOrderParams,
   ExecutionResult,
   FindRatesParams,
   SwapOrder,
@@ -63,6 +67,14 @@ async function findRates(params: FindRatesParams): Promise<Rate[]> {
     fromAsset: rate.edge[0],
     toAsset: rate.edge[1],
     until: rate.until,
+    fee: {
+      formula: rate.fee.formula,
+      components: rate.fee.components.map((component) => ({
+        name: component.name,
+        type: component.type,
+        value: component.value,
+      })),
+    },
   }));
 }
 
@@ -111,6 +123,34 @@ async function createExternalUsBankOrder(
   return mapCreateResult(result);
 }
 
+async function createSpeiDepositOrder(
+  params: CreateSpeiDepositParams,
+  options?: CreateOrderOptions,
+): Promise<CreateOrderResult> {
+  return mapCreateResult(await bloque.swap.spei.createDeposit(params, options));
+}
+
+async function createSpeiOrder(
+  params: CreateSpeiOrderParams,
+  options?: CreateOrderOptions,
+): Promise<CreateOrderResult> {
+  return mapCreateResult(await bloque.swap.spei.create(params, options));
+}
+
+async function createPixDepositOrder(
+  params: CreatePixDepositParams,
+  options?: CreateOrderOptions,
+): Promise<CreateOrderResult> {
+  return mapCreateResult(await bloque.swap.pix.createDeposit(params, options));
+}
+
+async function createPixOrder(
+  params: CreatePixOrderParams,
+  options?: CreateOrderOptions,
+): Promise<CreateOrderResult> {
+  return mapCreateResult(await bloque.swap.pix.create(params, options));
+}
+
 export const bloquePaymentsRepository: PaymentsRepository = {
   findRates,
   listPseBanks,
@@ -119,4 +159,8 @@ export const bloquePaymentsRepository: PaymentsRepository = {
   createBrebOrder,
   createRtpOrder,
   createExternalUsBankOrder,
+  createSpeiDepositOrder,
+  createSpeiOrder,
+  createPixDepositOrder,
+  createPixOrder,
 };

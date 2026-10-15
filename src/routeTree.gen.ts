@@ -28,7 +28,11 @@ import { Route as AuthedAccountsIndexRouteImport } from './routes/_authed/accoun
 import { Route as AuthedhomeIndexRouteImport } from './routes/_authed/(home)/index'
 import { Route as AuthedAccountsUrnRouteImport } from './routes/_authed/accounts/$urn'
 import { Route as AuthedTopupUsBanksIndexRouteImport } from './routes/_authed/topup/us-banks/index'
+import { Route as AuthedTopupSpeiIndexRouteImport } from './routes/_authed/topup/spei/index'
+import { Route as AuthedTopupPixIndexRouteImport } from './routes/_authed/topup/pix/index'
 import { Route as AuthedSendUsBanksIndexRouteImport } from './routes/_authed/send/us-banks/index'
+import { Route as AuthedSendSpeiIndexRouteImport } from './routes/_authed/send/spei/index'
+import { Route as AuthedSendPixIndexRouteImport } from './routes/_authed/send/pix/index'
 import { Route as AuthedSendColombianBanksIndexRouteImport } from './routes/_authed/send/colombian-banks/index'
 import { Route as AuthedSendBloqueFriendsIndexRouteImport } from './routes/_authed/send/bloque-friends/index'
 import { Route as AuthedProfileEditIndexRouteImport } from './routes/_authed/profile/edit/index'
@@ -133,9 +137,29 @@ const AuthedTopupUsBanksIndexRoute = AuthedTopupUsBanksIndexRouteImport.update({
   path: '/us-banks/',
   getParentRoute: () => AuthedTopupRouteRoute,
 } as any)
+const AuthedTopupSpeiIndexRoute = AuthedTopupSpeiIndexRouteImport.update({
+  id: '/spei/',
+  path: '/spei/',
+  getParentRoute: () => AuthedTopupRouteRoute,
+} as any)
+const AuthedTopupPixIndexRoute = AuthedTopupPixIndexRouteImport.update({
+  id: '/pix/',
+  path: '/pix/',
+  getParentRoute: () => AuthedTopupRouteRoute,
+} as any)
 const AuthedSendUsBanksIndexRoute = AuthedSendUsBanksIndexRouteImport.update({
   id: '/us-banks/',
   path: '/us-banks/',
+  getParentRoute: () => AuthedSendRouteRoute,
+} as any)
+const AuthedSendSpeiIndexRoute = AuthedSendSpeiIndexRouteImport.update({
+  id: '/spei/',
+  path: '/spei/',
+  getParentRoute: () => AuthedSendRouteRoute,
+} as any)
+const AuthedSendPixIndexRoute = AuthedSendPixIndexRouteImport.update({
+  id: '/pix/',
+  path: '/pix/',
   getParentRoute: () => AuthedSendRouteRoute,
 } as any)
 const AuthedSendColombianBanksIndexRoute =
@@ -221,7 +245,11 @@ export interface FileRoutesByFullPath {
   '/profile/edit/': typeof AuthedProfileEditIndexRoute
   '/send/bloque-friends/': typeof AuthedSendBloqueFriendsIndexRoute
   '/send/colombian-banks/': typeof AuthedSendColombianBanksIndexRoute
+  '/send/pix/': typeof AuthedSendPixIndexRoute
+  '/send/spei/': typeof AuthedSendSpeiIndexRoute
   '/send/us-banks/': typeof AuthedSendUsBanksIndexRoute
+  '/topup/pix/': typeof AuthedTopupPixIndexRoute
+  '/topup/spei/': typeof AuthedTopupSpeiIndexRoute
   '/topup/us-banks/': typeof AuthedTopupUsBanksIndexRoute
 }
 export interface FileRoutesByTo {
@@ -247,7 +275,11 @@ export interface FileRoutesByTo {
   '/profile/edit': typeof AuthedProfileEditIndexRoute
   '/send/bloque-friends': typeof AuthedSendBloqueFriendsIndexRoute
   '/send/colombian-banks': typeof AuthedSendColombianBanksIndexRoute
+  '/send/pix': typeof AuthedSendPixIndexRoute
+  '/send/spei': typeof AuthedSendSpeiIndexRoute
   '/send/us-banks': typeof AuthedSendUsBanksIndexRoute
+  '/topup/pix': typeof AuthedTopupPixIndexRoute
+  '/topup/spei': typeof AuthedTopupSpeiIndexRoute
   '/topup/us-banks': typeof AuthedTopupUsBanksIndexRoute
 }
 export interface FileRoutesById {
@@ -280,7 +312,11 @@ export interface FileRoutesById {
   '/_authed/profile/edit/': typeof AuthedProfileEditIndexRoute
   '/_authed/send/bloque-friends/': typeof AuthedSendBloqueFriendsIndexRoute
   '/_authed/send/colombian-banks/': typeof AuthedSendColombianBanksIndexRoute
+  '/_authed/send/pix/': typeof AuthedSendPixIndexRoute
+  '/_authed/send/spei/': typeof AuthedSendSpeiIndexRoute
   '/_authed/send/us-banks/': typeof AuthedSendUsBanksIndexRoute
+  '/_authed/topup/pix/': typeof AuthedTopupPixIndexRoute
+  '/_authed/topup/spei/': typeof AuthedTopupSpeiIndexRoute
   '/_authed/topup/us-banks/': typeof AuthedTopupUsBanksIndexRoute
 }
 export interface FileRouteTypes {
@@ -312,7 +348,11 @@ export interface FileRouteTypes {
     | '/profile/edit/'
     | '/send/bloque-friends/'
     | '/send/colombian-banks/'
+    | '/send/pix/'
+    | '/send/spei/'
     | '/send/us-banks/'
+    | '/topup/pix/'
+    | '/topup/spei/'
     | '/topup/us-banks/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -338,7 +378,11 @@ export interface FileRouteTypes {
     | '/profile/edit'
     | '/send/bloque-friends'
     | '/send/colombian-banks'
+    | '/send/pix'
+    | '/send/spei'
     | '/send/us-banks'
+    | '/topup/pix'
+    | '/topup/spei'
     | '/topup/us-banks'
   id:
     | '__root__'
@@ -370,7 +414,11 @@ export interface FileRouteTypes {
     | '/_authed/profile/edit/'
     | '/_authed/send/bloque-friends/'
     | '/_authed/send/colombian-banks/'
+    | '/_authed/send/pix/'
+    | '/_authed/send/spei/'
     | '/_authed/send/us-banks/'
+    | '/_authed/topup/pix/'
+    | '/_authed/topup/spei/'
     | '/_authed/topup/us-banks/'
   fileRoutesById: FileRoutesById
 }
@@ -514,11 +562,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedTopupUsBanksIndexRouteImport
       parentRoute: typeof AuthedTopupRouteRoute
     }
+    '/_authed/topup/spei/': {
+      id: '/_authed/topup/spei/'
+      path: '/spei'
+      fullPath: '/topup/spei/'
+      preLoaderRoute: typeof AuthedTopupSpeiIndexRouteImport
+      parentRoute: typeof AuthedTopupRouteRoute
+    }
+    '/_authed/topup/pix/': {
+      id: '/_authed/topup/pix/'
+      path: '/pix'
+      fullPath: '/topup/pix/'
+      preLoaderRoute: typeof AuthedTopupPixIndexRouteImport
+      parentRoute: typeof AuthedTopupRouteRoute
+    }
     '/_authed/send/us-banks/': {
       id: '/_authed/send/us-banks/'
       path: '/us-banks'
       fullPath: '/send/us-banks/'
       preLoaderRoute: typeof AuthedSendUsBanksIndexRouteImport
+      parentRoute: typeof AuthedSendRouteRoute
+    }
+    '/_authed/send/spei/': {
+      id: '/_authed/send/spei/'
+      path: '/spei'
+      fullPath: '/send/spei/'
+      preLoaderRoute: typeof AuthedSendSpeiIndexRouteImport
+      parentRoute: typeof AuthedSendRouteRoute
+    }
+    '/_authed/send/pix/': {
+      id: '/_authed/send/pix/'
+      path: '/pix'
+      fullPath: '/send/pix/'
+      preLoaderRoute: typeof AuthedSendPixIndexRouteImport
       parentRoute: typeof AuthedSendRouteRoute
     }
     '/_authed/send/colombian-banks/': {
@@ -629,6 +705,8 @@ interface AuthedSendRouteRouteChildren {
   AuthedSendIndexRoute: typeof AuthedSendIndexRoute
   AuthedSendBloqueFriendsIndexRoute: typeof AuthedSendBloqueFriendsIndexRoute
   AuthedSendColombianBanksIndexRoute: typeof AuthedSendColombianBanksIndexRoute
+  AuthedSendPixIndexRoute: typeof AuthedSendPixIndexRoute
+  AuthedSendSpeiIndexRoute: typeof AuthedSendSpeiIndexRoute
   AuthedSendUsBanksIndexRoute: typeof AuthedSendUsBanksIndexRoute
 }
 
@@ -636,6 +714,8 @@ const AuthedSendRouteRouteChildren: AuthedSendRouteRouteChildren = {
   AuthedSendIndexRoute: AuthedSendIndexRoute,
   AuthedSendBloqueFriendsIndexRoute: AuthedSendBloqueFriendsIndexRoute,
   AuthedSendColombianBanksIndexRoute: AuthedSendColombianBanksIndexRoute,
+  AuthedSendPixIndexRoute: AuthedSendPixIndexRoute,
+  AuthedSendSpeiIndexRoute: AuthedSendSpeiIndexRoute,
   AuthedSendUsBanksIndexRoute: AuthedSendUsBanksIndexRoute,
 }
 
@@ -645,11 +725,15 @@ const AuthedSendRouteRouteWithChildren = AuthedSendRouteRoute._addFileChildren(
 
 interface AuthedTopupRouteRouteChildren {
   AuthedTopupIndexRoute: typeof AuthedTopupIndexRoute
+  AuthedTopupPixIndexRoute: typeof AuthedTopupPixIndexRoute
+  AuthedTopupSpeiIndexRoute: typeof AuthedTopupSpeiIndexRoute
   AuthedTopupUsBanksIndexRoute: typeof AuthedTopupUsBanksIndexRoute
 }
 
 const AuthedTopupRouteRouteChildren: AuthedTopupRouteRouteChildren = {
   AuthedTopupIndexRoute: AuthedTopupIndexRoute,
+  AuthedTopupPixIndexRoute: AuthedTopupPixIndexRoute,
+  AuthedTopupSpeiIndexRoute: AuthedTopupSpeiIndexRoute,
   AuthedTopupUsBanksIndexRoute: AuthedTopupUsBanksIndexRoute,
 }
 

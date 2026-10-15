@@ -284,7 +284,13 @@ function mapTransaction(transaction: RawTransaction): MovementEntry {
  * across every asset this app renders and merge instead of relying on that
  * default.
  */
-const GLOBAL_FEED_ASSETS = ['COPM/2', 'DUSD/6', 'KSM/12'] as const;
+const GLOBAL_FEED_ASSETS = [
+  'COPM/2',
+  'DUSD/6',
+  'MXNB/2',
+  'BRLB/2',
+  'KSM/12',
+] as const;
 
 type GlobalFeedCursor = Partial<
   Record<(typeof GLOBAL_FEED_ASSETS)[number], string>
@@ -307,7 +313,9 @@ async function getAllAssetsTransactions(
   const perAsset = await Promise.all(
     GLOBAL_FEED_ASSETS.map(async (asset) => {
       const result = await bloque.accounts.transactions({
-        asset,
+        // The API already supports the new wallet assets; the accounts SDK
+        // union has not published them yet.
+        asset: asset as SupportedAsset,
         direction: params.direction,
         limit: params.limit,
         next: cursor[asset],
@@ -444,7 +452,9 @@ async function transfer(input: TransferInput): Promise<TransferOutcome> {
     sourceUrn: input.sourceUrn,
     destinationUrn: input.destinationUrn,
     amount: input.amount,
-    asset: input.asset,
+    // The backend supports MXNB/2 and BRLB/2 account transfers, while the
+    // accounts package's SupportedAsset union still lags those two assets.
+    asset: input.asset as SupportedAsset,
     metadata: input.metadata,
   });
   return {
