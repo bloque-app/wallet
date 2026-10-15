@@ -22,6 +22,8 @@ import { type Asset, formatAmount } from '~/lib/formatters';
 const ASSET_KEY_MAP: Record<string, Asset> = {
   COPM: 'COP',
   DUSD: 'USD',
+  MXNB: 'MXN',
+  BRLB: 'BRL',
   KSM: 'KSM',
 };
 
@@ -36,6 +38,8 @@ const ASSET_KEY_MAP: Record<string, Asset> = {
 const ASSET_SDK: Record<Asset, { sdkAsset: string; precision: number }> = {
   COP: { sdkAsset: 'COPM/2', precision: 2 },
   USD: { sdkAsset: 'DUSD/6', precision: 6 },
+  MXN: { sdkAsset: 'MXNB/2', precision: 2 },
+  BRL: { sdkAsset: 'BRLB/2', precision: 2 },
   KSM: { sdkAsset: 'KSM/12', precision: 12 },
 };
 const INTERNAL_MEDIUM = 'kusama';
@@ -43,7 +47,13 @@ const INTERNAL_MEDIUM = 'kusama';
 type BalancesData = Record<string, { current: string; pending: string }>;
 
 function parseBalances(data: BalancesData | undefined): Record<Asset, number> {
-  const out: Record<Asset, number> = { COP: 0, USD: 0, KSM: 0 };
+  const out: Record<Asset, number> = {
+    COP: 0,
+    USD: 0,
+    MXN: 0,
+    BRL: 0,
+    KSM: 0,
+  };
   if (!data) return out;
   for (const [key, value] of Object.entries(data)) {
     const [assetKey, precisionStr] = key.split('/');

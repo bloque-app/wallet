@@ -21,6 +21,8 @@ export function CurrencyBalanceCard({
   const assetLabels: Record<Asset, string> = {
     COP: t('home.assetLabels.cop'),
     USD: t('home.assetLabels.usd'),
+    MXN: t('home.assetLabels.mxn'),
+    BRL: t('home.assetLabels.brl'),
     KSM: t('home.assetLabels.ksm'),
   };
 

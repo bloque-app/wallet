@@ -12,6 +12,10 @@ type MovementFilter = 'todas' | 'entrantes' | 'salientes';
 const DISPLAY_ASSET_MAP: Record<string, Asset> = {
   COPM: 'COP',
   DUSD: 'USD',
+  MXN: 'MXN',
+  MXNB: 'MXN',
+  BRL: 'BRL',
+  BRLB: 'BRL',
   KSM: 'KSM',
 };
 

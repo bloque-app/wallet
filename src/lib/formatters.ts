@@ -4,7 +4,7 @@ import i18n from '~/i18n/config';
 export type LoginMethod = 'email' | 'phone';
 export type MovementType = 'topup' | 'withdraw' | 'send' | 'convert' | 'card';
 export type MovementStatus = 'completed' | 'pending' | 'failed';
-export type Asset = 'COP' | 'USD' | 'KSM';
+export type Asset = 'COP' | 'USD' | 'MXN' | 'BRL' | 'KSM';
 export type CardStatus = 'none' | 'active' | 'frozen';
 
 export interface Movement {
@@ -37,6 +37,22 @@ export function formatUSD(amount: number): string {
   }).format(amount);
 }
 
+export function formatMXN(amount: number): string {
+  return new Intl.NumberFormat('es-MX', {
+    style: 'currency',
+    currency: 'MXN',
+    minimumFractionDigits: 2,
+  }).format(amount);
+}
+
+export function formatBRL(amount: number): string {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 2,
+  }).format(amount);
+}
+
 export function formatKSM(amount: number): string {
   return `${amount.toFixed(4)} KSM`;
 }
@@ -47,9 +63,36 @@ export function formatAmount(asset: Asset, amount: number): string {
       return formatCOP(amount);
     case 'USD':
       return formatUSD(amount);
+    case 'MXN':
+      return formatMXN(amount);
+    case 'BRL':
+      return formatBRL(amount);
     case 'KSM':
       return formatKSM(amount);
   }
+}
+
+export function getDisplayAsset(sdkAsset: string): Asset | null {
+  const [code] = sdkAsset.split('/');
+  if (code === 'COP' || code === 'COPM' || code === 'COPB') return 'COP';
+  if (code === 'USD' || code === 'DUSD') return 'USD';
+  if (code === 'MXN' || code === 'MXNB') return 'MXN';
+  if (code === 'BRL' || code === 'BRLB') return 'BRL';
+  if (code === 'KSM') return 'KSM';
+  return null;
+}
+
+export function formatSdkAssetAmount(
+  sdkAsset: string,
+  rawAmount: string,
+): string {
+  const displayAsset = getDisplayAsset(sdkAsset);
+  const precision = getAssetPrecision(sdkAsset);
+  const parsed = Number.parseInt(rawAmount, 10);
+  const amount = Number.isNaN(parsed) ? 0 : parsed / 10 ** precision;
+  return displayAsset
+    ? formatAmount(displayAsset, amount)
+    : `${amount} ${sdkAsset}`;
 }
 
 /**

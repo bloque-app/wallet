@@ -1,21 +1,9 @@
 import { Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Account } from '~/domain/accounts/types';
-import { formatCOP, formatUSD, sortBalancesForDisplay } from '~/lib/formatters';
+import { formatSdkAssetAmount, sortBalancesForDisplay } from '~/lib/formatters';
 import { cn } from '~/lib/utils';
 import { getProductKindIcon } from './product-presentation';
-
-function formatAccountBalanceChip(asset: string, current: string): string {
-  const [assetKey, precisionStr] = asset.split('/');
-  const precision = Number.parseInt(precisionStr ?? '0', 10);
-  const parsed = Number.parseInt(current, 10);
-  const amount = Number.isNaN(parsed)
-    ? 0
-    : parsed / 10 ** (Number.isNaN(precision) ? 0 : precision);
-
-  if (assetKey === 'DUSD' || assetKey === 'USD') return formatUSD(amount);
-  return formatCOP(amount);
-}
 
 function AccountMiniCard({
   account,
@@ -50,7 +38,7 @@ function AccountMiniCard({
         </p>
         <p className="text-[11px] text-muted-foreground">
           {balance
-            ? formatAccountBalanceChip(balance.asset, balance.current)
+            ? formatSdkAssetAmount(balance.asset, balance.current)
             : t('accountsCarousel.noBalance')}
         </p>
       </div>

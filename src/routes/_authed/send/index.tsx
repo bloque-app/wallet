@@ -19,7 +19,7 @@ type SendOption = {
   description: string;
   icon: React.ComponentType<{ className?: string }>;
   search?: Record<string, string>;
-  group?: 'colombia' | 'us' | 'mexico';
+  group?: 'colombia' | 'us' | 'mexico' | 'brazil';
   fee?: string;
   hasFeeInfo?: boolean;
   comingSoon?: boolean;
@@ -70,9 +70,21 @@ function RouteComponent() {
     {
       title: t('send.options.spei.title'),
       description: t('send.options.spei.description'),
-      onClick: () => {},
+      to: '/send/spei',
       icon: Building2,
       group: 'mexico',
+      fee: '2.5% + 2%',
+      hasFeeInfo: true,
+      comingSoon: true,
+    },
+    {
+      title: t('send.options.pix.title'),
+      description: t('send.options.pix.description'),
+      to: '/send/pix',
+      icon: KeyRound,
+      group: 'brazil',
+      fee: '2% + 2%',
+      hasFeeInfo: true,
       comingSoon: true,
     },
   ];
@@ -83,6 +95,7 @@ function RouteComponent() {
   );
   const usOptions = options.filter((option) => option.group === 'us');
   const mexicoOptions = options.filter((option) => option.group === 'mexico');
+  const brazilOptions = options.filter((option) => option.group === 'brazil');
   const feeInfoDescription = t('send.feeInfo');
 
   return (
@@ -127,6 +140,15 @@ function RouteComponent() {
           {t('send.groups.mexico')}
         </h2>
         {mexicoOptions.map((option) =>
+          renderSendOption(option, feeInfoDescription),
+        )}
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          {t('send.groups.brazil')}
+        </h2>
+        {brazilOptions.map((option) =>
           renderSendOption(option, feeInfoDescription),
         )}
       </section>

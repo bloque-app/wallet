@@ -349,7 +349,7 @@ function RouteComponent() {
             icon: typeof Building2;
             enabled: boolean;
             onClick: () => void;
-            group?: 'colombia' | 'us' | 'mexico';
+            group?: 'colombia' | 'us' | 'mexico' | 'brazil';
             fee?: string;
           }> = [
             {
@@ -387,9 +387,19 @@ function RouteComponent() {
               title: t('topup.methods.spei.title'),
               subtitle: t('topup.methods.spei.subtitle'),
               icon: Building2,
-              enabled: false,
-              onClick: () => {},
+              enabled: true,
+              onClick: () => navigate({ to: '/topup/spei' }),
               group: 'mexico',
+              fee: '2.5% + 2%',
+            },
+            {
+              title: t('topup.methods.pix.title'),
+              subtitle: t('topup.methods.pix.subtitle'),
+              icon: KeyRound,
+              enabled: true,
+              onClick: () => navigate({ to: '/topup/pix' }),
+              group: 'brazil',
+              fee: '2% + 2%',
             },
           ];
 
@@ -438,6 +448,7 @@ function RouteComponent() {
           const colombiaMethods = methods.filter((m) => m.group === 'colombia');
           const usMethods = methods.filter((m) => m.group === 'us');
           const mexicoMethods = methods.filter((m) => m.group === 'mexico');
+          const brazilMethods = methods.filter((m) => m.group === 'brazil');
 
           return (
             <>
@@ -460,6 +471,13 @@ function RouteComponent() {
                   {t('topup.groups.mexico')}
                 </h2>
                 {mexicoMethods.map(renderMethod)}
+              </section>
+
+              <section className="flex flex-col gap-3">
+                <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {t('topup.groups.brazil')}
+                </h2>
+                {brazilMethods.map(renderMethod)}
               </section>
             </>
           );

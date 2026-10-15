@@ -452,7 +452,7 @@ describe('bloqueAccountsRepository.getTransactions — global feed adapter', () 
 
     const page = await bloqueAccountsRepository.getTransactions({ limit: 10 });
 
-    expect(transactionsMock).toHaveBeenCalledTimes(3);
+    expect(transactionsMock).toHaveBeenCalledTimes(5);
     expect(transactionsMock).toHaveBeenCalledWith({
       asset: 'COPM/2',
       direction: undefined,
@@ -461,6 +461,18 @@ describe('bloqueAccountsRepository.getTransactions — global feed adapter', () 
     });
     expect(transactionsMock).toHaveBeenCalledWith({
       asset: 'DUSD/6',
+      direction: undefined,
+      limit: 10,
+      next: undefined,
+    });
+    expect(transactionsMock).toHaveBeenCalledWith({
+      asset: 'MXNB/2',
+      direction: undefined,
+      limit: 10,
+      next: undefined,
+    });
+    expect(transactionsMock).toHaveBeenCalledWith({
+      asset: 'BRLB/2',
       direction: undefined,
       limit: 10,
       next: undefined,
