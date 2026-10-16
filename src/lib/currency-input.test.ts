@@ -17,6 +17,9 @@ describe('currencyMajorToMinor', () => {
     expect(currencyMajorToMinor('10.50')).toBe('1050');
     expect(currencyMajorToMinor('10')).toBe('1000');
     expect(currencyMajorToMinor('0.01')).toBe('1');
+    expect(currencyMajorToMinor(normalizeCurrencyInput('10,50'), 2)).toBe(
+      '1050',
+    );
   });
 
   test('rejects incomplete or invalid values', () => {
