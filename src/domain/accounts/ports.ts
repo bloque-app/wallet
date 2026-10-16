@@ -3,6 +3,7 @@ import type {
   BrebResolvedKey,
   ResolveBrebKeyParams,
   SupportedAsset,
+  SupportedCardAsset,
 } from '@bloque/sdk-accounts';
 import type { AssetBalance, Product } from './types';
 
@@ -119,7 +120,10 @@ export type AccountsRepository = {
   freezeCard(urn: string): Promise<void>;
   activateCard(urn: string): Promise<void>;
   updateCardName(urn: string, name: string): Promise<void>;
-  updateCardPreferredAsset(urn: string, asset: SupportedAsset): Promise<void>;
+  updateCardPreferredAsset(
+    urn: string,
+    asset: SupportedCardAsset,
+  ): Promise<void>;
   getCardDetailsUrl(urn: string): Promise<string>;
 
   createBrebKey(input: CreateBrebKeyInput): Promise<Product>;

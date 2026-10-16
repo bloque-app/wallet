@@ -1,4 +1,4 @@
-import type { SupportedAsset } from '@bloque/sdk-accounts';
+import type { SupportedCardAsset } from '@bloque/sdk-accounts';
 import { useQueryClient } from '@tanstack/react-query';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { EyeOff, Lock, Pencil, Unlock } from 'lucide-react';
@@ -53,6 +53,17 @@ const ASSET_LOGO_MAP: Record<string, string> = {
   COP: '/images/assets/cop.webp',
   USD: '/images/assets/usd.webp',
 };
+
+const CARD_SETTLEMENT_ASSETS = [
+  'DUSD/6',
+  'COPB/6',
+  'COPM/2',
+  'KSM/12',
+] as const satisfies readonly SupportedCardAsset[];
+
+function isCardSettlementAsset(asset: string): asset is SupportedCardAsset {
+  return (CARD_SETTLEMENT_ASSETS as readonly string[]).includes(asset);
+}
 
 function RouteComponent() {
   const { t } = useTranslation();
@@ -135,7 +146,7 @@ function RouteComponent() {
 
   const isUsdBlocked = (asset: string) => !USD_ENABLED && isUsdAsset(asset);
 
-  const handleSetPreferredAsset = async (asset: SupportedAsset) => {
+  const handleSetPreferredAsset = async (asset: SupportedCardAsset) => {
     if (!selectedCard || selectedCard.preferredAsset === asset) return;
     if (isUsdBlocked(asset)) return;
 
@@ -365,39 +376,45 @@ function RouteComponent() {
           <BalanceSkeleton />
         ) : (
           <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-            {assetList.map((asset) => (
-              <button
-                key={asset.sdkKey}
-                type="button"
-                onClick={() =>
-                  handleSetPreferredAsset(asset.sdkKey as SupportedAsset)
-                }
-                disabled={
-                  updatePreferredAssetMutation.isPending ||
-                  isUsdBlocked(asset.sdkKey)
-                }
-                className={cn(
-                  'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors disabled:opacity-50',
-                  selectedCard?.preferredAsset === asset.sdkKey
-                    ? 'border-primary bg-primary text-primary-foreground'
-                    : 'border-border bg-background/70 text-muted-foreground hover:text-foreground',
-                )}
-              >
-                {ASSET_LOGO_MAP[asset.code] && (
-                  <img
-                    src={ASSET_LOGO_MAP[asset.code]}
-                    alt={t('home.assetLogoAlt', { asset: asset.code })}
-                    className="h-3.5 w-3.5 rounded-full object-cover"
-                  />
-                )}
-                {asset.code}
-                {isUsdBlocked(asset.sdkKey) ? (
-                  <span className="text-[10px] font-normal">
-                    · {t('common.comingSoon')}
-                  </span>
-                ) : null}
-              </button>
-            ))}
+            {assetList
+              .filter(
+                (
+                  asset,
+                ): asset is typeof asset & {
+                  sdkKey: SupportedCardAsset;
+                } => isCardSettlementAsset(asset.sdkKey),
+              )
+              .map((asset) => (
+                <button
+                  key={asset.sdkKey}
+                  type="button"
+                  onClick={() => handleSetPreferredAsset(asset.sdkKey)}
+                  disabled={
+                    updatePreferredAssetMutation.isPending ||
+                    isUsdBlocked(asset.sdkKey)
+                  }
+                  className={cn(
+                    'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors disabled:opacity-50',
+                    selectedCard?.preferredAsset === asset.sdkKey
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'border-border bg-background/70 text-muted-foreground hover:text-foreground',
+                  )}
+                >
+                  {ASSET_LOGO_MAP[asset.code] && (
+                    <img
+                      src={ASSET_LOGO_MAP[asset.code]}
+                      alt={t('home.assetLogoAlt', { asset: asset.code })}
+                      className="h-3.5 w-3.5 rounded-full object-cover"
+                    />
+                  )}
+                  {asset.code}
+                  {isUsdBlocked(asset.sdkKey) ? (
+                    <span className="text-[10px] font-normal">
+                      · {t('common.comingSoon')}
+                    </span>
+                  ) : null}
+                </button>
+              ))}
           </div>
         )}
       </section>

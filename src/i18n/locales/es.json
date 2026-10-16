@@ -303,6 +303,8 @@
     "assetLabels": {
       "cop": "Peso Colombiano",
       "usd": "Dólar Estadounidense",
+      "mxn": "Peso Mexicano",
+      "brl": "Real Brasileño",
       "ksm": "Kusama"
     },
     "quickActions": {
@@ -318,7 +320,8 @@
     "groups": {
       "colombia": "Colombia",
       "us": "Estados Unidos",
-      "mexico": "México"
+      "mexico": "México",
+      "brazil": "Brasil"
     },
     "options": {
       "brebKeys": {
@@ -340,6 +343,10 @@
       "spei": {
         "title": "SPEI",
         "description": "Envía pesos mexicanos a bancos en México."
+      },
+      "pix": {
+        "title": "PIX",
+        "description": "Envía reales brasileños mediante una llave PIX."
       }
     },
     "bloqueFriends": {
@@ -352,6 +359,7 @@
       "aliasValidationError": "No se pudo validar el alias.",
       "noConfirmedRecipient": "No hay destinatario confirmado.",
       "invalidTransferAmount": "Monto invalido para transferir.",
+      "insufficientBalance": "El saldo de este bolsillo no alcanza para la transferencia.",
       "transferSentToast": "Transferencia enviada correctamente.",
       "transferErrorToast": "No se pudo enviar la transferencia.",
       "transferSentTitle": "Transferencia enviada",
@@ -422,6 +430,37 @@
     },
     "feeInfo": "Este cobro cubre el procesamiento de tu envío por este medio."
   },
+  "latamRails": {
+    "orderCreated": "Orden creada correctamente.",
+    "orderError": "No se pudo crear la orden.",
+    "missingRateOrAccount": "Selecciona un bolsillo y una tasa vigente.",
+    "depositInstructions": "Datos para completar tu recarga",
+    "transferSubmitted": "Transferencia enviada",
+    "pixCopyPaste": "Código PIX copia y pega",
+    "reference": "Referencia",
+    "orderId": "Orden: {{orderId}}",
+    "amount": "Monto ({{currency}})",
+    "fee": "Comisión",
+    "noEligibleAccount": "No encontramos un bolsillo compatible con esta moneda.",
+    "payerName": "Nombre completo de quien paga",
+    "documentType": "Tipo de documento",
+    "cpfCnpj": "CPF o CNPJ",
+    "rfcOptional": "RFC (opcional)",
+    "beneficiaryName": "Nombre del beneficiario",
+    "pixKeyType": "Tipo de llave PIX",
+    "pixKey": "Llave PIX",
+    "beneficiaryNameOptional": "Nombre del beneficiario (opcional)",
+    "confirm": "Confirmar operación",
+    "copied": "Copiado",
+    "spei": {
+      "topup": { "title": "Recargar con SPEI" },
+      "send": { "title": "Enviar por SPEI" }
+    },
+    "pix": {
+      "topup": { "title": "Recargar con PIX" },
+      "send": { "title": "Enviar por PIX" }
+    }
+  },
   "topup": {
     "title": "Recargar saldo",
     "stepAmount": "Monto",
@@ -438,7 +477,8 @@
     "groups": {
       "colombia": "Colombia",
       "us": "Estados Unidos",
-      "mexico": "México"
+      "mexico": "México",
+      "brazil": "Brasil"
     },
     "methods": {
       "colombianBanks": {
@@ -456,6 +496,10 @@
       "spei": {
         "title": "SPEI",
         "subtitle": "Recarga desde bancos en México."
+      },
+      "pix": {
+        "title": "PIX",
+        "subtitle": "Recarga desde bancos en Brasil."
       }
     },
     "destinationAccountLabel": "Bolsillo destino",
@@ -766,6 +810,8 @@
       "generalSection": "General",
       "colombiaSection": "Colombia",
       "usSection": "Estados Unidos",
+      "mexicoSection": "México",
+      "brazilSection": "Brasil",
       "direction": {
         "send": "Enviar",
         "topup": "Recargar"

@@ -26,6 +26,10 @@ import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useTransfer } from '~/hooks/accounts/use-transfer';
 import { isAliasNotFoundError, userFacingErrorMessage } from '~/lib/api-errors';
 import { bloque } from '~/lib/bloque';
+import {
+  currencyMajorToMinor,
+  normalizeCurrencyInput,
+} from '~/lib/currency-input';
 import { formatAmount } from '~/lib/formatters';
 
 export const Route = createFileRoute('/_authed/send/bloque-friends/')({
@@ -33,8 +37,8 @@ export const Route = createFileRoute('/_authed/send/bloque-friends/')({
 });
 
 type ViewState = 'form' | 'pending' | 'error';
-type AssetOption = 'USD' | 'COP';
-type TransferAsset = 'DUSD/6' | 'COPM/2';
+type AssetOption = 'USD' | 'COP' | 'MXN' | 'BRL';
+type TransferAsset = 'DUSD/6' | 'COPM/2' | 'MXNB/2' | 'BRLB/2';
 
 const ASSET_OPTIONS: Array<{
   value: AssetOption;
@@ -43,11 +47,9 @@ const ASSET_OPTIONS: Array<{
 }> = [
   { value: 'USD', sdkAsset: 'DUSD/6', precision: 6 },
   { value: 'COP', sdkAsset: 'COPM/2', precision: 2 },
+  { value: 'MXN', sdkAsset: 'MXNB/2', precision: 2 },
+  { value: 'BRL', sdkAsset: 'BRLB/2', precision: 2 },
 ];
-
-function majorToMinor(amountMajor: number, precision: number) {
-  return (BigInt(amountMajor) * 10n ** BigInt(precision)).toString();
-}
 
 function isAssetBlocked(asset: AssetOption): boolean {
   return asset === 'USD' && !USD_ENABLED;
@@ -74,8 +76,14 @@ function RouteComponent() {
     amount: number;
   } | null>(null);
 
+  const selectedAssetConfig =
+    ASSET_OPTIONS.find((asset) => asset.value === selectedAsset) ??
+    ASSET_OPTIONS[1];
   const { accounts: sourceAccounts, isLoading: isLoadingAccounts } =
-    useAccountPicker({ requireVirtualAccount: true });
+    useAccountPicker({
+      requireVirtualAccount: true,
+      asset: selectedAssetConfig.sdkAsset,
+    });
   const [sourceLedgerId, setSourceLedgerId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -94,15 +102,24 @@ function RouteComponent() {
     sourceAccounts.find((account) => account.ledgerId === sourceLedgerId) ??
     null;
 
-  const selectedAssetConfig =
-    ASSET_OPTIONS.find((asset) => asset.value === selectedAsset) ??
-    ASSET_OPTIONS[1];
   const normalizedAlias = alias.trim();
-  const parsedAmount = Number.parseInt(amount.replace(/\D/g, ''), 10) || 0;
+  const parsedAmount = Number.parseFloat(amount) || 0;
   const amountMinor = useMemo(() => {
     if (parsedAmount <= 0) return '';
-    return majorToMinor(parsedAmount, selectedAssetConfig.precision);
-  }, [parsedAmount, selectedAssetConfig.precision]);
+    return currencyMajorToMinor(amount, selectedAssetConfig.precision);
+  }, [amount, parsedAmount, selectedAssetConfig.precision]);
+  const hasSufficientBalance = useMemo(() => {
+    if (!sourceAccount || !amountMinor) return false;
+    const balance = sourceAccount.balances.find(
+      (entry) => entry.asset === selectedAssetConfig.sdkAsset,
+    );
+    if (!balance) return false;
+    try {
+      return BigInt(balance.current) >= BigInt(amountMinor);
+    } catch {
+      return false;
+    }
+  }, [amountMinor, selectedAssetConfig.sdkAsset, sourceAccount]);
 
   const formError = useMemo(() => {
     if (sourceAccounts.length === 0 && !isLoadingAccounts) {
@@ -114,12 +131,18 @@ function RouteComponent() {
     if (parsedAmount > 0 && parsedAmount < 1) {
       return t('send.bloqueFriends.invalidAmount');
     }
+    if (sourceAccount && amountMinor && !hasSufficientBalance) {
+      return t('send.bloqueFriends.insufficientBalance');
+    }
     return null;
   }, [
+    amountMinor,
+    hasSufficientBalance,
     isLoadingAccounts,
     alias.length,
     normalizedAlias,
     parsedAmount,
+    sourceAccount,
     sourceAccounts.length,
     t,
   ]);
@@ -169,6 +192,10 @@ function RouteComponent() {
       toast.error(t('send.bloqueFriends.invalidTransferAmount'));
       return;
     }
+    if (!hasSufficientBalance) {
+      toast.error(t('send.bloqueFriends.insufficientBalance'));
+      return;
+    }
 
     transferMutation.mutate(
       {
@@ -207,7 +234,8 @@ function RouteComponent() {
   const canSubmit =
     !!sourceAccount?.primaryUrn &&
     !!normalizedAlias &&
-    parsedAmount > 0 &&
+    !!amountMinor &&
+    hasSufficientBalance &&
     !validateAliasMutation.isPending &&
     !transferMutation.isPending;
 
@@ -289,12 +317,16 @@ function RouteComponent() {
 
           <div className="flex flex-col gap-2">
             <Label>{t('send.bloqueFriends.currency')}</Label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {ASSET_OPTIONS.map((asset) => (
                 <button
                   key={asset.value}
                   type="button"
-                  onClick={() => setSelectedAsset(asset.value)}
+                  onClick={() => {
+                    if (selectedAsset === asset.value) return;
+                    setSelectedAsset(asset.value);
+                    setAmount('');
+                  }}
                   disabled={isAssetBlocked(asset.value)}
                   className={`flex flex-col items-center rounded-2xl border px-3 py-3 text-sm transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
                     selectedAsset === asset.value
@@ -345,11 +377,18 @@ function RouteComponent() {
             </Label>
             <Input
               id="friend-amount"
-              inputMode="numeric"
+              inputMode={selectedAsset === 'COP' ? 'numeric' : 'decimal'}
               placeholder="$0"
               value={amount}
               onChange={(event) =>
-                setAmount(event.target.value.replace(/\D/g, ''))
+                setAmount(
+                  selectedAsset === 'COP'
+                    ? event.target.value.replace(/\D/g, '')
+                    : normalizeCurrencyInput(
+                        event.target.value,
+                        selectedAssetConfig.precision,
+                      ),
+                )
               }
               className="h-12 rounded-2xl"
             />

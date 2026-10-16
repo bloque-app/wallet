@@ -31,10 +31,14 @@ type BalancesResponse = Record<string, BalanceData>;
 const ASSET_KEY_MAP: Record<string, Asset> = {
   COPM: 'COP',
   DUSD: 'USD',
+  MXN: 'MXN',
+  MXNB: 'MXN',
+  BRL: 'BRL',
+  BRLB: 'BRL',
   KSM: 'KSM',
 };
 
-const ASSET_LOGO_MAP: Record<Asset, string> = {
+const ASSET_LOGO_MAP: Partial<Record<Asset, string>> = {
   COP: '/images/assets/cop.webp',
   USD: '/images/assets/usd.webp',
   KSM: '/images/assets/ksm.webp',
@@ -43,7 +47,13 @@ const ASSET_LOGO_MAP: Record<Asset, string> = {
 function parseBalances(
   balances: BalancesResponse | undefined,
 ): Record<Asset, number> {
-  const parsed: Record<Asset, number> = { COP: 0, USD: 0, KSM: 0 };
+  const parsed: Record<Asset, number> = {
+    COP: 0,
+    USD: 0,
+    MXN: 0,
+    BRL: 0,
+    KSM: 0,
+  };
 
   if (!balances) return parsed;
 
@@ -89,7 +99,9 @@ function RouteComponent() {
   // user who actually has one; only a *settled* list means that.
   const hasVirtualAccount =
     accountsQuery.isLoading || hasActiveVirtualAccount(accounts);
-  const assets: Asset[] = USD_ENABLED ? ['USD', 'COP'] : ['COP', 'USD'];
+  const assets: Asset[] = USD_ENABLED
+    ? ['USD', 'COP', 'MXN', 'BRL']
+    : ['COP', 'MXN', 'BRL', 'USD'];
   const selectedBalance = parsedBalances[selectedAsset] ?? 0;
 
   const recentMovements = transactionsData?.movements ?? [];
@@ -113,11 +125,17 @@ function RouteComponent() {
                     : 'border-border/60 bg-background/70 text-muted-foreground hover:text-foreground'
                 }`}
               >
-                <img
-                  src={ASSET_LOGO_MAP[asset]}
-                  alt={t('home.assetLogoAlt', { asset })}
-                  className="h-3.5 w-3.5 rounded-full object-cover"
-                />
+                {ASSET_LOGO_MAP[asset] ? (
+                  <img
+                    src={ASSET_LOGO_MAP[asset]}
+                    alt={t('home.assetLogoAlt', { asset })}
+                    className="h-3.5 w-3.5 rounded-full object-cover"
+                  />
+                ) : (
+                  <span className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary/15 text-[7px] font-bold">
+                    {asset.slice(0, 1)}
+                  </span>
+                )}
                 {asset}
                 {isBlocked ? (
                   <span className="text-[10px] font-normal">

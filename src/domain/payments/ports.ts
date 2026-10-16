@@ -3,8 +3,12 @@ import type {
   CreateBankTransferOrderParams,
   CreateBrebOrderParams,
   CreateExternalUsBankOrderParams,
+  CreatePixDepositParams,
+  CreatePixOrderParams,
   CreatePseOrderParams,
   CreateRtpOrderParams,
+  CreateSpeiDepositParams,
+  CreateSpeiOrderParams,
   FindRatesParams,
 } from '@bloque/sdk-swap';
 import type { ExecutionOutcome, PaymentOrder, Rate } from './types';
@@ -57,6 +61,26 @@ export type PaymentsRepository = {
 
   createExternalUsBankOrder(
     params: CreateExternalUsBankOrderParams,
+    options?: CreateOrderOptions,
+  ): Promise<CreateOrderResult>;
+
+  createSpeiDepositOrder(
+    params: CreateSpeiDepositParams,
+    options?: CreateOrderOptions,
+  ): Promise<CreateOrderResult>;
+
+  createSpeiOrder(
+    params: CreateSpeiOrderParams,
+    options?: CreateOrderOptions,
+  ): Promise<CreateOrderResult>;
+
+  createPixDepositOrder(
+    params: CreatePixDepositParams,
+    options?: CreateOrderOptions,
+  ): Promise<CreateOrderResult>;
+
+  createPixOrder(
+    params: CreatePixOrderParams,
     options?: CreateOrderOptions,
   ): Promise<CreateOrderResult>;
 };

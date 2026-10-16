@@ -91,6 +91,44 @@ describe('resolveExecutionOutcome', () => {
     });
   });
 
+  test('maps SPEI deposit instructions', () => {
+    expect(
+      resolveExecutionOutcome({
+        type: 'SPEI_DEPOSIT',
+        medium: 'spei',
+        clabe: '646180157034181180',
+        amount: '10000',
+        currency: 'MXN',
+        reference: 'spei-ref',
+      }),
+    ).toEqual({
+      kind: 'spei-deposit',
+      clabe: '646180157034181180',
+      amount: '10000',
+      reference: 'spei-ref',
+      expiresAt: undefined,
+    });
+  });
+
+  test('maps PIX deposit instructions', () => {
+    expect(
+      resolveExecutionOutcome({
+        type: 'PIX_DEPOSIT',
+        medium: 'pix',
+        qrCodePayload: '000201-pix-payload',
+        amount: '10000',
+        currency: 'BRL',
+        reference: 'pix-ref',
+      }),
+    ).toEqual({
+      kind: 'pix-deposit',
+      qrCodePayload: '000201-pix-payload',
+      amount: '10000',
+      reference: 'pix-ref',
+      expiresAt: undefined,
+    });
+  });
+
   test('returns { kind: "none" } for a how with neither a url nor keyValue', () => {
     const how = { type: 'SOMETHING_ELSE' } as unknown as ExecutionHow;
 

@@ -47,10 +47,13 @@ import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useAccount, useAccounts } from '~/hooks/accounts/use-accounts';
 import { useCreateCard } from '~/hooks/accounts/use-cards';
 import { useTransfer } from '~/hooks/accounts/use-transfer';
+import {
+  currencyMajorToMinor,
+  normalizeCurrencyInput,
+} from '~/lib/currency-input';
 import type { Asset, Movement } from '~/lib/formatters';
 import {
-  formatCOP,
-  formatUSD,
+  formatAmount,
   isUsdAsset,
   sortBalancesForDisplay,
 } from '~/lib/formatters';
@@ -79,6 +82,10 @@ const ASSET_LABELS: Record<string, Asset> = {
   COP: 'COP',
   COPM: 'COP',
   DUSD: 'USD',
+  MXN: 'MXN',
+  MXNB: 'MXN',
+  BRL: 'BRL',
+  BRLB: 'BRL',
   USD: 'USD',
   KSM: 'KSM',
 };
@@ -101,11 +108,13 @@ function getAssetLabel(rawAsset: string): Asset | null {
   return ASSET_LABELS[assetKey] ?? null;
 }
 
-function majorToMinor(amountMajor: number, rawAsset: string): string {
+function majorToMinor(amountMajor: string, rawAsset: string): string {
   const [, precisionStr] = rawAsset.split('/');
   const precision = Number.parseInt(precisionStr, 10);
-  if (Number.isNaN(precision)) return Math.round(amountMajor).toString();
-  return Math.round(amountMajor * 10 ** precision).toString();
+  return currencyMajorToMinor(
+    amountMajor,
+    Number.isNaN(precision) ? 0 : precision,
+  );
 }
 
 /**
@@ -120,19 +129,13 @@ function sanitizeTransferAmountInput(raw: string, rawAsset: string): string {
   const [, precisionStr] = rawAsset.split('/');
   const precision = Number.parseInt(precisionStr, 10);
   const maxDecimals = Number.isNaN(precision) ? 2 : precision;
-  const cleaned = raw.replace(/[^\d.]/g, '');
-  const [intPart, ...rest] = cleaned.split('.');
-  return rest.length > 0
-    ? `${intPart}.${rest.join('').slice(0, maxDecimals)}`
-    : intPart;
+  return normalizeCurrencyInput(raw, maxDecimals);
 }
 
 function formatAssetBalance(balance: AssetBalance) {
   const asset = getAssetLabel(balance.asset);
   const amount = parseAmount(balance.current, balance.asset);
-
-  if (asset === 'USD') return formatUSD(amount);
-  return formatCOP(amount);
+  return asset ? formatAmount(asset, amount) : balance.asset;
 }
 
 function getProductLink(
@@ -277,7 +280,7 @@ function RouteComponent() {
       await transferMutation.mutateAsync({
         sourceUrn: account.primaryUrn,
         destinationUrn: transferDestination.primaryUrn,
-        amount: majorToMinor(parsedTransferAmount, selectedAsset),
+        amount: majorToMinor(transferAmount, selectedAsset),
         asset: selectedAsset as SupportedAsset,
         metadata: { reference: `own-account-transfer-${Date.now()}` },
       });

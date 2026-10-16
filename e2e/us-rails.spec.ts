@@ -47,28 +47,23 @@ test('legal fees no longer list a US section', async ({ page }) => {
   );
 });
 
-test('send lists Mexico SPEI as coming soon without a link', async ({
-  page,
-}) => {
+test('send links Mexico SPEI to its enabled flow', async ({ page }) => {
   await page.goto('/send');
 
   await expect(page.getByText('México', { exact: true })).toBeVisible();
   const spei = page
     .getByText('Envía pesos mexicanos a bancos en México.')
     .locator('xpath=ancestor::div[contains(@class,"rounded-2xl")][1]');
-  await expect(spei).toContainText('Próximamente');
-  await expect(spei.getByRole('link')).toHaveCount(0);
+  await expect(spei).not.toContainText('Próximamente');
+  await expect(spei.getByRole('link')).toHaveAttribute('href', '/send/spei');
 });
 
-test('top-up disables the Mexico SPEI method as coming soon', async ({
-  page,
-}) => {
+test('top-up enables the Mexico SPEI method', async ({ page }) => {
   await page.goto('/topup');
 
   await expect(page.getByText('México', { exact: true })).toBeVisible();
   const spei = page.getByRole('button', { name: /SPEI/ });
-  await expect(spei).toBeDisabled();
-  await expect(
-    spei.locator('xpath=..').getByText('Próximamente'),
-  ).toBeVisible();
+  await expect(spei).toBeEnabled();
+  await spei.click();
+  await expect(page).toHaveURL(/\/topup\/spei$/);
 });

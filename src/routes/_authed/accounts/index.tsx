@@ -13,7 +13,7 @@ import { visibleProducts } from '~/domain/accounts/external-us-bank';
 import type { Account } from '~/domain/accounts/types';
 import { useAccounts } from '~/hooks/accounts/use-accounts';
 import i18n from '~/i18n/config';
-import { formatCOP, formatUSD, sortBalancesForDisplay } from '~/lib/formatters';
+import { formatSdkAssetAmount, sortBalancesForDisplay } from '~/lib/formatters';
 import {
   ACCOUNTS_ORIGIN_ROUTES,
   type AccountsOrigin,
@@ -29,18 +29,6 @@ export const Route = createFileRoute('/_authed/accounts/')({
   },
   component: RouteComponent,
 });
-
-function formatAssetBalanceChip(asset: string, current: string): string {
-  const [assetKey, precisionStr] = asset.split('/');
-  const precision = Number.parseInt(precisionStr ?? '0', 10);
-  const parsed = Number.parseInt(current, 10);
-  const amount = Number.isNaN(parsed)
-    ? 0
-    : parsed / 10 ** (Number.isNaN(precision) ? 0 : precision);
-
-  if (assetKey === 'DUSD' || assetKey === 'USD') return formatUSD(amount);
-  return formatCOP(amount);
-}
 
 function getCompositionLabel(account: Account) {
   const associated = visibleProducts(account.products).filter(
@@ -139,10 +127,7 @@ function RouteComponent() {
                           key={balance.asset}
                           className="rounded-full border border-border/70 bg-background/70 px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
                         >
-                          {formatAssetBalanceChip(
-                            balance.asset,
-                            balance.current,
-                          )}
+                          {formatSdkAssetAmount(balance.asset, balance.current)}
                         </span>
                       ))}
                     </div>

@@ -82,6 +82,32 @@ function RouteComponent() {
     },
   ];
 
+  const mexicoFees = [
+    {
+      method: t('send.options.spei.title'),
+      direction: sendLabel,
+      fee: '2.5% + 2%',
+    },
+    {
+      method: t('topup.methods.spei.title'),
+      direction: topupLabel,
+      fee: '2.5% + 2%',
+    },
+  ];
+
+  const brazilFees = [
+    {
+      method: t('send.options.pix.title'),
+      direction: sendLabel,
+      fee: '2% + 2%',
+    },
+    {
+      method: t('topup.methods.pix.title'),
+      direction: topupLabel,
+      fee: '2% + 2%',
+    },
+  ];
+
   const groups = [
     {
       key: 'general',
@@ -92,6 +118,8 @@ function RouteComponent() {
     ...(US_RAILS_ENABLED
       ? [{ key: 'us', title: t('legal.fees.usSection'), rows: usFees }]
       : []),
+    { key: 'mx', title: t('legal.fees.mexicoSection'), rows: mexicoFees },
+    { key: 'br', title: t('legal.fees.brazilSection'), rows: brazilFees },
   ];
 
   return (

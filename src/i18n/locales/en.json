@@ -303,6 +303,8 @@
     "assetLabels": {
       "cop": "Colombian Peso",
       "usd": "US Dollar",
+      "mxn": "Mexican Peso",
+      "brl": "Brazilian Real",
       "ksm": "Kusama"
     },
     "quickActions": {
@@ -318,7 +320,8 @@
     "groups": {
       "colombia": "Colombia",
       "us": "United States",
-      "mexico": "Mexico"
+      "mexico": "Mexico",
+      "brazil": "Brazil"
     },
     "options": {
       "brebKeys": {
@@ -340,6 +343,10 @@
       "spei": {
         "title": "SPEI",
         "description": "Send Mexican pesos to banks in Mexico."
+      },
+      "pix": {
+        "title": "PIX",
+        "description": "Send Brazilian reais using a PIX key."
       }
     },
     "bloqueFriends": {
@@ -352,6 +359,7 @@
       "aliasValidationError": "Couldn't validate the alias.",
       "noConfirmedRecipient": "There's no confirmed recipient.",
       "invalidTransferAmount": "Invalid amount to transfer.",
+      "insufficientBalance": "This pocket does not have enough balance for the transfer.",
       "transferSentToast": "Transfer sent successfully.",
       "transferErrorToast": "Couldn't send the transfer.",
       "transferSentTitle": "Transfer sent",
@@ -422,6 +430,37 @@
     },
     "feeInfo": "This fee covers processing your transfer through this method."
   },
+  "latamRails": {
+    "orderCreated": "Order created successfully.",
+    "orderError": "We couldn't create the order.",
+    "missingRateOrAccount": "Select a pocket and a current rate.",
+    "depositInstructions": "Details to complete your top up",
+    "transferSubmitted": "Transfer submitted",
+    "pixCopyPaste": "PIX copy-and-paste code",
+    "reference": "Reference",
+    "orderId": "Order: {{orderId}}",
+    "amount": "Amount ({{currency}})",
+    "fee": "Fee",
+    "noEligibleAccount": "We couldn't find a pocket compatible with this currency.",
+    "payerName": "Payer's full name",
+    "documentType": "Document type",
+    "cpfCnpj": "CPF or CNPJ",
+    "rfcOptional": "RFC (optional)",
+    "beneficiaryName": "Beneficiary name",
+    "pixKeyType": "PIX key type",
+    "pixKey": "PIX key",
+    "beneficiaryNameOptional": "Beneficiary name (optional)",
+    "confirm": "Confirm operation",
+    "copied": "Copied",
+    "spei": {
+      "topup": { "title": "Top up with SPEI" },
+      "send": { "title": "Send via SPEI" }
+    },
+    "pix": {
+      "topup": { "title": "Top up with PIX" },
+      "send": { "title": "Send via PIX" }
+    }
+  },
   "topup": {
     "title": "Top up balance",
     "stepAmount": "Amount",
@@ -438,7 +477,8 @@
     "groups": {
       "colombia": "Colombia",
       "us": "United States",
-      "mexico": "Mexico"
+      "mexico": "Mexico",
+      "brazil": "Brazil"
     },
     "methods": {
       "colombianBanks": {
@@ -456,6 +496,10 @@
       "spei": {
         "title": "SPEI",
         "subtitle": "Top up from banks in Mexico."
+      },
+      "pix": {
+        "title": "PIX",
+        "subtitle": "Top up from banks in Brazil."
       }
     },
     "destinationAccountLabel": "Destination pocket",
@@ -766,6 +810,8 @@
       "generalSection": "General",
       "colombiaSection": "Colombia",
       "usSection": "United States",
+      "mexicoSection": "Mexico",
+      "brazilSection": "Brazil",
       "direction": {
         "send": "Send",
         "topup": "Top up"

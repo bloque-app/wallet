@@ -3,7 +3,7 @@ import type {
   CardAccount,
   ExternalUsBankAccount,
   PolygonAccount,
-  SupportedAsset,
+  SupportedCardAsset,
 } from '@bloque/sdk-accounts';
 import type {
   AccountsRepository,
@@ -284,7 +284,13 @@ function mapTransaction(transaction: RawTransaction): MovementEntry {
  * across every asset this app renders and merge instead of relying on that
  * default.
  */
-const GLOBAL_FEED_ASSETS = ['COPM/2', 'DUSD/6', 'KSM/12'] as const;
+const GLOBAL_FEED_ASSETS = [
+  'COPM/2',
+  'DUSD/6',
+  'MXNB/2',
+  'BRLB/2',
+  'KSM/12',
+] as const;
 
 type GlobalFeedCursor = Partial<
   Record<(typeof GLOBAL_FEED_ASSETS)[number], string>
@@ -377,7 +383,7 @@ async function updateCardName(urn: string, name: string): Promise<void> {
 
 async function updateCardPreferredAsset(
   urn: string,
-  asset: SupportedAsset,
+  asset: SupportedCardAsset,
 ): Promise<void> {
   await bloque.accounts.card.updateMetadata({ urn, defaultAsset: asset });
 }

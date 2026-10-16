@@ -49,6 +49,10 @@ const ASSET_KEY_MAP: Record<string, Asset> = {
   COPM: 'COP',
   DUSD: 'USD',
   USD: 'USD',
+  MXN: 'MXN',
+  MXNB: 'MXN',
+  BRL: 'BRL',
+  BRLB: 'BRL',
   KSM: 'KSM',
 };
 

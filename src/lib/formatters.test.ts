@@ -1,11 +1,15 @@
 import { describe, expect, test } from 'bun:test';
 import {
   formatAmount,
+  formatBRL,
   formatCOP,
   formatKSM,
+  formatMXN,
   formatPolygonAddress,
+  formatSdkAssetAmount,
   formatUSD,
   getAssetPrecision,
+  getDisplayAsset,
   getMovementLabel,
   isUsdAsset,
   sortBalancesForDisplay,
@@ -42,7 +46,21 @@ describe('formatAmount', () => {
   test('dispatches to the right formatter per asset', () => {
     expect(formatAmount('COP', 1000)).toBe(formatCOP(1000));
     expect(formatAmount('USD', 10)).toBe(formatUSD(10));
+    expect(formatAmount('MXN', 10)).toBe(formatMXN(10));
+    expect(formatAmount('BRL', 10)).toBe(formatBRL(10));
     expect(formatAmount('KSM', 2)).toBe(formatKSM(2));
+  });
+});
+
+describe('SDK asset display', () => {
+  test('maps tokenized MXN and BRL to their user-facing currencies', () => {
+    expect(getDisplayAsset('MXNB/2')).toBe('MXN');
+    expect(getDisplayAsset('BRLB/2')).toBe('BRL');
+  });
+
+  test('formats tokenized balances without exposing the SDK identifier', () => {
+    expect(formatSdkAssetAmount('MXNB/2', '12345')).toBe(formatMXN(123.45));
+    expect(formatSdkAssetAmount('BRLB/2', '6789')).toBe(formatBRL(67.89));
   });
 });
 

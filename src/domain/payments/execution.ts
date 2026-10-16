@@ -31,6 +31,26 @@ export function resolveExecutionOutcome(
     };
   }
 
+  if (how.type === 'SPEI_DEPOSIT' && 'clabe' in how) {
+    return {
+      kind: 'spei-deposit',
+      clabe: how.clabe,
+      amount: how.amount,
+      reference: how.reference,
+      expiresAt: how.expiresAt,
+    };
+  }
+
+  if (how.type === 'PIX_DEPOSIT' && 'qrCodePayload' in how) {
+    return {
+      kind: 'pix-deposit',
+      qrCodePayload: how.qrCodePayload,
+      amount: how.amount,
+      reference: how.reference,
+      expiresAt: how.expiresAt,
+    };
+  }
+
   if ('url' in how && typeof how.url === 'string') {
     return { kind: 'redirect', url: how.url };
   }
