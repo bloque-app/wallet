@@ -3,7 +3,7 @@ import type {
   CardAccount,
   ExternalUsBankAccount,
   PolygonAccount,
-  SupportedAsset,
+  SupportedCardAsset,
 } from '@bloque/sdk-accounts';
 import type {
   AccountsRepository,
@@ -313,9 +313,7 @@ async function getAllAssetsTransactions(
   const perAsset = await Promise.all(
     GLOBAL_FEED_ASSETS.map(async (asset) => {
       const result = await bloque.accounts.transactions({
-        // The API already supports the new wallet assets; the accounts SDK
-        // union has not published them yet.
-        asset: asset as SupportedAsset,
+        asset,
         direction: params.direction,
         limit: params.limit,
         next: cursor[asset],
@@ -385,7 +383,7 @@ async function updateCardName(urn: string, name: string): Promise<void> {
 
 async function updateCardPreferredAsset(
   urn: string,
-  asset: SupportedAsset,
+  asset: SupportedCardAsset,
 ): Promise<void> {
   await bloque.accounts.card.updateMetadata({ urn, defaultAsset: asset });
 }
@@ -452,9 +450,7 @@ async function transfer(input: TransferInput): Promise<TransferOutcome> {
     sourceUrn: input.sourceUrn,
     destinationUrn: input.destinationUrn,
     amount: input.amount,
-    // The backend supports MXNB/2 and BRLB/2 account transfers, while the
-    // accounts package's SupportedAsset union still lags those two assets.
-    asset: input.asset as SupportedAsset,
+    asset: input.asset,
     metadata: input.metadata,
   });
   return {

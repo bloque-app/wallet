@@ -1,4 +1,8 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test';
+import type {
+  CreatePixOrderParams,
+  CreateSpeiOrderParams,
+} from '@bloque/sdk-swap';
 
 const findRatesMock = mock(() => Promise.resolve({ rates: [] as unknown[] }));
 const pseCreateMock = mock(() =>
@@ -24,13 +28,13 @@ const rtpCreateMock = mock(() =>
 const externalUsBankCreateMock = mock(() =>
   Promise.resolve({ order: baseOrder(), requestId: 'req-5' }),
 );
-const speiCreateMock = mock(() =>
+const speiCreateMock = mock((_params?: CreateSpeiOrderParams) =>
   Promise.resolve({ order: baseOrder(), requestId: 'req-6' }),
 );
 const speiDepositCreateMock = mock(() =>
   Promise.resolve({ order: baseOrder(), requestId: 'req-7' }),
 );
-const pixCreateMock = mock(() =>
+const pixCreateMock = mock((_params?: CreatePixOrderParams) =>
   Promise.resolve({ order: baseOrder(), requestId: 'req-8' }),
 );
 const pixDepositCreateMock = mock(() =>
@@ -160,6 +164,8 @@ describe('bloquePaymentsRepository order creation — execution outcome mapping'
     pseCreateMock.mockClear();
     bankTransferCreateMock.mockClear();
     brebCreateMock.mockClear();
+    speiCreateMock.mockClear();
+    pixCreateMock.mockClear();
   });
 
   test('createPseOrder resolves a redirect execution outcome', async () => {
@@ -320,6 +326,58 @@ describe('bloquePaymentsRepository order creation — execution outcome mapping'
 
     expect(result.order.id).toBe('order-1');
     expect(result.execution).toEqual({ kind: 'none' });
+  });
+
+  test('createSpeiOrder forwards the source account required by payout contracts', async () => {
+    await bloquePaymentsRepository.createSpeiOrder({
+      rateSig: 'rate-sig-1',
+      amountSrc: '10000',
+      args: {
+        sourceAccountUrn: 'did:bloque:account:virtual:mexico-source',
+      },
+      depositInformation: {
+        clabe: '646180157034181180',
+        beneficiaryName: 'Jane Doe',
+      },
+    });
+
+    expect(speiCreateMock.mock.calls[0]?.[0]).toEqual({
+      rateSig: 'rate-sig-1',
+      amountSrc: '10000',
+      args: {
+        sourceAccountUrn: 'did:bloque:account:virtual:mexico-source',
+      },
+      depositInformation: {
+        clabe: '646180157034181180',
+        beneficiaryName: 'Jane Doe',
+      },
+    });
+  });
+
+  test('createPixOrder forwards the source account required by payout contracts', async () => {
+    await bloquePaymentsRepository.createPixOrder({
+      rateSig: 'rate-sig-1',
+      amountSrc: '1000',
+      args: {
+        sourceAccountUrn: 'did:bloque:account:virtual:brazil-source',
+      },
+      depositInformation: {
+        pixKeyType: 'CPF',
+        pixKeyValue: '12345678901',
+      },
+    });
+
+    expect(pixCreateMock.mock.calls[0]?.[0]).toEqual({
+      rateSig: 'rate-sig-1',
+      amountSrc: '1000',
+      args: {
+        sourceAccountUrn: 'did:bloque:account:virtual:brazil-source',
+      },
+      depositInformation: {
+        pixKeyType: 'CPF',
+        pixKeyValue: '12345678901',
+      },
+    });
   });
 
   test('maps every SwapOrder field 1:1 into PaymentOrder (unlike the old breb.ts stopgap)', async () => {
