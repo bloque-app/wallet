@@ -75,7 +75,6 @@ function RouteComponent() {
       group: 'mexico',
       fee: '2.5% + 2%',
       hasFeeInfo: true,
-      comingSoon: true,
     },
     {
       title: t('send.options.pix.title'),
@@ -85,7 +84,6 @@ function RouteComponent() {
       group: 'brazil',
       fee: '2% + 2%',
       hasFeeInfo: true,
-      comingSoon: true,
     },
   ];
 

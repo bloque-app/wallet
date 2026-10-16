@@ -6,10 +6,10 @@
       "name": "wallet",
       "dependencies": {
         "@base-ui/react": "^1.1.0",
-        "@bloque/sdk": "^0.16.0",
-        "@bloque/sdk-accounts": "^0.16.0",
-        "@bloque/sdk-identity": "^0.16.0",
-        "@bloque/sdk-swap": "^0.16.0",
+        "@bloque/sdk": "^0.17.1",
+        "@bloque/sdk-accounts": "^0.17.1",
+        "@bloque/sdk-identity": "^0.17.1",
+        "@bloque/sdk-swap": "^0.17.1",
         "@fontsource-variable/geist": "^5.3.0",
         "@fontsource-variable/geist-mono": "^5.3.0",
         "@tanstack/react-query": "^5.90.20",
@@ -53,12 +53,12 @@
     },
   },
   "overrides": {
-    "@bloque/sdk-accounts": "0.16.0",
-    "@bloque/sdk-compliance": "0.16.0",
-    "@bloque/sdk-core": "0.16.0",
-    "@bloque/sdk-identity": "0.16.0",
-    "@bloque/sdk-orgs": "0.16.0",
-    "@bloque/sdk-swap": "0.16.0",
+    "@bloque/sdk-accounts": "0.17.1",
+    "@bloque/sdk-compliance": "0.17.1",
+    "@bloque/sdk-core": "0.17.1",
+    "@bloque/sdk-identity": "0.17.1",
+    "@bloque/sdk-orgs": "0.17.1",
+    "@bloque/sdk-swap": "0.17.1",
   },
   "packages": {
     "@adobe/css-tools": ["@adobe/css-tools@4.5.0", "", {}, "sha512-6OzddxPio9UiWTCemp4N8cYLV2ZN1ncRnV1cVGtve7dhPOtRkleRyx32GQCYSwDYgaHU3USMm84tNsvKzRCa1Q=="],
@@ -155,19 +155,19 @@
 
     "@biomejs/cli-win32-x64": ["@biomejs/cli-win32-x64@2.5.1", "", { "os": "win32", "cpu": "x64" }, "sha512-6uxpR9hvaglANkZemeSiN/FhYgkGasrEGn267eXIWvjrjJ2LhDlk251IhjVJq6MXzkV2/bcXwLwSroLyPtqRZg=="],
 
-    "@bloque/sdk": ["@bloque/sdk@0.16.0", "", { "dependencies": { "@bloque/sdk-accounts": "0.16.0", "@bloque/sdk-compliance": "0.16.0", "@bloque/sdk-core": "0.16.0", "@bloque/sdk-identity": "0.16.0", "@bloque/sdk-orgs": "0.16.0", "@bloque/sdk-swap": "0.16.0" } }, "sha512-Y5XI6OLGTxUHJXlmvbfYwRPnCo0o1qr+CuUoH8qRcYfTRJb9//g8UEvEsERLJkf/fISzG2sinlp3gV6AWbhQzg=="],
+    "@bloque/sdk": ["@bloque/sdk@0.17.1", "", { "dependencies": { "@bloque/sdk-accounts": "0.17.1", "@bloque/sdk-compliance": "0.17.1", "@bloque/sdk-core": "0.17.1", "@bloque/sdk-identity": "0.17.1", "@bloque/sdk-orgs": "0.17.1", "@bloque/sdk-swap": "0.17.1" } }, "sha512-p9psELxDfh2vzSrXaRI3qQggOLgEVWlkne1prsgBmhr9TEvdOzv87vFcENRNAqP253+QqWDUSd6mADtLp4cSIQ=="],
 
-    "@bloque/sdk-accounts": ["@bloque/sdk-accounts@0.16.0", "", { "dependencies": { "@bloque/sdk-core": "0.16.0" } }, "sha512-7Kxhf0d9i7wx+ov3RNR5CP2oDGBWlNySPP9MkAuxwmzkEAyelaZI8Fbirpw+VCQDnp8HAPfDtOobTxCljKLPew=="],
+    "@bloque/sdk-accounts": ["@bloque/sdk-accounts@0.17.1", "", { "dependencies": { "@bloque/sdk-core": "0.17.1" } }, "sha512-SMFQ9ToZVfbOEzlVzdd3lQjEPrY0MU0ENprdQfI+M678X/PUiKpz6s6BfqsnJoCNq6C3+fezPs/piZ3b0zrBqA=="],
 
-    "@bloque/sdk-compliance": ["@bloque/sdk-compliance@0.16.0", "", { "dependencies": { "@bloque/sdk-core": "0.16.0" } }, "sha512-q3/8zD4W70V9mbDYl9fuQENpxgEczkmbcDogkkHEHzOiWg9ox+MJCiSzD/Ehe2kuy5M2zo4j7VB4WyTNtnWe7A=="],
+    "@bloque/sdk-compliance": ["@bloque/sdk-compliance@0.17.1", "", { "dependencies": { "@bloque/sdk-core": "0.17.1" } }, "sha512-ZeD/dzvKit0Imaox/7SKjXaJjMwy7b7G4nGDynatw0UB9RrQEOxdaTLnqO+FxsSE2TiOr5WGdx8q01dlQFCjLA=="],
 
-    "@bloque/sdk-core": ["@bloque/sdk-core@0.16.0", "", {}, "sha512-kM7sg8iqTAs1yZ4PQD9eyAD2XhG1w7FUv1+OXvoC5I/lixtjLZMV0W9BI1Nj+1pSvqa0u8zJrZt61hftIxae5A=="],
+    "@bloque/sdk-core": ["@bloque/sdk-core@0.17.1", "", {}, "sha512-ritjZBoGCxegErkO66jnI/CwRzAse5P7TItsyioRTTEmwbaYns1AqOVVz2PYRTuuFpw0OK69wbIkYADTMNuHig=="],
 
-    "@bloque/sdk-identity": ["@bloque/sdk-identity@0.16.0", "", { "dependencies": { "@bloque/sdk-core": "0.16.0" } }, "sha512-TMa2ABcCt54YqbBVnNOU7KgzH6nFFJduYT4PLsaukpw3GS+0SbZrkG3M9PB4xjb2POsxiqjcl3gF5Ssjmxktfg=="],
+    "@bloque/sdk-identity": ["@bloque/sdk-identity@0.17.1", "", { "dependencies": { "@bloque/sdk-core": "0.17.1" } }, "sha512-iNlZZ2c8O0IHjMWOpMU5ZfwF6brLvZbUZ4eLeysJ0OBqnJfDGXubrXaS0gW+yQUt/5DWQF+Uz9aEsp3XEoTqJg=="],
 
-    "@bloque/sdk-orgs": ["@bloque/sdk-orgs@0.16.0", "", { "dependencies": { "@bloque/sdk-core": "0.16.0" } }, "sha512-6KQTyepgqfpir2IeYnBp0UeQu1A72l0S3UfJF9IJA3oP3Z+Hm+lX/xIYOeT+PW4pO+gfXbD0g5MjLwTG49NmUQ=="],
+    "@bloque/sdk-orgs": ["@bloque/sdk-orgs@0.17.1", "", { "dependencies": { "@bloque/sdk-core": "0.17.1" } }, "sha512-kZL5jBGHAjuTFYsu1SSavFTryk4N4MAKvZhaG5MhwyVUswggZSO3rOLTGOYVuGo4IWNmvvA+ooQeBlijlh/LvQ=="],
 
-    "@bloque/sdk-swap": ["@bloque/sdk-swap@0.16.0", "", { "dependencies": { "@bloque/sdk-core": "0.16.0" } }, "sha512-Leq35L2JF8wZ0xhgx1Sj00eMTIX3HNTAd7tBw8qfuQBN7NbL+RD8762NRrAAAGkDmbmmCRQ0U9ful0Gx64knoA=="],
+    "@bloque/sdk-swap": ["@bloque/sdk-swap@0.17.1", "", { "dependencies": { "@bloque/sdk-core": "0.17.1" } }, "sha512-n1ras4/dDqx9CF25OtQw2wAQ578x0eOzVys0xrtkW6PFVrwqxAiPFcGcYz52ndQXx3563UXZ18fZcf/mHZ2ILg=="],
 
     "@bramus/specificity": ["@bramus/specificity@2.4.2", "", { "dependencies": { "css-tree": "^3.0.0" }, "bin": { "specificity": "bin/cli.js" } }, "sha512-ctxtJ/eA+t+6q2++vj5j7FYX3nRu311q1wfYH3xjlLOsczhlhxAg2FWNUXhpGvAw3BWo1xBcvOV6/YLc2r5FJw=="],
 

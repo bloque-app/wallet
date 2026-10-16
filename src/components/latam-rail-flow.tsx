@@ -203,6 +203,7 @@ export function LatamRailFlow({
           params: {
             rateSig: rate.sig,
             amountSrc,
+            args: { sourceAccountUrn: accountUrn },
             depositInformation: {
               clabe,
               beneficiaryName: beneficiaryName.trim(),
@@ -219,6 +220,7 @@ export function LatamRailFlow({
         params: {
           rateSig: rate.sig,
           amountSrc,
+          args: { sourceAccountUrn: accountUrn },
           depositInformation: {
             pixKeyType,
             pixKeyValue: pixKeyValue.trim(),
