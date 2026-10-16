@@ -26,6 +26,10 @@ import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useTransfer } from '~/hooks/accounts/use-transfer';
 import { isAliasNotFoundError, userFacingErrorMessage } from '~/lib/api-errors';
 import { bloque } from '~/lib/bloque';
+import {
+  currencyMajorToMinor,
+  normalizeCurrencyInput,
+} from '~/lib/currency-input';
 import { formatAmount } from '~/lib/formatters';
 
 export const Route = createFileRoute('/_authed/send/bloque-friends/')({
@@ -46,10 +50,6 @@ const ASSET_OPTIONS: Array<{
   { value: 'MXN', sdkAsset: 'MXNB/2', precision: 2 },
   { value: 'BRL', sdkAsset: 'BRLB/2', precision: 2 },
 ];
-
-function majorToMinor(amountMajor: number, precision: number) {
-  return (BigInt(amountMajor) * 10n ** BigInt(precision)).toString();
-}
 
 function isAssetBlocked(asset: AssetOption): boolean {
   return asset === 'USD' && !USD_ENABLED;
@@ -100,11 +100,11 @@ function RouteComponent() {
     ASSET_OPTIONS.find((asset) => asset.value === selectedAsset) ??
     ASSET_OPTIONS[1];
   const normalizedAlias = alias.trim();
-  const parsedAmount = Number.parseInt(amount.replace(/\D/g, ''), 10) || 0;
+  const parsedAmount = Number.parseFloat(amount) || 0;
   const amountMinor = useMemo(() => {
     if (parsedAmount <= 0) return '';
-    return majorToMinor(parsedAmount, selectedAssetConfig.precision);
-  }, [parsedAmount, selectedAssetConfig.precision]);
+    return currencyMajorToMinor(amount, selectedAssetConfig.precision);
+  }, [amount, parsedAmount, selectedAssetConfig.precision]);
 
   const formError = useMemo(() => {
     if (sourceAccounts.length === 0 && !isLoadingAccounts) {
@@ -296,7 +296,11 @@ function RouteComponent() {
                 <button
                   key={asset.value}
                   type="button"
-                  onClick={() => setSelectedAsset(asset.value)}
+                  onClick={() => {
+                    if (selectedAsset === asset.value) return;
+                    setSelectedAsset(asset.value);
+                    setAmount('');
+                  }}
                   disabled={isAssetBlocked(asset.value)}
                   className={`flex flex-col items-center rounded-2xl border px-3 py-3 text-sm transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
                     selectedAsset === asset.value
@@ -347,11 +351,18 @@ function RouteComponent() {
             </Label>
             <Input
               id="friend-amount"
-              inputMode="numeric"
+              inputMode={selectedAsset === 'COP' ? 'numeric' : 'decimal'}
               placeholder="$0"
               value={amount}
               onChange={(event) =>
-                setAmount(event.target.value.replace(/\D/g, ''))
+                setAmount(
+                  selectedAsset === 'COP'
+                    ? event.target.value.replace(/\D/g, '')
+                    : normalizeCurrencyInput(
+                        event.target.value,
+                        selectedAssetConfig.precision,
+                      ),
+                )
               }
               className="h-12 rounded-2xl"
             />
