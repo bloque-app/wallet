@@ -76,8 +76,14 @@ function RouteComponent() {
     amount: number;
   } | null>(null);
 
+  const selectedAssetConfig =
+    ASSET_OPTIONS.find((asset) => asset.value === selectedAsset) ??
+    ASSET_OPTIONS[1];
   const { accounts: sourceAccounts, isLoading: isLoadingAccounts } =
-    useAccountPicker({ requireVirtualAccount: true });
+    useAccountPicker({
+      requireVirtualAccount: true,
+      asset: selectedAssetConfig.sdkAsset,
+    });
   const [sourceLedgerId, setSourceLedgerId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -96,15 +102,24 @@ function RouteComponent() {
     sourceAccounts.find((account) => account.ledgerId === sourceLedgerId) ??
     null;
 
-  const selectedAssetConfig =
-    ASSET_OPTIONS.find((asset) => asset.value === selectedAsset) ??
-    ASSET_OPTIONS[1];
   const normalizedAlias = alias.trim();
   const parsedAmount = Number.parseFloat(amount) || 0;
   const amountMinor = useMemo(() => {
     if (parsedAmount <= 0) return '';
     return currencyMajorToMinor(amount, selectedAssetConfig.precision);
   }, [amount, parsedAmount, selectedAssetConfig.precision]);
+  const hasSufficientBalance = useMemo(() => {
+    if (!sourceAccount || !amountMinor) return false;
+    const balance = sourceAccount.balances.find(
+      (entry) => entry.asset === selectedAssetConfig.sdkAsset,
+    );
+    if (!balance) return false;
+    try {
+      return BigInt(balance.current) >= BigInt(amountMinor);
+    } catch {
+      return false;
+    }
+  }, [amountMinor, selectedAssetConfig.sdkAsset, sourceAccount]);
 
   const formError = useMemo(() => {
     if (sourceAccounts.length === 0 && !isLoadingAccounts) {
@@ -116,12 +131,18 @@ function RouteComponent() {
     if (parsedAmount > 0 && parsedAmount < 1) {
       return t('send.bloqueFriends.invalidAmount');
     }
+    if (sourceAccount && amountMinor && !hasSufficientBalance) {
+      return t('send.bloqueFriends.insufficientBalance');
+    }
     return null;
   }, [
+    amountMinor,
+    hasSufficientBalance,
     isLoadingAccounts,
     alias.length,
     normalizedAlias,
     parsedAmount,
+    sourceAccount,
     sourceAccounts.length,
     t,
   ]);
@@ -171,6 +192,10 @@ function RouteComponent() {
       toast.error(t('send.bloqueFriends.invalidTransferAmount'));
       return;
     }
+    if (!hasSufficientBalance) {
+      toast.error(t('send.bloqueFriends.insufficientBalance'));
+      return;
+    }
 
     transferMutation.mutate(
       {
@@ -209,7 +234,8 @@ function RouteComponent() {
   const canSubmit =
     !!sourceAccount?.primaryUrn &&
     !!normalizedAlias &&
-    parsedAmount > 0 &&
+    !!amountMinor &&
+    hasSufficientBalance &&
     !validateAliasMutation.isPending &&
     !transferMutation.isPending;
 

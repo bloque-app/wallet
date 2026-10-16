@@ -359,6 +359,7 @@
       "aliasValidationError": "Couldn't validate the alias.",
       "noConfirmedRecipient": "There's no confirmed recipient.",
       "invalidTransferAmount": "Invalid amount to transfer.",
+      "insufficientBalance": "This pocket does not have enough balance for the transfer.",
       "transferSentToast": "Transfer sent successfully.",
       "transferErrorToast": "Couldn't send the transfer.",
       "transferSentTitle": "Transfer sent",
