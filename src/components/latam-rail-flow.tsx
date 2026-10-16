@@ -23,6 +23,10 @@ import {
   useCreateSpeiOrder,
 } from '~/hooks/payments/use-latam-rails';
 import { useRates } from '~/hooks/payments/use-rates';
+import {
+  currencyMajorToMinor,
+  normalizeCurrencyInput,
+} from '~/lib/currency-input';
 import { formatAmount } from '~/lib/formatters';
 
 type Rail = 'spei' | 'pix';
@@ -41,10 +45,6 @@ const RAIL_CONFIG = {
     currency: 'BRL' as const,
   },
 };
-
-function majorToMinor(amount: number) {
-  return (BigInt(amount) * 100n).toString();
-}
 
 export function LatamRailFlow({
   rail,
@@ -68,8 +68,8 @@ export function LatamRailFlow({
   const [execution, setExecution] = useState<ExecutionOutcome>();
   const [orderId, setOrderId] = useState('');
 
-  const parsedAmount = Number.parseInt(amount.replace(/\D/g, ''), 10) || 0;
-  const amountSrc = parsedAmount >= 10 ? majorToMinor(parsedAmount) : '';
+  const parsedAmount = Number.parseFloat(amount) || 0;
+  const amountSrc = parsedAmount >= 10 ? currencyMajorToMinor(amount, 2) : '';
   const { accounts, isLoading: isLoadingAccounts } = useAccountPicker({
     requireVirtualAccount: true,
     ...(direction === 'send' ? { asset: config.balanceAsset } : {}),
@@ -131,7 +131,9 @@ export function LatamRailFlow({
         (rail === 'spei' || documentNumber.trim().length > 0)
       : rail === 'spei'
         ? /^\d{18}$/.test(clabe) && beneficiaryName.trim().length >= 2
-        : pixKeyValue.trim().length > 0;
+        : pixKeyValue.trim().length > 0 &&
+          (beneficiaryName.trim().length === 0 ||
+            beneficiaryName.trim().length >= 2);
 
   const onSuccess = (result: {
     order: { id: string };
@@ -307,10 +309,10 @@ export function LatamRailFlow({
               </Label>
               <Input
                 id={`${rail}-${direction}-amount`}
-                inputMode="numeric"
+                inputMode="decimal"
                 value={amount}
                 onChange={(event) =>
-                  setAmount(event.target.value.replace(/\D/g, ''))
+                  setAmount(normalizeCurrencyInput(event.target.value, 2))
                 }
                 placeholder="0"
                 className="h-14 rounded-2xl text-center text-xl font-bold"
