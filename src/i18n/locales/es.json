@@ -359,6 +359,7 @@
       "aliasValidationError": "No se pudo validar el alias.",
       "noConfirmedRecipient": "No hay destinatario confirmado.",
       "invalidTransferAmount": "Monto invalido para transferir.",
+      "insufficientBalance": "El saldo de este bolsillo no alcanza para la transferencia.",
       "transferSentToast": "Transferencia enviada correctamente.",
       "transferErrorToast": "No se pudo enviar la transferencia.",
       "transferSentTitle": "Transferencia enviada",
