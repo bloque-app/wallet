@@ -19,6 +19,7 @@ import {
 import { Separator } from '~/components/ui/separator';
 import { US_RAILS_ENABLED } from '~/config/features';
 import { useAuth } from '~/contexts/auth/auth-context';
+import { calculateGrossAnchoredFee } from '~/domain/payments/topup-fee';
 import type { ExecutionOutcome } from '~/domain/payments/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useCreatePseOrder, usePseBanks } from '~/hooks/payments/use-pse-topup';
@@ -52,13 +53,11 @@ const FROM_MEDIUM = 'pse';
 const TO_MEDIUM = 'kusama';
 const RECEIVE_SDK_ASSET = 'COPM/2';
 const RECEIVE_PRECISION = 2;
+const PSE_PROVIDER_COST = 2_500;
+const PSE_SERVICE_FEE_PERCENTAGE = 1;
 
 function majorToMinor(amountMajor: number, precision: number) {
   return (BigInt(amountMajor) * 10n ** BigInt(precision)).toString();
-}
-
-function minorToMajor(amountMinor: number, precision: number) {
-  return amountMinor / 10 ** precision;
 }
 
 /**
@@ -150,17 +149,16 @@ function RouteComponent() {
   );
 
   const selectedRate = ratesQuery.data?.[0] ?? null;
-  const receiveAmount = useMemo(() => {
-    if (!selectedRate || !amountSrc || parsedAmount <= 0) return 0;
-    if (
-      typeof selectedRate.ratio === 'number' &&
-      Number.isFinite(selectedRate.ratio)
-    ) {
-      return parsedAmount * selectedRate.ratio;
-    }
-    const dstAmountMinor = selectedRate.rate?.[1] ?? 0;
-    return minorToMajor(dstAmountMinor, RECEIVE_PRECISION);
-  }, [selectedRate, amountSrc, parsedAmount]);
+  const feeSummary = useMemo(
+    () =>
+      calculateGrossAnchoredFee(
+        parsedAmount,
+        PSE_PROVIDER_COST,
+        PSE_SERVICE_FEE_PERCENTAGE,
+      ),
+    [parsedAmount],
+  );
+  const receiveAmount = selectedRate ? feeSummary.netAmount : 0;
 
   const rateError = useMemo(() => {
     if (parsedAmount < MIN_TOPUP_AMOUNT) return null;
@@ -530,6 +528,16 @@ function RouteComponent() {
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">
+                      {t('topup.fee')}
+                    </span>
+                    <span className="font-medium text-foreground">
+                      {selectedRate
+                        ? formatCOP(feeSummary.totalFee)
+                        : t('convert.querying')}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">
                       {t('topup.youReceive')}
                     </span>
                     <span className="font-medium text-foreground">
@@ -738,6 +746,14 @@ function RouteComponent() {
                   </span>
                   <span className="font-medium text-foreground">
                     {formatCOP(parsedAmount)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">
+                    {t('topup.fee')}
+                  </span>
+                  <span className="font-medium text-foreground">
+                    {formatCOP(feeSummary.totalFee)}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
