@@ -19,7 +19,7 @@ import {
 import { Separator } from '~/components/ui/separator';
 import { US_RAILS_ENABLED } from '~/config/features';
 import { useAuth } from '~/contexts/auth/auth-context';
-import { calculateGrossAnchoredFee } from '~/domain/payments/topup-fee';
+import { calculatePseTopUpQuote } from '~/domain/payments/topup-fee';
 import type { ExecutionOutcome } from '~/domain/payments/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useCreatePseOrder, usePseBanks } from '~/hooks/payments/use-pse-topup';
@@ -53,8 +53,6 @@ const FROM_MEDIUM = 'pse';
 const TO_MEDIUM = 'kusama';
 const RECEIVE_SDK_ASSET = 'COPM/2';
 const RECEIVE_PRECISION = 2;
-const PSE_PROVIDER_COST = 2_500;
-const PSE_SERVICE_FEE_PERCENTAGE = 1;
 
 function majorToMinor(amountMajor: number, precision: number) {
   return (BigInt(amountMajor) * 10n ** BigInt(precision)).toString();
@@ -150,13 +148,8 @@ function RouteComponent() {
 
   const selectedRate = ratesQuery.data?.[0] ?? null;
   const feeSummary = useMemo(
-    () =>
-      calculateGrossAnchoredFee(
-        parsedAmount,
-        PSE_PROVIDER_COST,
-        PSE_SERVICE_FEE_PERCENTAGE,
-      ),
-    [parsedAmount],
+    () => calculatePseTopUpQuote(parsedAmount, selectedRate?.fee),
+    [parsedAmount, selectedRate],
   );
   const receiveAmount = selectedRate ? feeSummary.netAmount : 0;
 
