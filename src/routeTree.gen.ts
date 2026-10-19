@@ -19,6 +19,7 @@ import { Route as PublicLoginIndexRouteImport } from './routes/_public/login/ind
 import { Route as AuthedTopupIndexRouteImport } from './routes/_authed/topup/index'
 import { Route as AuthedSendIndexRouteImport } from './routes/_authed/send/index'
 import { Route as AuthedProfileIndexRouteImport } from './routes/_authed/profile/index'
+import { Route as AuthedPasskeyIndexRouteImport } from './routes/_authed/passkey/index'
 import { Route as AuthedMovementsIndexRouteImport } from './routes/_authed/movements/index'
 import { Route as AuthedKycIndexRouteImport } from './routes/_authed/kyc/index'
 import { Route as AuthedConvertIndexRouteImport } from './routes/_authed/convert/index'
@@ -90,6 +91,11 @@ const AuthedSendIndexRoute = AuthedSendIndexRouteImport.update({
 const AuthedProfileIndexRoute = AuthedProfileIndexRouteImport.update({
   id: '/profile/',
   path: '/profile/',
+  getParentRoute: () => AuthedRoute,
+} as any)
+const AuthedPasskeyIndexRoute = AuthedPasskeyIndexRouteImport.update({
+  id: '/passkey/',
+  path: '/passkey/',
   getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedMovementsIndexRoute = AuthedMovementsIndexRouteImport.update({
@@ -231,6 +237,7 @@ export interface FileRoutesByFullPath {
   '/convert/': typeof AuthedConvertIndexRoute
   '/kyc/': typeof AuthedKycIndexRoute
   '/movements/': typeof AuthedMovementsIndexRoute
+  '/passkey/': typeof AuthedPasskeyIndexRoute
   '/profile/': typeof AuthedProfileIndexRoute
   '/send/': typeof AuthedSendIndexRoute
   '/topup/': typeof AuthedTopupIndexRoute
@@ -261,6 +268,7 @@ export interface FileRoutesByTo {
   '/convert': typeof AuthedConvertIndexRoute
   '/kyc': typeof AuthedKycIndexRoute
   '/movements': typeof AuthedMovementsIndexRoute
+  '/passkey': typeof AuthedPasskeyIndexRoute
   '/profile': typeof AuthedProfileIndexRoute
   '/send': typeof AuthedSendIndexRoute
   '/topup': typeof AuthedTopupIndexRoute
@@ -298,6 +306,7 @@ export interface FileRoutesById {
   '/_authed/convert/': typeof AuthedConvertIndexRoute
   '/_authed/kyc/': typeof AuthedKycIndexRoute
   '/_authed/movements/': typeof AuthedMovementsIndexRoute
+  '/_authed/passkey/': typeof AuthedPasskeyIndexRoute
   '/_authed/profile/': typeof AuthedProfileIndexRoute
   '/_authed/send/': typeof AuthedSendIndexRoute
   '/_authed/topup/': typeof AuthedTopupIndexRoute
@@ -334,6 +343,7 @@ export interface FileRouteTypes {
     | '/convert/'
     | '/kyc/'
     | '/movements/'
+    | '/passkey/'
     | '/profile/'
     | '/send/'
     | '/topup/'
@@ -364,6 +374,7 @@ export interface FileRouteTypes {
     | '/convert'
     | '/kyc'
     | '/movements'
+    | '/passkey'
     | '/profile'
     | '/send'
     | '/topup'
@@ -400,6 +411,7 @@ export interface FileRouteTypes {
     | '/_authed/convert/'
     | '/_authed/kyc/'
     | '/_authed/movements/'
+    | '/_authed/passkey/'
     | '/_authed/profile/'
     | '/_authed/send/'
     | '/_authed/topup/'
@@ -497,6 +509,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile/'
       preLoaderRoute: typeof AuthedProfileIndexRouteImport
+      parentRoute: typeof AuthedRoute
+    }
+    '/_authed/passkey/': {
+      id: '/_authed/passkey/'
+      path: '/passkey'
+      fullPath: '/passkey/'
+      preLoaderRoute: typeof AuthedPasskeyIndexRouteImport
       parentRoute: typeof AuthedRoute
     }
     '/_authed/movements/': {
@@ -751,6 +770,7 @@ interface AuthedRouteChildren {
   AuthedConvertIndexRoute: typeof AuthedConvertIndexRoute
   AuthedKycIndexRoute: typeof AuthedKycIndexRoute
   AuthedMovementsIndexRoute: typeof AuthedMovementsIndexRoute
+  AuthedPasskeyIndexRoute: typeof AuthedPasskeyIndexRoute
   AuthedProfileIndexRoute: typeof AuthedProfileIndexRoute
   AuthedLegalFeesIndexRoute: typeof AuthedLegalFeesIndexRoute
   AuthedLegalPrivacyIndexRoute: typeof AuthedLegalPrivacyIndexRoute
@@ -769,6 +789,7 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedConvertIndexRoute: AuthedConvertIndexRoute,
   AuthedKycIndexRoute: AuthedKycIndexRoute,
   AuthedMovementsIndexRoute: AuthedMovementsIndexRoute,
+  AuthedPasskeyIndexRoute: AuthedPasskeyIndexRoute,
   AuthedProfileIndexRoute: AuthedProfileIndexRoute,
   AuthedLegalFeesIndexRoute: AuthedLegalFeesIndexRoute,
   AuthedLegalPrivacyIndexRoute: AuthedLegalPrivacyIndexRoute,
