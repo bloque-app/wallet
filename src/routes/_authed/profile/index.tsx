@@ -7,6 +7,7 @@ import {
   Copy,
   FileText,
   Globe,
+  KeyRound,
   Landmark,
   Lock,
   LogOut,
@@ -168,6 +169,15 @@ function RouteComponent() {
             chevron
             onClick={() => {
               navigate({ to: '/kyc' });
+            }}
+          />
+          <Separator />
+          <ProfileRow
+            icon={KeyRound}
+            label={t('profile.rows.passkey')}
+            chevron
+            onClick={() => {
+              navigate({ to: '/passkey' });
             }}
           />
         </div>
