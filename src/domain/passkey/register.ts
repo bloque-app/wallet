@@ -10,8 +10,11 @@ export type CreateCredential = (
   options: CredentialCreationOptions,
 ) => Promise<Credential | null>;
 
-/** Origins registered the passkey but has not recorded it for approvals yet. */
-const ALIAS_NOT_RECORDED = 'E_PASSKEY_ALIAS_NOT_RECORDED';
+/** Delays before each automatic resend of a retryable registration. */
+const RESEND_DELAYS_MS = [1_000, 3_000];
+
+/** Shown by the browser while it creates the passkey. */
+const RP_NAME = 'Bloque';
 
 export function base64UrlToBytes(value: string): Uint8Array<ArrayBuffer> {
   const base64 = value.replace(/-/g, '+').replace(/_/g, '/');
@@ -35,7 +38,7 @@ export function toPublicKeyCreationOptions(
 ): PublicKeyCredentialCreationOptions {
   return {
     challenge: base64UrlToBytes(options.challenge),
-    rp: { id: options.rpId, name: options.rpId },
+    rp: { id: options.rpId, name: RP_NAME },
     user: {
       id: base64UrlToBytes(options.user.id),
       name: options.user.name,
@@ -95,17 +98,10 @@ export function fromCreateError(error: unknown): PasskeyRegistrationError {
   }
 }
 
-/**
- * Challenge → browser ceremony → registration. Must start from a user
- * gesture: browsers refuse `create` without user activation.
- *
- * A registration that landed but was not recorded for approvals is sent
- * again unchanged, once; Origins treats a repeat as the same registration.
- */
-export async function registerPasskey(
+async function createRegistration(
   repository: PasskeyRepository,
   create: CreateCredential,
-): Promise<void> {
+): Promise<{ registration: PasskeyRegistration; expiresAt: number }> {
   const options = await repository.challenge();
 
   let credential: Credential | null;
@@ -116,18 +112,67 @@ export async function registerPasskey(
   } catch (error) {
     throw fromCreateError(error);
   }
-  const registration = toRegistration(credential);
+  return {
+    registration: toRegistration(credential),
+    expiresAt: options.expiresAt,
+  };
+}
 
-  try {
-    await repository.register(registration);
-  } catch (error) {
-    if (
-      error instanceof PasskeyRegistrationError &&
-      error.code === ALIAS_NOT_RECORDED
-    ) {
-      await repository.register(registration);
-      return;
+const isRetryable = (error: unknown) =>
+  error instanceof PasskeyRegistrationError && error.retryable;
+
+/** Registers a passkey; rejects with {@link PasskeyRegistrationError}. */
+export type PasskeyRegistrar = () => Promise<void>;
+
+/**
+ * Challenge → browser ceremony → registration. Each call must start from a
+ * user gesture: browsers refuse `create` without user activation.
+ *
+ * Origins documents a registration that failed with a retryable error as
+ * safe to send again unchanged. So a retryable failure is resent as is, a
+ * couple of times with a short backoff, and the registration is kept for the
+ * next call while its challenge is still valid: retrying never makes the user
+ * create a second passkey for a registration that may already have landed.
+ * A rate-limited one is kept too, but not resent until the user retries.
+ */
+export function createPasskeyRegistrar(
+  repository: PasskeyRepository,
+  create: CreateCredential,
+  {
+    now = Date.now,
+    wait = (ms: number) => new Promise<void>((done) => setTimeout(done, ms)),
+  }: { now?: () => number; wait?: (ms: number) => Promise<void> } = {},
+): PasskeyRegistrar {
+  let pending: { registration: PasskeyRegistration; expiresAt: number } | null =
+    null;
+
+  const submit = async (registration: PasskeyRegistration) => {
+    for (const delay of [...RESEND_DELAYS_MS, undefined]) {
+      try {
+        await repository.register(registration);
+        return;
+      } catch (error) {
+        if (delay === undefined || !isRetryable(error)) throw error;
+        await wait(delay);
+      }
     }
-    throw error;
-  }
+  };
+
+  return async () => {
+    if (!pending || now() >= pending.expiresAt) {
+      pending = null;
+      pending = await createRegistration(repository, create);
+    }
+    try {
+      await submit(pending.registration);
+      pending = null;
+    } catch (error) {
+      const keep =
+        isRetryable(error) ||
+        (error instanceof PasskeyRegistrationError &&
+          error.reason === 'rate_limited');
+      if (!keep) pending = null;
+      throw error;
+    }
+  };
 }

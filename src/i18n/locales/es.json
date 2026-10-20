@@ -730,6 +730,7 @@
     "action": "Registrar passkey",
     "working": "Esperando tu dispositivo…",
     "retry": "Intentar de nuevo",
+    "signInAgain": "Iniciar sesión de nuevo",
     "success": {
       "title": "Passkey registrada",
       "description": "Ya puedes volver a la página de aprobación y aprobar la operación."
@@ -742,7 +743,8 @@
       "account_not_ready": "Tu cuenta aún no está lista para una passkey. Intenta de nuevo en unos minutos.",
       "rate_limited": "Demasiados intentos. Espera un rato e intenta de nuevo.",
       "session": "Tu sesión ya no es válida. Inicia sesión de nuevo y vuelve aquí.",
-      "unavailable": "No pudimos registrar tu passkey en este momento. Intenta de nuevo en un rato."
+      "unavailable": "No pudimos registrar tu passkey en este momento. Intenta de nuevo en un rato.",
+      "blocked": "No podemos registrar una passkey en tu cuenta en este momento. Escríbenos a soporte@bloque.team."
     }
   },
   "profile": {
