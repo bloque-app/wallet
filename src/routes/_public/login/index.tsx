@@ -6,6 +6,7 @@ import {
   type PendingOnboarding,
   WALLET_ORIGIN,
 } from '~/contexts/auth/types';
+import { safeRedirectPath } from '~/lib/safe-redirect';
 import { LoginMethodSelect } from './-components/login-method-select';
 import { OnboardingProfile } from './-components/onboarding-profile';
 import { OTPVerify } from './-components/otp-verify';
@@ -28,6 +29,7 @@ function RouteComponent() {
     setPendingProfileOnboarding,
     resetOnboardingState,
   } = useAuth();
+  const { redirect } = Route.useSearch();
 
   const [pendingLogin] = useState(() => readPendingLogin());
   const [step, setStep] = useState<'method' | 'otp' | 'onboarding'>(
@@ -90,6 +92,7 @@ function RouteComponent() {
             method={method}
             contact={contact}
             resendAvailableAt={resendAvailableAt}
+            redirectTo={safeRedirectPath(redirect)}
             onResendAvailableAtChange={(availableAt) => {
               setResendAvailableAt(availableAt);
               savePendingLogin({

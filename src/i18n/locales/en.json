@@ -724,6 +724,29 @@
     "card": "Card",
     "profile": "Profile"
   },
+  "passkey": {
+    "title": "Passkey",
+    "description": "Register your passkey again so you can approve payments and transfers with it. Use this if an approval page told you your passkey is not registered.",
+    "action": "Register passkey",
+    "working": "Waiting for your device…",
+    "retry": "Try again",
+    "signInAgain": "Sign in again",
+    "success": {
+      "title": "Passkey registered",
+      "description": "You can now go back to the approval page and approve the operation."
+    },
+    "errors": {
+      "cancelled": "The passkey was not created. Try again and confirm on your device.",
+      "unsupported_browser": "This browser can't create passkeys. Open the wallet in an up-to-date browser on your phone or computer.",
+      "rejected": "The registration was not accepted. Try again.",
+      "not_usable": "This passkey can't be used for approvals. Try again to create a new one.",
+      "account_not_ready": "Your account isn't ready for a passkey yet. Try again in a few minutes.",
+      "rate_limited": "Too many attempts. Wait a while and try again.",
+      "session": "Your session is no longer valid. Sign in again and come back here.",
+      "unavailable": "We couldn't register your passkey right now. Try again shortly.",
+      "blocked": "We can't register a passkey on your account right now. Write to us at soporte@bloque.team."
+    }
+  },
   "profile": {
     "title": "Profile",
     "myAlias": {
@@ -751,6 +774,7 @@
       "allAccounts": "All pockets",
       "view": "View",
       "kycVerification": "KYC verification",
+      "passkey": "Passkey",
       "language": "Language",
       "pushNotifications": "Push notifications",
       "pushNotificationsSublabel": "Get alerts about your movements",
