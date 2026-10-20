@@ -24,7 +24,7 @@ import type { ExecutionOutcome } from '~/domain/payments/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useCreatePseOrder, usePseBanks } from '~/hooks/payments/use-pse-topup';
 import { useRates } from '~/hooks/payments/use-rates';
-import { formatAmount, formatCOP, formatUSD } from '~/lib/formatters';
+import { formatCOP, formatCOPPrecise, formatUSD } from '~/lib/formatters';
 import { cn } from '~/lib/utils';
 import { TopUpErrorStep } from './-components/error-step';
 import { ExecutionOutcomeStep } from './-components/execution-outcome-step';
@@ -525,7 +525,7 @@ function RouteComponent() {
                     </span>
                     <span className="font-medium text-foreground">
                       {selectedRate
-                        ? formatCOP(feeSummary.totalFee)
+                        ? formatCOPPrecise(feeSummary.totalFee)
                         : t('convert.querying')}
                     </span>
                   </div>
@@ -535,7 +535,7 @@ function RouteComponent() {
                     </span>
                     <span className="font-medium text-foreground">
                       {selectedRate
-                        ? formatAmount('COP', receiveAmount)
+                        ? formatCOPPrecise(receiveAmount)
                         : t('convert.querying')}
                     </span>
                   </div>
@@ -746,7 +746,7 @@ function RouteComponent() {
                     {t('topup.fee')}
                   </span>
                   <span className="font-medium text-foreground">
-                    {formatCOP(feeSummary.totalFee)}
+                    {formatCOPPrecise(feeSummary.totalFee)}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
@@ -754,7 +754,7 @@ function RouteComponent() {
                     {t('topup.youReceive')}
                   </span>
                   <span className="font-medium text-foreground">
-                    {formatAmount('COP', receiveAmount)}
+                    {formatCOPPrecise(receiveAmount)}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">

@@ -54,8 +54,12 @@ function evaluateRateFormula(fee: RateFee, amountSrc: number): number | null {
   if (!fee.formula.trim()) return null;
   const variables = new Map<string, number>([['amount_src', amountSrc]]);
   for (const component of fee.components) {
-    const value = Number(component.value);
-    if (!Number.isFinite(value)) return null;
+    const [numeratorText, denominatorText] = String(component.value).split('/');
+    const numerator = Number(numeratorText);
+    const denominator =
+      denominatorText === undefined ? 1 : Number(denominatorText);
+    const value = numerator / denominator;
+    if (!Number.isFinite(value) || denominator === 0) return null;
     variables.set(component.name, value);
   }
 
@@ -128,8 +132,11 @@ function evaluateRateFormula(fee: RateFee, amountSrc: number): number | null {
 }
 
 function calculateLegacyPseNet(grossAmount: number): number {
-  const amountAfterProvider = Math.max(0, grossAmount - 2_500);
-  return amountAfterProvider - Math.floor(amountAfterProvider * 0.01);
+  const grossAtoms = BigInt(Math.round(grossAmount * 100));
+  const amountAfterProvider =
+    grossAtoms > 250_000n ? grossAtoms - 250_000n : 0n;
+  const serviceFee = amountAfterProvider / 100n;
+  return Number(amountAfterProvider - serviceFee) / 100;
 }
 
 export function calculatePseTopUpQuote(
