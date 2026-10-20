@@ -1,6 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
-
-const fallback = '/' as const;
+import { safeRedirectPath } from '~/lib/safe-redirect';
 
 export const Route = createFileRoute('/_public')({
   validateSearch: (
@@ -13,9 +12,7 @@ export const Route = createFileRoute('/_public')({
   },
   beforeLoad: async ({ search, context }) => {
     if (context.auth.isAuthenticated) {
-      throw redirect({
-        to: (search as Record<string, string>).redirect || fallback,
-      });
+      throw redirect({ to: safeRedirectPath(search.redirect) });
     }
   },
 });
