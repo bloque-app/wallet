@@ -9,9 +9,75 @@ export type TopUpQuote = {
 };
 
 type Token =
-  | { type: 'number'; value: number }
+  | { type: 'number'; value: string }
   | { type: 'identifier'; value: string }
   | { type: 'operator'; value: '+' | '-' | '*' | '/' | '(' | ')' };
+
+type Rational = { numerator: bigint; denominator: bigint };
+
+function gcd(left: bigint, right: bigint): bigint {
+  let a = left < 0n ? -left : left;
+  let b = right < 0n ? -right : right;
+  while (b !== 0n) [a, b] = [b, a % b];
+  return a || 1n;
+}
+
+function rational(numerator: bigint, denominator = 1n): Rational {
+  if (denominator === 0n) throw new Error('Division by zero');
+  const sign = denominator < 0n ? -1n : 1n;
+  const divisor = gcd(numerator, denominator);
+  return {
+    numerator: (numerator / divisor) * sign,
+    denominator: (denominator < 0n ? -denominator : denominator) / divisor,
+  };
+}
+
+function parseRational(value: number | string): Rational {
+  const text = String(value)
+    .trim()
+    .replace(/^([+-]?)\./, '$10.');
+  const fraction = /^([+-]?\d+)\/([+-]?\d+)$/.exec(text);
+  if (fraction) return rational(BigInt(fraction[1]), BigInt(fraction[2]));
+
+  const decimal = /^([+-]?)(\d+)(?:\.(\d*))?(?:[eE]([+-]?\d+))?$/.exec(text);
+  if (!decimal) throw new Error('Invalid rational value');
+  const fractionDigits = decimal[3] ?? '';
+  const exponent = Number(decimal[4] ?? '0') - fractionDigits.length;
+  if (!Number.isSafeInteger(exponent)) throw new Error('Invalid exponent');
+  const sign = decimal[1] === '-' ? -1n : 1n;
+  const digits = BigInt(`${decimal[2]}${fractionDigits}`) * sign;
+  return exponent >= 0
+    ? rational(digits * 10n ** BigInt(exponent))
+    : rational(digits, 10n ** BigInt(-exponent));
+}
+
+function add(left: Rational, right: Rational): Rational {
+  return rational(
+    left.numerator * right.denominator + right.numerator * left.denominator,
+    left.denominator * right.denominator,
+  );
+}
+
+function subtract(left: Rational, right: Rational): Rational {
+  return rational(
+    left.numerator * right.denominator - right.numerator * left.denominator,
+    left.denominator * right.denominator,
+  );
+}
+
+function multiply(left: Rational, right: Rational): Rational {
+  return rational(
+    left.numerator * right.numerator,
+    left.denominator * right.denominator,
+  );
+}
+
+function divide(left: Rational, right: Rational): Rational {
+  return rational(
+    left.numerator * right.denominator,
+    left.denominator * right.numerator,
+  );
+}
 
 function tokenize(formula: string): Token[] {
   const tokens: Token[] = [];
@@ -24,9 +90,11 @@ function tokenize(formula: string): Token[] {
       index += whitespace.length;
       continue;
     }
-    const number = /^(?:\d+(?:\.\d*)?|\.\d+)/.exec(remaining)?.[0];
+    const number = /^(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?/.exec(
+      remaining,
+    )?.[0];
     if (number) {
-      tokens.push({ type: 'number', value: Number(number) });
+      tokens.push({ type: 'number', value: number });
       index += number.length;
       continue;
     }
@@ -50,28 +118,27 @@ function tokenize(formula: string): Token[] {
   return tokens;
 }
 
-function evaluateRateFormula(fee: RateFee, amountSrc: number): number | null {
+function evaluateRateFormulaToAtoms(
+  fee: RateFee,
+  sourceAtoms: bigint,
+): bigint | null {
   if (!fee.formula.trim()) return null;
-  const variables = new Map<string, number>([['amount_src', amountSrc]]);
-  for (const component of fee.components) {
-    const [numeratorText, denominatorText] = String(component.value).split('/');
-    const numerator = Number(numeratorText);
-    const denominator =
-      denominatorText === undefined ? 1 : Number(denominatorText);
-    const value = numerator / denominator;
-    if (!Number.isFinite(value) || denominator === 0) return null;
-    variables.set(component.name, value);
-  }
 
   try {
+    const variables = new Map<string, Rational>([
+      ['amount_src', rational(sourceAtoms, 100n)],
+    ]);
+    for (const component of fee.components) {
+      variables.set(component.name, parseRational(component.value));
+    }
     const tokens = tokenize(fee.formula);
     let index = 0;
-    const parsePrimary = (): number => {
+    const parsePrimary = (): Rational => {
       const token = tokens[index];
       if (!token) throw new Error('Unexpected end of rate formula');
       if (token.type === 'number') {
         index += 1;
-        return token.value;
+        return parseRational(token.value);
       }
       if (token.type === 'identifier') {
         index += 1;
@@ -94,11 +161,13 @@ function evaluateRateFormula(fee: RateFee, amountSrc: number): number | null {
       if (token.value === '+' || token.value === '-') {
         index += 1;
         const value = parsePrimary();
-        return token.value === '-' ? -value : value;
+        return token.value === '-'
+          ? rational(-value.numerator, value.denominator)
+          : value;
       }
       throw new Error('Invalid rate formula');
     };
-    const parseMultiplicative = (): number => {
+    const parseMultiplicative = (): Rational => {
       let value = parsePrimary();
       while (
         tokens[index]?.type === 'operator' &&
@@ -107,11 +176,12 @@ function evaluateRateFormula(fee: RateFee, amountSrc: number): number | null {
         const operator = tokens[index]?.value;
         index += 1;
         const operand = parsePrimary();
-        value = operator === '*' ? value * operand : value / operand;
+        value =
+          operator === '*' ? multiply(value, operand) : divide(value, operand);
       }
       return value;
     };
-    const parseAdditive = (): number => {
+    const parseAdditive = (): Rational => {
       let value = parseMultiplicative();
       while (
         tokens[index]?.type === 'operator' &&
@@ -120,42 +190,41 @@ function evaluateRateFormula(fee: RateFee, amountSrc: number): number | null {
         const operator = tokens[index]?.value;
         index += 1;
         const operand = parseMultiplicative();
-        value = operator === '+' ? value + operand : value - operand;
+        value =
+          operator === '+' ? add(value, operand) : subtract(value, operand);
       }
       return value;
     };
     const result = parseAdditive();
-    return index === tokens.length && Number.isFinite(result) ? result : null;
+    if (index !== tokens.length || result.numerator < 0n) return null;
+    return (result.numerator * 100n) / result.denominator;
   } catch {
     return null;
   }
 }
 
-function calculateLegacyPseNet(grossAmount: number): number {
-  const grossAtoms = BigInt(Math.round(grossAmount * 100));
+function calculateLegacyPseNetAtoms(grossAtoms: bigint): bigint {
   const amountAfterProvider =
     grossAtoms > 250_000n ? grossAtoms - 250_000n : 0n;
   const serviceFee = amountAfterProvider / 100n;
-  return Number(amountAfterProvider - serviceFee) / 100;
+  return amountAfterProvider - serviceFee;
 }
 
 export function calculatePseTopUpQuote(
   grossAmount: number,
   rateFee?: RateFee,
 ): TopUpQuote {
-  const quotedNet = rateFee ? evaluateRateFormula(rateFee, grossAmount) : null;
-  const netAmount = Math.max(
-    0,
-    Math.min(
-      grossAmount,
-      quotedNet !== null && quotedNet < grossAmount
-        ? Math.floor(quotedNet * 100) / 100
-        : calculateLegacyPseNet(grossAmount),
-    ),
-  );
+  const grossAtoms = BigInt(Math.round(grossAmount * 100));
+  const quotedNetAtoms = rateFee
+    ? evaluateRateFormulaToAtoms(rateFee, grossAtoms)
+    : null;
+  const netAtoms =
+    quotedNetAtoms !== null && quotedNetAtoms < grossAtoms
+      ? quotedNetAtoms
+      : calculateLegacyPseNetAtoms(grossAtoms);
 
   return {
-    totalFee: grossAmount - netAmount,
-    netAmount,
+    totalFee: Number(grossAtoms - netAtoms) / 100,
+    netAmount: Number(netAtoms) / 100,
   };
 }

@@ -36,4 +36,29 @@ describe('calculatePseTopUpQuote', () => {
       netAmount: 2_475.99,
     });
   });
+
+  test('accepts backend-compatible leading-decimal literals', () => {
+    expect(
+      calculatePseTopUpQuote(5_001, {
+        formula: 'amount_src * .5',
+        components: [],
+      }),
+    ).toEqual({ totalFee: 2_500.5, netAmount: 2_500.5 });
+  });
+
+  test.each([
+    [5_001, 2_525.01, 2_475.99],
+    [5_003, 2_525.03, 2_477.97],
+    [12_345, 2_598.45, 9_746.55],
+  ])('matches backend atom truncation for a %i COP formula quote', (gross, fee, net) => {
+    expect(
+      calculatePseTopUpQuote(gross, {
+        formula: '(amount_src - provider_fee) * (1 - service_fee)',
+        components: [
+          { name: 'provider_fee', value: 2_500 },
+          { name: 'service_fee', value: '1/100' },
+        ],
+      }),
+    ).toEqual({ totalFee: fee, netAmount: net });
+  });
 });
