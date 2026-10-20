@@ -204,10 +204,10 @@ function evaluateRateFormulaToAtoms(
 }
 
 function calculateLegacyPseNetAtoms(grossAtoms: bigint): bigint {
-  const amountAfterProvider =
-    grossAtoms > 250_000n ? grossAtoms - 250_000n : 0n;
-  const serviceFee = amountAfterProvider / 100n;
-  return amountAfterProvider - serviceFee;
+  const grossAmount = Number(grossAtoms) / 100;
+  const amountAfterProvider = Math.max(0, grossAmount - 2_500);
+  const remainingAmount = amountAfterProvider - amountAfterProvider * 0.01;
+  return BigInt(Math.floor(remainingAmount * 100));
 }
 
 export function calculatePseTopUpQuote(
