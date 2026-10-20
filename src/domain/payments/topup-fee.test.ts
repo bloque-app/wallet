@@ -8,7 +8,7 @@ describe('calculatePseTopUpQuote', () => {
         formula: '(amount_src - provider_fee) * (1 - service_fee)',
         components: [
           { name: 'provider_fee', value: 3_000 },
-          { name: 'service_fee', value: '0.02' },
+          { name: 'service_fee', value: '1/50' },
         ],
       }),
     ).toEqual({ totalFee: 3_240, netAmount: 11_760 });
@@ -27,6 +27,13 @@ describe('calculatePseTopUpQuote', () => {
     expect(calculatePseTopUpQuote(2_000)).toEqual({
       totalFee: 2_000,
       netAmount: 0,
+    });
+  });
+
+  test('calculates legacy percentage fees at COP cent precision', () => {
+    expect(calculatePseTopUpQuote(5_001)).toEqual({
+      totalFee: 2_525.01,
+      netAmount: 2_475.99,
     });
   });
 });

@@ -3,6 +3,7 @@ import {
   formatAmount,
   formatBRL,
   formatCOP,
+  formatCOPPrecise,
   formatKSM,
   formatMXN,
   formatPolygonAddress,
@@ -23,6 +24,16 @@ describe('formatCOP', () => {
 
   test('formats zero', () => {
     expect(formatCOP(0)).toBe('$ 0');
+  });
+});
+
+describe('formatCOPPrecise', () => {
+  test('preserves cent precision when present', () => {
+    expect(formatCOPPrecise(2_475.99)).toBe('$\u00a02.475,99');
+  });
+
+  test('does not add decimals to whole pesos', () => {
+    expect(formatCOPPrecise(2_476)).toBe('$\u00a02.476');
   });
 });
 
