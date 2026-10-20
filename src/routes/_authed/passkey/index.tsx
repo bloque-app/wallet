@@ -1,8 +1,10 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BackButton } from '~/components/back-button';
 import { PasskeyRegistration } from '~/components/passkey/passkey-registration';
-import { registerPasskey } from '~/domain/passkey/register';
+import { useAuth } from '~/contexts/auth/auth-context';
+import { createPasskeyRegistrar } from '~/domain/passkey/register';
 import { bloquePasskeyRepository } from '~/infra/bloque/passkey-repository';
 
 /**
@@ -23,6 +25,14 @@ const supportsPasskeys = () =>
 function RouteComponent() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { logout } = useAuth();
+  // One per visit: it keeps a registration that failed with a retryable error,
+  // so "try again" resends it instead of creating another passkey.
+  const [register] = useState(() =>
+    createPasskeyRegistrar(bloquePasskeyRepository, (options) =>
+      navigator.credentials.create(options),
+    ),
+  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -41,11 +51,11 @@ function RouteComponent() {
 
       <PasskeyRegistration
         supported={supportsPasskeys()}
-        onRegister={() =>
-          registerPasskey(bloquePasskeyRepository, (options) =>
-            navigator.credentials.create(options),
-          )
-        }
+        onRegister={register}
+        onSignInAgain={async () => {
+          await logout();
+          navigate({ to: '/login', search: { redirect: '/passkey' } });
+        }}
       />
     </div>
   );

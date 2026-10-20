@@ -42,22 +42,39 @@ const REASON_BY_CODE: Record<string, PasskeyFailureReason> = {
   E_USER_SESSION_REQUIRED: 'session',
 };
 
+/**
+ * Origins says whether a failure is worth retrying in `extra_details.retryable`.
+ * When it says nothing, a 5xx is treated as retryable: the request may or may
+ * not have landed, and resending the same one is documented as safe.
+ */
 async function failureOf(
   response: Response,
 ): Promise<PasskeyRegistrationError> {
   const body = (await response.json().catch(() => ({}))) as {
     code?: unknown;
+    extra_details?: { retryable?: unknown };
   };
   const code = typeof body.code === 'string' ? body.code : undefined;
   if (response.status === 429) {
-    return new PasskeyRegistrationError('rate_limited', code);
+    return new PasskeyRegistrationError('rate_limited', { code });
   }
+  if (response.status === 501) {
+    return new PasskeyRegistrationError('blocked', { code });
+  }
+  const said = body.extra_details?.retryable;
+  const retryable = typeof said === 'boolean' ? said : response.status >= 500;
   const reason =
     (code ? REASON_BY_CODE[code] : undefined) ??
     (response.status === 401 || response.status === 403
       ? 'session'
       : 'unavailable');
-  return new PasskeyRegistrationError(reason, code);
+  if (
+    said === false &&
+    (reason === 'unavailable' || reason === 'account_not_ready')
+  ) {
+    return new PasskeyRegistrationError('blocked', { code });
+  }
+  return new PasskeyRegistrationError(reason, { code, retryable });
 }
 
 async function post(path: `/${string}`, body?: unknown): Promise<Response> {
@@ -69,7 +86,8 @@ async function post(path: `/${string}`, body?: unknown): Promise<Response> {
       body: JSON.stringify(body ?? {}),
     });
   } catch {
-    throw new PasskeyRegistrationError('unavailable');
+    // Never answered, so it may have landed: resending is safe.
+    throw new PasskeyRegistrationError('unavailable', { retryable: true });
   }
   if (!response.ok) throw await failureOf(response);
   return response;

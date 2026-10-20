@@ -1,4 +1,4 @@
-import { CircleCheck, KeyRound, LoaderCircle } from 'lucide-react';
+import { CircleCheck, KeyRound, LoaderCircle, LogIn } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '~/components/ui/button';
@@ -13,6 +13,13 @@ type State =
   | { kind: 'done' }
   | { kind: 'failed'; reason: PasskeyFailureReason };
 
+/** Failures the user cannot fix by trying again from this page. */
+const FINAL_REASONS: ReadonlySet<PasskeyFailureReason> = new Set([
+  'unsupported_browser',
+  'blocked',
+  'session',
+]);
+
 /**
  * Registers a passkey for the signed-in user. The ceremony only starts from
  * the button: browsers (iOS Safari in particular) refuse
@@ -21,10 +28,13 @@ type State =
 export function PasskeyRegistration({
   supported,
   onRegister,
+  onSignInAgain,
 }: {
   /** Whether this browser can create passkeys at all. */
   supported: boolean;
   onRegister: () => Promise<void>;
+  /** Ends the session and comes back here once signed in again. */
+  onSignInAgain: () => void;
 }) {
   const { t } = useTranslation();
   const [state, setState] = useState<State>(
@@ -51,7 +61,10 @@ export function PasskeyRegistration({
 
   if (state.kind === 'done') {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-2xl border border-primary/20 bg-primary/[0.06] p-6 text-center">
+      <div
+        role="status"
+        className="flex flex-col items-center gap-3 rounded-2xl border border-primary/20 bg-primary/[0.06] p-6 text-center"
+      >
         <CircleCheck className="h-8 w-8 text-primary" strokeWidth={1.5} />
         <p className="text-sm font-semibold text-foreground">
           {t('passkey.success.title')}
@@ -63,8 +76,8 @@ export function PasskeyRegistration({
     );
   }
 
-  const canRetry =
-    state.kind === 'failed' && state.reason !== 'unsupported_browser';
+  const failed = state.kind === 'failed';
+  const canRetry = failed && !FINAL_REASONS.has(state.reason);
 
   return (
     <div className="flex flex-col gap-4">
@@ -76,7 +89,17 @@ export function PasskeyRegistration({
           {t(`passkey.errors.${state.reason}`)}
         </p>
       )}
-      {(state.kind !== 'failed' || canRetry) && (
+      {failed && state.reason === 'session' && (
+        <Button
+          type="button"
+          onClick={onSignInAgain}
+          className="h-12 w-full gap-2 rounded-2xl text-sm font-medium"
+        >
+          <LogIn className="h-4 w-4" />
+          {t('passkey.signInAgain')}
+        </Button>
+      )}
+      {(!failed || canRetry) && (
         <Button
           type="button"
           onClick={start}
