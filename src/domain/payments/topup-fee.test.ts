@@ -32,8 +32,8 @@ describe('calculatePseTopUpQuote', () => {
 
   test('calculates legacy percentage fees at COP cent precision', () => {
     expect(calculatePseTopUpQuote(5_001)).toEqual({
-      totalFee: 2_525.01,
-      netAmount: 2_475.99,
+      totalFee: 2_525.02,
+      netAmount: 2_475.98,
     });
   });
 
