@@ -16,6 +16,8 @@ interface OTPVerifyProps {
   method: 'email' | 'phone';
   contact: string;
   resendAvailableAt: number;
+  /** In-app path to land on once signed in. */
+  redirectTo: string;
   onResendAvailableAtChange: (availableAt: number) => void;
   onVerified: () => void;
   onBack: () => void;
@@ -26,6 +28,7 @@ export function OTPVerify({
   method,
   contact,
   resendAvailableAt,
+  redirectTo,
   onResendAvailableAtChange,
   onVerified,
   onBack,
@@ -78,7 +81,7 @@ export function OTPVerify({
       }
 
       onVerified();
-      navigate({ to: '/', replace: true });
+      navigate({ href: redirectTo, replace: true });
     } catch (error) {
       if (isOtpError(error)) {
         setError('Codigo invalido o expirado. Intenta de nuevo.');
@@ -97,6 +100,7 @@ export function OTPVerify({
     onOnboardingRequired,
     onVerified,
     navigate,
+    redirectTo,
   ]);
 
   useEffect(() => {
