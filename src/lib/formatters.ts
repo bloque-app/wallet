@@ -29,6 +29,15 @@ export function formatCOP(amount: number): string {
   }).format(amount);
 }
 
+export function formatCOPPrecise(amount: number): string {
+  return new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    minimumFractionDigits: Number.isInteger(amount) ? 0 : 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
+
 export function formatUSD(amount: number): string {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
