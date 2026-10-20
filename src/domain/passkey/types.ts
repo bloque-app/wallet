@@ -49,6 +49,7 @@ export type PasskeyRegistration = {
  * - `rate_limited`: too many attempts from this session.
  * - `session`: the session is not valid for this; sign in again.
  * - `unavailable`: a temporary failure; retrying may help.
+ * - `blocked`: a server-side failure retrying will not fix; contact support.
  */
 export type PasskeyFailureReason =
   | 'cancelled'
@@ -58,17 +59,28 @@ export type PasskeyFailureReason =
   | 'account_not_ready'
   | 'rate_limited'
   | 'session'
-  | 'unavailable';
+  | 'unavailable'
+  | 'blocked';
 
 export class PasskeyRegistrationError extends Error {
   readonly reason: PasskeyFailureReason;
   /** The backend code, when there was one. Never shown to users. */
   readonly code?: string;
+  /**
+   * Whether the same request may be sent again unchanged: the backend said
+   * so, or it never answered. A failed registration that is retryable is
+   * resent as is, never recreated with a new passkey.
+   */
+  readonly retryable: boolean;
 
-  constructor(reason: PasskeyFailureReason, code?: string) {
-    super(code ?? reason);
+  constructor(
+    reason: PasskeyFailureReason,
+    options: { code?: string; retryable?: boolean } = {},
+  ) {
+    super(options.code ?? reason);
     this.name = 'PasskeyRegistrationError';
     this.reason = reason;
-    this.code = code;
+    this.code = options.code;
+    this.retryable = options.retryable ?? false;
   }
 }

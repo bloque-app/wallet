@@ -730,6 +730,7 @@
     "action": "Register passkey",
     "working": "Waiting for your device…",
     "retry": "Try again",
+    "signInAgain": "Sign in again",
     "success": {
       "title": "Passkey registered",
       "description": "You can now go back to the approval page and approve the operation."
@@ -742,7 +743,8 @@
       "account_not_ready": "Your account isn't ready for a passkey yet. Try again in a few minutes.",
       "rate_limited": "Too many attempts. Wait a while and try again.",
       "session": "Your session is no longer valid. Sign in again and come back here.",
-      "unavailable": "We couldn't register your passkey right now. Try again shortly."
+      "unavailable": "We couldn't register your passkey right now. Try again shortly.",
+      "blocked": "We can't register a passkey on your account right now. Write to us at soporte@bloque.team."
     }
   },
   "profile": {

@@ -44,6 +44,8 @@ describe('bloquePasskeyRepository.challenge', () => {
     expect(path).toBe('/api/origins/passkeys/challenge');
     expect(init?.method).toBe('POST');
     expect(new Headers(init?.headers).has('Authorization')).toBe(false);
+    // Left to `apiFetch`, which sends the session cookie.
+    expect(init?.credentials).toBeUndefined();
     expect(options.rpId).toBe('dev-bloque.app');
     expect(options.user.displayName).toBe('did:bloque:bloque-id:user-1');
     expect(options.authenticatorSelection.userVerification).toBe('required');
@@ -80,13 +82,25 @@ describe('bloquePasskeyRepository.challenge', () => {
     });
   });
 
-  test('a network failure is unavailable', async () => {
+  test('a network failure is unavailable and safe to resend', async () => {
     apiFetchMock.mockImplementationOnce(() =>
       Promise.reject(new TypeError('Failed to fetch')),
     );
 
     await expect(bloquePasskeyRepository.challenge()).rejects.toMatchObject({
       reason: 'unavailable',
+      retryable: true,
+    });
+  });
+
+  test('a missing or expired session (no code) reads as a session problem', async () => {
+    apiFetchMock.mockImplementationOnce(() =>
+      fail(401, { error: true, message: 'Unauthorized', extra: {} }),
+    );
+
+    await expect(bloquePasskeyRepository.challenge()).rejects.toMatchObject({
+      reason: 'session',
+      retryable: false,
     });
   });
 });
@@ -113,15 +127,24 @@ describe('bloquePasskeyRepository.register', () => {
   });
 
   test.each([
-    [422, 'E_PASSKEY_REGISTRATION_REJECTED', 'rejected'],
-    [409, 'E_PASSKEY_NOT_USABLE_FOR_APPROVALS', 'not_usable'],
-    [409, 'E_IDENTITY_ACCOUNT_NOT_READY', 'account_not_ready'],
-    [503, 'E_PASSKEY_ALIAS_NOT_RECORDED', 'unavailable'],
-    [503, 'E_PASSKEY_REGISTRATION_UNAVAILABLE', 'unavailable'],
-    [401, 'E_INVALID_TOKEN', 'session'],
-  ])('%i %s maps to %s and keeps the code', async (status, code, reason) => {
+    [422, 'E_PASSKEY_REGISTRATION_REJECTED', undefined, 'rejected', false],
+    [400, 'E_INVALID_PAYLOAD', undefined, 'rejected', false],
+    [409, 'E_PASSKEY_NOT_USABLE_FOR_APPROVALS', false, 'not_usable', false],
+    [409, 'E_IDENTITY_ACCOUNT_NOT_READY', false, 'blocked', false],
+    [503, 'E_IDENTITY_ACCOUNT_NOT_READY', true, 'account_not_ready', true],
+    [503, 'E_PASSKEY_ALIAS_NOT_RECORDED', true, 'unavailable', true],
+    [503, 'E_PASSKEY_REGISTRATION_UNAVAILABLE', true, 'unavailable', true],
+    [503, 'E_PASSKEY_REGISTRATION_UNAVAILABLE', false, 'blocked', false],
+    [501, 'E_PASSKEY_REGISTRATION_NOT_SUPPORTED', false, 'blocked', false],
+    [401, 'E_INVALID_TOKEN', undefined, 'session', false],
+    [502, undefined, undefined, 'unavailable', true],
+  ] as const)('%i %s (retryable: %p) maps to %s, retryable %p', async (status, code, said, reason, retryable) => {
     apiFetchMock.mockImplementationOnce(() =>
-      fail(status, { error: true, code }),
+      fail(status, {
+        error: true,
+        code,
+        ...(said !== undefined && { extra_details: { retryable: said } }),
+      }),
     );
 
     await expect(
@@ -129,6 +152,6 @@ describe('bloquePasskeyRepository.register', () => {
         clientDataJson: 'Y2Q',
         attestationObject: 'YW8',
       }),
-    ).rejects.toMatchObject({ reason, code });
+    ).rejects.toMatchObject({ reason, retryable, code });
   });
 });
