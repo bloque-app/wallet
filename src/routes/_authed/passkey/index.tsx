@@ -1,10 +1,8 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BackButton } from '~/components/back-button';
 import { PasskeyRegistration } from '~/components/passkey/passkey-registration';
 import { useAuth } from '~/contexts/auth/auth-context';
-import { createPasskeyRegistrar } from '~/domain/passkey/register';
 import { bloquePasskeyRepository } from '~/infra/bloque/passkey-repository';
 
 /**
@@ -12,27 +10,26 @@ import { bloquePasskeyRepository } from '~/infra/bloque/passkey-repository';
  * approval page answers `passkey_not_registered`. This is the URL Origins'
  * `ORIGINS_OPERATION_APPROVAL_REREGISTER_URL` points to; signed-out visitors
  * go through /login and come back here.
+ *
+ * The passkey itself is created in Bloque's identity app, under its relying
+ * party: this page sends the person there and the app sends them back with
+ * `?registered=1`.
  */
 export const Route = createFileRoute('/_authed/passkey/')({
+  validateSearch: (search: Record<string, unknown>): { registered?: true } =>
+    search.registered === 1 || search.registered === '1'
+      ? { registered: true }
+      : {},
   component: RouteComponent,
 });
 
-const supportsPasskeys = () =>
-  typeof window !== 'undefined' &&
-  typeof window.PublicKeyCredential !== 'undefined' &&
-  typeof navigator.credentials?.create === 'function';
+const RETURN_PATH = '/passkey?registered=1';
 
 function RouteComponent() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { logout } = useAuth();
-  // One per visit: it keeps a registration that failed with a retryable error,
-  // so "try again" resends it instead of creating another passkey.
-  const [register] = useState(() =>
-    createPasskeyRegistrar(bloquePasskeyRepository, (options) =>
-      navigator.credentials.create(options),
-    ),
-  );
+  const { registered } = Route.useSearch();
 
   return (
     <div className="flex flex-col gap-6">
@@ -50,8 +47,14 @@ function RouteComponent() {
       </div>
 
       <PasskeyRegistration
-        supported={supportsPasskeys()}
-        onRegister={register}
+        registered={registered === true}
+        onStart={async () => {
+          const { url } = await bloquePasskeyRepository.createLink(
+            `${window.location.origin}${RETURN_PATH}`,
+          );
+          // A full-page navigation: the identity app is another site.
+          window.location.assign(url);
+        }}
         onSignInAgain={async () => {
           await logout();
           navigate({ to: '/login', search: { redirect: '/passkey' } });
