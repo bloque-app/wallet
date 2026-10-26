@@ -8,65 +8,78 @@ import {
 import { PasskeyRegistration } from './passkey-registration';
 
 function renderFailing(reason: PasskeyFailureReason) {
-  const onRegister = vi.fn(async () => {
+  const onStart = vi.fn(async () => {
     throw new PasskeyRegistrationError(reason);
   });
   const onSignInAgain = vi.fn();
   render(
     <PasskeyRegistration
-      supported
-      onRegister={onRegister}
+      registered={false}
+      onStart={onStart}
       onSignInAgain={onSignInAgain}
     />,
   );
-  return { onRegister, onSignInAgain };
+  return { onStart, onSignInAgain };
 }
 
 const startButton = () =>
   screen.getByRole('button', { name: 'Registrar passkey' });
 
 describe('PasskeyRegistration', () => {
-  test('starts the ceremony only from the button, then announces success', async () => {
-    const onRegister = vi.fn(async () => {});
+  test('leaves for the identity app only from the button, and stays busy while it does', async () => {
+    const onStart = vi.fn(async () => {});
     render(
       <PasskeyRegistration
-        supported
-        onRegister={onRegister}
+        registered={false}
+        onStart={onStart}
         onSignInAgain={vi.fn()}
       />,
     );
 
-    expect(onRegister).not.toHaveBeenCalled();
+    expect(onStart).not.toHaveBeenCalled();
     await userEvent.click(startButton());
 
-    expect(onRegister).toHaveBeenCalledTimes(1);
-    expect(await screen.findByRole('status')).toHaveTextContent(
-      'Passkey registrada',
+    expect(onStart).toHaveBeenCalledTimes(1);
+    expect(
+      screen.getByRole('button', { name: 'Abriendo la página de passkey…' }),
+    ).toBeDisabled();
+  });
+
+  test('back from the identity app, it confirms the registration', () => {
+    render(
+      <PasskeyRegistration
+        registered
+        onStart={vi.fn()}
+        onSignInAgain={vi.fn()}
+      />,
     );
+
+    expect(screen.getByRole('status')).toHaveTextContent('Passkey registrada');
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 
   test('a retryable failure shows its reason and retries through the same handler', async () => {
-    const { onRegister } = renderFailing('cancelled');
+    const { onStart } = renderFailing('unavailable');
 
     await userEvent.click(startButton());
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'No se creó la passkey',
+      'No pudimos abrir la página de passkey',
     );
     await userEvent.click(
       screen.getByRole('button', { name: 'Intentar de nuevo' }),
     );
 
-    expect(onRegister).toHaveBeenCalledTimes(2);
+    expect(onStart).toHaveBeenCalledTimes(2);
   });
 
   test('an unexpected error never shows a raw message', async () => {
-    const onRegister = vi.fn(async () => {
+    const onStart = vi.fn(async () => {
       throw new Error('E_SOMETHING_INTERNAL');
     });
     render(
       <PasskeyRegistration
-        supported
-        onRegister={onRegister}
+        registered={false}
+        onStart={onStart}
         onSignInAgain={vi.fn()}
       />,
     );
@@ -74,7 +87,7 @@ describe('PasskeyRegistration', () => {
     await userEvent.click(startButton());
 
     const alert = await screen.findByRole('alert');
-    expect(alert).toHaveTextContent('No pudimos registrar tu passkey');
+    expect(alert).toHaveTextContent('No pudimos abrir la página de passkey');
     expect(alert).not.toHaveTextContent('E_SOMETHING_INTERNAL');
   });
 
@@ -100,21 +113,6 @@ describe('PasskeyRegistration', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'soporte@bloque.team',
-    );
-    expect(screen.queryByRole('button')).not.toBeInTheDocument();
-  });
-
-  test('an unsupported browser gets no button to press', () => {
-    render(
-      <PasskeyRegistration
-        supported={false}
-        onRegister={vi.fn()}
-        onSignInAgain={vi.fn()}
-      />,
-    );
-
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'Este navegador no puede crear passkeys',
     );
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });

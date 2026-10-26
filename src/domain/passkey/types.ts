@@ -6,57 +6,29 @@
  *
  * Registering again is how a person whose passkey is not registered for
  * operation approvals (`passkey_not_registered` on the approval page) fixes
- * it: the same registration also records the passkey for approvals.
+ * it. The wallet does not run the WebAuthn ceremony itself: passkeys must be
+ * created under the relying party of Bloque's identity app (id.bloque.sh),
+ * which the wallet's host is not part of. So the wallet asks Origins for a
+ * registration link and sends the person there; the app sends them back.
  */
 
-/** What `navigator.credentials.create` needs, as Origins returns it. */
-export type PasskeyCreationOptions = {
-  /** Base64url. Single use, bound to the caller's identity. */
-  challenge: string;
-  /** Epoch ms. */
-  expiresAt: number;
-  /** The passkey must be created for exactly this RP id. */
-  rpId: string;
-  user: {
-    /** Base64url WebAuthn `user.id`. */
-    id: string;
-    name: string;
-    displayName: string;
-  };
-  pubKeyCredParams: { type: 'public-key'; alg: number }[];
-  authenticatorSelection: {
-    residentKey?: ResidentKeyRequirement;
-    userVerification?: UserVerificationRequirement;
-  };
-  timeout: number;
-  attestation: AttestationConveyancePreference;
-};
-
-/** The raw WebAuthn registration Origins verifies, base64url. */
-export type PasskeyRegistration = {
-  clientDataJson: string;
-  attestationObject: string;
+/** A one-time link to the identity app's passkey registration page. */
+export type PasskeyLink = {
+  /** Absolute https URL. Carries a short-lived token in its fragment. */
+  url: string;
+  /** How long the link stays valid, as Origins says it (e.g. `15m`). */
+  expiresIn: string;
 };
 
 /**
- * Why a registration did not complete, as the user should be told.
+ * Why a link could not be created, as the user should be told.
  *
- * - `cancelled`: the user dismissed the browser prompt, or it timed out.
- * - `unsupported_browser`: this browser cannot create passkeys.
- * - `rejected`: the registration was refused; start again.
- * - `not_usable`: registered but cannot approve operations; create a new one.
- * - `account_not_ready`: the account cannot take a passkey yet.
  * - `rate_limited`: too many attempts from this session.
  * - `session`: the session is not valid for this; sign in again.
  * - `unavailable`: a temporary failure; retrying may help.
- * - `blocked`: a server-side failure retrying will not fix; contact support.
+ * - `blocked`: a failure retrying will not fix; contact support.
  */
 export type PasskeyFailureReason =
-  | 'cancelled'
-  | 'unsupported_browser'
-  | 'rejected'
-  | 'not_usable'
-  | 'account_not_ready'
   | 'rate_limited'
   | 'session'
   | 'unavailable'
@@ -66,21 +38,11 @@ export class PasskeyRegistrationError extends Error {
   readonly reason: PasskeyFailureReason;
   /** The backend code, when there was one. Never shown to users. */
   readonly code?: string;
-  /**
-   * Whether the same request may be sent again unchanged: the backend said
-   * so, or it never answered. A failed registration that is retryable is
-   * resent as is, never recreated with a new passkey.
-   */
-  readonly retryable: boolean;
 
-  constructor(
-    reason: PasskeyFailureReason,
-    options: { code?: string; retryable?: boolean } = {},
-  ) {
+  constructor(reason: PasskeyFailureReason, options: { code?: string } = {}) {
     super(options.code ?? reason);
     this.name = 'PasskeyRegistrationError';
     this.reason = reason;
     this.code = options.code;
-    this.retryable = options.retryable ?? false;
   }
 }
