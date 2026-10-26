@@ -724,6 +724,58 @@
     "card": "Tarjeta",
     "profile": "Perfil"
   },
+  "approval": {
+    "redirecting": "Abriendo la página de aprobación…",
+    "cannotStart": "No pudimos abrir la página de aprobación. Intenta de nuevo.",
+    "working": "Revisando tu aprobación…",
+    "goHome": "Ir al inicio",
+    "approveNow": "Aprobar ahora",
+    "cancel": "Cancelar operación",
+    "registerPasskey": "Registrar passkey",
+    "none": {
+      "title": "Nada por aprobar",
+      "description": "No hay ninguna operación esperando tu aprobación."
+    },
+    "done": {
+      "title": "Operación aprobada",
+      "description": "Tu operación fue aprobada y enviada.",
+      "descriptionAmount": "Tu operación por {{amount}} fue aprobada y enviada."
+    },
+    "error": {
+      "title": "La operación falló",
+      "description": "Recibimos tu aprobación, pero la operación no se pudo completar. Revisa tus movimientos antes de intentar de nuevo."
+    },
+    "failed": {
+      "not_approved": {
+        "title": "Operación no aprobada",
+        "description": "No aprobaste esta operación, así que no se envió nada. Puedes aprobarla ahora o cancelarla."
+      },
+      "expired": {
+        "title": "La aprobación expiró",
+        "description": "No se envió nada. Inicia la operación de nuevo para obtener una nueva aprobación."
+      },
+      "passkey_not_registered": {
+        "title": "Registra tu passkey",
+        "description": "Tu passkey no está registrada para aprobaciones. No se envió nada. Vuelve a registrarla y luego inicia la operación de nuevo."
+      },
+      "rejected": {
+        "title": "La aprobación fue rechazada",
+        "description": "No se envió nada. Inicia la operación de nuevo y apruébala con tu propia passkey."
+      },
+      "mismatch": {
+        "title": "La operación cambió",
+        "description": "No se envió nada porque la operación no es la que aprobaste. Iníciala de nuevo."
+      },
+      "rate_expired": {
+        "title": "La tasa expiró",
+        "description": "La tasa expiró mientras aprobabas, así que no se envió nada. Inicia de nuevo para obtener una nueva tasa."
+      },
+      "unavailable": {
+        "title": "No pudimos revisar tu aprobación",
+        "description": "No se envió nada. Intenta de nuevo en un momento."
+      }
+    }
+  },
   "passkey": {
     "title": "Passkey",
     "description": "Vuelve a registrar tu passkey para aprobar pagos y transferencias con ella. Úsalo si una página de aprobación te dijo que tu passkey no está registrada.",

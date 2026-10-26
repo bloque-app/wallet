@@ -18,6 +18,7 @@ import type { ExecutionOutcome } from '~/domain/payments/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useAccounts } from '~/hooks/accounts/use-accounts';
 import { useCreateExternalUsBankAccount } from '~/hooks/accounts/use-external-us-bank-account';
+import { useApprovalRedirect } from '~/hooks/approval/use-approval-redirect';
 import { useCreateExternalUsBankOrder } from '~/hooks/payments/use-external-us-bank-order';
 import { useRates } from '~/hooks/payments/use-rates';
 import { formatUSD, getAssetPrecision } from '~/lib/formatters';
@@ -401,6 +402,7 @@ function RouteComponent() {
   ]);
 
   const createOrderMutation = useCreateExternalUsBankOrder();
+  const redirectToApproval = useApprovalRedirect();
 
   const submitOrder = useCallback(() => {
     if (!selectedRate?.sig) {
@@ -420,15 +422,14 @@ function RouteComponent() {
       return;
     }
 
+    const params = {
+      rateSig: selectedRate.sig,
+      amountSrc,
+      depositInformation: { ledgerAccountId },
+      args: { sourceAccountUrn },
+    };
     createOrderMutation.mutate(
-      {
-        params: {
-          rateSig: selectedRate.sig,
-          amountSrc,
-          depositInformation: { ledgerAccountId },
-          args: { sourceAccountUrn },
-        },
-      },
+      { params },
       {
         onSuccess: (result) => {
           const execution = result.execution ?? { kind: 'none' as const };
@@ -440,6 +441,15 @@ function RouteComponent() {
           }
         },
         onError: (error) => {
+          if (
+            redirectToApproval(
+              error,
+              { kind: 'external-us-bank-order', params },
+              { amount: parsedAmount, asset: 'USD' },
+            )
+          ) {
+            return;
+          }
           const message = error instanceof Error ? error.message : '';
           if (message.includes('E_RATE_EXPIRED')) {
             toast.info(t('topup.rateExpiredToast'));
@@ -457,7 +467,9 @@ function RouteComponent() {
     amountSrc,
     sourceAccountUrn,
     ledgerAccountId,
+    parsedAmount,
     createOrderMutation,
+    redirectToApproval,
     ratesQuery,
     t,
   ]);

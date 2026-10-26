@@ -25,6 +25,7 @@ import { Route as AuthedKycIndexRouteImport } from './routes/_authed/kyc/index'
 import { Route as AuthedConvertIndexRouteImport } from './routes/_authed/convert/index'
 import { Route as AuthedCardIndexRouteImport } from './routes/_authed/card/index'
 import { Route as AuthedBrebKeysIndexRouteImport } from './routes/_authed/breb-keys/index'
+import { Route as AuthedApprovalIndexRouteImport } from './routes/_authed/approval/index'
 import { Route as AuthedAccountsIndexRouteImport } from './routes/_authed/accounts/index'
 import { Route as AuthedhomeIndexRouteImport } from './routes/_authed/(home)/index'
 import { Route as AuthedAccountsUrnRouteImport } from './routes/_authed/accounts/$urn'
@@ -122,6 +123,11 @@ const AuthedBrebKeysIndexRoute = AuthedBrebKeysIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthedBrebKeysRouteRoute,
+} as any)
+const AuthedApprovalIndexRoute = AuthedApprovalIndexRouteImport.update({
+  id: '/approval/',
+  path: '/approval/',
+  getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedAccountsIndexRoute = AuthedAccountsIndexRouteImport.update({
   id: '/accounts/',
@@ -232,6 +238,7 @@ export interface FileRoutesByFullPath {
   '/topup': typeof AuthedTopupRouteRouteWithChildren
   '/accounts/$urn': typeof AuthedAccountsUrnRoute
   '/accounts/': typeof AuthedAccountsIndexRoute
+  '/approval/': typeof AuthedApprovalIndexRoute
   '/breb-keys/': typeof AuthedBrebKeysIndexRoute
   '/card/': typeof AuthedCardIndexRoute
   '/convert/': typeof AuthedConvertIndexRoute
@@ -263,6 +270,7 @@ export interface FileRoutesByTo {
   '/': typeof AuthedhomeIndexRoute
   '/accounts/$urn': typeof AuthedAccountsUrnRoute
   '/accounts': typeof AuthedAccountsIndexRoute
+  '/approval': typeof AuthedApprovalIndexRoute
   '/breb-keys': typeof AuthedBrebKeysIndexRoute
   '/card': typeof AuthedCardIndexRoute
   '/convert': typeof AuthedConvertIndexRoute
@@ -301,6 +309,7 @@ export interface FileRoutesById {
   '/_authed/accounts/$urn': typeof AuthedAccountsUrnRoute
   '/_authed/(home)/': typeof AuthedhomeIndexRoute
   '/_authed/accounts/': typeof AuthedAccountsIndexRoute
+  '/_authed/approval/': typeof AuthedApprovalIndexRoute
   '/_authed/breb-keys/': typeof AuthedBrebKeysIndexRoute
   '/_authed/card/': typeof AuthedCardIndexRoute
   '/_authed/convert/': typeof AuthedConvertIndexRoute
@@ -338,6 +347,7 @@ export interface FileRouteTypes {
     | '/topup'
     | '/accounts/$urn'
     | '/accounts/'
+    | '/approval/'
     | '/breb-keys/'
     | '/card/'
     | '/convert/'
@@ -369,6 +379,7 @@ export interface FileRouteTypes {
     | '/'
     | '/accounts/$urn'
     | '/accounts'
+    | '/approval'
     | '/breb-keys'
     | '/card'
     | '/convert'
@@ -406,6 +417,7 @@ export interface FileRouteTypes {
     | '/_authed/accounts/$urn'
     | '/_authed/(home)/'
     | '/_authed/accounts/'
+    | '/_authed/approval/'
     | '/_authed/breb-keys/'
     | '/_authed/card/'
     | '/_authed/convert/'
@@ -552,6 +564,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/breb-keys/'
       preLoaderRoute: typeof AuthedBrebKeysIndexRouteImport
       parentRoute: typeof AuthedBrebKeysRouteRoute
+    }
+    '/_authed/approval/': {
+      id: '/_authed/approval/'
+      path: '/approval'
+      fullPath: '/approval/'
+      preLoaderRoute: typeof AuthedApprovalIndexRouteImport
+      parentRoute: typeof AuthedRoute
     }
     '/_authed/accounts/': {
       id: '/_authed/accounts/'
@@ -767,6 +786,7 @@ interface AuthedRouteChildren {
   AuthedAccountsUrnRoute: typeof AuthedAccountsUrnRoute
   AuthedhomeIndexRoute: typeof AuthedhomeIndexRoute
   AuthedAccountsIndexRoute: typeof AuthedAccountsIndexRoute
+  AuthedApprovalIndexRoute: typeof AuthedApprovalIndexRoute
   AuthedConvertIndexRoute: typeof AuthedConvertIndexRoute
   AuthedKycIndexRoute: typeof AuthedKycIndexRoute
   AuthedMovementsIndexRoute: typeof AuthedMovementsIndexRoute
@@ -786,6 +806,7 @@ const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedAccountsUrnRoute: AuthedAccountsUrnRoute,
   AuthedhomeIndexRoute: AuthedhomeIndexRoute,
   AuthedAccountsIndexRoute: AuthedAccountsIndexRoute,
+  AuthedApprovalIndexRoute: AuthedApprovalIndexRoute,
   AuthedConvertIndexRoute: AuthedConvertIndexRoute,
   AuthedKycIndexRoute: AuthedKycIndexRoute,
   AuthedMovementsIndexRoute: AuthedMovementsIndexRoute,

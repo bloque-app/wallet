@@ -14,8 +14,10 @@ import {
   SelectItem,
   SelectTrigger,
 } from '~/components/ui/select';
+import type { ApprovalOperation } from '~/domain/approval/types';
 import type { ExecutionOutcome } from '~/domain/payments/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
+import { useApprovalRedirect } from '~/hooks/approval/use-approval-redirect';
 import {
   useCreatePixDepositOrder,
   useCreatePixOrder,
@@ -119,6 +121,7 @@ export function LatamRailFlow({
   const speiPayout = useCreateSpeiOrder();
   const pixDeposit = useCreatePixDepositOrder();
   const pixPayout = useCreatePixOrder();
+  const redirectToApproval = useApprovalRedirect();
   const isSubmitting =
     speiDeposit.isPending ||
     speiPayout.isPending ||
@@ -145,7 +148,16 @@ export function LatamRailFlow({
     toast.success(t('latamRails.orderCreated'));
   };
 
-  const onError = (error: Error) => {
+  const onError = (error: Error, operation?: ApprovalOperation) => {
+    if (
+      operation &&
+      redirectToApproval(error, operation, {
+        amount: parsedAmount,
+        asset: config.currency,
+      })
+    ) {
+      return;
+    }
     if (error.message.includes('E_RATE_EXPIRED')) {
       toast.info(t('topup.rateExpiredToast'));
       setStep('amount');
@@ -161,7 +173,7 @@ export function LatamRailFlow({
       toast.error(t('latamRails.missingRateOrAccount'));
       return;
     }
-    const options = { onSuccess, onError };
+    const options = { onSuccess, onError: (error: Error) => onError(error) };
     if (direction === 'topup' && rail === 'spei') {
       speiDeposit.mutate(
         {
@@ -200,39 +212,43 @@ export function LatamRailFlow({
       return;
     }
     if (rail === 'spei') {
-      speiPayout.mutate(
-        {
-          params: {
-            rateSig: rate.sig,
-            amountSrc,
-            args: { sourceAccountUrn: accountUrn },
-            depositInformation: {
-              clabe,
-              beneficiaryName: beneficiaryName.trim(),
-              ...(documentNumber.trim() ? { rfc: documentNumber.trim() } : {}),
-            },
-          },
+      const params = {
+        rateSig: rate.sig,
+        amountSrc,
+        args: { sourceAccountUrn: accountUrn },
+        depositInformation: {
+          clabe,
+          beneficiaryName: beneficiaryName.trim(),
+          ...(documentNumber.trim() ? { rfc: documentNumber.trim() } : {}),
         },
-        options,
+      };
+      speiPayout.mutate(
+        { params },
+        {
+          onSuccess,
+          onError: (error) => onError(error, { kind: 'spei-order', params }),
+        },
       );
       return;
     }
-    pixPayout.mutate(
-      {
-        params: {
-          rateSig: rate.sig,
-          amountSrc,
-          args: { sourceAccountUrn: accountUrn },
-          depositInformation: {
-            pixKeyType,
-            pixKeyValue: pixKeyValue.trim(),
-            ...(beneficiaryName.trim()
-              ? { beneficiaryName: beneficiaryName.trim() }
-              : {}),
-          },
-        },
+    const params = {
+      rateSig: rate.sig,
+      amountSrc,
+      args: { sourceAccountUrn: accountUrn },
+      depositInformation: {
+        pixKeyType,
+        pixKeyValue: pixKeyValue.trim(),
+        ...(beneficiaryName.trim()
+          ? { beneficiaryName: beneficiaryName.trim() }
+          : {}),
       },
-      options,
+    };
+    pixPayout.mutate(
+      { params },
+      {
+        onSuccess,
+        onError: (error) => onError(error, { kind: 'pix-order', params }),
+      },
     );
   };
 

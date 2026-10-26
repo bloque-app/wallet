@@ -19,6 +19,7 @@ import {
   useCardDetailsUrl,
   useCardToggleFreeze,
 } from '~/hooks/accounts/use-cards';
+import { useApprovalRedirect } from '~/hooks/approval/use-approval-redirect';
 import { CardsSkeleton } from './-components/cards-skeleton';
 
 export const Route = createFileRoute('/_authed/card/')({
@@ -41,6 +42,7 @@ function RouteComponent() {
     isPending: isQuickViewLoading,
   } = useCardDetailsUrl();
   const toggleFreezeMutation = useCardToggleFreeze();
+  const redirectToApproval = useApprovalRedirect();
 
   const { user } = useAuth();
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
@@ -107,6 +109,12 @@ function RouteComponent() {
           : t('card.freeze.frozenToast'),
       );
     } catch (error) {
+      if (
+        isFrozen &&
+        redirectToApproval(error, { kind: 'activate-card', urn: cardUrn })
+      ) {
+        return;
+      }
       toast.error(
         isFrozen
           ? t('card.freeze.activateErrorToast')
