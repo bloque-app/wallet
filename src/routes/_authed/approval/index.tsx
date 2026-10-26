@@ -14,14 +14,15 @@ import type { ApprovalOutcome } from '~/domain/approval/ports';
 import {
   ApprovalFailedError,
   type ApprovalFailureReason,
+  type ApprovalOperationKind,
   type SavedApproval,
 } from '~/domain/approval/types';
 import { bloqueApprovalRepository } from '~/infra/bloque/approval-repository';
-import { userFacingErrorMessage } from '~/lib/api-errors';
 import { formatAmount, formatCOP } from '~/lib/formatters';
 import {
   clearPendingApproval,
   readPendingApproval,
+  savePendingApproval,
 } from '~/lib/pending-approval';
 import { safeRedirectPath } from '~/lib/safe-redirect';
 import { ExecutionOutcomeStep } from '../topup/-components/execution-outcome-step';
@@ -30,6 +31,10 @@ import { ExecutionOutcomeStep } from '../topup/-components/execution-outcome-ste
  * Where the identity app sends the person back after the approval page.
  * Collects the approval for the operation saved before leaving and repeats
  * it once. Coming back without approving runs nothing.
+ *
+ * Once the repeat is sent its outcome can only be confirmed by its answer:
+ * the SDK retries lost responses with the same single-use approval, so a
+ * refused or expired answer may follow an operation that did run.
  */
 export const Route = createFileRoute('/_authed/approval/')({
   component: RouteComponent,
@@ -40,7 +45,21 @@ type State =
   | { kind: 'none' }
   | { kind: 'done'; saved: SavedApproval; outcome: ApprovalOutcome }
   | { kind: 'failed'; saved: SavedApproval; reason: ApprovalFailureReason }
-  | { kind: 'error'; saved: SavedApproval; message: string };
+  | { kind: 'unconfirmed'; saved: SavedApproval };
+
+/** Refusals of the repeat that are certain to have run nothing. */
+const NOTHING_RAN: ReadonlySet<ApprovalFailureReason> = new Set([
+  'mismatch',
+  'passkey_not_registered',
+  'rate_expired',
+]);
+
+/** Operations that change a card instead of moving money. */
+const CARD_CHANGES: ReadonlySet<ApprovalOperationKind> = new Set([
+  'create-card',
+  'activate-card',
+  'card-preferred-asset',
+]);
 
 function RouteComponent() {
   const { t } = useTranslation();
@@ -57,6 +76,12 @@ function RouteComponent() {
       setState({ kind: 'none' });
       return;
     }
+    // A repeat already sent from an earlier load (reload, second tab).
+    if (saved.replayStartedAt !== undefined) {
+      clearPendingApproval();
+      setState({ kind: 'unconfirmed', saved });
+      return;
+    }
     setState({ kind: 'working' });
 
     let approval: string;
@@ -71,29 +96,32 @@ function RouteComponent() {
       setState({ kind: 'failed', saved, reason });
       return;
     }
-    clearPendingApproval();
+    if (!savePendingApproval({ ...saved, replayStartedAt: Date.now() })) {
+      clearPendingApproval();
+    }
 
     try {
       const outcome = await bloqueApprovalRepository.run(
         saved.operation,
         approval,
       );
+      setState({ kind: 'done', saved, outcome });
+    } catch (error) {
+      if (
+        error instanceof ApprovalFailedError &&
+        NOTHING_RAN.has(error.reason)
+      ) {
+        setState({ kind: 'failed', saved, reason: error.reason });
+      } else {
+        setState({ kind: 'unconfirmed', saved });
+      }
+    } finally {
+      clearPendingApproval();
       void queryClient.invalidateQueries({ queryKey: ['accounts'] });
       void queryClient.invalidateQueries({ queryKey: ['transactions'] });
       void queryClient.invalidateQueries({ queryKey: ['card-detail'] });
-      setState({ kind: 'done', saved, outcome });
-    } catch (error) {
-      if (error instanceof ApprovalFailedError) {
-        setState({ kind: 'failed', saved, reason: error.reason });
-        return;
-      }
-      setState({
-        kind: 'error',
-        saved,
-        message: userFacingErrorMessage(error, t('approval.error.description')),
-      });
     }
-  }, [queryClient, t]);
+  }, [queryClient]);
 
   useEffect(() => {
     if (started.current) return;
@@ -152,6 +180,16 @@ function RouteComponent() {
         </div>
       );
     }
+    if (CARD_CHANGES.has(saved.operation.kind)) {
+      return (
+        <ApprovalScreen
+          icon="success"
+          title={t('approval.done.cardTitle')}
+          description={t('approval.done.cardDescription')}
+          primary={{ label: t('common.done'), onClick: () => goBack(saved) }}
+        />
+      );
+    }
     return (
       <ApprovalScreen
         icon="success"
@@ -166,13 +204,17 @@ function RouteComponent() {
     );
   }
 
-  if (state.kind === 'error') {
+  if (state.kind === 'unconfirmed') {
     return (
       <ApprovalScreen
         icon="alert"
-        title={t('approval.error.title')}
-        description={state.message}
+        title={t('approval.unconfirmed.title')}
+        description={t('approval.unconfirmed.description')}
         primary={{
+          label: t('approval.seeMovements'),
+          onClick: () => void navigate({ to: '/movements' }),
+        }}
+        secondary={{
           label: t('common.back'),
           onClick: () => goBack(state.saved),
         }}
