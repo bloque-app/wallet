@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test';
+import { BloqueApprovalRequiredError } from '@bloque/sdk';
 import type {
   CreatePixOrderParams,
   CreateSpeiOrderParams,
 } from '@bloque/sdk-swap';
+import { ApprovalRequiredError } from '~/domain/approval/types';
 
 const findRatesMock = mock(() => Promise.resolve({ rates: [] as unknown[] }));
 const pseCreateMock = mock(() =>
@@ -413,5 +415,63 @@ describe('bloquePaymentsRepository.listPseBanks', () => {
   test('unwraps the { banks } envelope', async () => {
     const banks = await bloquePaymentsRepository.listPseBanks();
     expect(banks).toEqual([{ code: '1', name: 'Bancolombia' }]);
+  });
+});
+
+describe('bloquePaymentsRepository order creation — passkey approval', () => {
+  const params = {
+    rateSig: 'rate-sig-1',
+    amountSrc: '1000000',
+    depositInformation: {
+      resolutionId: 'resolution-1',
+      destinationKey: { keyValue: '3001234567' },
+    },
+    args: { sourceAccountUrn: 'did:bloque:account:breb:source' },
+  };
+
+  beforeEach(() => {
+    brebCreateMock.mockClear();
+  });
+
+  test('throws ApprovalRequiredError when the order needs an approval', async () => {
+    brebCreateMock.mockImplementationOnce(() =>
+      Promise.reject(
+        new BloqueApprovalRequiredError('', {
+          status: 428,
+          code: 'E_APPROVAL_REQUIRED',
+          response: {
+            extra_details: {
+              approval_token: 'token-1',
+              approval_url: 'https://id.dev-bloque.app/approve#token-1',
+              expires_at: 1_800_000_000_000,
+            },
+          },
+        }),
+      ),
+    );
+
+    let thrown: unknown;
+    try {
+      await bloquePaymentsRepository.createBrebOrder(params);
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(ApprovalRequiredError);
+    expect((thrown as ApprovalRequiredError).pending.approvalToken).toBe(
+      'token-1',
+    );
+  });
+
+  test('passes the approval and the idempotency key when repeating it', async () => {
+    await bloquePaymentsRepository.createBrebOrder(params, {
+      approval: 'approval-1',
+      idempotencyKey: 'key-1',
+    });
+
+    expect(brebCreateMock).toHaveBeenCalledWith(params, {
+      approval: 'approval-1',
+      idempotencyKey: 'key-1',
+    });
   });
 });

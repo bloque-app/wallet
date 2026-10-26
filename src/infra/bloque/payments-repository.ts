@@ -21,6 +21,15 @@ import type {
 } from '~/domain/payments/ports';
 import type { PaymentOrder, Rate } from '~/domain/payments/types';
 import { bloque } from '~/lib/bloque';
+import { sdkApprovalOptions, withApprovalErrors } from './approval-errors';
+
+/** A gated order's SDK options: idempotency key plus the approval ones. */
+function orderOptions(options?: CreateOrderOptions) {
+  return {
+    ...(options?.idempotencyKey && { idempotencyKey: options.idempotencyKey }),
+    ...sdkApprovalOptions(options),
+  };
+}
 
 function mapOrder(order: SwapOrder): PaymentOrder {
   return {
@@ -87,7 +96,9 @@ async function createPseOrder(
   params: CreatePseOrderParams,
   options?: CreateOrderOptions,
 ): Promise<CreateOrderResult> {
-  const result = await bloque.swap.pse.create(params, options);
+  const result = await withApprovalErrors(() =>
+    bloque.swap.pse.create(params, orderOptions(options)),
+  );
   return mapCreateResult(result);
 }
 
@@ -95,7 +106,9 @@ async function createBankTransferOrder(
   params: CreateBankTransferOrderParams,
   options?: CreateOrderOptions,
 ): Promise<CreateOrderResult> {
-  const result = await bloque.swap.bankTransfer.create(params, options);
+  const result = await withApprovalErrors(() =>
+    bloque.swap.bankTransfer.create(params, orderOptions(options)),
+  );
   return mapCreateResult(result);
 }
 
@@ -103,7 +116,9 @@ async function createBrebOrder(
   params: CreateBrebOrderParams,
   options?: CreateOrderOptions,
 ): Promise<CreateOrderResult> {
-  const result = await bloque.swap.breb.create(params, options);
+  const result = await withApprovalErrors(() =>
+    bloque.swap.breb.create(params, orderOptions(options)),
+  );
   return mapCreateResult(result);
 }
 
@@ -111,7 +126,9 @@ async function createRtpOrder(
   params: CreateRtpOrderParams,
   options?: CreateOrderOptions,
 ): Promise<CreateOrderResult> {
-  const result = await bloque.swap.rtp.create(params, options);
+  const result = await withApprovalErrors(() =>
+    bloque.swap.rtp.create(params, orderOptions(options)),
+  );
   return mapCreateResult(result);
 }
 
@@ -119,7 +136,9 @@ async function createExternalUsBankOrder(
   params: CreateExternalUsBankOrderParams,
   options?: CreateOrderOptions,
 ): Promise<CreateOrderResult> {
-  const result = await bloque.swap.externalUsBank.create(params, options);
+  const result = await withApprovalErrors(() =>
+    bloque.swap.externalUsBank.create(params, orderOptions(options)),
+  );
   return mapCreateResult(result);
 }
 
@@ -127,28 +146,44 @@ async function createSpeiDepositOrder(
   params: CreateSpeiDepositParams,
   options?: CreateOrderOptions,
 ): Promise<CreateOrderResult> {
-  return mapCreateResult(await bloque.swap.spei.createDeposit(params, options));
+  return mapCreateResult(
+    await withApprovalErrors(() =>
+      bloque.swap.spei.createDeposit(params, orderOptions(options)),
+    ),
+  );
 }
 
 async function createSpeiOrder(
   params: CreateSpeiOrderParams,
   options?: CreateOrderOptions,
 ): Promise<CreateOrderResult> {
-  return mapCreateResult(await bloque.swap.spei.create(params, options));
+  return mapCreateResult(
+    await withApprovalErrors(() =>
+      bloque.swap.spei.create(params, orderOptions(options)),
+    ),
+  );
 }
 
 async function createPixDepositOrder(
   params: CreatePixDepositParams,
   options?: CreateOrderOptions,
 ): Promise<CreateOrderResult> {
-  return mapCreateResult(await bloque.swap.pix.createDeposit(params, options));
+  return mapCreateResult(
+    await withApprovalErrors(() =>
+      bloque.swap.pix.createDeposit(params, orderOptions(options)),
+    ),
+  );
 }
 
 async function createPixOrder(
   params: CreatePixOrderParams,
   options?: CreateOrderOptions,
 ): Promise<CreateOrderResult> {
-  return mapCreateResult(await bloque.swap.pix.create(params, options));
+  return mapCreateResult(
+    await withApprovalErrors(() =>
+      bloque.swap.pix.create(params, orderOptions(options)),
+    ),
+  );
 }
 
 export const bloquePaymentsRepository: PaymentsRepository = {

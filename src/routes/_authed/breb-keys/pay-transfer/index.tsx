@@ -22,6 +22,7 @@ import { Textarea } from '~/components/ui/textarea';
 import type { ExecutionOutcome } from '~/domain/payments/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useResolveBrebKey } from '~/hooks/accounts/use-breb-keys';
+import { useApprovalRedirect } from '~/hooks/approval/use-approval-redirect';
 import { useCreateBrebOrder } from '~/hooks/payments/use-breb-order';
 import { useRates } from '~/hooks/payments/use-rates';
 import { formatCOP, getAssetPrecision } from '~/lib/formatters';
@@ -159,6 +160,7 @@ function RouteComponent() {
   ]);
 
   const createOrderMutation = useCreateBrebOrder();
+  const redirectToApproval = useApprovalRedirect();
 
   const submitOrder = useCallback(() => {
     if (!recipientPreview?.resolutionId) {
@@ -174,21 +176,20 @@ function RouteComponent() {
       return;
     }
 
-    createOrderMutation.mutate(
-      {
-        params: {
-          rateSig: selectedRate.sig,
-          amountSrc,
-          depositInformation: {
-            resolutionId: recipientPreview.resolutionId,
-            destinationKey: {
-              keyValue: recipientPreview.key.keyValue,
-            },
-          },
-          args: { sourceAccountUrn: selectedSourceBrebUrn },
-          metadata: message.trim() ? { message: message.trim() } : undefined,
+    const params = {
+      rateSig: selectedRate.sig,
+      amountSrc,
+      depositInformation: {
+        resolutionId: recipientPreview.resolutionId,
+        destinationKey: {
+          keyValue: recipientPreview.key.keyValue,
         },
       },
+      args: { sourceAccountUrn: selectedSourceBrebUrn },
+      metadata: message.trim() ? { message: message.trim() } : undefined,
+    };
+    createOrderMutation.mutate(
+      { params },
       {
         onSuccess: (result) => {
           setConfirmOpen(false);
@@ -200,6 +201,15 @@ function RouteComponent() {
           toast.success(t('brebKeys.payTransfer.transferSentToast'));
         },
         onError: (error) => {
+          if (
+            redirectToApproval(
+              error,
+              { kind: 'breb-order', params },
+              { amount: parsedAmount, asset: 'COP' },
+            )
+          ) {
+            return;
+          }
           const msg = error instanceof Error ? error.message : '';
           if (msg.includes('E_RATE_EXPIRED')) {
             toast.info(t('topup.rateExpiredToast'));
@@ -219,7 +229,9 @@ function RouteComponent() {
     amountSrc,
     selectedSourceBrebUrn,
     message,
+    parsedAmount,
     createOrderMutation,
+    redirectToApproval,
     ratesQuery,
     t,
   ]);

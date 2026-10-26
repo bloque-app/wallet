@@ -24,6 +24,7 @@ import { Textarea } from '~/components/ui/textarea';
 import { USD_ENABLED } from '~/config/features';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useTransfer } from '~/hooks/accounts/use-transfer';
+import { useApprovalRedirect } from '~/hooks/approval/use-approval-redirect';
 import { isAliasNotFoundError, userFacingErrorMessage } from '~/lib/api-errors';
 import { bloque } from '~/lib/bloque';
 import {
@@ -178,6 +179,7 @@ function RouteComponent() {
   });
 
   const transferMutation = useTransfer();
+  const redirectToApproval = useApprovalRedirect();
 
   const submitTransfer = () => {
     if (!sourceAccount?.primaryUrn) {
@@ -197,38 +199,45 @@ function RouteComponent() {
       return;
     }
 
-    transferMutation.mutate(
-      {
-        sourceUrn: sourceAccount.primaryUrn,
-        destinationUrn: recipientPreview.account_urn,
-        amount: amountMinor,
-        asset: selectedAssetConfig.sdkAsset,
-        metadata: {
-          reference: `bloque-friend-${Date.now()}`,
-          note: message.trim(),
-        },
+    const input = {
+      sourceUrn: sourceAccount.primaryUrn,
+      destinationUrn: recipientPreview.account_urn,
+      amount: amountMinor,
+      asset: selectedAssetConfig.sdkAsset,
+      metadata: {
+        reference: `bloque-friend-${Date.now()}`,
+        note: message.trim(),
       },
-      {
-        onSuccess: () => {
-          setConfirmOpen(false);
-          setLastTransfer({
-            destinationUrn: recipientPreview.account_urn as string,
-            amount: parsedAmount,
-          });
-          setView('pending');
-          toast.success(t('send.bloqueFriends.transferSentToast'));
-        },
-        onError: (error) => {
-          toast.error(
-            userFacingErrorMessage(
-              error,
-              t('send.bloqueFriends.transferErrorToast'),
-            ),
-          );
-          setView('error');
-        },
+    };
+    transferMutation.mutate(input, {
+      onSuccess: () => {
+        setConfirmOpen(false);
+        setLastTransfer({
+          destinationUrn: recipientPreview.account_urn as string,
+          amount: parsedAmount,
+        });
+        setView('pending');
+        toast.success(t('send.bloqueFriends.transferSentToast'));
       },
-    );
+      onError: (error) => {
+        if (
+          redirectToApproval(
+            error,
+            { kind: 'transfer', input },
+            { amount: parsedAmount, asset: selectedAsset },
+          )
+        ) {
+          return;
+        }
+        toast.error(
+          userFacingErrorMessage(
+            error,
+            t('send.bloqueFriends.transferErrorToast'),
+          ),
+        );
+        setView('error');
+      },
+    });
   };
 
   const canSubmit =

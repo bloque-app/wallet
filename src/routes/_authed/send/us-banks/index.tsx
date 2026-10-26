@@ -8,6 +8,7 @@ import { US_RAILS_ENABLED } from '~/config/features';
 import { useAuth } from '~/contexts/auth/auth-context';
 import type { ExecutionOutcome } from '~/domain/payments/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
+import { useApprovalRedirect } from '~/hooks/approval/use-approval-redirect';
 import { useRates } from '~/hooks/payments/use-rates';
 import { useCreateRtpOrder } from '~/hooks/payments/use-rtp-order';
 import { formatUSD, getAssetPrecision } from '~/lib/formatters';
@@ -169,6 +170,7 @@ function RouteComponent() {
   ]);
 
   const createOrderMutation = useCreateRtpOrder();
+  const redirectToApproval = useApprovalRedirect();
 
   const submitOrder = useCallback(() => {
     if (!selectedRate?.sig) {
@@ -184,21 +186,20 @@ function RouteComponent() {
       return;
     }
 
-    createOrderMutation.mutate(
-      {
-        params: {
-          rateSig: selectedRate.sig,
-          amountSrc,
-          depositInformation: {
-            owner: bankForm.owner.trim(),
-            accountNumber: bankForm.accountNumber.trim(),
-            routingNumber: bankForm.routingNumber.trim(),
-            accountType: bankForm.accountType,
-            bankName: bankForm.bankName.trim() || undefined,
-          },
-          args: { sourceAccountUrn },
-        },
+    const params = {
+      rateSig: selectedRate.sig,
+      amountSrc,
+      depositInformation: {
+        owner: bankForm.owner.trim(),
+        accountNumber: bankForm.accountNumber.trim(),
+        routingNumber: bankForm.routingNumber.trim(),
+        accountType: bankForm.accountType,
+        bankName: bankForm.bankName.trim() || undefined,
       },
+      args: { sourceAccountUrn },
+    };
+    createOrderMutation.mutate(
+      { params },
       {
         onSuccess: (result) => {
           const execution = result.execution ?? { kind: 'none' as const };
@@ -210,6 +211,15 @@ function RouteComponent() {
           }
         },
         onError: (error) => {
+          if (
+            redirectToApproval(
+              error,
+              { kind: 'rtp-order', params },
+              { amount: parsedAmount, asset: 'USD' },
+            )
+          ) {
+            return;
+          }
           const message = error instanceof Error ? error.message : '';
           if (message.includes('E_RATE_EXPIRED')) {
             toast.info(t('topup.rateExpiredToast'));
@@ -227,7 +237,9 @@ function RouteComponent() {
     amountSrc,
     sourceAccountUrn,
     bankForm,
+    parsedAmount,
     createOrderMutation,
+    redirectToApproval,
     ratesQuery,
     t,
   ]);
