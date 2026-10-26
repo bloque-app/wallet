@@ -32,6 +32,7 @@ import {
   useSuspendBrebKey,
 } from '~/hooks/accounts/use-breb-keys';
 import i18n from '~/i18n/config';
+import { userFacingErrorMessage } from '~/lib/api-errors';
 import { getAssetPrecision } from '~/lib/formatters';
 import {
   BrebKeyError,
@@ -62,14 +63,10 @@ function getProviderCode(error: unknown): string | undefined {
 }
 
 function getBrebKeyCreationError(error: unknown): string {
-  if (
-    error instanceof Error &&
-    error.message &&
-    !error.message.startsWith('E_')
-  ) {
-    return error.message;
-  }
-  return i18n.t('brebKeys.manageKeys.creationErrorFallback');
+  return userFacingErrorMessage(
+    error,
+    i18n.t('brebKeys.manageKeys.creationErrorFallback'),
+  );
 }
 
 function stripCountryCode(phone: string): string {

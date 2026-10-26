@@ -16,12 +16,23 @@ export function isAliasNotFoundError(error: unknown): boolean {
   );
 }
 
-/** Raw backend codes (`E_*`) are never shown to users; anything else is. */
+/**
+ * Raw backend codes (`E_*`) and the SDK's passkey-approval errors, whose
+ * messages are written for developers, are never shown to users; anything
+ * else is.
+ */
 export function userFacingErrorMessage(
   error: unknown,
   fallback: string,
 ): string {
-  const message = asApiError(error)?.message;
+  const apiError = asApiError(error);
+  if (
+    typeof apiError?.code === 'string' &&
+    apiError.code.startsWith('E_APPROVAL')
+  ) {
+    return fallback;
+  }
+  const message = apiError?.message;
   if (typeof message !== 'string' || !message || message.startsWith('E_')) {
     return fallback;
   }

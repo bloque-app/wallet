@@ -12,7 +12,7 @@ export const Route = createFileRoute('/_public')({
   },
   beforeLoad: async ({ search, context }) => {
     if (context.auth.isAuthenticated) {
-      throw redirect({ to: safeRedirectPath(search.redirect) });
+      throw redirect({ href: safeRedirectPath(search.redirect) });
     }
   },
 });
