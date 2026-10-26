@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import {
@@ -104,6 +104,36 @@ describe('PasskeyRegistration', () => {
       screen.getByRole('button', { name: 'Iniciar sesión de nuevo' }),
     );
     expect(onSignInAgain).toHaveBeenCalledTimes(1);
+  });
+
+  test('back from the identity app without registering, the button works again', async () => {
+    render(
+      <PasskeyRegistration
+        registered={false}
+        onStart={vi.fn(async () => {})}
+        onSignInAgain={vi.fn()}
+      />,
+    );
+    await userEvent.click(startButton());
+
+    act(() => {
+      window.dispatchEvent(
+        new PageTransitionEvent('pageshow', { persisted: true }),
+      );
+    });
+
+    expect(startButton()).toBeEnabled();
+  });
+
+  test('a rate limit offers no retry, since the SDK already retried', async () => {
+    renderFailing('rate_limited');
+
+    await userEvent.click(startButton());
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Demasiados intentos',
+    );
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 
   test('a failure retrying cannot fix points to support, with no button', async () => {

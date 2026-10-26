@@ -7,9 +7,8 @@ import { bloquePasskeyRepository } from '~/infra/bloque/passkey-repository';
 
 /**
  * Where a person registers their passkey again, e.g. when the operation
- * approval page answers `passkey_not_registered`. This is the URL Origins'
- * `ORIGINS_OPERATION_APPROVAL_REREGISTER_URL` points to; signed-out visitors
- * go through /login and come back here.
+ * approval page answers `passkey_not_registered`. Signed-out visitors go
+ * through /login and come back here.
  *
  * The passkey itself is created in Bloque's identity app, under its relying
  * party: this page sends the person there and the app sends them back with
