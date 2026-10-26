@@ -9,6 +9,7 @@ import {
 } from '~/domain/payments/supported-bank';
 import type { ExecutionOutcome } from '~/domain/payments/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
+import { useApprovalRedirect } from '~/hooks/approval/use-approval-redirect';
 import { useCreateBankTransferOrder } from '~/hooks/payments/use-bank-transfer';
 import { useRates } from '~/hooks/payments/use-rates';
 import { TopUpAmountStep } from '../../topup/-components/amount-step';
@@ -163,6 +164,7 @@ function RouteComponent() {
   ]);
 
   const createOrderMutation = useCreateBankTransferOrder();
+  const redirectToApproval = useApprovalRedirect();
 
   const submitOrder = useCallback(() => {
     if (!selectedRate?.sig) {
@@ -186,18 +188,17 @@ function RouteComponent() {
       return;
     }
 
-    createOrderMutation.mutate(
-      {
-        params: {
-          rateSig: selectedRate.sig,
-          amountSrc,
-          toMedium: selectedBank,
-          depositInformation: bankForm,
-          args: {
-            sourceAccountUrn,
-          },
-        },
+    const params = {
+      rateSig: selectedRate.sig,
+      amountSrc,
+      toMedium: selectedBank,
+      depositInformation: bankForm,
+      args: {
+        sourceAccountUrn,
       },
+    };
+    createOrderMutation.mutate(
+      { params },
       {
         onSuccess: (result) => {
           const execution = result.execution ?? { kind: 'none' as const };
@@ -209,6 +210,15 @@ function RouteComponent() {
           }
         },
         onError: (error) => {
+          if (
+            redirectToApproval(
+              error,
+              { kind: 'bank-transfer-order', params },
+              { amount: parsedAmount, asset: 'COP' },
+            )
+          ) {
+            return;
+          }
           const message = error instanceof Error ? error.message : '';
           if (message.includes('E_RATE_EXPIRED')) {
             toast.info(t('topup.rateExpiredToast'));
@@ -227,7 +237,9 @@ function RouteComponent() {
     sourceAccountUrn,
     selectedBank,
     bankForm,
+    parsedAmount,
     createOrderMutation,
+    redirectToApproval,
     ratesQuery,
     t,
   ]);

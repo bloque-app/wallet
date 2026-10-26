@@ -21,7 +21,9 @@ import type {
   TransferOutcome,
 } from '~/domain/accounts/ports';
 import type { AssetBalance, Product } from '~/domain/accounts/types';
+import type { ApprovalOptions } from '~/domain/approval/types';
 import { bloque } from '~/lib/bloque';
+import { sdkApprovalOptions, withApprovalErrors } from './approval-errors';
 
 type ListedAccount = Awaited<
   ReturnType<typeof bloque.accounts.list>
@@ -361,11 +363,16 @@ async function getTransactions(
   };
 }
 
-async function createCard(input: CreateCardInput): Promise<Product> {
-  const account = await bloque.accounts.card.create({
-    name: input.name,
-    ledgerId: input.ledgerId,
-  });
+async function createCard(
+  input: CreateCardInput,
+  options?: ApprovalOptions,
+): Promise<Product> {
+  const account = await withApprovalErrors(() =>
+    bloque.accounts.card.create(
+      { name: input.name, ledgerId: input.ledgerId },
+      sdkApprovalOptions(options),
+    ),
+  );
   return mapToProduct(account as ListedAccount);
 }
 
@@ -373,8 +380,13 @@ async function freezeCard(urn: string): Promise<void> {
   await bloque.accounts.card.freeze(urn);
 }
 
-async function activateCard(urn: string): Promise<void> {
-  await bloque.accounts.card.activate(urn);
+async function activateCard(
+  urn: string,
+  options?: ApprovalOptions,
+): Promise<void> {
+  await withApprovalErrors(() =>
+    bloque.accounts.card.activate(urn, sdkApprovalOptions(options)),
+  );
 }
 
 async function updateCardName(urn: string, name: string): Promise<void> {
@@ -384,8 +396,14 @@ async function updateCardName(urn: string, name: string): Promise<void> {
 async function updateCardPreferredAsset(
   urn: string,
   asset: SupportedCardAsset,
+  options?: ApprovalOptions,
 ): Promise<void> {
-  await bloque.accounts.card.updateMetadata({ urn, defaultAsset: asset });
+  await withApprovalErrors(() =>
+    bloque.accounts.card.updateMetadata(
+      { urn, defaultAsset: asset },
+      sdkApprovalOptions(options),
+    ),
+  );
 }
 
 /** `detailsUrl` is a provider-hosted, PCI-compliant iframe URL — the SDK
@@ -445,14 +463,22 @@ async function createPolygonAccount(
   return mapToProduct(account as ListedAccount);
 }
 
-async function transfer(input: TransferInput): Promise<TransferOutcome> {
-  const result = await bloque.accounts.transfer({
-    sourceUrn: input.sourceUrn,
-    destinationUrn: input.destinationUrn,
-    amount: input.amount,
-    asset: input.asset,
-    metadata: input.metadata,
-  });
+async function transfer(
+  input: TransferInput,
+  options?: ApprovalOptions,
+): Promise<TransferOutcome> {
+  const result = await withApprovalErrors(() =>
+    bloque.accounts.transfer(
+      {
+        sourceUrn: input.sourceUrn,
+        destinationUrn: input.destinationUrn,
+        amount: input.amount,
+        asset: input.asset,
+        metadata: input.metadata,
+      },
+      sdkApprovalOptions(options),
+    ),
+  );
   return {
     queueId: result.queueId,
     status: result.status,

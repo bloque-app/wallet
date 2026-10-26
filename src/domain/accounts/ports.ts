@@ -5,6 +5,7 @@ import type {
   SupportedAsset,
   SupportedCardAsset,
 } from '@bloque/sdk-accounts';
+import type { ApprovalOptions } from '../approval/types';
 import type { AssetBalance, Product } from './types';
 
 export type MovementEntry = {
@@ -108,21 +109,32 @@ export type TransferOutcome = {
  * ledger transfer with no rate/order/execution involved, so it lives here
  * rather than in the Payments/Transfers domain (`~/domain/payments`), which
  * is scoped to swap-based rails (PSE, bank transfer, BRE-B payout, rates).
+ *
+ * Calls that move money or re-enable spending (`transfer`, `createCard`,
+ * `activateCard`, `updateCardPreferredAsset`) may throw
+ * `ApprovalRequiredError`; repeat them with the collected approval.
  */
 export type AccountsRepository = {
   listProducts(): Promise<Product[]>;
   getBalance(urn: string): Promise<AssetBalance[]>;
   getMovements(params: GetMovementsParams): Promise<MovementsPage>;
   getTransactions(params: GetTransactionsParams): Promise<MovementsPage>;
-  transfer(input: TransferInput): Promise<TransferOutcome>;
+  transfer(
+    input: TransferInput,
+    options?: ApprovalOptions,
+  ): Promise<TransferOutcome>;
 
-  createCard(input: CreateCardInput): Promise<Product>;
+  createCard(
+    input: CreateCardInput,
+    options?: ApprovalOptions,
+  ): Promise<Product>;
   freezeCard(urn: string): Promise<void>;
-  activateCard(urn: string): Promise<void>;
+  activateCard(urn: string, options?: ApprovalOptions): Promise<void>;
   updateCardName(urn: string, name: string): Promise<void>;
   updateCardPreferredAsset(
     urn: string,
     asset: SupportedCardAsset,
+    options?: ApprovalOptions,
   ): Promise<void>;
   getCardDetailsUrl(urn: string): Promise<string>;
 

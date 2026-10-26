@@ -11,6 +11,7 @@ import type {
   CreateSpeiOrderParams,
   FindRatesParams,
 } from '@bloque/sdk-swap';
+import type { ApprovalOptions } from '../approval/types';
 import type { ExecutionOutcome, PaymentOrder, Rate } from './types';
 
 /**
@@ -25,8 +26,11 @@ import type { ExecutionOutcome, PaymentOrder, Rate } from './types';
  * as `AccountsRepository` reusing `BrebResolvedKey`. Only the *results* get
  * translated into domain types (`PaymentOrder`, `ExecutionOutcome`), since
  * those are what UI code actually reads back.
+ *
+ * Order creation may throw `ApprovalRequiredError` (deposits are exempt);
+ * repeat it with the collected approval in `options.approval`.
  */
-export type CreateOrderOptions = {
+export type CreateOrderOptions = ApprovalOptions & {
   idempotencyKey?: string;
 };
 

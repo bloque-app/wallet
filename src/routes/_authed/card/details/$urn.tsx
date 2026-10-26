@@ -33,6 +33,7 @@ import {
   useCardUpdateName,
   useCardUpdatePreferredAsset,
 } from '~/hooks/accounts/use-cards';
+import { useApprovalRedirect } from '~/hooks/approval/use-approval-redirect';
 import {
   formatAmount,
   formatDate,
@@ -93,6 +94,7 @@ function RouteComponent() {
   const toggleFreezeMutation = useCardToggleFreeze();
   const updateNameMutation = useCardUpdateName();
   const updatePreferredAssetMutation = useCardUpdatePreferredAsset();
+  const redirectToApproval = useApprovalRedirect();
   const [showRenameDialog, setShowRenameDialog] = useState(false);
   const [newCardName, setNewCardName] = useState('');
   const [selectedMovement, setSelectedMovement] = useState<Movement | null>(
@@ -135,6 +137,12 @@ function RouteComponent() {
           : t('card.freeze.frozenToast'),
       );
     } catch (error) {
+      if (
+        isFrozen &&
+        redirectToApproval(error, { kind: 'activate-card', urn })
+      ) {
+        return;
+      }
       toast.error(
         isFrozen
           ? t('card.freeze.activateErrorToast')
@@ -155,6 +163,11 @@ function RouteComponent() {
       await queryClient.invalidateQueries({ queryKey: ['card-detail', urn] });
       toast.success(t('card.detail.preferredAssetUpdatedToast'));
     } catch (error) {
+      if (
+        redirectToApproval(error, { kind: 'card-preferred-asset', urn, asset })
+      ) {
+        return;
+      }
       toast.error(t('card.detail.preferredAssetUpdateErrorToast'));
       console.error('Error updating preferred asset:', error);
     }

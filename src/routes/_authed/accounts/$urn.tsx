@@ -47,6 +47,7 @@ import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useAccount, useAccounts } from '~/hooks/accounts/use-accounts';
 import { useCreateCard } from '~/hooks/accounts/use-cards';
 import { useTransfer } from '~/hooks/accounts/use-transfer';
+import { useApprovalRedirect } from '~/hooks/approval/use-approval-redirect';
 import {
   currencyMajorToMinor,
   normalizeCurrencyInput,
@@ -54,6 +55,7 @@ import {
 import type { Asset, Movement } from '~/lib/formatters';
 import {
   formatAmount,
+  getDisplayAsset,
   isUsdAsset,
   sortBalancesForDisplay,
 } from '~/lib/formatters';
@@ -173,6 +175,7 @@ function RouteComponent() {
 
   const createCardMutation = useCreateCard();
   const transferMutation = useTransfer();
+  const redirectToApproval = useApprovalRedirect();
   const { accounts: ownAccounts } = useAccountPicker({
     requireVirtualAccount: true,
   });
@@ -235,16 +238,18 @@ function RouteComponent() {
 
   const handleCreateProduct = async () => {
     if (!account || !canAddProduct) return;
+    const input = {
+      name: productName.trim() || t('accounts.detail.defaultCardName'),
+      ledgerId: account.ledgerId,
+    };
     try {
       if (addProductStep === 'card') {
-        await createCardMutation.mutateAsync({
-          name: productName.trim() || t('accounts.detail.defaultCardName'),
-          ledgerId: account.ledgerId,
-        });
+        await createCardMutation.mutateAsync(input);
         toast.success(t('accounts.detail.cardCreatedToast'));
       }
       setAddProductStep('closed');
-    } catch {
+    } catch (error) {
+      if (redirectToApproval(error, { kind: 'create-card', input })) return;
       toast.error(t('accounts.detail.createProductErrorToast'));
     }
   };
@@ -276,17 +281,25 @@ function RouteComponent() {
       return;
     }
 
+    const input = {
+      sourceUrn: account.primaryUrn,
+      destinationUrn: transferDestination.primaryUrn,
+      amount: majorToMinor(transferAmount, selectedAsset),
+      asset: selectedAsset as SupportedAsset,
+      metadata: { reference: `own-account-transfer-${Date.now()}` },
+    };
     try {
-      await transferMutation.mutateAsync({
-        sourceUrn: account.primaryUrn,
-        destinationUrn: transferDestination.primaryUrn,
-        amount: majorToMinor(transferAmount, selectedAsset),
-        asset: selectedAsset as SupportedAsset,
-        metadata: { reference: `own-account-transfer-${Date.now()}` },
-      });
+      await transferMutation.mutateAsync(input);
       toast.success(t('accounts.detail.transferSuccessToast'));
       setShowTransferDrawer(false);
-    } catch {
+    } catch (error) {
+      const display = {
+        amount: parsedTransferAmount,
+        asset: getDisplayAsset(selectedAsset) ?? undefined,
+      };
+      if (redirectToApproval(error, { kind: 'transfer', input }, display)) {
+        return;
+      }
       toast.error(t('accounts.detail.transferErrorToast'));
     }
   };

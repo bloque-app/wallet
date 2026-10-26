@@ -724,6 +724,58 @@
     "card": "Card",
     "profile": "Profile"
   },
+  "approval": {
+    "redirecting": "Opening the approval page…",
+    "cannotStart": "We couldn't open the approval page. Try again.",
+    "working": "Checking your approval…",
+    "goHome": "Go home",
+    "approveNow": "Approve now",
+    "cancel": "Cancel operation",
+    "registerPasskey": "Register passkey",
+    "none": {
+      "title": "Nothing to approve",
+      "description": "There is no operation waiting for your approval."
+    },
+    "done": {
+      "title": "Operation approved",
+      "description": "Your operation was approved and sent.",
+      "descriptionAmount": "Your operation for {{amount}} was approved and sent."
+    },
+    "error": {
+      "title": "The operation failed",
+      "description": "Your approval was received, but the operation could not be completed. Check your movements before trying again."
+    },
+    "failed": {
+      "not_approved": {
+        "title": "Operation not approved",
+        "description": "You didn't approve this operation, so nothing was sent. You can approve it now or cancel it."
+      },
+      "expired": {
+        "title": "The approval expired",
+        "description": "Nothing was sent. Start the operation again to get a new approval."
+      },
+      "passkey_not_registered": {
+        "title": "Register your passkey",
+        "description": "Your passkey is not registered for approvals. Nothing was sent. Register it again, then start the operation again."
+      },
+      "rejected": {
+        "title": "The approval was refused",
+        "description": "Nothing was sent. Start the operation again and approve it with your own passkey."
+      },
+      "mismatch": {
+        "title": "The operation changed",
+        "description": "Nothing was sent because the operation is not the one you approved. Start it again."
+      },
+      "rate_expired": {
+        "title": "The rate expired",
+        "description": "The rate expired while you were approving, so nothing was sent. Start again to get a new rate."
+      },
+      "unavailable": {
+        "title": "We couldn't check your approval",
+        "description": "Nothing was sent. Try again in a moment."
+      }
+    }
+  },
   "passkey": {
     "title": "Passkey",
     "description": "Register your passkey again so you can approve payments and transfers with it. Use this if an approval page told you your passkey is not registered.",
