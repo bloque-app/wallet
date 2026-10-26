@@ -41,12 +41,19 @@ export type ApprovalOptions = { approval?: string };
 
 /** Thrown by an adapter when an operation needs the person's approval. */
 export class ApprovalRequiredError extends Error {
-  readonly pending: PendingApproval;
+  /**
+   * Non-enumerable, as in the SDK's error: it carries the approval token, so
+   * it is left out when the error is logged, spread or serialized.
+   */
+  declare readonly pending: PendingApproval;
 
   constructor(pending: PendingApproval) {
     super('E_APPROVAL_REQUIRED');
     this.name = 'ApprovalRequiredError';
-    this.pending = pending;
+    Object.defineProperty(this, 'pending', {
+      value: pending,
+      enumerable: false,
+    });
   }
 }
 
@@ -117,4 +124,9 @@ export type SavedApproval = {
   /** In-app path to go back to when done. */
   returnTo: string;
   display?: ApprovalDisplay;
+  /**
+   * Set once the approval was collected and the operation is being repeated.
+   * Found on a later load, the outcome is unknown: it may have run.
+   */
+  replayStartedAt?: number;
 };

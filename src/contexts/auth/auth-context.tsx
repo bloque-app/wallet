@@ -13,6 +13,7 @@ import type { VerificationStatus } from '~/domain/kyc/types';
 import type { TosStatus } from '~/domain/tos/types';
 import { apiFetch } from '~/lib/api-fetch';
 import { createBloqueSdk, resetBloque } from '~/lib/bloque';
+import { clearPendingApproval } from '~/lib/pending-approval';
 import { queryClient, SESSION_EXPIRED_EVENT } from '~/lib/query-client';
 import { deriveKycStatus } from './kyc-status';
 import { makeLatestWins } from './latest-wins';
@@ -328,6 +329,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       queryClient.clear();
       localStorage.clear();
+      clearPendingApproval();
       // The memoized client holds the session that was just ended.
       resetBloque();
       signedInUrnRef.current = null;
