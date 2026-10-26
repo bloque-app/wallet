@@ -732,6 +732,7 @@
     "approveNow": "Aprobar ahora",
     "cancel": "Cancelar operación",
     "registerPasskey": "Registrar passkey",
+    "seeMovements": "Ver movimientos",
     "none": {
       "title": "Nada por aprobar",
       "description": "No hay ninguna operación esperando tu aprobación."
@@ -739,11 +740,13 @@
     "done": {
       "title": "Operación aprobada",
       "description": "Tu operación fue aprobada y enviada.",
-      "descriptionAmount": "Tu operación por {{amount}} fue aprobada y enviada."
+      "descriptionAmount": "Tu operación por {{amount}} fue aprobada y enviada.",
+      "cardTitle": "Cambio aprobado",
+      "cardDescription": "El cambio en tu tarjeta fue aprobado y aplicado."
     },
-    "error": {
-      "title": "La operación falló",
-      "description": "Recibimos tu aprobación, pero la operación no se pudo completar. Revisa tus movimientos antes de intentar de nuevo."
+    "unconfirmed": {
+      "title": "No pudimos confirmar tu operación",
+      "description": "Recibimos tu aprobación, pero no pudimos confirmar si la operación se realizó. Revisa tus movimientos antes de intentar de nuevo, para no enviarla dos veces."
     },
     "failed": {
       "not_approved": {
@@ -760,7 +763,7 @@
       },
       "rejected": {
         "title": "La aprobación fue rechazada",
-        "description": "No se envió nada. Inicia la operación de nuevo y apruébala con tu propia passkey."
+        "description": "La aprobación fue rechazada o ya se usó. No se envió nada. Inicia la operación de nuevo y apruébala."
       },
       "mismatch": {
         "title": "La operación cambió",

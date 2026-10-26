@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import type { ComponentType } from 'react';
+import { type ComponentType, StrictMode } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   ApprovalFailedError,
@@ -48,13 +48,14 @@ const SAVED: SavedApproval = {
   display: { amount: 10_000, asset: 'COP' },
 };
 
-function renderPage() {
+function renderPage({ strict = false } = {}) {
   const queryClient = new QueryClient();
-  return render(
+  const page = (
     <QueryClientProvider client={queryClient}>
       <ApprovalPage />
-    </QueryClientProvider>,
+    </QueryClientProvider>
   );
+  return render(strict ? <StrictMode>{page}</StrictMode> : page);
 }
 
 describe('approval return page', () => {
@@ -131,5 +132,108 @@ describe('approval return page', () => {
 
     expect(await screen.findByText('Nada por aprobar')).toBeInTheDocument();
     expect(collect).not.toHaveBeenCalled();
+  });
+
+  test('collects and repeats only once when mounted twice', async () => {
+    savePendingApproval(SAVED);
+    collect.mockResolvedValue('approval-1');
+    run.mockResolvedValue({ kind: 'done' });
+
+    renderPage({ strict: true });
+
+    expect(await screen.findByText('Operación aprobada')).toBeInTheDocument();
+    expect(collect).toHaveBeenCalledTimes(1);
+    expect(run).toHaveBeenCalledTimes(1);
+  });
+
+  test('marks the repeat as sent while it is in flight', async () => {
+    savePendingApproval(SAVED);
+    collect.mockResolvedValue('approval-1');
+    let inFlight: SavedApproval | null = null;
+    run.mockImplementation(async () => {
+      inFlight = readPendingApproval();
+      return { kind: 'done' };
+    });
+
+    renderPage();
+
+    await screen.findByText('Operación aprobada');
+    expect(inFlight).toMatchObject({ replayStartedAt: expect.any(Number) });
+  });
+
+  test('does not repeat again a repeat already sent from an earlier load', async () => {
+    savePendingApproval({ ...SAVED, replayStartedAt: Date.now() });
+
+    renderPage();
+
+    expect(
+      await screen.findByText('No pudimos confirmar tu operación'),
+    ).toBeInTheDocument();
+    expect(collect).not.toHaveBeenCalled();
+    expect(run).not.toHaveBeenCalled();
+    expect(readPendingApproval()).toBeNull();
+  });
+
+  test.each([
+    ['refused', new ApprovalFailedError('rejected')],
+    ['expired', new ApprovalFailedError('expired')],
+    ['failed', new Error('network down')],
+  ])('does not say nothing was sent when the repeat is %s', async (_, error) => {
+    savePendingApproval(SAVED);
+    collect.mockResolvedValue('approval-1');
+    run.mockRejectedValue(error);
+
+    renderPage();
+
+    expect(
+      await screen.findByText('No pudimos confirmar tu operación'),
+    ).toBeInTheDocument();
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Ver movimientos' }),
+    );
+    expect(navigate).toHaveBeenCalledWith({ to: '/movements' });
+  });
+
+  test('drops an approval that expired before it was collected', async () => {
+    savePendingApproval(SAVED);
+    collect.mockRejectedValue(new ApprovalFailedError('expired'));
+
+    renderPage();
+
+    expect(await screen.findByText('La aprobación expiró')).toBeInTheDocument();
+    expect(run).not.toHaveBeenCalled();
+    expect(readPendingApproval()).toBeNull();
+  });
+
+  test('retries collecting when approvals were unavailable', async () => {
+    savePendingApproval(SAVED);
+    collect
+      .mockRejectedValueOnce(new ApprovalFailedError('unavailable'))
+      .mockResolvedValueOnce('approval-1');
+    run.mockResolvedValue({ kind: 'done' });
+
+    renderPage();
+
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Reintentar' }),
+    );
+
+    expect(await screen.findByText('Operación aprobada')).toBeInTheDocument();
+    expect(collect).toHaveBeenCalledTimes(2);
+    expect(run).toHaveBeenCalledTimes(1);
+  });
+
+  test('says a card change was applied, not sent', async () => {
+    savePendingApproval({
+      ...SAVED,
+      operation: { kind: 'activate-card', urn: 'did:bloque:account:card:1' },
+      display: undefined,
+    });
+    collect.mockResolvedValue('approval-1');
+    run.mockResolvedValue({ kind: 'done' });
+
+    renderPage();
+
+    expect(await screen.findByText('Cambio aprobado')).toBeInTheDocument();
   });
 });

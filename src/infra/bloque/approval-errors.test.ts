@@ -126,3 +126,14 @@ describe('sdkApprovalOptions', () => {
     expect(sdkApprovalOptions()).toEqual({});
   });
 });
+
+describe('ApprovalRequiredError', () => {
+  test('keeps the approval token out of logs and serialization', () => {
+    const error = toApprovalError(requiredError()) as ApprovalRequiredError;
+
+    expect(error.pending.approvalToken).toBe('token-1');
+    expect(Object.keys(error)).not.toContain('pending');
+    expect(JSON.stringify(error)).not.toContain('token-1');
+    expect(JSON.stringify({ ...error })).not.toContain('token-1');
+  });
+});
