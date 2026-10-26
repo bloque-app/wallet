@@ -6,6 +6,7 @@ import {
   BloquePasskeyRegistrationUnavailableError,
   BloqueRateLimitError,
   BloqueReturnUrlNotAllowedError,
+  BloqueValidationError,
 } from '@bloque/sdk';
 
 const createLinkMock = mock(
@@ -53,6 +54,14 @@ describe('bloquePasskeyRepository.createLink', () => {
       new BloqueReturnUrlNotAllowedError('', {
         status: 400,
         code: 'E_RETURN_URL_NOT_ALLOWED',
+      }),
+      'blocked',
+    ],
+    [
+      'a malformed return URL',
+      new BloqueValidationError('', {
+        status: 400,
+        code: 'E_INVALID_PAYLOAD',
       }),
       'blocked',
     ],

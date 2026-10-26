@@ -42,6 +42,18 @@ describe('userFacingErrorMessage', () => {
     );
   });
 
+  test('hides the SDK passkey-approval errors behind the fallback', () => {
+    expect(
+      userFacingErrorMessage(
+        new BloqueAPIError('Share approvalUrl with them', {
+          status: 428,
+          code: 'E_APPROVAL_REQUIRED',
+        }),
+        'fb',
+      ),
+    ).toBe('fb');
+  });
+
   test('falls back for non-errors and empty messages', () => {
     expect(userFacingErrorMessage(undefined, 'fb')).toBe('fb');
     expect(userFacingErrorMessage(new Error(''), 'fb')).toBe('fb');

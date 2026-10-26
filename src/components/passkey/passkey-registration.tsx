@@ -1,5 +1,5 @@
 import { CircleCheck, KeyRound, LoaderCircle, LogIn } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '~/components/ui/button';
 import {
@@ -16,6 +16,8 @@ type State =
 const FINAL_REASONS: ReadonlySet<PasskeyFailureReason> = new Set([
   'blocked',
   'session',
+  // The SDK already retried; another try now hits the same limit.
+  'rate_limited',
 ]);
 
 /**
@@ -36,6 +38,16 @@ export function PasskeyRegistration({
 }) {
   const { t } = useTranslation();
   const [state, setState] = useState<State>({ kind: 'idle' });
+
+  // Coming back with the browser's back button can restore this page from
+  // the back/forward cache, still `working` from the moment it left.
+  useEffect(() => {
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) setState({ kind: 'idle' });
+    };
+    window.addEventListener('pageshow', onPageShow);
+    return () => window.removeEventListener('pageshow', onPageShow);
+  }, []);
 
   const start = async () => {
     setState({ kind: 'working' });
