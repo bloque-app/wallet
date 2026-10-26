@@ -10,44 +10,38 @@ import {
 type State =
   | { kind: 'idle' }
   | { kind: 'working' }
-  | { kind: 'done' }
   | { kind: 'failed'; reason: PasskeyFailureReason };
 
 /** Failures the user cannot fix by trying again from this page. */
 const FINAL_REASONS: ReadonlySet<PasskeyFailureReason> = new Set([
-  'unsupported_browser',
   'blocked',
   'session',
 ]);
 
 /**
- * Registers a passkey for the signed-in user. The ceremony only starts from
- * the button: browsers (iOS Safari in particular) refuse
- * `navigator.credentials.create` without user activation.
+ * Sends the signed-in user to register a passkey in Bloque's identity app,
+ * and confirms it once they are back.
  */
 export function PasskeyRegistration({
-  supported,
-  onRegister,
+  registered,
+  onStart,
   onSignInAgain,
 }: {
-  /** Whether this browser can create passkeys at all. */
-  supported: boolean;
-  onRegister: () => Promise<void>;
+  /** The identity app sent the person back after registering. */
+  registered: boolean;
+  /** Creates the registration link and leaves for it. */
+  onStart: () => Promise<void>;
   /** Ends the session and comes back here once signed in again. */
   onSignInAgain: () => void;
 }) {
   const { t } = useTranslation();
-  const [state, setState] = useState<State>(
-    supported
-      ? { kind: 'idle' }
-      : { kind: 'failed', reason: 'unsupported_browser' },
-  );
+  const [state, setState] = useState<State>({ kind: 'idle' });
 
   const start = async () => {
     setState({ kind: 'working' });
     try {
-      await onRegister();
-      setState({ kind: 'done' });
+      // On success the page is already leaving: stay on `working`.
+      await onStart();
     } catch (error) {
       setState({
         kind: 'failed',
@@ -59,7 +53,7 @@ export function PasskeyRegistration({
     }
   };
 
-  if (state.kind === 'done') {
+  if (registered) {
     return (
       <div
         role="status"
