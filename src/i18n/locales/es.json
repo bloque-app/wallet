@@ -145,6 +145,7 @@
       "active": "Activa",
       "frozen": "Suspendida",
       "deleted": "Eliminada",
+      "inProgress": "En proceso",
       "none": "Sin estado"
     },
     "manageKeys": {

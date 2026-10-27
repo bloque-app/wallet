@@ -73,6 +73,7 @@ export function brebKey(opts: {
   keyValue: string;
   displayName?: string;
   createdAt: string;
+  status?: string;
 }) {
   return {
     urn: opts.urn,
@@ -85,7 +86,7 @@ export function brebKey(opts: {
       display_name: opts.displayName ?? null,
       created_at: opts.createdAt,
     },
-    status: 'active',
+    status: opts.status ?? 'active',
     owner_urn: OWNER_URN,
     ledger_account_id: opts.ledgerId,
     webhook_url: null,
