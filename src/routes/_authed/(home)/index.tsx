@@ -109,7 +109,7 @@ function RouteComponent() {
   return (
     <div className="flex flex-col gap-6">
       <section className="rounded-3xl border border-border/75 bg-card/80 p-5 shadow-[0_18px_36px_-34px_color-mix(in_oklch,var(--foreground)_40%,transparent)] dark:shadow-[0_18px_36px_-34px_rgb(0_0_0_/_0.75)]">
-        <div className="mb-4 flex gap-2">
+        <div className="mb-4 flex flex-wrap gap-2">
           {assets.map((asset) => {
             const isActive = selectedAsset === asset;
             const isBlocked = asset === 'USD' && !USD_ENABLED;
@@ -119,7 +119,7 @@ function RouteComponent() {
                 type="button"
                 onClick={() => setSelectedAsset(asset)}
                 disabled={isBlocked}
-                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
                   isActive
                     ? 'border-primary/40 bg-primary/10 text-primary'
                     : 'border-border/60 bg-background/70 text-muted-foreground hover:text-foreground'

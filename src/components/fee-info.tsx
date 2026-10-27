@@ -1,9 +1,13 @@
 import { Info } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Button } from '~/components/ui/button';
 import {
   Drawer,
+  DrawerClose,
   DrawerContent,
   DrawerDescription,
+  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
 } from '~/components/ui/drawer';
@@ -15,6 +19,7 @@ export function FeeInfo({
   fee: string;
   description: string;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
   return (
@@ -39,6 +44,13 @@ export function FeeInfo({
             </DrawerTitle>
             <DrawerDescription>{description}</DrawerDescription>
           </DrawerHeader>
+          <DrawerFooter>
+            <DrawerClose asChild>
+              <Button className="h-12 w-full rounded-2xl text-sm font-medium">
+                {t('common.close')}
+              </Button>
+            </DrawerClose>
+          </DrawerFooter>
         </DrawerContent>
       </Drawer>
     </>
