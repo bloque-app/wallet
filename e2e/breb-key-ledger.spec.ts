@@ -146,3 +146,81 @@ test('a failed or deleted key stays suggested, an in-progress one moves to ready
     suggestions.getByText('@bqalovelace345678', { exact: true }),
   ).toHaveCount(0);
 });
+
+test('a key the provider failed stays suggested with the reason, even on an active account', async ({
+  page,
+}) => {
+  await installMockApi(page, {
+    accounts: [
+      ...orphanPocket,
+      brebKey({
+        urn: 'urn:breb-taken',
+        ledgerId: 'ledger-orphan',
+        keyType: 'ALPHA',
+        keyValue: '@bq1012345678',
+        createdAt: '2026-10-27T15:00:00.000Z',
+        keyStatus: 'failed',
+        actionCode: 'KEY007',
+      }),
+    ],
+  });
+  await page.goto('/breb-keys/manage-keys');
+
+  await expect(page.getByText('Llaves listas para usar')).toHaveCount(0);
+  const row = page
+    .getByText('@bq1012345678', { exact: true })
+    .locator('xpath=ancestor::div[contains(@class,"rounded-2xl")][1]');
+  await expect(
+    row.getByText('Ya está registrada en BRE-B. Prueba con otra.'),
+  ).toBeVisible();
+  await expect(row.getByRole('button', { name: 'Registrar' })).toBeVisible();
+});
+
+test('a key the provider rejects after accepting it shows the conflict drawer', async ({
+  page,
+}) => {
+  const created = (keyStatus: string, actionCode?: string) =>
+    brebKey({
+      urn: 'urn:breb-new',
+      ledgerId: 'ledger-orphan',
+      keyType: 'ALPHA',
+      keyValue: '@bq1012345678',
+      createdAt: '2026-10-27T15:00:00.000Z',
+      keyStatus,
+      actionCode,
+    });
+  let posted = false;
+  await installMockApi(page, { accounts: orphanPocket });
+  await page.route(
+    (url) => url.pathname === '/api/accounts',
+    (route) =>
+      route.fulfill({
+        json: {
+          accounts: posted
+            ? [...orphanPocket, created('failed', 'KEY007')]
+            : orphanPocket,
+        },
+      }),
+  );
+  await page.route(
+    (url) => url.pathname === '/api/mediums/breb',
+    (route) => {
+      if (route.request().method() !== 'POST') return route.fallback();
+      posted = true;
+      return route.fulfill({
+        json: { result: { account: created('processing') } },
+      });
+    },
+  );
+  await page.goto('/breb-keys/manage-keys');
+
+  await registerDocumentKey(page);
+  await expect(
+    page.getByText(
+      'Estamos registrando tu llave. Te avisamos en unos segundos.',
+    ),
+  ).toBeVisible();
+  await expect(page.getByText('Esta llave ya está registrada')).toBeVisible({
+    timeout: 10_000,
+  });
+});

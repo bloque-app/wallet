@@ -114,6 +114,17 @@ function getCreatedAt(account: ListedAccount): string | undefined {
   return undefined;
 }
 
+function getKeyFailureCode(
+  rawResponse: Record<string, unknown> | undefined,
+): string | undefined {
+  const previousAction = rawResponse?.previous_action as
+    | { action_code?: unknown }
+    | undefined;
+  return typeof previousAction?.action_code === 'string'
+    ? previousAction.action_code
+    : undefined;
+}
+
 function mapToProduct(account: ListedAccount): Product {
   const base = {
     urn: account.urn,
@@ -131,6 +142,8 @@ function mapToProduct(account: ListedAccount): Product {
       keyType: account.keyType,
       keyValue: account.key,
       displayName: account.displayName,
+      keyStatus: account.details?.status ?? undefined,
+      keyFailureCode: getKeyFailureCode(account.details?.raw_response),
       label:
         metaString(base.metadata, 'name') || account.displayName || account.key,
     };
