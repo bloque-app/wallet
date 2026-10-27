@@ -1,12 +1,6 @@
 import { BloqueAPIError } from '@bloque/sdk';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import {
-  CreditCard,
-  KeyRound,
-  Mail,
-  MoreVertical,
-  Smartphone,
-} from 'lucide-react';
+import { CreditCard, KeyRound, MoreVertical, Smartphone } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -22,6 +16,12 @@ import {
   DrawerTitle,
 } from '~/components/ui/drawer';
 import { useAuth } from '~/contexts/auth/auth-context';
+import {
+  BrebKeyCreationError,
+  type BrebKeySuggestionKind,
+  normalizeBrebKey,
+  suggestBrebKeys,
+} from '~/domain/accounts/breb-key-suggestions';
 import type { BrebKeyProduct } from '~/domain/accounts/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useAccounts } from '~/hooks/accounts/use-accounts';
@@ -34,11 +34,7 @@ import {
 import i18n from '~/i18n/config';
 import { userFacingErrorMessage } from '~/lib/api-errors';
 import { getAssetPrecision } from '~/lib/formatters';
-import {
-  BrebKeyError,
-  type BrebKeyType,
-  getBrebStatusLabel,
-} from '../-lib/breb';
+import { type BrebKeyType, getBrebStatusLabel } from '../-lib/breb';
 
 export const Route = createFileRoute('/_authed/breb-keys/manage-keys/')({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -50,33 +46,40 @@ export const Route = createFileRoute('/_authed/breb-keys/manage-keys/')({
 const FROM_ASSET = 'COPM/2';
 const FROM_PRECISION = getAssetPrecision(FROM_ASSET);
 
-const DRAWER_PROVIDER_CODES = new Set(['P901', 'U807']);
+const ALREADY_REGISTERED_CODES = new Set([
+  'E_BREB_KEY_ALREADY_REGISTERED',
+  'KEY007',
+]);
 
-function getProviderCode(error: unknown): string | undefined {
-  if (error instanceof BrebKeyError) return error.providerCode;
+const NOT_VERIFIED_CODE = 'E_BREB_KEY_VALUE_NOT_VERIFIED';
+
+const OPTION_ICONS: Record<BrebKeySuggestionKind, React.ElementType> = {
+  name: KeyRound,
+  bloque: KeyRound,
+  document: CreditCard,
+  phone: Smartphone,
+  initial: KeyRound,
+};
+
+function getErrorCode(error: unknown): string | undefined {
+  if (error instanceof BrebKeyCreationError) return error.code;
   if (error instanceof BloqueAPIError) {
     const details = (error.response as Record<string, unknown> | undefined)
       ?.extra_details as Record<string, unknown> | undefined;
     if (details?.provider_code) return details.provider_code as string;
+    return error.code;
   }
   return undefined;
 }
 
 function getBrebKeyCreationError(error: unknown): string {
+  if (getErrorCode(error) === NOT_VERIFIED_CODE) {
+    return i18n.t('brebKeys.manageKeys.notVerifiedError');
+  }
   return userFacingErrorMessage(
     error,
     i18n.t('brebKeys.manageKeys.creationErrorFallback'),
   );
-}
-
-function stripCountryCode(phone: string): string {
-  if (phone.startsWith('+57')) return phone.slice(3);
-  if (phone.startsWith('57') && phone.length > 10) return phone.slice(2);
-  return phone;
-}
-
-function isColombianPhone(phone: string): boolean {
-  return !phone.startsWith('+') || phone.startsWith('+57');
 }
 
 type KeyOption = {
@@ -109,7 +112,7 @@ function RouteComponent() {
 
   const { user, refreshUser } = useAuth();
 
-  // Phone/personal-ID suggestions come from a once-per-session profile
+  // Key suggestions come from a once-per-session profile
   // snapshot, which can go stale if the user completes KYC (or otherwise
   // updates their profile) elsewhere before visiting this screen.
   useEffect(() => {
@@ -137,57 +140,31 @@ function RouteComponent() {
     pickerAccounts.find((account) => account.ledgerId === selectedLedgerId) ??
     null;
 
-  const localPhone = user.phone ? stripCountryCode(user.phone) : null;
   const displayName =
     [user.name].filter(Boolean).join(' ') ||
     t('brebKeys.manageKeys.defaultDisplayName');
 
-  const keyOptions: KeyOption[] = [];
-  if (localPhone) {
-    keyOptions.push({
-      keyType: 'ALPHA',
-      value: `@bq${localPhone}`,
-      label: t('brebKeys.manageKeys.bloqueKey'),
-      icon: KeyRound,
-    });
-    if (user.phone && isColombianPhone(user.phone)) {
-      keyOptions.push({
-        keyType: 'PHONE',
-        value: localPhone,
-        label: t('brebKeys.manageKeys.phone'),
-        icon: Smartphone,
-      });
-    }
-  }
-  if (user.email) {
-    keyOptions.push({
-      keyType: 'EMAIL',
-      value: user.email,
-      label: t('brebKeys.manageKeys.email'),
-      icon: Mail,
-    });
-  }
-  if (user.personalIdNumber && user.personalIdType === 'CC') {
-    keyOptions.push({
-      keyType: 'ALPHA',
-      value: `@bq${user.personalIdNumber}`,
-      label: t('brebKeys.manageKeys.bloqueKey'),
-      icon: KeyRound,
-    });
-    keyOptions.push({
-      keyType: 'ID',
-      value: user.personalIdNumber,
-      label: t('brebKeys.manageKeys.document'),
-      icon: CreditCard,
-    });
-  }
+  const keyOptions: KeyOption[] = suggestBrebKeys({
+    firstName: user.name,
+    lastName: user.lastName,
+    personalIdNumber: user.personalIdNumber,
+    phone: user.phone,
+    email: user.email,
+  }).map((suggestion) => ({
+    keyType: 'ALPHA',
+    value: suggestion.value,
+    label: t(`brebKeys.manageKeys.options.${suggestion.kind}`),
+    icon: OPTION_ICONS[suggestion.kind],
+  }));
 
-  const registeredKeys = new Set(brebProducts.map((p) => p.keyValue));
+  const registeredKeys = new Set(
+    brebProducts.map((p) => normalizeBrebKey(p.keyValue)),
+  );
   const activeAccounts = brebProducts.filter(
     (p) => p.status === 'active' || p.status === 'frozen',
   );
   const unregisteredOptions = keyOptions.filter(
-    (o) => !registeredKeys.has(o.value),
+    (o) => !registeredKeys.has(normalizeBrebKey(o.value)),
   );
 
   const createMutation = useCreateBrebKey();
@@ -224,8 +201,8 @@ function RouteComponent() {
           setSelectedLedgerId(null);
         },
         onError: (error) => {
-          const code = getProviderCode(error);
-          if (code && DRAWER_PROVIDER_CODES.has(code)) {
+          const code = getErrorCode(error);
+          if (code && ALREADY_REGISTERED_CODES.has(code)) {
             setConflictDrawer({ open: true, key: option.value });
             return;
           }
@@ -377,7 +354,7 @@ function RouteComponent() {
         </>
       )}
 
-      {/* Conflict drawer (P901 / U807) */}
+      {/* Conflict drawer: the key already exists in BRE-B */}
       <Drawer
         open={conflictDrawer.open}
         onOpenChange={(open) => setConflictDrawer((s) => ({ ...s, open }))}

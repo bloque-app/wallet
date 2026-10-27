@@ -222,6 +222,8 @@ export const mockIdentity = {
     first_name: 'Ada',
     last_name: 'Lovelace',
     email: 'ada@bloque.team',
+    personal_id_type: 'CC',
+    personal_id_number: '1012345678',
   },
   metadata: { kyc_verified: true },
 };

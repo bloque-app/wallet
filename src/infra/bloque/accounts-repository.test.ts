@@ -19,6 +19,16 @@ const resolveBrebKeyMock = mock((params: { key: string }) =>
   }),
 );
 
+const createBrebKeyMock = mock(() =>
+  Promise.resolve({
+    data: null,
+    error: {
+      code: 'E_BREB_KEY_ALREADY_REGISTERED' as string | null,
+      message: 'E_BREB_KEY_ALREADY_REGISTERED',
+    },
+  }),
+);
+
 mock.module('~/lib/bloque', () => ({
   bloque: {
     accounts: {
@@ -26,12 +36,29 @@ mock.module('~/lib/bloque', () => ({
       transactions: transactionsMock,
       breb: {
         resolveKey: resolveBrebKeyMock,
+        createKey: createBrebKeyMock,
       },
     },
   },
 }));
 
 const { bloqueAccountsRepository } = await import('./accounts-repository');
+const { BrebKeyCreationError } = await import(
+  '~/domain/accounts/breb-key-suggestions'
+);
+
+describe('bloqueAccountsRepository.createBrebKey', () => {
+  test('keeps the backend code on the thrown error', async () => {
+    const error = await bloqueAccountsRepository
+      .createBrebKey({ keyType: 'ALPHA', key: '@bqada123456' })
+      .catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(BrebKeyCreationError);
+    expect((error as InstanceType<typeof BrebKeyCreationError>).code).toBe(
+      'E_BREB_KEY_ALREADY_REGISTERED',
+    );
+  });
+});
 
 describe('bloqueAccountsRepository.resolveBrebKey', () => {
   beforeEach(() => {

@@ -5,6 +5,7 @@ import type {
   PolygonAccount,
   SupportedCardAsset,
 } from '@bloque/sdk-accounts';
+import { BrebKeyCreationError } from '~/domain/accounts/breb-key-suggestions';
 import type {
   AccountsRepository,
   CreateBrebKeyInput,
@@ -420,8 +421,9 @@ async function getCardDetailsUrl(urn: string): Promise<string> {
 async function createBrebKey(input: CreateBrebKeyInput): Promise<Product> {
   const result = await bloque.accounts.breb.createKey(input);
   if (result.error || !result.data) {
-    throw new Error(
+    throw new BrebKeyCreationError(
       result.error?.message ?? 'No se pudo crear la llave BRE-B.',
+      result.error?.code ?? undefined,
     );
   }
   return mapToProduct(result.data as ListedAccount);

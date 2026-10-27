@@ -7,15 +7,6 @@ import i18n from '~/i18n/config';
 export type BrebKeyType = SdkBrebKeyType;
 export type ResolvedRecipient = SdkBrebResolvedKey;
 
-export class BrebKeyError extends Error {
-  providerCode?: string;
-  constructor(message: string, providerCode?: string) {
-    super(message);
-    this.name = 'BrebKeyError';
-    this.providerCode = providerCode;
-  }
-}
-
 export function getBrebKeyTypes(): Array<{
   value: BrebKeyType;
   label: string;
