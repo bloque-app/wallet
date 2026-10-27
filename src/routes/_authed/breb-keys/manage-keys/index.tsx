@@ -53,6 +53,11 @@ const ALREADY_REGISTERED_CODES = new Set([
 
 const NOT_VERIFIED_CODE = 'E_BREB_KEY_VALUE_NOT_VERIFIED';
 
+/** Keys in these states can be registered again, so they stay suggested. */
+const RETRYABLE_KEY_STATUSES = new Set(['creation_failed', 'deleted']);
+
+const MANAGEABLE_KEY_STATUSES = new Set(['active', 'frozen']);
+
 const OPTION_ICONS: Record<BrebKeySuggestionKind, React.ElementType> = {
   name: KeyRound,
   bloque: KeyRound,
@@ -157,11 +162,11 @@ function RouteComponent() {
     icon: OPTION_ICONS[suggestion.kind],
   }));
 
-  const registeredKeys = new Set(
-    brebProducts.map((p) => normalizeBrebKey(p.keyValue)),
-  );
   const activeAccounts = brebProducts.filter(
-    (p) => p.status === 'active' || p.status === 'frozen',
+    (p) => !RETRYABLE_KEY_STATUSES.has(p.status),
+  );
+  const registeredKeys = new Set(
+    activeAccounts.map((p) => normalizeBrebKey(p.keyValue)),
   );
   const unregisteredOptions = keyOptions.filter(
     (o) => !registeredKeys.has(normalizeBrebKey(o.value)),
@@ -243,39 +248,48 @@ function RouteComponent() {
                 {t('brebKeys.manageKeys.readyKeys')}
               </p>
               <div className="flex flex-col divide-y divide-border/60 rounded-2xl border border-border/75 bg-card/80 overflow-hidden">
-                {activeAccounts.map((product) => (
-                  <div
-                    key={product.urn}
-                    className="flex items-center gap-3 px-4 py-3.5"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-foreground">
-                        {product.keyValue}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {product.displayName ||
-                          getBrebStatusLabel(product.status)}
-                      </p>
-                    </div>
-                    <span className="shrink-0 rounded-full border border-primary/25 bg-primary/[0.06] px-2.5 py-0.5 text-[10px] font-medium text-primary">
-                      BRE-B
-                    </span>
-                    <button
-                      type="button"
-                      className="shrink-0 rounded-xl p-1.5 text-muted-foreground hover:bg-muted/70 hover:text-foreground"
-                      onClick={() =>
-                        setActionsDrawer({
-                          open: true,
-                          urn: product.urn,
-                          status: product.status,
-                          key: product.keyValue,
-                        })
-                      }
+                {activeAccounts.map((product) => {
+                  const isManageable = MANAGEABLE_KEY_STATUSES.has(
+                    product.status,
+                  );
+                  return (
+                    <div
+                      key={product.urn}
+                      className="flex items-center gap-3 px-4 py-3.5"
                     >
-                      <MoreVertical className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-foreground">
+                          {product.keyValue}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {isManageable
+                            ? product.displayName ||
+                              getBrebStatusLabel(product.status)
+                            : getBrebStatusLabel(product.status)}
+                        </p>
+                      </div>
+                      <span className="shrink-0 rounded-full border border-primary/25 bg-primary/[0.06] px-2.5 py-0.5 text-[10px] font-medium text-primary">
+                        BRE-B
+                      </span>
+                      {isManageable && (
+                        <button
+                          type="button"
+                          className="shrink-0 rounded-xl p-1.5 text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                          onClick={() =>
+                            setActionsDrawer({
+                              open: true,
+                              urn: product.urn,
+                              status: product.status,
+                              key: product.keyValue,
+                            })
+                          }
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </section>
           )}

@@ -1,5 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
-import { installMockApi, mockAccounts } from './fixtures/mock-api';
+import { brebKey, installMockApi, mockAccounts } from './fixtures/mock-api';
 
 const orphanPocket = mockAccounts.filter(
   (account) => account.ledger_account_id === 'ledger-orphan',
@@ -103,4 +103,46 @@ test('suggests four bq keys from the profile and never the email', async ({
   await expect(page.getByText('ada@bloque.team', { exact: true })).toHaveCount(
     0,
   );
+});
+
+test('a failed or deleted key stays suggested, an in-progress one moves to ready keys', async ({
+  page,
+}) => {
+  const key = (urn: string, keyValue: string, status: string) =>
+    brebKey({
+      urn,
+      ledgerId: 'ledger-orphan',
+      keyType: 'ALPHA',
+      keyValue,
+      createdAt: '2026-10-27T15:00:00.000Z',
+      status,
+    });
+  await installMockApi(page, {
+    accounts: [
+      ...orphanPocket,
+      key('urn:breb-failed', '@bq1012345678', 'creation_failed'),
+      key('urn:breb-deleted', '@bqadabloque345678', 'deleted'),
+      key('urn:breb-pending', '@bqalovelace345678', 'creation_in_progress'),
+    ],
+  });
+  await page.goto('/breb-keys/manage-keys');
+
+  const suggestions = page
+    .getByText('Registra tus llaves en BRE-B')
+    .locator('xpath=..');
+  await expect(
+    suggestions.getByText('@bq1012345678', { exact: true }),
+  ).toBeVisible();
+  await expect(
+    suggestions.getByText('@bqadabloque345678', { exact: true }),
+  ).toBeVisible();
+
+  const ready = page.getByText('Llaves listas para usar').locator('xpath=..');
+  await expect(
+    ready.getByText('@bqalovelace345678', { exact: true }),
+  ).toBeVisible();
+  await expect(ready.getByText('En proceso', { exact: true })).toBeVisible();
+  await expect(
+    suggestions.getByText('@bqalovelace345678', { exact: true }),
+  ).toHaveCount(0);
 });

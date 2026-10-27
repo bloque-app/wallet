@@ -74,6 +74,8 @@ export function getBrebStatusLabel(status?: string) {
       return i18n.t('brebKeys.status.frozen');
     case 'deleted':
       return i18n.t('brebKeys.status.deleted');
+    case 'creation_in_progress':
+      return i18n.t('brebKeys.status.inProgress');
     default:
       return status ?? i18n.t('brebKeys.status.none');
   }

@@ -145,6 +145,7 @@
       "active": "Active",
       "frozen": "Suspended",
       "deleted": "Deleted",
+      "inProgress": "In progress",
       "none": "No status"
     },
     "manageKeys": {
