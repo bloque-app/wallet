@@ -41,3 +41,24 @@ test('BRE-B deposit hides keys on ledgers without a pocket', async ({
   await expect(page.getByText('pawhaus@bloque.team')).toBeVisible();
   await expect(page.getByText('solo@bloque.team')).toHaveCount(0);
 });
+
+test('BRE-B deposit hides keys the provider failed to register', async ({
+  page,
+}) => {
+  const failedKey = brebKey({
+    urn: 'urn:breb-failed',
+    ledgerId: 'ledger-pawhaus',
+    keyType: 'ALPHA',
+    keyValue: '@bqfailed123456',
+    createdAt: '2026-10-27T15:00:00.000Z',
+    keyStatus: 'failed',
+    actionCode: 'KEY007',
+  });
+  await installMockApi(page, {
+    accounts: [...mockAccounts, failedKey],
+  });
+  await page.goto('/breb-keys/deposit');
+
+  await expect(page.getByText('pawhaus@bloque.team')).toBeVisible();
+  await expect(page.getByText('@bqfailed123456')).toHaveCount(0);
+});

@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { BackButton } from '~/components/back-button';
+import { brebKeyState } from '~/domain/accounts/breb-key-state';
 import type { BrebKeyProduct } from '~/domain/accounts/types';
 import { isActiveVirtualAccount } from '~/domain/accounts/virtual-account';
 import { useAccounts } from '~/hooks/accounts/use-accounts';
@@ -34,7 +35,7 @@ function RouteComponent() {
     [accountsQuery.data],
   );
 
-  const activeKeys = brebProducts.filter((p) => p.status === 'active');
+  const activeKeys = brebProducts.filter((p) => brebKeyState(p) === 'ready');
 
   const copyKey = async (key: string) => {
     try {

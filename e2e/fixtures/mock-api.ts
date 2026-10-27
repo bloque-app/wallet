@@ -74,6 +74,10 @@ export function brebKey(opts: {
   displayName?: string;
   createdAt: string;
   status?: string;
+  /** Provider key status, e.g. `registered`, `processing`, `failed`. */
+  keyStatus?: string;
+  /** Provider code of the last key action, e.g. `KEY007`. */
+  actionCode?: string;
 }) {
   return {
     urn: opts.urn,
@@ -85,6 +89,10 @@ export function brebKey(opts: {
       key: { key_type: opts.keyType, key_value: opts.keyValue },
       display_name: opts.displayName ?? null,
       created_at: opts.createdAt,
+      status: opts.keyStatus ?? 'registered',
+      raw_response: opts.actionCode
+        ? { previous_action: { action_code: opts.actionCode } }
+        : {},
     },
     status: opts.status ?? 'active',
     owner_urn: OWNER_URN,

@@ -127,6 +127,37 @@ describe('bloqueAccountsRepository.listProducts — medium duck-typing', () => {
     }
   });
 
+  test('a BRE-B account carries its provider key status and last action code', async () => {
+    listMock.mockImplementationOnce(() =>
+      Promise.resolve({
+        accounts: [
+          {
+            urn: 'did:bloque:account:breb:taken',
+            medium: 'breb',
+            ledgerId: 'ledger-1',
+            status: 'active',
+            keyType: 'ALPHA',
+            key: '@bq1012345678',
+            displayName: null,
+            metadata: {},
+            details: {
+              status: 'failed',
+              raw_response: { previous_action: { action_code: 'KEY007' } },
+            },
+          },
+        ],
+      }),
+    );
+
+    const [product] = await bloqueAccountsRepository.listProducts();
+
+    expect(product?.kind).toBe('breb');
+    if (product?.kind === 'breb') {
+      expect(product.keyStatus).toBe('failed');
+      expect(product.keyFailureCode).toBe('KEY007');
+    }
+  });
+
   test('a card account (no medium tag) is recognized by lastFour/cardType shape', async () => {
     listMock.mockImplementationOnce(() =>
       Promise.resolve({

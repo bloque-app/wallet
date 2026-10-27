@@ -17,12 +17,17 @@ import {
 } from '~/components/ui/drawer';
 import { useAuth } from '~/contexts/auth/auth-context';
 import {
+  BREB_KEY_ALREADY_REGISTERED_CODE,
+  brebKeyState,
+  isRetryableBrebKey,
+} from '~/domain/accounts/breb-key-state';
+import {
   BrebKeyCreationError,
   type BrebKeySuggestionKind,
   normalizeBrebKey,
   suggestBrebKeys,
 } from '~/domain/accounts/breb-key-suggestions';
-import type { BrebKeyProduct } from '~/domain/accounts/types';
+import type { Account, BrebKeyProduct } from '~/domain/accounts/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useAccounts } from '~/hooks/accounts/use-accounts';
 import {
@@ -48,15 +53,23 @@ const FROM_PRECISION = getAssetPrecision(FROM_ASSET);
 
 const ALREADY_REGISTERED_CODES = new Set([
   'E_BREB_KEY_ALREADY_REGISTERED',
-  'KEY007',
+  BREB_KEY_ALREADY_REGISTERED_CODE,
 ]);
 
 const NOT_VERIFIED_CODE = 'E_BREB_KEY_VALUE_NOT_VERIFIED';
 
-/** Keys in these states can be registered again, so they stay suggested. */
-const RETRYABLE_KEY_STATUSES = new Set(['creation_failed', 'deleted']);
+const PENDING_KEY_POLL_MS = 3000;
+const PENDING_KEY_TIMEOUT_MS = 60_000;
 
-const MANAGEABLE_KEY_STATUSES = new Set(['active', 'frozen']);
+type PendingKey = { urn: string; value: string; since: number };
+
+function brebKeysOf(accounts: Account[] | undefined): BrebKeyProduct[] {
+  return (accounts ?? []).flatMap((account) =>
+    account.products.filter(
+      (product): product is BrebKeyProduct => product.kind === 'breb',
+    ),
+  );
+}
 
 const OPTION_ICONS: Record<BrebKeySuggestionKind, React.ElementType> = {
   name: KeyRound,
@@ -124,14 +137,26 @@ function RouteComponent() {
     void refreshUser();
   }, [refreshUser]);
 
-  const accountsQuery = useAccounts();
+  const [pendingKey, setPendingKey] = useState<PendingKey | null>(null);
+
+  const accountsQuery = useAccounts({
+    refetchInterval: (query) => {
+      if (
+        !pendingKey ||
+        Date.now() - pendingKey.since > PENDING_KEY_TIMEOUT_MS
+      ) {
+        return false;
+      }
+      const product = brebKeysOf(query.state.data).find(
+        (p) => p.urn === pendingKey.urn,
+      );
+      return !product || brebKeyState(product) === 'in_progress'
+        ? PENDING_KEY_POLL_MS
+        : false;
+    },
+  });
   const brebProducts = useMemo(
-    () =>
-      (accountsQuery.data ?? []).flatMap((account) =>
-        account.products.filter(
-          (product): product is BrebKeyProduct => product.kind === 'breb',
-        ),
-      ),
+    () => brebKeysOf(accountsQuery.data),
     [accountsQuery.data],
   );
 
@@ -162,11 +187,17 @@ function RouteComponent() {
     icon: OPTION_ICONS[suggestion.kind],
   }));
 
-  const activeAccounts = brebProducts.filter(
-    (p) => !RETRYABLE_KEY_STATUSES.has(p.status),
-  );
+  const activeAccounts = brebProducts.filter((p) => !isRetryableBrebKey(p));
   const registeredKeys = new Set(
     activeAccounts.map((p) => normalizeBrebKey(p.keyValue)),
+  );
+  const lastFailureByKey = new Map(
+    brebProducts
+      .filter((p) => brebKeyState(p) === 'failed')
+      .sort((a, b) => (a.createdAt ?? '').localeCompare(b.createdAt ?? ''))
+      .map(
+        (p) => [normalizeBrebKey(p.keyValue), p.keyFailureCode ?? ''] as const,
+      ),
   );
   const unregisteredOptions = keyOptions.filter(
     (o) => !registeredKeys.has(normalizeBrebKey(o.value)),
@@ -182,6 +213,28 @@ function RouteComponent() {
     suspendMutation.isPending ||
     activateMutation.isPending ||
     deleteMutation.isPending;
+
+  const notifyRegistrationFailed = (key: string, code?: string) => {
+    if (code && ALREADY_REGISTERED_CODES.has(code)) {
+      setConflictDrawer({ open: true, key });
+      return;
+    }
+    toast.error(t('brebKeys.manageKeys.registrationFailedToast', { key }));
+  };
+
+  useEffect(() => {
+    if (!pendingKey) return;
+    const product = brebProducts.find((p) => p.urn === pendingKey.urn);
+    if (!product) return;
+    const state = brebKeyState(product);
+    if (state === 'ready' || state === 'suspended') {
+      toast.success(t('brebKeys.manageKeys.keyRegisteredToast'));
+      setPendingKey(null);
+    } else if (state === 'failed' || state === 'removed') {
+      notifyRegistrationFailed(pendingKey.value, product.keyFailureCode);
+      setPendingKey(null);
+    }
+  });
 
   const handleBack = () => {
     void navigate({ to: '/breb-keys' });
@@ -200,10 +253,19 @@ function RouteComponent() {
         metadata: { source: 'wallet', purpose: 'breb-send' },
       },
       {
-        onSuccess: () => {
-          toast.success(t('brebKeys.manageKeys.keyRegisteredToast'));
+        onSuccess: (product) => {
           setCreateDrawer(null);
           setSelectedLedgerId(null);
+          if (product.kind === 'breb' && brebKeyState(product) !== 'ready') {
+            toast.info(t('brebKeys.manageKeys.registeringToast'));
+            setPendingKey({
+              urn: product.urn,
+              value: option.value,
+              since: Date.now(),
+            });
+            return;
+          }
+          toast.success(t('brebKeys.manageKeys.keyRegisteredToast'));
         },
         onError: (error) => {
           const code = getErrorCode(error);
@@ -249,9 +311,9 @@ function RouteComponent() {
               </p>
               <div className="flex flex-col divide-y divide-border/60 rounded-2xl border border-border/75 bg-card/80 overflow-hidden">
                 {activeAccounts.map((product) => {
-                  const isManageable = MANAGEABLE_KEY_STATUSES.has(
-                    product.status,
-                  );
+                  const state = brebKeyState(product);
+                  const isManageable =
+                    state === 'ready' || state === 'suspended';
                   return (
                     <div
                       key={product.urn}
@@ -265,7 +327,7 @@ function RouteComponent() {
                           {isManageable
                             ? product.displayName ||
                               getBrebStatusLabel(product.status)
-                            : getBrebStatusLabel(product.status)}
+                            : t('brebKeys.status.inProgress')}
                         </p>
                       </div>
                       <span className="shrink-0 rounded-full border border-primary/25 bg-primary/[0.06] px-2.5 py-0.5 text-[10px] font-medium text-primary">
@@ -320,6 +382,19 @@ function RouteComponent() {
                         <p className="text-xs text-muted-foreground">
                           {option.label}
                         </p>
+                        {lastFailureByKey.has(
+                          normalizeBrebKey(option.value),
+                        ) && (
+                          <p className="text-xs text-destructive">
+                            {lastFailureByKey.get(
+                              normalizeBrebKey(option.value),
+                            ) === BREB_KEY_ALREADY_REGISTERED_CODE
+                              ? t(
+                                  'brebKeys.manageKeys.lastAttemptAlreadyRegistered',
+                                )
+                              : t('brebKeys.manageKeys.lastAttemptFailed')}
+                          </p>
+                        )}
                       </div>
                       <Button
                         size="sm"
