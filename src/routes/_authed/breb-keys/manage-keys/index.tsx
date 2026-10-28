@@ -341,9 +341,11 @@ function RouteComponent() {
                             : t('brebKeys.status.inProgress')}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {t('brebKeys.pocketLabel', {
-                            label: pocketLabelByKeyUrn.get(product.urn),
-                          })}
+                          {pocketLabelByKeyUrn.get(product.urn)
+                            ? t('brebKeys.pocketLabel', {
+                                label: pocketLabelByKeyUrn.get(product.urn),
+                              })
+                            : t('brebKeys.pocketUnavailable')}
                         </p>
                       </div>
                       <span className="shrink-0 rounded-full border border-primary/25 bg-primary/[0.06] px-2.5 py-0.5 text-[10px] font-medium text-primary">

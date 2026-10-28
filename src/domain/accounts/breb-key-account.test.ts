@@ -3,7 +3,7 @@ import { brebKeyAccounts } from './breb-key-account';
 import type { Account } from './types';
 
 describe('brebKeyAccounts', () => {
-  test('keeps the pocket label alongside each BRE-B key', () => {
+  test('uses a real pocket label and leaves an orphan key unlabeled', () => {
     const accounts: Account[] = [
       {
         ledgerId: 'ledger-main',
@@ -31,8 +31,8 @@ describe('brebKeyAccounts', () => {
       },
       {
         ledgerId: 'ledger-savings',
-        label: 'Ahorros',
-        primaryUrn: 'pocket-savings',
+        label: '@ahorros',
+        primaryUrn: 'key-savings',
         balances: [],
         products: [
           {
@@ -55,7 +55,7 @@ describe('brebKeyAccounts', () => {
       },
       {
         product: expect.objectContaining({ urn: 'key-savings' }),
-        accountLabel: 'Ahorros',
+        accountLabel: undefined,
       },
     ]);
   });

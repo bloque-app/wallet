@@ -119,7 +119,9 @@ function RouteComponent() {
                     t('accounts.detail.brebKeyLabel')}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {t('brebKeys.pocketLabel', { label: accountLabel })}
+                  {accountLabel
+                    ? t('brebKeys.pocketLabel', { label: accountLabel })
+                    : t('brebKeys.pocketUnavailable')}
                 </p>
               </div>
               <button
