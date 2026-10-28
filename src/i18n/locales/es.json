@@ -104,6 +104,7 @@
     }
   },
   "brebKeys": {
+    "pocketLabel": "Bolsillo: {{label}}",
     "subtitle": "Envía y recibe al instante desde cualquier banco",
     "menu": {
       "sendWithKeys": {

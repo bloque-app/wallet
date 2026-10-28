@@ -4,8 +4,8 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { BackButton } from '~/components/back-button';
+import { brebKeyAccounts } from '~/domain/accounts/breb-key-account';
 import { brebKeyState } from '~/domain/accounts/breb-key-state';
-import type { BrebKeyProduct } from '~/domain/accounts/types';
 import { isActiveVirtualAccount } from '~/domain/accounts/virtual-account';
 import { useAccounts } from '~/hooks/accounts/use-accounts';
 
@@ -23,19 +23,17 @@ function RouteComponent() {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   const accountsQuery = useAccounts();
-  const brebProducts = useMemo(
+  const brebKeys = useMemo(
     () =>
-      (accountsQuery.data ?? [])
-        .filter(isActiveVirtualAccount)
-        .flatMap((account) =>
-          account.products.filter(
-            (product): product is BrebKeyProduct => product.kind === 'breb',
-          ),
-        ),
+      brebKeyAccounts(
+        (accountsQuery.data ?? []).filter(isActiveVirtualAccount),
+      ),
     [accountsQuery.data],
   );
 
-  const activeKeys = brebProducts.filter((p) => brebKeyState(p) === 'ready');
+  const activeKeys = brebKeys.filter(
+    ({ product }) => brebKeyState(product) === 'ready',
+  );
 
   const copyKey = async (key: string) => {
     try {
@@ -103,9 +101,9 @@ function RouteComponent() {
         </div>
       ) : (
         <section className="flex flex-col gap-3">
-          {activeKeys.map((account) => (
+          {activeKeys.map(({ product, accountLabel }) => (
             <div
-              key={account.urn}
+              key={product.urn}
               className="flex items-center gap-4 rounded-2xl border border-border/75 bg-card/80 px-4 py-4"
             >
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
@@ -113,20 +111,23 @@ function RouteComponent() {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-foreground">
-                  {account.keyValue}
+                  {product.keyValue}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {account.displayName ??
-                    account.keyType ??
+                  {product.displayName ??
+                    product.keyType ??
                     t('accounts.detail.brebKeyLabel')}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {t('brebKeys.pocketLabel', { label: accountLabel })}
                 </p>
               </div>
               <button
                 type="button"
-                onClick={() => copyKey(account.keyValue)}
+                onClick={() => copyKey(product.keyValue)}
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border/80 bg-background/70 transition-all hover:bg-muted/70"
               >
-                {copiedKey === account.keyValue ? (
+                {copiedKey === product.keyValue ? (
                   <Check className="h-4 w-4 text-primary" />
                 ) : (
                   <Copy className="h-4 w-4 text-muted-foreground" />

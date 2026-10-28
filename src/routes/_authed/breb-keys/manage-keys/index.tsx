@@ -16,6 +16,7 @@ import {
   DrawerTitle,
 } from '~/components/ui/drawer';
 import { useAuth } from '~/contexts/auth/auth-context';
+import { brebKeyAccounts } from '~/domain/accounts/breb-key-account';
 import {
   BREB_KEY_ALREADY_REGISTERED_CODE,
   brebKeyState,
@@ -157,6 +158,16 @@ function RouteComponent() {
   });
   const brebProducts = useMemo(
     () => brebKeysOf(accountsQuery.data),
+    [accountsQuery.data],
+  );
+  const pocketLabelByKeyUrn = useMemo(
+    () =>
+      new Map(
+        brebKeyAccounts(accountsQuery.data).map(({ product, accountLabel }) => [
+          product.urn,
+          accountLabel,
+        ]),
+      ),
     [accountsQuery.data],
   );
 
@@ -328,6 +339,11 @@ function RouteComponent() {
                             ? product.displayName ||
                               getBrebStatusLabel(product.status)
                             : t('brebKeys.status.inProgress')}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {t('brebKeys.pocketLabel', {
+                            label: pocketLabelByKeyUrn.get(product.urn),
+                          })}
                         </p>
                       </div>
                       <span className="shrink-0 rounded-full border border-primary/25 bg-primary/[0.06] px-2.5 py-0.5 text-[10px] font-medium text-primary">

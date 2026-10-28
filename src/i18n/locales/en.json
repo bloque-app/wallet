@@ -104,6 +104,7 @@
     }
   },
   "brebKeys": {
+    "pocketLabel": "Pocket: {{label}}",
     "subtitle": "Send and receive instantly from any bank",
     "menu": {
       "sendWithKeys": {
