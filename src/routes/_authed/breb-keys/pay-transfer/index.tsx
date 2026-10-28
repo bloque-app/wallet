@@ -82,7 +82,6 @@ function RouteComponent() {
   const { accounts: fundedAccounts, isLoading: isLoadingFundedAccounts } =
     useAccountPicker({
       asset: FROM_ASSET,
-      requireProductKind: 'breb',
       requireVirtualAccount: true,
     });
 
@@ -101,9 +100,8 @@ function RouteComponent() {
   const selectedAccount =
     fundedAccounts.find((account) => account.ledgerId === selectedLedgerId) ??
     null;
-  const selectedSourceBrebUrn = selectedAccount?.products.find(
-    (product) => product.kind === 'breb',
-  )?.urn;
+  // The pocket that anchors the account; it needs no BRE-B key of its own.
+  const selectedSourceUrn = selectedAccount?.primaryUrn;
   const selectedBalance = selectedAccount?.balances.find(
     (balance) => balance.asset === FROM_ASSET,
   );
@@ -171,7 +169,7 @@ function RouteComponent() {
       toast.error(t('brebKeys.payTransfer.noRateToSend'));
       return;
     }
-    if (!selectedSourceBrebUrn) {
+    if (!selectedSourceUrn) {
       toast.error(t('brebKeys.payTransfer.selectSourceAccount'));
       return;
     }
@@ -185,7 +183,7 @@ function RouteComponent() {
           keyValue: recipientPreview.key.keyValue,
         },
       },
-      args: { sourceAccountUrn: selectedSourceBrebUrn },
+      args: { sourceAccountUrn: selectedSourceUrn },
       metadata: message.trim() ? { message: message.trim() } : undefined,
     };
     createOrderMutation.mutate(
@@ -227,7 +225,7 @@ function RouteComponent() {
     recipientPreview,
     selectedRate,
     amountSrc,
-    selectedSourceBrebUrn,
+    selectedSourceUrn,
     message,
     parsedAmount,
     createOrderMutation,
@@ -247,7 +245,7 @@ function RouteComponent() {
   }, [autoRetry, ratesQuery.isFetching, selectedRate, submitOrder, t]);
 
   const canSubmit =
-    !!selectedSourceBrebUrn &&
+    !!selectedSourceUrn &&
     hasValidKey &&
     parsedAmount >= MIN_TRANSFER_AMOUNT &&
     !!selectedRate &&
