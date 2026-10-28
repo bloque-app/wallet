@@ -105,6 +105,7 @@
   },
   "brebKeys": {
     "pocketLabel": "Bolsillo: {{label}}",
+    "pocketUnavailable": "Bolsillo no disponible",
     "subtitle": "Envía y recibe al instante desde cualquier banco",
     "menu": {
       "sendWithKeys": {
