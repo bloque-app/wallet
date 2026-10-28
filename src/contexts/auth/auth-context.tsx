@@ -33,6 +33,7 @@ import {
 interface User {
   urn: string;
   name: string;
+  lastName: string;
   email: string;
   phone: string;
   personalIdNumber: string;
@@ -126,6 +127,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setCurrentUser({
         urn: me.urn,
         name: profile.first_name ?? '',
+        lastName: profile.last_name ?? '',
         email: profile.email ?? '',
         phone: profile.phone ?? '',
         personalIdNumber: profile.personal_id_number ?? '',

@@ -37,6 +37,10 @@ export type BrebKeyProduct = ProductBase & {
   keyType: string;
   keyValue: string;
   displayName?: string | null;
+  /** Provider-side key status, e.g. `processing`, `registered`, `failed`. */
+  keyStatus?: string;
+  /** Provider code of the last key action; read it only for a failed key. */
+  keyFailureCode?: string;
 };
 
 export type PolygonProduct = ProductBase & {

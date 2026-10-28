@@ -73,6 +73,11 @@ export function brebKey(opts: {
   keyValue: string;
   displayName?: string;
   createdAt: string;
+  status?: string;
+  /** Provider key status, e.g. `registered`, `processing`, `failed`. */
+  keyStatus?: string;
+  /** Provider code of the last key action, e.g. `KEY007`. */
+  actionCode?: string;
 }) {
   return {
     urn: opts.urn,
@@ -84,8 +89,12 @@ export function brebKey(opts: {
       key: { key_type: opts.keyType, key_value: opts.keyValue },
       display_name: opts.displayName ?? null,
       created_at: opts.createdAt,
+      status: opts.keyStatus ?? 'registered',
+      raw_response: opts.actionCode
+        ? { previous_action: { action_code: opts.actionCode } }
+        : {},
     },
-    status: 'active',
+    status: opts.status ?? 'active',
     owner_urn: OWNER_URN,
     ledger_account_id: opts.ledgerId,
     webhook_url: null,
@@ -222,6 +231,8 @@ export const mockIdentity = {
     first_name: 'Ada',
     last_name: 'Lovelace',
     email: 'ada@bloque.team',
+    personal_id_type: 'CC',
+    personal_id_number: '1012345678',
   },
   metadata: { kyc_verified: true },
 };

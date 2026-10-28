@@ -7,15 +7,6 @@ import i18n from '~/i18n/config';
 export type BrebKeyType = SdkBrebKeyType;
 export type ResolvedRecipient = SdkBrebResolvedKey;
 
-export class BrebKeyError extends Error {
-  providerCode?: string;
-  constructor(message: string, providerCode?: string) {
-    super(message);
-    this.name = 'BrebKeyError';
-    this.providerCode = providerCode;
-  }
-}
-
 export function getBrebKeyTypes(): Array<{
   value: BrebKeyType;
   label: string;
@@ -83,6 +74,8 @@ export function getBrebStatusLabel(status?: string) {
       return i18n.t('brebKeys.status.frozen');
     case 'deleted':
       return i18n.t('brebKeys.status.deleted');
+    case 'creation_in_progress':
+      return i18n.t('brebKeys.status.inProgress');
     default:
       return status ?? i18n.t('brebKeys.status.none');
   }
