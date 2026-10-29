@@ -155,6 +155,7 @@
       "subtitle": "Registra o edita tus llaves para recibir dinero al instante",
       "readyKeys": "Llaves listas para usar",
       "registerYourKeys": "Registra tus llaves en BRE-B",
+      "validKeyHint": "Una llave válida tiene máximo 20 letras y números, y al menos la mitad debe coincidir con tus datos verificados.",
       "registering": "Registrando...",
       "register": "Registrar",
       "noKeysAvailable": "No hay llaves disponibles para registrar.",

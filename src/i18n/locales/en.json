@@ -155,6 +155,7 @@
       "subtitle": "Register or edit your keys to receive money instantly",
       "readyKeys": "Keys ready to use",
       "registerYourKeys": "Register your BRE-B keys",
+      "validKeyHint": "A valid key has up to 20 letters and numbers, and at least half must match your verified information.",
       "registering": "Registering...",
       "register": "Register",
       "noKeysAvailable": "There are no keys available to register.",
