@@ -35,7 +35,7 @@ function hasPositiveBalance(account: Account, asset: string): boolean {
  * Accounts a new product could be tied to, or an existing funded account
  * could be picked to act from — parametrized so both "which account should
  * this new card/BRE-B key/Polygon address join" and "which of my funded
- * BRE-B accounts should this send draw from" share one implementation.
+ * accounts should this BRE-B send draw from" share one implementation.
  */
 export function useAccountPicker(options: AccountPickerOptions = {}) {
   const accountsQuery = useAccounts();
