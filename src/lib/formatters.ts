@@ -104,6 +104,17 @@ export function formatSdkAssetAmount(
     : `${amount} ${sdkAsset}`;
 }
 
+export function formatSdkAssetAmountWithCode(
+  sdkAsset: string,
+  rawAmount: string,
+): string {
+  const formatted = formatSdkAssetAmount(sdkAsset, rawAmount);
+  const displayAsset = getDisplayAsset(sdkAsset);
+  return displayAsset && displayAsset !== 'KSM'
+    ? `${formatted} ${displayAsset}`
+    : formatted;
+}
+
 /**
  * Balance chip display order/filter for any list of `{ asset }` records
  * (raw ledger balances, movement rows, etc.): KSM is hidden entirely — not
