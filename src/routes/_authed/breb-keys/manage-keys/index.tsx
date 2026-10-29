@@ -379,6 +379,9 @@ function RouteComponent() {
               <p className="px-1 text-xs font-medium text-muted-foreground">
                 {t('brebKeys.manageKeys.registerYourKeys')}
               </p>
+              <p className="px-1 pb-1 text-xs text-muted-foreground">
+                {t('brebKeys.manageKeys.validKeyHint')}
+              </p>
               <div className="flex flex-col gap-3">
                 {unregisteredOptions.map((option) => {
                   const Icon = option.icon;
