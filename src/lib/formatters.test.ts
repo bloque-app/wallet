@@ -8,6 +8,7 @@ import {
   formatMXN,
   formatPolygonAddress,
   formatSdkAssetAmount,
+  formatSdkAssetAmountWithCode,
   formatUSD,
   getAssetPrecision,
   getDisplayAsset,
@@ -72,6 +73,15 @@ describe('SDK asset display', () => {
   test('formats tokenized balances without exposing the SDK identifier', () => {
     expect(formatSdkAssetAmount('MXNB/2', '12345')).toBe(formatMXN(123.45));
     expect(formatSdkAssetAmount('BRLB/2', '6789')).toBe(formatBRL(67.89));
+  });
+
+  test('adds an unambiguous currency code to pocket balances', () => {
+    expect(formatSdkAssetAmountWithCode('MXNB/2', '12345')).toBe(
+      `${formatMXN(123.45)} MXN`,
+    );
+    expect(formatSdkAssetAmountWithCode('BRLB/2', '6789')).toBe(
+      `${formatBRL(67.89)} BRL`,
+    );
   });
 });
 
