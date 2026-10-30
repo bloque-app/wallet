@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import {
   formatAmount,
+  formatAmountWithCode,
   formatBRL,
   formatCOP,
   formatCOPPrecise,
@@ -82,6 +83,12 @@ describe('SDK asset display', () => {
     expect(formatSdkAssetAmountWithCode('BRLB/2', '6789')).toBe(
       `${formatBRL(67.89)} BRL`,
     );
+  });
+
+  test('adds the currency code to transaction amounts', () => {
+    expect(formatAmountWithCode('COP', 12500)).toBe(`${formatCOP(12500)} COP`);
+    expect(formatAmountWithCode('USD', 12.5)).toBe(`${formatUSD(12.5)} USD`);
+    expect(formatAmountWithCode('KSM', 1)).toBe('1.0000 KSM');
   });
 });
 

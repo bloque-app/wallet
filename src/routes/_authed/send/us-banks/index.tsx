@@ -11,7 +11,7 @@ import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useApprovalRedirect } from '~/hooks/approval/use-approval-redirect';
 import { useRates } from '~/hooks/payments/use-rates';
 import { useCreateRtpOrder } from '~/hooks/payments/use-rtp-order';
-import { formatUSD, getAssetPrecision } from '~/lib/formatters';
+import { formatAmountWithCode, getAssetPrecision } from '~/lib/formatters';
 import { TopUpErrorStep } from '../../topup/-components/error-step';
 import { ExecutionOutcomeStep } from '../../topup/-components/execution-outcome-step';
 import { UsAmountStep } from '../../topup/-components/us-amount-step';
@@ -381,7 +381,7 @@ function RouteComponent() {
           amount={parsedAmount}
           orderId={lastOrder?.id}
           execution={lastOrder?.execution}
-          formatAmount={formatUSD}
+          formatAmount={(value) => formatAmountWithCode('USD', value)}
           onError={() => setStep('error')}
         />
       )}

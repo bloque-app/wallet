@@ -81,6 +81,11 @@ export function formatAmount(asset: Asset, amount: number): string {
   }
 }
 
+export function formatAmountWithCode(asset: Asset, amount: number): string {
+  const formatted = formatAmount(asset, amount);
+  return asset === 'KSM' ? formatted : `${formatted} ${asset}`;
+}
+
 export function getDisplayAsset(sdkAsset: string): Asset | null {
   const [code] = sdkAsset.split('/');
   if (code === 'COP' || code === 'COPM' || code === 'COPB') return 'COP';

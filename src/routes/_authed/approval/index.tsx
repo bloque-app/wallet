@@ -18,7 +18,7 @@ import {
   type SavedApproval,
 } from '~/domain/approval/types';
 import { bloqueApprovalRepository } from '~/infra/bloque/approval-repository';
-import { formatAmount, formatCOP } from '~/lib/formatters';
+import { formatAmountWithCode } from '~/lib/formatters';
 import {
   clearPendingApproval,
   readPendingApproval,
@@ -167,7 +167,7 @@ function RouteComponent() {
     const { saved, outcome } = state;
     const { amount, asset } = saved.display ?? {};
     const format = (value: number) =>
-      asset ? formatAmount(asset, value) : formatCOP(value);
+      formatAmountWithCode(asset ?? 'COP', value);
     if (outcome.kind === 'order') {
       return (
         <div className="flex flex-col gap-2">

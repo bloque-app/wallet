@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Button } from '~/components/ui/button';
 import type { ExecutionOutcome } from '~/domain/payments/types';
-import { formatCOP } from '~/lib/formatters';
+import { formatAmountWithCode } from '~/lib/formatters';
 import { TopUpPendingStep } from './pending-step';
 
 interface ExecutionOutcomeStepProps {
@@ -14,7 +14,7 @@ interface ExecutionOutcomeStepProps {
   /** The `execution` returned alongside a created swap order, already
    * translated by `resolveExecutionOutcome` — never a raw SDK `how`. */
   execution: ExecutionOutcome | undefined;
-  /** Defaults to `formatCOP` — pass `formatUSD` for the RTP/ACH US-bank flows.
+  /** Defaults to COP with its code — pass a USD formatter for the RTP/ACH US-bank flows.
    * Only affects the generic pending fallback; `breb-deposit` is always COP. */
   formatAmount?: (amount: number) => string;
   onError: () => void;
@@ -50,7 +50,8 @@ export function ExecutionOutcomeStep({
           </h2>
           <p className="text-sm text-muted-foreground">
             {t('topup.executionOutcome.brebDescription', {
-              amount: formatCOP(
+              amount: formatAmountWithCode(
+                'COP',
                 Number.isNaN(depositAmountMajor) ? amount : depositAmountMajor,
               ),
             })}

@@ -64,6 +64,8 @@ import {
 import type { Asset, Movement } from '~/lib/formatters';
 import {
   formatAmount,
+  formatAmountWithCode,
+  formatSdkAssetAmountWithCode,
   getDisplayAsset,
   isUsdAsset,
   sortBalancesForDisplay,
@@ -321,7 +323,14 @@ function RouteComponent() {
     };
     try {
       await transferMutation.mutateAsync(input);
-      toast.success(t('accounts.detail.transferSuccessToast'));
+      const transferredAsset = getDisplayAsset(selectedAsset);
+      toast.success(
+        t('accounts.detail.transferSuccessToast', {
+          amount: transferredAsset
+            ? formatAmountWithCode(transferredAsset, parsedTransferAmount)
+            : `${parsedTransferAmount} ${selectedAsset}`,
+        }),
+      );
       setShowTransferDrawer(false);
     } catch (error) {
       const display = {
@@ -886,7 +895,10 @@ function RouteComponent() {
             <div className="flex flex-col gap-4 px-5 pb-2">
               <p className="text-sm text-muted-foreground">
                 {t('accounts.detail.deleteMoveBalance', {
-                  amount: formatAssetBalance(nextFundedBalance),
+                  amount: formatSdkAssetAmountWithCode(
+                    nextFundedBalance.asset,
+                    nextFundedBalance.current,
+                  ),
                 })}
               </p>
               {transferDestinations.length === 0 ? (
