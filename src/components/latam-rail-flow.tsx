@@ -30,7 +30,7 @@ import {
   currencyMajorToMinor,
   normalizeCurrencyInput,
 } from '~/lib/currency-input';
-import { formatAmount } from '~/lib/formatters';
+import { formatAmount, formatAmountWithCode } from '~/lib/formatters';
 
 type Rail = 'spei' | 'pix';
 type Direction = 'topup' | 'send';
@@ -491,13 +491,13 @@ export function LatamRailFlow({
                     ? t('topup.youPay')
                     : t('send.bloqueFriends.youSend')}
                 </span>
-                <span>{formatAmount(displayAsset, parsedAmount)}</span>
+                <span>{formatAmountWithCode(displayAsset, parsedAmount)}</span>
               </div>
               <div className="mt-2 flex justify-between text-sm">
                 <span className="text-muted-foreground">
                   {t('topup.youReceive')}
                 </span>
-                <span>{formatAmount(displayAsset, receiveAmount)}</span>
+                <span>{formatAmountWithCode(displayAsset, receiveAmount)}</span>
               </div>
             </div>
             <Button

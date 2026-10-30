@@ -25,7 +25,11 @@ import { useResolveBrebKey } from '~/hooks/accounts/use-breb-keys';
 import { useApprovalRedirect } from '~/hooks/approval/use-approval-redirect';
 import { useCreateBrebOrder } from '~/hooks/payments/use-breb-order';
 import { useRates } from '~/hooks/payments/use-rates';
-import { formatCOP, getAssetPrecision } from '~/lib/formatters';
+import {
+  formatAmountWithCode,
+  formatCOP,
+  getAssetPrecision,
+} from '~/lib/formatters';
 import { TopUpErrorStep } from '../../topup/-components/error-step';
 import { ExecutionOutcomeStep } from '../../topup/-components/execution-outcome-step';
 import { getRecipientName, type ResolvedRecipient } from '../-lib/breb';
@@ -482,7 +486,7 @@ function RouteComponent() {
                   {t('brebKeys.payTransfer.amount')}
                 </span>
                 <span className="font-medium text-foreground">
-                  {formatCOP(parsedAmount)}
+                  {formatAmountWithCode('COP', parsedAmount)}
                 </span>
               </div>
               {message.trim() ? (

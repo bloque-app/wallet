@@ -3,13 +3,17 @@
 import { Clock, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '~/components/ui/button';
-import { formatCOP } from '~/lib/formatters';
+import { formatAmountWithCode } from '~/lib/formatters';
+
+function formatCopWithCode(amount: number) {
+  return formatAmountWithCode('COP', amount);
+}
 
 interface PendingStepProps {
   amount: number;
   orderId?: string;
   actionLabel?: string;
-  /** Defaults to `formatCOP` — pass `formatUSD` for the RTP/ACH US-bank flows. */
+  /** Defaults to COP with its code — pass a USD formatter for the RTP/ACH US-bank flows. */
   formatAmount?: (amount: number) => string;
   onRefresh: () => void;
   onError: () => void;
@@ -19,7 +23,7 @@ export function TopUpPendingStep({
   amount,
   orderId,
   actionLabel,
-  formatAmount = formatCOP,
+  formatAmount = formatCopWithCode,
   onRefresh,
   onError,
 }: PendingStepProps) {

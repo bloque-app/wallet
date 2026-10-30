@@ -74,6 +74,7 @@ describe('approval return page', () => {
     renderPage();
 
     expect(await screen.findByText('Operación aprobada')).toBeInTheDocument();
+    expect(screen.getByText(/10\.000 COP/)).toBeInTheDocument();
     expect(collect).toHaveBeenCalledWith(SAVED.pending);
     expect(run).toHaveBeenCalledTimes(1);
     expect(run).toHaveBeenCalledWith(SAVED.operation, 'approval-1');

@@ -93,7 +93,7 @@
       "transferInsufficientBalance": "Insufficient balance for this transfer.",
       "transferSubmit": "Transfer",
       "transferring": "Transferring...",
-      "transferSuccessToast": "Transfer completed successfully",
+      "transferSuccessToast": "You transferred {{amount}} successfully",
       "transferErrorToast": "Couldn't complete the transfer. Please try again.",
       "addProductCardLabel": "Card (Global)",
       "addProductBrebLabel": "BRE-B key (COP)",

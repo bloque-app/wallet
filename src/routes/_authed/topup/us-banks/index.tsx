@@ -21,7 +21,7 @@ import { useCreateExternalUsBankAccount } from '~/hooks/accounts/use-external-us
 import { useApprovalRedirect } from '~/hooks/approval/use-approval-redirect';
 import { useCreateExternalUsBankOrder } from '~/hooks/payments/use-external-us-bank-order';
 import { useRates } from '~/hooks/payments/use-rates';
-import { formatUSD, getAssetPrecision } from '~/lib/formatters';
+import { formatAmountWithCode, getAssetPrecision } from '~/lib/formatters';
 import { TopUpErrorStep } from '../-components/error-step';
 import { ExecutionOutcomeStep } from '../-components/execution-outcome-step';
 import { LinkBankStep } from '../-components/link-bank-step';
@@ -629,7 +629,7 @@ function RouteComponent() {
           amount={parsedAmount}
           orderId={lastOrder?.id}
           execution={lastOrder?.execution}
-          formatAmount={formatUSD}
+          formatAmount={(value) => formatAmountWithCode('USD', value)}
           onError={() => setStep('error')}
         />
       )}
