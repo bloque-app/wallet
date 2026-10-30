@@ -5,7 +5,10 @@ import type {
   PolygonAccount,
   SupportedCardAsset,
 } from '@bloque/sdk-accounts';
-import { BrebKeyCreationError } from '~/domain/accounts/breb-key-suggestions';
+import {
+  BrebKeyCreationError,
+  BrebKeyDeletionError,
+} from '~/domain/accounts/breb-key-suggestions';
 import type {
   AccountsRepository,
   CreateBrebKeyInput,
@@ -462,7 +465,12 @@ async function deleteBrebKey(
       sdkApprovalOptions(options),
     ),
   );
-  if (result.error) throw new Error(result.error.message);
+  if (result.error) {
+    throw new BrebKeyDeletionError(
+      result.error.message,
+      result.error.code ?? undefined,
+    );
+  }
 }
 
 async function createPolygonAccount(

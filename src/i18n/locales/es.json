@@ -198,6 +198,8 @@
       "deleteKey": "Eliminar llave",
       "keyDeletedToast": "Llave eliminada.",
       "deleteErrorToast": "No se pudo eliminar la llave.",
+      "deleteBalanceError": "El bolsillo de esta llave todavía tiene saldo. Transfiérelo antes de eliminarla.",
+      "deleteProviderError": "BRE-B no pudo cancelar la llave. Intenta de nuevo más tarde.",
       "chooseAccountTitle": "Elige el bolsillo para tu nueva llave",
       "chooseAccountDescriptionPrefix": "La llave",
       "chooseAccountDescriptionSuffix": "compartirá el saldo del bolsillo que elijas.",
@@ -762,7 +764,9 @@
       "cardTitle": "Cambio aprobado",
       "cardDescription": "El cambio en tu tarjeta fue aprobado y aplicado.",
       "accountDeletedTitle": "Bolsillo eliminado",
-      "accountDeletedDescription": "La eliminación fue aprobada y el bolsillo ya no está disponible."
+      "accountDeletedDescription": "La eliminación fue aprobada y el bolsillo ya no está disponible.",
+      "keyDeletedTitle": "Llave eliminada",
+      "keyDeletedDescription": "La eliminación fue aprobada y la llave ya no está registrada en BRE-B."
     },
     "unconfirmed": {
       "title": "No pudimos confirmar tu operación",

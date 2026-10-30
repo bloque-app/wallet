@@ -198,6 +198,8 @@
       "deleteKey": "Delete key",
       "keyDeletedToast": "Key deleted.",
       "deleteErrorToast": "Couldn't delete the key.",
+      "deleteBalanceError": "This key's pocket still has a balance. Transfer it before deleting the key.",
+      "deleteProviderError": "BRE-B couldn't cancel the key. Please try again later.",
       "chooseAccountTitle": "Choose the pocket for your new key",
       "chooseAccountDescriptionPrefix": "The key",
       "chooseAccountDescriptionSuffix": "will share the balance of the pocket you choose.",
@@ -762,7 +764,9 @@
       "cardTitle": "Change approved",
       "cardDescription": "Your card change was approved and applied.",
       "accountDeletedTitle": "Pocket deleted",
-      "accountDeletedDescription": "The deletion was approved and the pocket is no longer available."
+      "accountDeletedDescription": "The deletion was approved and the pocket is no longer available.",
+      "keyDeletedTitle": "Key deleted",
+      "keyDeletedDescription": "The deletion was approved and the key is no longer registered in BRE-B."
     },
     "unconfirmed": {
       "title": "We couldn't confirm your operation",

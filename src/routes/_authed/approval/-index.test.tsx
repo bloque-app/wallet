@@ -255,4 +255,24 @@ describe('approval return page', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Listo' }));
     expect(navigate).toHaveBeenCalledWith({ to: '/accounts' });
   });
+
+  test('returns to the keys page after an approved BRE-B key deletion', async () => {
+    savePendingApproval({
+      ...SAVED,
+      operation: {
+        kind: 'delete-breb-key',
+        urn: 'did:bloque:account:breb:1',
+      },
+      returnTo: '/breb-keys/manage-keys',
+      display: undefined,
+    });
+    collect.mockResolvedValue('approval-1');
+    run.mockResolvedValue({ kind: 'done' });
+
+    renderPage();
+
+    expect(await screen.findByText('Llave eliminada')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Listo' }));
+    expect(navigate).toHaveBeenCalledWith({ href: '/breb-keys/manage-keys' });
+  });
 });
