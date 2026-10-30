@@ -24,6 +24,7 @@ import {
 } from '~/domain/accounts/breb-key-state';
 import {
   BrebKeyCreationError,
+  BrebKeyDeletionError,
   type BrebKeySuggestionKind,
   normalizeBrebKey,
   suggestBrebKeys,
@@ -80,7 +81,12 @@ const OPTION_ICONS: Record<BrebKeySuggestionKind, React.ElementType> = {
 };
 
 function getErrorCode(error: unknown): string | undefined {
-  if (error instanceof BrebKeyCreationError) return error.code;
+  if (
+    error instanceof BrebKeyCreationError ||
+    error instanceof BrebKeyDeletionError
+  ) {
+    return error.code;
+  }
   if (error instanceof BloqueAPIError) {
     const details = (error.response as Record<string, unknown> | undefined)
       ?.extra_details as Record<string, unknown> | undefined;
@@ -98,6 +104,17 @@ function getBrebKeyCreationError(error: unknown): string {
     error,
     i18n.t('brebKeys.manageKeys.creationErrorFallback'),
   );
+}
+
+function getBrebKeyDeletionError(error: unknown): string {
+  switch (getErrorCode(error)) {
+    case 'E_ACCOUNT_HAS_BALANCE':
+      return i18n.t('brebKeys.manageKeys.deleteBalanceError');
+    case 'E_BREB_KEY_DELETION_FAILED':
+      return i18n.t('brebKeys.manageKeys.deleteProviderError');
+    default:
+      return i18n.t('brebKeys.manageKeys.deleteErrorToast');
+  }
 }
 
 type KeyOption = {
@@ -525,7 +542,7 @@ function RouteComponent() {
                     ) {
                       return;
                     }
-                    toast.error(t('brebKeys.manageKeys.deleteErrorToast'));
+                    toast.error(getBrebKeyDeletionError(error));
                   },
                 })
               }

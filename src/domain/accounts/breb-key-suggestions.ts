@@ -175,3 +175,15 @@ export class BrebKeyCreationError extends Error {
     this.code = code;
   }
 }
+
+/** A BRE-B key the backend refused to delete, with its error code. */
+export class BrebKeyDeletionError extends Error {
+  /** Backend or provider code. Never shown to users. */
+  readonly code?: string;
+
+  constructor(message: string, code?: string) {
+    super(message);
+    this.name = 'BrebKeyDeletionError';
+    this.code = code;
+  }
+}

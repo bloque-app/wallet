@@ -65,6 +65,10 @@ const ACCOUNT_DELETIONS: ReadonlySet<ApprovalOperationKind> = new Set([
   'delete-pocket',
 ]);
 
+const KEY_DELETIONS: ReadonlySet<ApprovalOperationKind> = new Set([
+  'delete-breb-key',
+]);
+
 function RouteComponent() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -190,6 +194,16 @@ function RouteComponent() {
           icon="success"
           title={t('approval.done.cardTitle')}
           description={t('approval.done.cardDescription')}
+          primary={{ label: t('common.done'), onClick: () => goBack(saved) }}
+        />
+      );
+    }
+    if (KEY_DELETIONS.has(saved.operation.kind)) {
+      return (
+        <ApprovalScreen
+          icon="success"
+          title={t('approval.done.keyDeletedTitle')}
+          description={t('approval.done.keyDeletedDescription')}
           primary={{ label: t('common.done'), onClick: () => goBack(saved) }}
         />
       );

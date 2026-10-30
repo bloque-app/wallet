@@ -29,6 +29,16 @@ const createBrebKeyMock = mock(() =>
   }),
 );
 
+const deleteBrebKeyMock = mock(() =>
+  Promise.resolve({
+    data: null,
+    error: {
+      code: 'E_ACCOUNT_HAS_BALANCE' as string | null,
+      message: 'E_ACCOUNT_HAS_BALANCE',
+    },
+  }),
+);
+
 mock.module('~/lib/bloque', () => ({
   bloque: {
     accounts: {
@@ -37,13 +47,14 @@ mock.module('~/lib/bloque', () => ({
       breb: {
         resolveKey: resolveBrebKeyMock,
         createKey: createBrebKeyMock,
+        deleteKey: deleteBrebKeyMock,
       },
     },
   },
 }));
 
 const { bloqueAccountsRepository } = await import('./accounts-repository');
-const { BrebKeyCreationError } = await import(
+const { BrebKeyCreationError, BrebKeyDeletionError } = await import(
   '~/domain/accounts/breb-key-suggestions'
 );
 
@@ -56,6 +67,19 @@ describe('bloqueAccountsRepository.createBrebKey', () => {
     expect(error).toBeInstanceOf(BrebKeyCreationError);
     expect((error as InstanceType<typeof BrebKeyCreationError>).code).toBe(
       'E_BREB_KEY_ALREADY_REGISTERED',
+    );
+  });
+});
+
+describe('bloqueAccountsRepository.deleteBrebKey', () => {
+  test('keeps the backend code on the thrown error', async () => {
+    const error = await bloqueAccountsRepository
+      .deleteBrebKey('did:bloque:account:breb:1')
+      .catch((caught: unknown) => caught);
+
+    expect(error).toBeInstanceOf(BrebKeyDeletionError);
+    expect((error as InstanceType<typeof BrebKeyDeletionError>).code).toBe(
+      'E_ACCOUNT_HAS_BALANCE',
     );
   });
 });
