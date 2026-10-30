@@ -21,22 +21,6 @@ export function useResolveBrebKey() {
   });
 }
 
-export function useSuspendBrebKey() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (urn: string) => bloqueAccountsRepository.suspendBrebKey(urn),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['accounts'] }),
-  });
-}
-
-export function useActivateBrebKey() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (urn: string) => bloqueAccountsRepository.activateBrebKey(urn),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['accounts'] }),
-  });
-}
-
 export function useDeleteBrebKey() {
   const queryClient = useQueryClient();
   return useMutation({

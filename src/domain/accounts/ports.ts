@@ -141,8 +141,6 @@ export type AccountsRepository = {
 
   createBrebKey(input: CreateBrebKeyInput): Promise<Product>;
   resolveBrebKey(input: ResolveBrebKeyInput): Promise<BrebResolvedKey>;
-  suspendBrebKey(urn: string): Promise<void>;
-  activateBrebKey(urn: string): Promise<void>;
   deleteBrebKey(urn: string, options?: ApprovalOptions): Promise<void>;
 
   createPolygonAccount(input: CreatePolygonAccountInput): Promise<Product>;
