@@ -37,6 +37,7 @@ import {
   useDeleteBrebKey,
   useSuspendBrebKey,
 } from '~/hooks/accounts/use-breb-keys';
+import { useApprovalRedirect } from '~/hooks/approval/use-approval-redirect';
 import i18n from '~/i18n/config';
 import { userFacingErrorMessage } from '~/lib/api-errors';
 import { getAssetPrecision } from '~/lib/formatters';
@@ -218,6 +219,7 @@ function RouteComponent() {
   const suspendMutation = useSuspendBrebKey();
   const activateMutation = useActivateBrebKey();
   const deleteMutation = useDeleteBrebKey();
+  const redirectToApproval = useApprovalRedirect();
 
   const isLoading = accountsQuery.isLoading;
   const actionsPending =
@@ -564,8 +566,17 @@ function RouteComponent() {
                     toast.success(t('brebKeys.manageKeys.keyDeletedToast'));
                     setActionsDrawer((s) => ({ ...s, open: false }));
                   },
-                  onError: () =>
-                    toast.error(t('brebKeys.manageKeys.deleteErrorToast')),
+                  onError: (error) => {
+                    if (
+                      redirectToApproval(error, {
+                        kind: 'delete-breb-key',
+                        urn: actionsDrawer.urn,
+                      })
+                    ) {
+                      return;
+                    }
+                    toast.error(t('brebKeys.manageKeys.deleteErrorToast'));
+                  },
                 })
               }
             >

@@ -462,8 +462,16 @@ async function activateBrebKey(urn: string): Promise<void> {
   if (result.error) throw new Error(result.error.message);
 }
 
-async function deleteBrebKey(urn: string): Promise<void> {
-  const result = await bloque.accounts.breb.deleteKey({ accountUrn: urn });
+async function deleteBrebKey(
+  urn: string,
+  options?: ApprovalOptions,
+): Promise<void> {
+  const result = await withApprovalErrors(() =>
+    bloque.accounts.breb.deleteKey(
+      { accountUrn: urn },
+      sdkApprovalOptions(options),
+    ),
+  );
   if (result.error) throw new Error(result.error.message);
 }
 

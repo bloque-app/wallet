@@ -87,6 +87,9 @@ async function runOperation(
     case 'activate-card':
       await bloqueAccountsRepository.activateCard(operation.urn, options);
       return { kind: 'done' };
+    case 'delete-breb-key':
+      await bloqueAccountsRepository.deleteBrebKey(operation.urn, options);
+      return { kind: 'done' };
     case 'card-preferred-asset':
       await bloqueAccountsRepository.updateCardPreferredAsset(
         operation.urn,
