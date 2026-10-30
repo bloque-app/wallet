@@ -61,6 +61,10 @@ const CARD_CHANGES: ReadonlySet<ApprovalOperationKind> = new Set([
   'card-preferred-asset',
 ]);
 
+const ACCOUNT_DELETIONS: ReadonlySet<ApprovalOperationKind> = new Set([
+  'delete-pocket',
+]);
+
 function RouteComponent() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -187,6 +191,19 @@ function RouteComponent() {
           title={t('approval.done.cardTitle')}
           description={t('approval.done.cardDescription')}
           primary={{ label: t('common.done'), onClick: () => goBack(saved) }}
+        />
+      );
+    }
+    if (ACCOUNT_DELETIONS.has(saved.operation.kind)) {
+      return (
+        <ApprovalScreen
+          icon="success"
+          title={t('approval.done.accountDeletedTitle')}
+          description={t('approval.done.accountDeletedDescription')}
+          primary={{
+            label: t('common.done'),
+            onClick: () => void navigate({ to: '/accounts' }),
+          }}
         />
       );
     }

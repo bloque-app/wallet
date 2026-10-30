@@ -236,4 +236,23 @@ describe('approval return page', () => {
 
     expect(await screen.findByText('Cambio aprobado')).toBeInTheDocument();
   });
+
+  test('returns to the account list after an approved pocket deletion', async () => {
+    savePendingApproval({
+      ...SAVED,
+      operation: {
+        kind: 'delete-pocket',
+        urn: 'did:bloque:account:virtual:1',
+      },
+      display: undefined,
+    });
+    collect.mockResolvedValue('approval-1');
+    run.mockResolvedValue({ kind: 'done' });
+
+    renderPage();
+
+    expect(await screen.findByText('Bolsillo eliminado')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Listo' }));
+    expect(navigate).toHaveBeenCalledWith({ to: '/accounts' });
+  });
 });

@@ -29,6 +29,9 @@ const cardActivateMock = mock((_urn: string, _options?: unknown) =>
 const brebDeleteMock = mock((_urn: string, _options?: unknown) =>
   Promise.resolve({ data: { deleted: true }, error: null }),
 );
+const virtualDeleteMock = mock((_urn: string, _options?: unknown) =>
+  Promise.resolve({}),
+);
 
 mock.module('~/lib/bloque', () => ({
   bloque: {
@@ -37,6 +40,7 @@ mock.module('~/lib/bloque', () => ({
       transfer: transferMock,
       card: { activate: cardActivateMock },
       breb: { deleteKey: brebDeleteMock },
+      virtual: { delete: virtualDeleteMock },
     },
     swap: { breb: { create: brebCreateMock } },
   },
@@ -107,6 +111,7 @@ describe('bloqueApprovalRepository.run', () => {
     brebCreateMock.mockClear();
     cardActivateMock.mockClear();
     brebDeleteMock.mockClear();
+    virtualDeleteMock.mockClear();
   });
 
   test('repeats a transfer once with the exact params and the approval', async () => {
@@ -164,6 +169,17 @@ describe('bloqueApprovalRepository.run', () => {
     );
     expect(brebDeleteMock).toHaveBeenCalledWith(
       { accountUrn: 'did:bloque:account:breb:1' },
+      { approval: 'approval-1' },
+    );
+  });
+
+  test('repeats a pocket deletion with the approval', async () => {
+    await bloqueApprovalRepository.run(
+      { kind: 'delete-pocket', urn: 'did:bloque:account:virtual:1' },
+      'approval-1',
+    );
+    expect(virtualDeleteMock).toHaveBeenCalledWith(
+      'did:bloque:account:virtual:1',
       { approval: 'approval-1' },
     );
   });
