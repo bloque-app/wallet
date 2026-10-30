@@ -106,6 +106,7 @@
       "deleteDrawerDescription": "Revisa el saldo de {{label}} antes de eliminarlo.",
       "deletePendingBalance": "Este bolsillo tiene movimientos pendientes. Espera a que terminen antes de eliminarlo.",
       "deleteMoveBalance": "Primero transfiere {{amount}} a otro bolsillo. Si hay otros saldos, podrás moverlos después uno por uno.",
+      "deleteRemoveProducts": "Primero elimina los productos que comparten saldo con este bolsillo:",
       "deleteNeedsDestination": "Crea otro bolsillo activo para poder mover este saldo antes de eliminarlo.",
       "deleteTransferBalance": "Transferir este saldo",
       "deleteConfirmation": "Esta acción eliminará el bolsillo. No podrás deshacerla.",

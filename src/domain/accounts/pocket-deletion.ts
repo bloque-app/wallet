@@ -1,4 +1,18 @@
-import type { AssetBalance } from './types';
+import type { AssetBalance, Product } from './types';
+
+/** Products that still share the pocket's ledger and must go first. */
+export function pocketDeletionBlockers(
+  products: Product[],
+  pocketUrn: string,
+): Product[] {
+  return products.filter(
+    (product) => product.urn !== pocketUrn && product.status !== 'deleted',
+  );
+}
+
+export function isDefaultPocket(product: Product): boolean {
+  return product.metadata?.default === true;
+}
 
 function rawAmountIsNonZero(value: string): boolean {
   try {

@@ -43,8 +43,10 @@ import {
   visibleProducts,
 } from '~/domain/accounts/external-us-bank';
 import {
+  isDefaultPocket,
   minorUnitsToMajorInput,
   pocketDeletionBalances,
+  pocketDeletionBlockers,
 } from '~/domain/accounts/pocket-deletion';
 import type { AssetBalance, Product } from '~/domain/accounts/types';
 import { isActiveVirtualAccount } from '~/domain/accounts/virtual-account';
@@ -225,6 +227,12 @@ function RouteComponent() {
   const pocketProduct = account?.products.find(
     (product) => product.kind === 'pocket' && product.status !== 'deleted',
   );
+  const canDeletePocket = pocketProduct
+    ? !isDefaultPocket(pocketProduct)
+    : false;
+  const deletionBlockers = pocketProduct
+    ? pocketDeletionBlockers(account?.products ?? [], pocketProduct.urn)
+    : [];
   const deletionBalances = pocketDeletionBalances(balances);
   const nextFundedBalance = deletionBalances.funded[0];
   const shownProducts = visibleProducts(account?.products ?? []);
@@ -349,6 +357,7 @@ function RouteComponent() {
     if (
       !pocketProduct ||
       deletionBalances.pending.length > 0 ||
+      deletionBlockers.length > 0 ||
       deletionBalances.funded.length > 0
     ) {
       return;
@@ -625,7 +634,7 @@ function RouteComponent() {
             )}
           </section>
 
-          {pocketProduct ? (
+          {canDeletePocket ? (
             <Button
               type="button"
               variant="outline"
@@ -857,6 +866,22 @@ function RouteComponent() {
             <div className="px-5 pb-4 text-sm text-muted-foreground">
               {t('accounts.detail.deletePendingBalance')}
             </div>
+          ) : deletionBlockers.length > 0 ? (
+            <div className="flex flex-col gap-3 px-5 pb-2">
+              <p className="text-sm text-muted-foreground">
+                {t('accounts.detail.deleteRemoveProducts')}
+              </p>
+              <ul className="flex flex-col gap-2">
+                {deletionBlockers.map((product) => (
+                  <li
+                    key={product.urn}
+                    className="rounded-2xl border border-border/75 bg-background/70 px-4 py-3 text-sm font-medium"
+                  >
+                    {getProductKindLabel(product.kind)} • {product.label}
+                  </li>
+                ))}
+              </ul>
+            </div>
           ) : nextFundedBalance ? (
             <div className="flex flex-col gap-4 px-5 pb-2">
               <p className="text-sm text-muted-foreground">
@@ -900,7 +925,8 @@ function RouteComponent() {
           )}
 
           <DrawerFooter>
-            {deletionBalances.pending.length > 0 ? (
+            {deletionBalances.pending.length > 0 ||
+            deletionBlockers.length > 0 ? (
               <Button
                 variant="outline"
                 onClick={() => setShowDeleteDrawer(false)}
