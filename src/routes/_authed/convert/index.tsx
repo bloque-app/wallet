@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { ArrowDownUp } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { ComingSoonScreen } from '~/components/coming-soon';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
@@ -15,6 +16,7 @@ import {
   SelectValue,
 } from '~/components/ui/select';
 import { Separator } from '~/components/ui/separator';
+import { CONVERT_ENABLED } from '~/config/features';
 import { useRates } from '~/hooks/payments/use-rates';
 import { bloque } from '~/lib/bloque';
 import { type Asset, formatAmount } from '~/lib/formatters';
@@ -76,8 +78,19 @@ function minorToMajor(amountMinor: number, precision: number) {
 }
 
 export const Route = createFileRoute('/_authed/convert/')({
-  component: RouteComponent,
+  component: CONVERT_ENABLED ? RouteComponent : ConvertComingSoon,
 });
+
+function ConvertComingSoon() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  return (
+    <ComingSoonScreen
+      title={t('convert.title')}
+      onBack={() => void navigate({ to: '/' })}
+    />
+  );
+}
 
 function RouteComponent() {
   const { t } = useTranslation();

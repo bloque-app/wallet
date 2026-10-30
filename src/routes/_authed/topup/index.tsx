@@ -24,7 +24,12 @@ import type { ExecutionOutcome } from '~/domain/payments/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useCreatePseOrder, usePseBanks } from '~/hooks/payments/use-pse-topup';
 import { useRates } from '~/hooks/payments/use-rates';
-import { formatCOP, formatCOPPrecise, formatUSD } from '~/lib/formatters';
+import {
+  formatAmountWithCode,
+  formatCOP,
+  formatCOPPrecise,
+  formatUSD,
+} from '~/lib/formatters';
 import { cn } from '~/lib/utils';
 import { TopUpErrorStep } from './-components/error-step';
 import { ExecutionOutcomeStep } from './-components/execution-outcome-step';
@@ -738,7 +743,7 @@ function RouteComponent() {
                     {t('topup.youPay')}
                   </span>
                   <span className="font-medium text-foreground">
-                    {formatCOP(parsedAmount)}
+                    {formatAmountWithCode('COP', parsedAmount)}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
@@ -746,7 +751,7 @@ function RouteComponent() {
                     {t('topup.fee')}
                   </span>
                   <span className="font-medium text-foreground">
-                    {formatCOPPrecise(feeSummary.totalFee)}
+                    {formatCOPPrecise(feeSummary.totalFee)} COP
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
@@ -754,7 +759,7 @@ function RouteComponent() {
                     {t('topup.youReceive')}
                   </span>
                   <span className="font-medium text-foreground">
-                    {formatCOPPrecise(receiveAmount)}
+                    {formatCOPPrecise(receiveAmount)} COP
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">

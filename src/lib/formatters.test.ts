@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import {
   formatAmount,
+  formatAmountWithCode,
   formatBRL,
   formatCOP,
   formatCOPPrecise,
@@ -8,6 +9,7 @@ import {
   formatMXN,
   formatPolygonAddress,
   formatSdkAssetAmount,
+  formatSdkAssetAmountWithCode,
   formatUSD,
   getAssetPrecision,
   getDisplayAsset,
@@ -72,6 +74,21 @@ describe('SDK asset display', () => {
   test('formats tokenized balances without exposing the SDK identifier', () => {
     expect(formatSdkAssetAmount('MXNB/2', '12345')).toBe(formatMXN(123.45));
     expect(formatSdkAssetAmount('BRLB/2', '6789')).toBe(formatBRL(67.89));
+  });
+
+  test('adds an unambiguous currency code to pocket balances', () => {
+    expect(formatSdkAssetAmountWithCode('MXNB/2', '12345')).toBe(
+      `${formatMXN(123.45)} MXN`,
+    );
+    expect(formatSdkAssetAmountWithCode('BRLB/2', '6789')).toBe(
+      `${formatBRL(67.89)} BRL`,
+    );
+  });
+
+  test('adds the currency code to transaction amounts', () => {
+    expect(formatAmountWithCode('COP', 12500)).toBe(`${formatCOP(12500)} COP`);
+    expect(formatAmountWithCode('USD', 12.5)).toBe(`${formatUSD(12.5)} USD`);
+    expect(formatAmountWithCode('KSM', 1)).toBe('1.0000 KSM');
   });
 });
 

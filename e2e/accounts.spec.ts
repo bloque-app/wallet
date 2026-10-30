@@ -122,4 +122,88 @@ test.describe('accounts', () => {
     await expect(plaid).toBeDisabled();
     await expect(plaid).toContainText('Próximamente');
   });
+
+  test('deletes an empty pocket through the account DELETE endpoint', async ({
+    page,
+  }) => {
+    await page.goto('/accounts/urn%3Apocket-orphan');
+
+    await page.getByRole('button', { name: 'Eliminar bolsillo' }).click();
+    await expect(
+      page.getByText('Esta acción eliminará el bolsillo.'),
+    ).toBeVisible();
+
+    const deletion = page.waitForRequest(
+      (request) =>
+        request.method() === 'DELETE' &&
+        new URL(request.url()).pathname.endsWith(
+          '/api/accounts/urn:pocket-orphan',
+        ),
+    );
+    await page
+      .getByRole('button', { name: 'Eliminar bolsillo' })
+      .last()
+      .click();
+    await deletion;
+
+    await expect(page).toHaveURL(/\/accounts$/);
+    await expect(page.getByText('Orphan', { exact: true })).toHaveCount(0);
+  });
+
+  test('asks to remove the products that share the pocket balance first', async ({
+    page,
+  }) => {
+    await page.goto('/accounts/urn%3Apocket-main');
+
+    await page.getByRole('button', { name: 'Eliminar bolsillo' }).click();
+    await expect(page.getByText(/Primero elimina los productos/)).toBeVisible();
+    await expect(
+      page.getByRole('listitem').filter({ hasText: '4242' }),
+    ).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Cerrar' })).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Eliminar bolsillo' }),
+    ).toHaveCount(0);
+  });
+
+  test('hides the delete action on the default pocket', async ({ page }) => {
+    await installMockApi(page, {
+      accounts: mockAccounts.map((account) =>
+        account.urn === 'urn:pocket-orphan'
+          ? { ...account, metadata: { default: true } }
+          : account,
+      ),
+    });
+    await page.goto('/accounts/urn%3Apocket-orphan');
+
+    await expect(
+      page.getByRole('button', { name: 'Agregar producto' }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Eliminar bolsillo' }),
+    ).toHaveCount(0);
+  });
+
+  test('guides a funded pocket into the existing transfer flow first', async ({
+    page,
+  }) => {
+    await installMockApi(page, {
+      accounts: mockAccounts.filter(
+        (account) =>
+          account.urn === 'urn:pocket-main' ||
+          account.ledger_account_id !== 'ledger-main',
+      ),
+    });
+    await page.goto('/accounts/urn%3Apocket-main');
+
+    await page.getByRole('button', { name: 'Eliminar bolsillo' }).click();
+    await expect(page.getByText(/Primero transfiere/)).toBeVisible();
+    await page.getByRole('button', { name: 'Orphan' }).click();
+    await page.getByRole('button', { name: 'Transferir este saldo' }).click();
+
+    await expect(
+      page.getByRole('heading', { name: 'Transferir fondos' }),
+    ).toBeVisible();
+    await expect(page.getByLabel('Monto a transferir')).toHaveValue('5000');
+  });
 });

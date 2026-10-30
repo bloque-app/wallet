@@ -18,7 +18,7 @@ import {
   type SavedApproval,
 } from '~/domain/approval/types';
 import { bloqueApprovalRepository } from '~/infra/bloque/approval-repository';
-import { formatAmount, formatCOP } from '~/lib/formatters';
+import { formatAmountWithCode } from '~/lib/formatters';
 import {
   clearPendingApproval,
   readPendingApproval,
@@ -59,6 +59,14 @@ const CARD_CHANGES: ReadonlySet<ApprovalOperationKind> = new Set([
   'create-card',
   'activate-card',
   'card-preferred-asset',
+]);
+
+const ACCOUNT_DELETIONS: ReadonlySet<ApprovalOperationKind> = new Set([
+  'delete-pocket',
+]);
+
+const KEY_DELETIONS: ReadonlySet<ApprovalOperationKind> = new Set([
+  'delete-breb-key',
 ]);
 
 function RouteComponent() {
@@ -159,7 +167,7 @@ function RouteComponent() {
     const { saved, outcome } = state;
     const { amount, asset } = saved.display ?? {};
     const format = (value: number) =>
-      asset ? formatAmount(asset, value) : formatCOP(value);
+      formatAmountWithCode(asset ?? 'COP', value);
     if (outcome.kind === 'order') {
       return (
         <div className="flex flex-col gap-2">
@@ -187,6 +195,29 @@ function RouteComponent() {
           title={t('approval.done.cardTitle')}
           description={t('approval.done.cardDescription')}
           primary={{ label: t('common.done'), onClick: () => goBack(saved) }}
+        />
+      );
+    }
+    if (KEY_DELETIONS.has(saved.operation.kind)) {
+      return (
+        <ApprovalScreen
+          icon="success"
+          title={t('approval.done.keyDeletedTitle')}
+          description={t('approval.done.keyDeletedDescription')}
+          primary={{ label: t('common.done'), onClick: () => goBack(saved) }}
+        />
+      );
+    }
+    if (ACCOUNT_DELETIONS.has(saved.operation.kind)) {
+      return (
+        <ApprovalScreen
+          icon="success"
+          title={t('approval.done.accountDeletedTitle')}
+          description={t('approval.done.accountDeletedDescription')}
+          primary={{
+            label: t('common.done'),
+            onClick: () => void navigate({ to: '/accounts' }),
+          }}
         />
       );
     }

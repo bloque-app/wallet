@@ -24,6 +24,7 @@ import {
 } from '~/domain/accounts/breb-key-state';
 import {
   BrebKeyCreationError,
+  BrebKeyDeletionError,
   type BrebKeySuggestionKind,
   normalizeBrebKey,
   suggestBrebKeys,
@@ -32,11 +33,10 @@ import type { Account, BrebKeyProduct } from '~/domain/accounts/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useAccounts } from '~/hooks/accounts/use-accounts';
 import {
-  useActivateBrebKey,
   useCreateBrebKey,
   useDeleteBrebKey,
-  useSuspendBrebKey,
 } from '~/hooks/accounts/use-breb-keys';
+import { useApprovalRedirect } from '~/hooks/approval/use-approval-redirect';
 import i18n from '~/i18n/config';
 import { userFacingErrorMessage } from '~/lib/api-errors';
 import { getAssetPrecision } from '~/lib/formatters';
@@ -81,7 +81,12 @@ const OPTION_ICONS: Record<BrebKeySuggestionKind, React.ElementType> = {
 };
 
 function getErrorCode(error: unknown): string | undefined {
-  if (error instanceof BrebKeyCreationError) return error.code;
+  if (
+    error instanceof BrebKeyCreationError ||
+    error instanceof BrebKeyDeletionError
+  ) {
+    return error.code;
+  }
   if (error instanceof BloqueAPIError) {
     const details = (error.response as Record<string, unknown> | undefined)
       ?.extra_details as Record<string, unknown> | undefined;
@@ -99,6 +104,17 @@ function getBrebKeyCreationError(error: unknown): string {
     error,
     i18n.t('brebKeys.manageKeys.creationErrorFallback'),
   );
+}
+
+function getBrebKeyDeletionError(error: unknown): string {
+  switch (getErrorCode(error)) {
+    case 'E_ACCOUNT_HAS_BALANCE':
+      return i18n.t('brebKeys.manageKeys.deleteBalanceError');
+    case 'E_BREB_KEY_DELETION_FAILED':
+      return i18n.t('brebKeys.manageKeys.deleteProviderError');
+    default:
+      return i18n.t('brebKeys.manageKeys.deleteErrorToast');
+  }
 }
 
 type KeyOption = {
@@ -215,15 +231,10 @@ function RouteComponent() {
   );
 
   const createMutation = useCreateBrebKey();
-  const suspendMutation = useSuspendBrebKey();
-  const activateMutation = useActivateBrebKey();
   const deleteMutation = useDeleteBrebKey();
+  const redirectToApproval = useApprovalRedirect();
 
   const isLoading = accountsQuery.isLoading;
-  const actionsPending =
-    suspendMutation.isPending ||
-    activateMutation.isPending ||
-    deleteMutation.isPending;
 
   const notifyRegistrationFailed = (key: string, code?: string) => {
     if (code && ALREADY_REGISTERED_CODES.has(code)) {
@@ -379,6 +390,9 @@ function RouteComponent() {
               <p className="px-1 text-xs font-medium text-muted-foreground">
                 {t('brebKeys.manageKeys.registerYourKeys')}
               </p>
+              <p className="px-1 pb-1 text-xs text-muted-foreground">
+                {t('brebKeys.manageKeys.validKeyHint')}
+              </p>
               <div className="flex flex-col gap-3">
                 {unregisteredOptions.map((option) => {
                   const Icon = option.icon;
@@ -509,60 +523,27 @@ function RouteComponent() {
             </DrawerDescription>
           </DrawerHeader>
           <DrawerFooter>
-            {actionsDrawer.status === 'active' && (
-              <Button
-                variant="outline"
-                className="h-12 w-full rounded-2xl text-sm"
-                disabled={actionsPending}
-                onClick={() =>
-                  suspendMutation.mutate(actionsDrawer.urn, {
-                    onSuccess: () => {
-                      toast.success(t('brebKeys.manageKeys.keySuspendedToast'));
-                      setActionsDrawer((s) => ({ ...s, open: false }));
-                    },
-                    onError: () =>
-                      toast.error(t('brebKeys.manageKeys.suspendErrorToast')),
-                  })
-                }
-              >
-                {suspendMutation.isPending
-                  ? t('brebKeys.manageKeys.suspending')
-                  : t('brebKeys.manageKeys.suspendKey')}
-              </Button>
-            )}
-            {actionsDrawer.status === 'frozen' && (
-              <Button
-                variant="outline"
-                className="h-12 w-full rounded-2xl text-sm"
-                disabled={actionsPending}
-                onClick={() =>
-                  activateMutation.mutate(actionsDrawer.urn, {
-                    onSuccess: () => {
-                      toast.success(t('brebKeys.manageKeys.keyActivatedToast'));
-                      setActionsDrawer((s) => ({ ...s, open: false }));
-                    },
-                    onError: () =>
-                      toast.error(t('brebKeys.manageKeys.activateErrorToast')),
-                  })
-                }
-              >
-                {activateMutation.isPending
-                  ? t('brebKeys.manageKeys.activating')
-                  : t('brebKeys.manageKeys.activateKey')}
-              </Button>
-            )}
             <Button
               variant="outline"
               className="h-12 w-full rounded-2xl text-sm text-destructive hover:text-destructive"
-              disabled={actionsPending}
+              disabled={deleteMutation.isPending}
               onClick={() =>
                 deleteMutation.mutate(actionsDrawer.urn, {
                   onSuccess: () => {
                     toast.success(t('brebKeys.manageKeys.keyDeletedToast'));
                     setActionsDrawer((s) => ({ ...s, open: false }));
                   },
-                  onError: () =>
-                    toast.error(t('brebKeys.manageKeys.deleteErrorToast')),
+                  onError: (error) => {
+                    if (
+                      redirectToApproval(error, {
+                        kind: 'delete-breb-key',
+                        urn: actionsDrawer.urn,
+                      })
+                    ) {
+                      return;
+                    }
+                    toast.error(getBrebKeyDeletionError(error));
+                  },
                 })
               }
             >

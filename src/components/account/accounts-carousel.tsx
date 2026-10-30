@@ -1,7 +1,10 @@
 import { Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Account } from '~/domain/accounts/types';
-import { formatSdkAssetAmount, sortBalancesForDisplay } from '~/lib/formatters';
+import {
+  formatSdkAssetAmountWithCode,
+  sortBalancesForDisplay,
+} from '~/lib/formatters';
 import { cn } from '~/lib/utils';
 import { getProductKindIcon } from './product-presentation';
 
@@ -17,13 +20,13 @@ function AccountMiniCard({
     (product) => product.urn === account.primaryUrn,
   );
   const Icon = getProductKindIcon(primary?.kind ?? 'other');
-  const balance = sortBalancesForDisplay(account.balances)[0];
+  const balances = sortBalancesForDisplay(account.balances);
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className="relative flex h-[6.5rem] w-[9.5rem] shrink-0 snap-center flex-col justify-between overflow-hidden rounded-2xl border border-border/90 bg-card/80 p-3.5 text-left shadow-[0_14px_25px_-26px_color-mix(in_oklch,var(--foreground)_55%,transparent)] transition-all duration-200 hover:opacity-100 focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:shadow-[0_14px_25px_-26px_rgb(0_0_0_/_0.65)]"
+      className="relative flex min-h-[7.5rem] w-[9.5rem] shrink-0 snap-center flex-col justify-between overflow-hidden rounded-2xl border border-border/90 bg-card/80 p-3.5 text-left shadow-[0_14px_25px_-26px_color-mix(in_oklch,var(--foreground)_55%,transparent)] transition-all duration-200 hover:opacity-100 focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:shadow-[0_14px_25px_-26px_rgb(0_0_0_/_0.65)]"
       aria-label={t('accountsCarousel.accountAria', { label: account.label })}
     >
       <div className="flex items-center justify-end">
@@ -36,11 +39,19 @@ function AccountMiniCard({
         <p className="truncate text-xs font-medium text-foreground">
           {account.label}
         </p>
-        <p className="text-[11px] text-muted-foreground">
-          {balance
-            ? formatSdkAssetAmount(balance.asset, balance.current)
-            : t('accountsCarousel.noBalance')}
-        </p>
+        {balances.length > 0 ? (
+          <div className="flex flex-col text-[11px] leading-tight text-muted-foreground">
+            {balances.map((balance) => (
+              <span key={balance.asset} className="truncate">
+                {formatSdkAssetAmountWithCode(balance.asset, balance.current)}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <p className="text-[11px] text-muted-foreground">
+            {t('accountsCarousel.noBalance')}
+          </p>
+        )}
       </div>
     </button>
   );
@@ -81,7 +92,7 @@ export function AccountsCarousel({
         type="button"
         onClick={onAddAccount}
         className={cn(
-          'flex h-[6.5rem] w-[9.5rem] shrink-0 snap-center flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed bg-card/35 transition-colors hover:bg-muted',
+          'flex min-h-[7.5rem] w-[9.5rem] shrink-0 snap-center flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed bg-card/35 transition-colors hover:bg-muted',
           highlightAdd ? 'border-primary/60' : 'border-border',
         )}
         aria-label={t('accountsCarousel.createNewAria')}

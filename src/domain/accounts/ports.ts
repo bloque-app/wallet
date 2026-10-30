@@ -110,8 +110,9 @@ export type TransferOutcome = {
  * rather than in the Payments/Transfers domain (`~/domain/payments`), which
  * is scoped to swap-based rails (PSE, bank transfer, BRE-B payout, rates).
  *
- * Calls that move money or re-enable spending (`transfer`, `createCard`,
- * `activateCard`, `updateCardPreferredAsset`) may throw
+ * Calls that move money, re-enable spending or delete an account (`transfer`,
+ * `createCard`, `activateCard`, `updateCardPreferredAsset`,
+ * `deleteVirtualAccount`) may throw
  * `ApprovalRequiredError`; repeat them with the collected approval.
  */
 export type AccountsRepository = {
@@ -140,13 +141,12 @@ export type AccountsRepository = {
 
   createBrebKey(input: CreateBrebKeyInput): Promise<Product>;
   resolveBrebKey(input: ResolveBrebKeyInput): Promise<BrebResolvedKey>;
-  suspendBrebKey(urn: string): Promise<void>;
-  activateBrebKey(urn: string): Promise<void>;
-  deleteBrebKey(urn: string): Promise<void>;
+  deleteBrebKey(urn: string, options?: ApprovalOptions): Promise<void>;
 
   createPolygonAccount(input: CreatePolygonAccountInput): Promise<Product>;
 
   createVirtualAccount(input: CreateVirtualAccountInput): Promise<Product>;
+  deleteVirtualAccount(urn: string, options?: ApprovalOptions): Promise<void>;
 
   createExternalUsBankAccount(
     input: CreateExternalUsBankAccountInput,

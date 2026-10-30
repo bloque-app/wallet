@@ -282,6 +282,7 @@ export async function installMockApi(
   options: MockApiOptions = {},
 ): Promise<MockApiHandle> {
   let missingRequirements = options.missingRequirements ?? [];
+  const deletedAccounts = new Set<string>();
 
   await page.route('**/api/**', async (route: Route) => {
     const url = new URL(route.request().url());
@@ -345,8 +346,38 @@ export async function installMockApi(
     }
 
     if (pathname === '/api/accounts') {
+      const accounts = options.accounts ?? mockAccounts;
       return route.fulfill({
-        json: { accounts: options.accounts ?? mockAccounts },
+        json: {
+          accounts: accounts.filter(
+            (account) => !deletedAccounts.has((account as { urn: string }).urn),
+          ),
+        },
+      });
+    }
+
+    if (
+      route.request().method() === 'DELETE' &&
+      pathname.startsWith('/api/accounts/')
+    ) {
+      const urn = decodeURIComponent(pathname.slice('/api/accounts/'.length));
+      const account = (options.accounts ?? mockAccounts).find(
+        (candidate) => (candidate as { urn: string }).urn === urn,
+      );
+      if (!account) {
+        return route.fulfill({
+          status: 404,
+          json: { code: 'E_ACCOUNT_NOT_FOUND', message: 'E_ACCOUNT_NOT_FOUND' },
+        });
+      }
+      deletedAccounts.add(urn);
+      return route.fulfill({
+        json: {
+          result: {
+            account: { ...(account as object), status: 'deleted' },
+          },
+          req_id: 'req_delete_account',
+        },
       });
     }
 
