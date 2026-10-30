@@ -122,4 +122,47 @@ test.describe('accounts', () => {
     await expect(plaid).toBeDisabled();
     await expect(plaid).toContainText('Próximamente');
   });
+
+  test('deletes an empty pocket through the account DELETE endpoint', async ({
+    page,
+  }) => {
+    await page.goto('/accounts/urn%3Apocket-orphan');
+
+    await page.getByRole('button', { name: 'Eliminar bolsillo' }).click();
+    await expect(
+      page.getByText('Esta acción eliminará el bolsillo.'),
+    ).toBeVisible();
+
+    const deletion = page.waitForRequest(
+      (request) =>
+        request.method() === 'DELETE' &&
+        new URL(request.url()).pathname.endsWith(
+          '/api/accounts/urn:pocket-orphan',
+        ),
+    );
+    await page
+      .getByRole('button', { name: 'Eliminar bolsillo' })
+      .last()
+      .click();
+    await deletion;
+
+    await expect(page).toHaveURL(/\/accounts$/);
+    await expect(page.getByText('Orphan', { exact: true })).toHaveCount(0);
+  });
+
+  test('guides a funded pocket into the existing transfer flow first', async ({
+    page,
+  }) => {
+    await page.goto('/accounts/urn%3Apocket-main');
+
+    await page.getByRole('button', { name: 'Eliminar bolsillo' }).click();
+    await expect(page.getByText(/Primero transfiere/)).toBeVisible();
+    await page.getByRole('button', { name: 'Orphan' }).click();
+    await page.getByRole('button', { name: 'Transferir este saldo' }).click();
+
+    await expect(
+      page.getByRole('heading', { name: 'Transferir fondos' }),
+    ).toBeVisible();
+    await expect(page.getByLabel('Monto a transferir')).toHaveValue('5000');
+  });
 });

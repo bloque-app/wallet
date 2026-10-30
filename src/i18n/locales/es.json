@@ -100,7 +100,21 @@
       "addProductPlaidLabel": "Plaid (USD)",
       "addProductNeedsVirtualAccount": "Solo puedes agregar productos a un bolsillo activo.",
       "usBankLinking": "Vinculación en proceso",
-      "usBankPendingLink": "Vinculación sin terminar"
+      "usBankPendingLink": "Vinculación sin terminar",
+      "deletePocket": "Eliminar bolsillo",
+      "deleteDrawerTitle": "Eliminar bolsillo",
+      "deleteDrawerDescription": "Revisa el saldo de {{label}} antes de eliminarlo.",
+      "deletePendingBalance": "Este bolsillo tiene movimientos pendientes. Espera a que terminen antes de eliminarlo.",
+      "deleteMoveBalance": "Primero transfiere {{amount}} a otro bolsillo. Si hay otros saldos, podrás moverlos después uno por uno.",
+      "deleteNeedsDestination": "Crea otro bolsillo activo para poder mover este saldo antes de eliminarlo.",
+      "deleteTransferBalance": "Transferir este saldo",
+      "deleteConfirmation": "Esta acción eliminará el bolsillo. No podrás deshacerla.",
+      "confirmDeletePocket": "Eliminar bolsillo",
+      "deletingPocket": "Eliminando...",
+      "deleteSuccessToast": "Bolsillo eliminado correctamente",
+      "deleteBalanceError": "El bolsillo todavía tiene saldo disponible o pendiente.",
+      "deleteDefaultError": "No puedes eliminar el bolsillo principal de tu cuenta.",
+      "deleteErrorToast": "No se pudo eliminar el bolsillo. Intenta de nuevo."
     }
   },
   "brebKeys": {
@@ -754,7 +768,9 @@
       "description": "Tu operación fue aprobada y enviada.",
       "descriptionAmount": "Tu operación por {{amount}} fue aprobada y enviada.",
       "cardTitle": "Cambio aprobado",
-      "cardDescription": "El cambio en tu tarjeta fue aprobado y aplicado."
+      "cardDescription": "El cambio en tu tarjeta fue aprobado y aplicado.",
+      "accountDeletedTitle": "Bolsillo eliminado",
+      "accountDeletedDescription": "La eliminación fue aprobada y el bolsillo ya no está disponible."
     },
     "unconfirmed": {
       "title": "No pudimos confirmar tu operación",

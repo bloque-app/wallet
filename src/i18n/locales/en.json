@@ -100,7 +100,21 @@
       "addProductPlaidLabel": "Plaid (USD)",
       "addProductNeedsVirtualAccount": "You can only add products to an active pocket.",
       "usBankLinking": "Linking in progress",
-      "usBankPendingLink": "Linking not finished"
+      "usBankPendingLink": "Linking not finished",
+      "deletePocket": "Delete pocket",
+      "deleteDrawerTitle": "Delete pocket",
+      "deleteDrawerDescription": "Review {{label}}'s balance before deleting it.",
+      "deletePendingBalance": "This pocket has pending movements. Wait for them to finish before deleting it.",
+      "deleteMoveBalance": "First transfer {{amount}} to another pocket. If there are other balances, you can move them one at a time afterward.",
+      "deleteNeedsDestination": "Create another active pocket so you can move this balance before deleting it.",
+      "deleteTransferBalance": "Transfer this balance",
+      "deleteConfirmation": "This action will delete the pocket. You can't undo it.",
+      "confirmDeletePocket": "Delete pocket",
+      "deletingPocket": "Deleting...",
+      "deleteSuccessToast": "Pocket deleted successfully",
+      "deleteBalanceError": "The pocket still has an available or pending balance.",
+      "deleteDefaultError": "You can't delete your primary pocket.",
+      "deleteErrorToast": "We couldn't delete the pocket. Please try again."
     }
   },
   "brebKeys": {
@@ -754,7 +768,9 @@
       "description": "Your operation was approved and sent.",
       "descriptionAmount": "Your operation for {{amount}} was approved and sent.",
       "cardTitle": "Change approved",
-      "cardDescription": "Your card change was approved and applied."
+      "cardDescription": "Your card change was approved and applied.",
+      "accountDeletedTitle": "Pocket deleted",
+      "accountDeletedDescription": "The deletion was approved and the pocket is no longer available."
     },
     "unconfirmed": {
       "title": "We couldn't confirm your operation",

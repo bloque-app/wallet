@@ -519,6 +519,15 @@ async function createVirtualAccount(
   return mapToProduct(account as ListedAccount);
 }
 
+async function deleteVirtualAccount(
+  urn: string,
+  options?: ApprovalOptions,
+): Promise<void> {
+  await withApprovalErrors(() =>
+    bloque.accounts.virtual.delete(urn, sdkApprovalOptions(options)),
+  );
+}
+
 async function createExternalUsBankAccount(
   input: CreateExternalUsBankAccountInput,
 ): Promise<Product> {
@@ -549,5 +558,6 @@ export const bloqueAccountsRepository: AccountsRepository = {
   deleteBrebKey,
   createPolygonAccount,
   createVirtualAccount,
+  deleteVirtualAccount,
   createExternalUsBankAccount,
 };

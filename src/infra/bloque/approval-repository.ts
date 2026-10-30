@@ -90,6 +90,12 @@ async function runOperation(
     case 'delete-breb-key':
       await bloqueAccountsRepository.deleteBrebKey(operation.urn, options);
       return { kind: 'done' };
+    case 'delete-pocket':
+      await bloqueAccountsRepository.deleteVirtualAccount(
+        operation.urn,
+        options,
+      );
+      return { kind: 'done' };
     case 'card-preferred-asset':
       await bloqueAccountsRepository.updateCardPreferredAsset(
         operation.urn,
