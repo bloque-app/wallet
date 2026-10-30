@@ -452,16 +452,6 @@ async function resolveBrebKey(input: ResolveBrebKeyInput) {
   return result.data;
 }
 
-async function suspendBrebKey(urn: string): Promise<void> {
-  const result = await bloque.accounts.breb.suspendKey({ accountUrn: urn });
-  if (result.error) throw new Error(result.error.message);
-}
-
-async function activateBrebKey(urn: string): Promise<void> {
-  const result = await bloque.accounts.breb.activateKey({ accountUrn: urn });
-  if (result.error) throw new Error(result.error.message);
-}
-
 async function deleteBrebKey(
   urn: string,
   options?: ApprovalOptions,
@@ -553,8 +543,6 @@ export const bloqueAccountsRepository: AccountsRepository = {
   getCardDetailsUrl,
   createBrebKey,
   resolveBrebKey,
-  suspendBrebKey,
-  activateBrebKey,
   deleteBrebKey,
   createPolygonAccount,
   createVirtualAccount,

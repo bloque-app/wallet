@@ -32,10 +32,8 @@ import type { Account, BrebKeyProduct } from '~/domain/accounts/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useAccounts } from '~/hooks/accounts/use-accounts';
 import {
-  useActivateBrebKey,
   useCreateBrebKey,
   useDeleteBrebKey,
-  useSuspendBrebKey,
 } from '~/hooks/accounts/use-breb-keys';
 import { useApprovalRedirect } from '~/hooks/approval/use-approval-redirect';
 import i18n from '~/i18n/config';
@@ -216,16 +214,10 @@ function RouteComponent() {
   );
 
   const createMutation = useCreateBrebKey();
-  const suspendMutation = useSuspendBrebKey();
-  const activateMutation = useActivateBrebKey();
   const deleteMutation = useDeleteBrebKey();
   const redirectToApproval = useApprovalRedirect();
 
   const isLoading = accountsQuery.isLoading;
-  const actionsPending =
-    suspendMutation.isPending ||
-    activateMutation.isPending ||
-    deleteMutation.isPending;
 
   const notifyRegistrationFailed = (key: string, code?: string) => {
     if (code && ALREADY_REGISTERED_CODES.has(code)) {
@@ -514,52 +506,10 @@ function RouteComponent() {
             </DrawerDescription>
           </DrawerHeader>
           <DrawerFooter>
-            {actionsDrawer.status === 'active' && (
-              <Button
-                variant="outline"
-                className="h-12 w-full rounded-2xl text-sm"
-                disabled={actionsPending}
-                onClick={() =>
-                  suspendMutation.mutate(actionsDrawer.urn, {
-                    onSuccess: () => {
-                      toast.success(t('brebKeys.manageKeys.keySuspendedToast'));
-                      setActionsDrawer((s) => ({ ...s, open: false }));
-                    },
-                    onError: () =>
-                      toast.error(t('brebKeys.manageKeys.suspendErrorToast')),
-                  })
-                }
-              >
-                {suspendMutation.isPending
-                  ? t('brebKeys.manageKeys.suspending')
-                  : t('brebKeys.manageKeys.suspendKey')}
-              </Button>
-            )}
-            {actionsDrawer.status === 'frozen' && (
-              <Button
-                variant="outline"
-                className="h-12 w-full rounded-2xl text-sm"
-                disabled={actionsPending}
-                onClick={() =>
-                  activateMutation.mutate(actionsDrawer.urn, {
-                    onSuccess: () => {
-                      toast.success(t('brebKeys.manageKeys.keyActivatedToast'));
-                      setActionsDrawer((s) => ({ ...s, open: false }));
-                    },
-                    onError: () =>
-                      toast.error(t('brebKeys.manageKeys.activateErrorToast')),
-                  })
-                }
-              >
-                {activateMutation.isPending
-                  ? t('brebKeys.manageKeys.activating')
-                  : t('brebKeys.manageKeys.activateKey')}
-              </Button>
-            )}
             <Button
               variant="outline"
               className="h-12 w-full rounded-2xl text-sm text-destructive hover:text-destructive"
-              disabled={actionsPending}
+              disabled={deleteMutation.isPending}
               onClick={() =>
                 deleteMutation.mutate(actionsDrawer.urn, {
                   onSuccess: () => {
