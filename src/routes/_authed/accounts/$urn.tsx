@@ -296,8 +296,15 @@ function RouteComponent() {
     : 0;
   const parsedTransferAmount = Number.parseFloat(transferAmount) || 0;
   const isTransferAssetBlocked = !USD_ENABLED && isUsdAsset(selectedAsset);
+  const transferableBalances = balances.filter(
+    (balance) => USD_ENABLED || !isUsdAsset(balance.asset),
+  );
+  const transferCurrency = getDisplayAsset(selectedAsset) ?? selectedAsset;
 
   const handleOpenTransferDrawer = () => {
+    if (isTransferAssetBlocked && transferableBalances[0]) {
+      setSelectedAsset(transferableBalances[0].asset);
+    }
     setTransferDestinationId('');
     setTransferAmount('');
     setShowTransferDrawer(true);
@@ -820,9 +827,40 @@ function RouteComponent() {
               </div>
             </div>
 
+            {transferableBalances.length > 1 ? (
+              <div className="flex flex-col gap-2">
+                <Label className="text-sm font-medium">
+                  {t('accounts.detail.transferCurrencyLabel')}
+                </Label>
+                <div className="flex flex-wrap gap-2">
+                  {transferableBalances.map((balance) => (
+                    <button
+                      key={balance.asset}
+                      type="button"
+                      onClick={() => {
+                        setSelectedAsset(balance.asset);
+                        setTransferAmount('');
+                      }}
+                      aria-pressed={selectedAsset === balance.asset}
+                      className={cn(
+                        'rounded-full border px-3 py-1.5 text-sm font-medium transition-colors',
+                        selectedAsset === balance.asset
+                          ? 'border-foreground bg-foreground/5'
+                          : 'border-border/75 bg-background/70 hover:bg-muted/60',
+                      )}
+                    >
+                      {getDisplayAsset(balance.asset) ?? balance.asset}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
             <div className="flex flex-col gap-2">
               <Label htmlFor="transfer-amount" className="text-sm font-medium">
-                {t('accounts.detail.transferAmountLabel')}
+                {t('accounts.detail.transferAmountLabel', {
+                  currency: transferCurrency,
+                })}
               </Label>
               <Input
                 id="transfer-amount"
@@ -840,7 +878,10 @@ function RouteComponent() {
               <p className="text-xs text-muted-foreground">
                 {t('accounts.detail.transferAvailable', {
                   amount: transferAssetBalance
-                    ? formatAssetBalance(transferAssetBalance)
+                    ? formatSdkAssetAmountWithCode(
+                        transferAssetBalance.asset,
+                        transferAssetBalance.current,
+                      )
                     : '-',
                 })}
               </p>
@@ -852,6 +893,7 @@ function RouteComponent() {
               disabled={
                 transferMutation.isPending ||
                 !transferDestination ||
+                isTransferAssetBlocked ||
                 parsedTransferAmount <= 0
               }
               className="h-12 w-full rounded-xl text-sm font-medium"
