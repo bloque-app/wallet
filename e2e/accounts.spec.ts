@@ -259,4 +259,30 @@ test.describe('accounts', () => {
       expect(deleteSent).toBe(false);
     });
   }
+  test('the transfer drawer names the currency being moved', async ({
+    page,
+  }) => {
+    await installMockApi(page, {
+      accounts: mockAccounts.map((account) =>
+        account.urn === 'urn:pocket-orphan'
+          ? {
+              ...account,
+              balance: {
+                'COPM/2': { current: '297400', pending: '0' },
+                'MXNB/2': { current: '2000', pending: '0' },
+              },
+            }
+          : account,
+      ),
+    });
+    await page.goto('/accounts/urn%3Apocket-orphan');
+
+    await page.getByRole('button', { name: 'Transferir' }).first().click();
+    await expect(page.getByLabel('Monto a transferir (COP)')).toBeVisible();
+    await expect(page.getByText(/Disponible: .*2\.974 COP/)).toBeVisible();
+
+    await page.getByRole('button', { name: 'MXN', exact: true }).click();
+    await expect(page.getByLabel('Monto a transferir (MXN)')).toBeVisible();
+    await expect(page.getByText(/Disponible: .*20\.00 MXN/)).toBeVisible();
+  });
 });
