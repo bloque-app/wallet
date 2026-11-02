@@ -224,3 +224,38 @@ test('a key the provider rejects after accepting it shows the conflict drawer', 
     timeout: 10_000,
   });
 });
+
+test('deleting a key asks for confirmation before sending DELETE', async ({
+  page,
+}) => {
+  await installMockApi(page);
+  let deleteSent = false;
+  page.on('request', (request) => {
+    if (request.method() === 'DELETE') deleteSent = true;
+  });
+  await page.goto('/breb-keys/manage-keys');
+
+  await page
+    .getByRole('button', { name: 'Opciones de la llave main-1@bloque.team' })
+    .click();
+  await page.getByRole('button', { name: 'Eliminar llave' }).click();
+  await expect(
+    page.getByText(/no se puede deshacer/, { exact: false }),
+  ).toBeVisible();
+  expect(deleteSent).toBe(false);
+
+  await page.getByRole('button', { name: 'Cancelar' }).click();
+  await expect(page.getByText(/no se puede deshacer/)).toHaveCount(0);
+  expect(deleteSent).toBe(false);
+
+  await page.getByRole('button', { name: 'Eliminar llave' }).click();
+  const deletion = page.waitForRequest(
+    (request) =>
+      request.method() === 'DELETE' &&
+      new URL(request.url()).pathname.endsWith(
+        `/api/accounts/${encodeURIComponent('urn:breb-main-1')}`,
+      ),
+  );
+  await page.getByRole('button', { name: 'Sí, eliminar llave' }).click();
+  await deletion;
+});
