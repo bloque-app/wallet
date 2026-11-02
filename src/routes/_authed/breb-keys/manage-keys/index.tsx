@@ -121,7 +121,8 @@ function RouteComponent() {
     urn: string;
     status: string;
     key: string;
-  }>({ open: false, urn: '', status: '', key: '' });
+    confirmingDelete: boolean;
+  }>({ open: false, urn: '', status: '', key: '', confirmingDelete: false });
   const [createDrawer, setCreateDrawer] = useState<{
     open: boolean;
     keyType: BrebKeyType;
@@ -350,12 +351,16 @@ function RouteComponent() {
                         <button
                           type="button"
                           className="shrink-0 rounded-xl p-1.5 text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                          aria-label={t('brebKeys.manageKeys.keyActionsAria', {
+                            key: product.keyValue,
+                          })}
                           onClick={() =>
                             setActionsDrawer({
                               open: true,
                               urn: product.urn,
                               status: product.status,
                               key: product.keyValue,
+                              confirmingDelete: false,
                             })
                           }
                         >
@@ -506,38 +511,67 @@ function RouteComponent() {
                   : getBrebStatusLabel(actionsDrawer.status)}
             </DrawerDescription>
           </DrawerHeader>
+          {actionsDrawer.confirmingDelete ? (
+            <p className="px-4 text-sm text-muted-foreground">
+              {t('brebKeys.manageKeys.deleteKeyConfirmation')}
+            </p>
+          ) : null}
           <DrawerFooter>
-            <Button
-              variant="outline"
-              className="h-12 w-full rounded-2xl text-sm text-destructive hover:text-destructive"
-              disabled={deleteMutation.isPending}
-              onClick={() =>
-                deleteMutation.mutate(actionsDrawer.urn, {
-                  onSuccess: () => {
-                    toast.success(t('brebKeys.manageKeys.keyDeletedToast'));
-                    setActionsDrawer((s) => ({ ...s, open: false }));
-                  },
-                  onError: (error) => {
-                    if (
-                      redirectToApproval(error, {
-                        kind: 'delete-breb-key',
-                        urn: actionsDrawer.urn,
-                      })
-                    ) {
-                      return;
-                    }
-                    toast.error(
-                      brebKeyDeletionRefusal(error) ??
-                        t('brebKeys.manageKeys.deleteErrorToast'),
-                    );
-                  },
-                })
-              }
-            >
-              {deleteMutation.isPending
-                ? t('brebKeys.manageKeys.deleting')
-                : t('brebKeys.manageKeys.deleteKey')}
-            </Button>
+            {actionsDrawer.confirmingDelete ? (
+              <Button
+                variant="destructive"
+                className="h-12 w-full rounded-2xl text-sm"
+                disabled={deleteMutation.isPending}
+                onClick={() =>
+                  deleteMutation.mutate(actionsDrawer.urn, {
+                    onSuccess: () => {
+                      toast.success(t('brebKeys.manageKeys.keyDeletedToast'));
+                      setActionsDrawer((s) => ({ ...s, open: false }));
+                    },
+                    onError: (error) => {
+                      if (
+                        redirectToApproval(error, {
+                          kind: 'delete-breb-key',
+                          urn: actionsDrawer.urn,
+                        })
+                      ) {
+                        return;
+                      }
+                      toast.error(
+                        brebKeyDeletionRefusal(error) ??
+                          t('brebKeys.manageKeys.deleteErrorToast'),
+                      );
+                    },
+                  })
+                }
+              >
+                {deleteMutation.isPending
+                  ? t('brebKeys.manageKeys.deleting')
+                  : t('brebKeys.manageKeys.confirmDeleteKey')}
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                className="h-12 w-full rounded-2xl text-sm text-destructive hover:text-destructive"
+                onClick={() =>
+                  setActionsDrawer((s) => ({ ...s, confirmingDelete: true }))
+                }
+              >
+                {t('brebKeys.manageKeys.deleteKey')}
+              </Button>
+            )}
+            {actionsDrawer.confirmingDelete ? (
+              <Button
+                variant="outline"
+                className="h-12 w-full rounded-2xl text-sm"
+                disabled={deleteMutation.isPending}
+                onClick={() =>
+                  setActionsDrawer((s) => ({ ...s, confirmingDelete: false }))
+                }
+              >
+                {t('common.cancel')}
+              </Button>
+            ) : null}
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
