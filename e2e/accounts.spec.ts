@@ -285,4 +285,71 @@ test.describe('accounts', () => {
     await expect(page.getByLabel('Monto a transferir (MXN)')).toBeVisible();
     await expect(page.getByText(/Disponible: .*20\.00 MXN/)).toBeVisible();
   });
+  test('deletes a blocking BRE-B key from the pocket deletion drawer', async ({
+    page,
+  }) => {
+    await page.goto('/accounts/urn%3Apocket-main');
+    await page.getByRole('button', { name: 'Eliminar bolsillo' }).click();
+
+    const keyRow = page
+      .getByRole('listitem')
+      .filter({ hasText: 'main-1@bloque.team' });
+    await expect(keyRow).toContainText('BRE-B • main-1@bloque.team');
+    await keyRow.getByRole('button', { name: 'Eliminar llave' }).click();
+    await expect(page.getByText(/no se puede deshacer/)).toBeVisible();
+
+    const deletion = page.waitForRequest(
+      (request) =>
+        request.method() === 'DELETE' &&
+        new URL(request.url()).pathname.endsWith(
+          `/api/accounts/${encodeURIComponent('urn:breb-main-1')}`,
+        ),
+    );
+    await page.getByRole('button', { name: 'Sí, eliminar llave' }).click();
+    await deletion;
+
+    await expect(
+      page.getByRole('listitem').filter({ hasText: 'main-1@bloque.team' }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole('listitem').filter({ hasText: '+573000000000' }),
+    ).toBeVisible();
+  });
+
+  test('a blocking key that needs a passkey opens the approval page', async ({
+    page,
+  }) => {
+    await page.route(
+      `**/api/accounts/${encodeURIComponent('urn:breb-main-1')}`,
+      (route) =>
+        route.request().method() === 'DELETE'
+          ? route.fulfill({
+              status: 428,
+              json: {
+                code: 'E_APPROVAL_REQUIRED',
+                message: 'E_APPROVAL_REQUIRED',
+                extra_details: {
+                  approval_token: 'approval-token',
+                  expires_at: Date.now() + 600_000,
+                  approval_url:
+                    'https://id.dev-bloque.app/approve#token=approval-token',
+                },
+              },
+            })
+          : route.fallback(),
+    );
+    await page.route('https://id.dev-bloque.app/**', (route) =>
+      route.fulfill({ contentType: 'text/html', body: '<h1>Aprobar</h1>' }),
+    );
+    await page.goto('/accounts/urn%3Apocket-main');
+    await page.getByRole('button', { name: 'Eliminar bolsillo' }).click();
+    await page
+      .getByRole('listitem')
+      .filter({ hasText: 'main-1@bloque.team' })
+      .getByRole('button', { name: 'Eliminar llave' })
+      .click();
+    await page.getByRole('button', { name: 'Sí, eliminar llave' }).click();
+
+    await expect(page).toHaveURL(/id\.dev-bloque\.app\/approve/);
+  });
 });

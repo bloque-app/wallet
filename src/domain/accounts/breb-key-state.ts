@@ -27,6 +27,14 @@ export function brebKeyState(
   return 'ready';
 }
 
+/** Only registered keys, active or suspended, can be deleted. */
+export function isDeletableBrebKey(
+  product: Pick<BrebKeyProduct, 'status' | 'keyStatus'>,
+): boolean {
+  const state = brebKeyState(product);
+  return state === 'ready' || state === 'suspended';
+}
+
 /** Failed and removed keys can be registered again. */
 export function isRetryableBrebKey(
   product: Pick<BrebKeyProduct, 'status' | 'keyStatus'>,
