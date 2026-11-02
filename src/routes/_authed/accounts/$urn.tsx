@@ -36,6 +36,7 @@ import {
   US_RAILS_ENABLED,
   USD_ENABLED,
 } from '~/config/features';
+import { isDeletableBrebKey } from '~/domain/accounts/breb-key-state';
 import {
   blocksUsBankLink,
   isLinkingUsBank,
@@ -47,11 +48,16 @@ import {
   pocketDeletionBalances,
   pocketDeletionBlockers,
 } from '~/domain/accounts/pocket-deletion';
-import type { AssetBalance, Product } from '~/domain/accounts/types';
+import type {
+  AssetBalance,
+  BrebKeyProduct,
+  Product,
+} from '~/domain/accounts/types';
 import { isActiveVirtualAccount } from '~/domain/accounts/virtual-account';
 import { useAccountMovements } from '~/hooks/accounts/use-account-movements';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useAccount, useAccounts } from '~/hooks/accounts/use-accounts';
+import { useDeleteBrebKey } from '~/hooks/accounts/use-breb-keys';
 import { useCreateCard } from '~/hooks/accounts/use-cards';
 import { useDeletePocket } from '~/hooks/accounts/use-delete-pocket';
 import { useTransfer } from '~/hooks/accounts/use-transfer';
@@ -60,7 +66,10 @@ import {
   currencyMajorToMinor,
   normalizeCurrencyInput,
 } from '~/lib/currency-input';
-import { pocketDeletionRefusal } from '~/lib/deletion-errors';
+import {
+  brebKeyDeletionRefusal,
+  pocketDeletionRefusal,
+} from '~/lib/deletion-errors';
 import type { Asset, Movement } from '~/lib/formatters';
 import {
   formatAmount,
@@ -183,6 +192,7 @@ function RouteComponent() {
   const [productName, setProductName] = useState('');
   const [showTransferDrawer, setShowTransferDrawer] = useState(false);
   const [showDeleteDrawer, setShowDeleteDrawer] = useState(false);
+  const [keyToDelete, setKeyToDelete] = useState<BrebKeyProduct | null>(null);
   const [transferDestinationId, setTransferDestinationId] = useState('');
   const [transferAmount, setTransferAmount] = useState('');
 
@@ -193,6 +203,7 @@ function RouteComponent() {
   const createCardMutation = useCreateCard();
   const transferMutation = useTransfer();
   const deletePocketMutation = useDeletePocket();
+  const deleteBrebKeyMutation = useDeleteBrebKey();
   const redirectToApproval = useApprovalRedirect();
   const { accounts: ownAccounts } = useAccountPicker({
     requireVirtualAccount: true,
@@ -352,7 +363,30 @@ function RouteComponent() {
 
   const handleOpenDeleteDrawer = () => {
     setTransferDestinationId('');
+    setKeyToDelete(null);
     setShowDeleteDrawer(true);
+  };
+
+  const handleDeleteBlockingKey = () => {
+    if (!keyToDelete) return;
+    const { urn: keyUrn } = keyToDelete;
+    deleteBrebKeyMutation.mutate(keyUrn, {
+      onSuccess: () => {
+        toast.success(t('brebKeys.manageKeys.keyDeletedToast'));
+        setKeyToDelete(null);
+      },
+      onError: (error) => {
+        if (
+          redirectToApproval(error, { kind: 'delete-breb-key', urn: keyUrn })
+        ) {
+          return;
+        }
+        toast.error(
+          brebKeyDeletionRefusal(error) ??
+            t('brebKeys.manageKeys.deleteErrorToast'),
+        );
+      },
+    });
   };
 
   const handleMoveBalanceBeforeDelete = async () => {
@@ -926,6 +960,15 @@ function RouteComponent() {
             <div className="px-5 pb-4 text-sm text-muted-foreground">
               {t('accounts.detail.deletePendingBalance')}
             </div>
+          ) : keyToDelete ? (
+            <div className="flex flex-col gap-2 px-5 pb-2">
+              <p className="text-sm font-medium text-foreground">
+                {keyToDelete.keyValue}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {t('brebKeys.manageKeys.deleteKeyConfirmation')}
+              </p>
+            </div>
           ) : deletionBlockers.length > 0 ? (
             <div className="flex flex-col gap-3 px-5 pb-2">
               <p className="text-sm text-muted-foreground">
@@ -935,9 +978,25 @@ function RouteComponent() {
                 {deletionBlockers.map((product) => (
                   <li
                     key={product.urn}
-                    className="rounded-2xl border border-border/75 bg-background/70 px-4 py-3 text-sm font-medium"
+                    className="flex items-center justify-between gap-3 rounded-2xl border border-border/75 bg-background/70 px-4 py-3 text-sm font-medium"
                   >
-                    {getProductKindLabel(product.kind)} • {product.label}
+                    <span className="min-w-0 truncate">
+                      {getProductKindLabel(product.kind)} •{' '}
+                      {product.kind === 'breb'
+                        ? product.keyValue
+                        : product.label}
+                    </span>
+                    {product.kind === 'breb' && isDeletableBrebKey(product) ? (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="h-8 shrink-0 rounded-xl text-xs text-destructive hover:text-destructive"
+                        onClick={() => setKeyToDelete(product)}
+                      >
+                        {t('brebKeys.manageKeys.deleteKey')}
+                      </Button>
+                    ) : null}
                   </li>
                 ))}
               </ul>
@@ -1001,9 +1060,30 @@ function RouteComponent() {
           )}
 
           <DrawerFooter>
-            {deletionBalances.pending.length > 0 ||
-            deletionBlockers.length > 0 ||
-            deletionBalances.unmovable.length > 0 ? (
+            {keyToDelete ? (
+              <>
+                <Button
+                  variant="destructive"
+                  onClick={handleDeleteBlockingKey}
+                  disabled={deleteBrebKeyMutation.isPending}
+                  className="h-12 w-full rounded-xl text-sm font-medium"
+                >
+                  {deleteBrebKeyMutation.isPending
+                    ? t('brebKeys.manageKeys.deleting')
+                    : t('brebKeys.manageKeys.confirmDeleteKey')}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setKeyToDelete(null)}
+                  disabled={deleteBrebKeyMutation.isPending}
+                  className="h-12 w-full rounded-xl text-sm font-medium"
+                >
+                  {t('common.cancel')}
+                </Button>
+              </>
+            ) : deletionBalances.pending.length > 0 ||
+              deletionBlockers.length > 0 ||
+              deletionBalances.unmovable.length > 0 ? (
               <Button
                 variant="outline"
                 onClick={() => setShowDeleteDrawer(false)}

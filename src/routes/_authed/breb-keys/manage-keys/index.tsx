@@ -20,6 +20,7 @@ import { brebKeyAccounts } from '~/domain/accounts/breb-key-account';
 import {
   BREB_KEY_ALREADY_REGISTERED_CODE,
   brebKeyState,
+  isDeletableBrebKey,
   isRetryableBrebKey,
 } from '~/domain/accounts/breb-key-state';
 import {
@@ -318,9 +319,7 @@ function RouteComponent() {
               </p>
               <div className="flex flex-col divide-y divide-border/60 rounded-2xl border border-border/75 bg-card/80 overflow-hidden">
                 {activeAccounts.map((product) => {
-                  const state = brebKeyState(product);
-                  const isManageable =
-                    state === 'ready' || state === 'suspended';
+                  const isManageable = isDeletableBrebKey(product);
                   return (
                     <div
                       key={product.urn}
