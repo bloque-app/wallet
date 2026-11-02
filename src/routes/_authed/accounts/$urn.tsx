@@ -313,9 +313,6 @@ function RouteComponent() {
   const transferCurrency = getDisplayAsset(selectedAsset) ?? selectedAsset;
 
   const handleOpenTransferDrawer = () => {
-    if (isTransferAssetBlocked && transferableBalances[0]) {
-      setSelectedAsset(transferableBalances[0].asset);
-    }
     setTransferDestinationId('');
     setTransferAmount('');
     setShowTransferDrawer(true);
@@ -956,11 +953,7 @@ function RouteComponent() {
             </DrawerDescription>
           </DrawerHeader>
 
-          {deletionBalances.pending.length > 0 ? (
-            <div className="px-5 pb-4 text-sm text-muted-foreground">
-              {t('accounts.detail.deletePendingBalance')}
-            </div>
-          ) : keyToDelete ? (
+          {keyToDelete ? (
             <div className="flex flex-col gap-2 px-5 pb-2">
               <p className="text-sm font-medium text-foreground">
                 {keyToDelete.keyValue}
@@ -968,6 +961,10 @@ function RouteComponent() {
               <p className="text-sm text-muted-foreground">
                 {t('brebKeys.manageKeys.deleteKeyConfirmation')}
               </p>
+            </div>
+          ) : deletionBalances.pending.length > 0 ? (
+            <div className="px-5 pb-4 text-sm text-muted-foreground">
+              {t('accounts.detail.deletePendingBalance')}
             </div>
           ) : deletionBlockers.length > 0 ? (
             <div className="flex flex-col gap-3 px-5 pb-2">
