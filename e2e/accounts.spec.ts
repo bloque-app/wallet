@@ -184,26 +184,79 @@ test.describe('accounts', () => {
     ).toHaveCount(0);
   });
 
-  test('guides a funded pocket into the existing transfer flow first', async ({
+  test('moves a funded pocket balance in full before deleting it', async ({
     page,
   }) => {
-    await installMockApi(page, {
-      accounts: mockAccounts.filter(
-        (account) =>
-          account.urn === 'urn:pocket-main' ||
-          account.ledger_account_id !== 'ledger-main',
-      ),
+    const api = await installMockApi(page, {
+      accounts: mockAccounts
+        .filter(
+          (account) =>
+            account.urn === 'urn:pocket-main' ||
+            account.ledger_account_id !== 'ledger-main',
+        )
+        .map((account) =>
+          account.urn === 'urn:pocket-main'
+            ? {
+                ...account,
+                balance: { 'COPM/2': { current: '500050', pending: '0' } },
+              }
+            : account,
+        ),
     });
     await page.goto('/accounts/urn%3Apocket-main');
 
     await page.getByRole('button', { name: 'Eliminar bolsillo' }).click();
     await expect(page.getByText(/Primero transfiere/)).toBeVisible();
     await page.getByRole('button', { name: 'Orphan' }).click();
-    await page.getByRole('button', { name: 'Transferir este saldo' }).click();
+    await page.getByRole('button', { name: /^Transferir .*COP$/ }).click();
 
     await expect(
-      page.getByRole('heading', { name: 'Transferir fondos' }),
+      page.getByText('Esta acción eliminará el bolsillo.', { exact: false }),
     ).toBeVisible();
-    await expect(page.getByLabel('Monto a transferir')).toHaveValue('5000');
+    expect(api.transfers).toEqual([
+      expect.objectContaining({
+        destination_account_urn: 'urn:pocket-orphan',
+        amount: '500050',
+        asset: 'COPM/2',
+      }),
+    ]);
   });
+
+  for (const { name, balance, shown } of [
+    {
+      name: 'KSM',
+      balance: { 'KSM/12': { current: '1500000000000', pending: '0' } },
+      shown: /KSM/,
+    },
+    {
+      name: 'USD',
+      balance: { 'DUSD/6': { current: '250000000', pending: '0' } },
+      shown: /USD/,
+    },
+  ]) {
+    test(`blocks deletion while the pocket holds ${name} it can't move`, async ({
+      page,
+    }) => {
+      await installMockApi(page, {
+        accounts: mockAccounts.map((account) =>
+          account.urn === 'urn:pocket-orphan'
+            ? { ...account, balance }
+            : account,
+        ),
+      });
+      let deleteSent = false;
+      page.on('request', (request) => {
+        if (request.method() === 'DELETE') deleteSent = true;
+      });
+      await page.goto('/accounts/urn%3Apocket-orphan');
+
+      await page.getByRole('button', { name: 'Eliminar bolsillo' }).click();
+      await expect(page.getByText(/soporte@bloque\.team/)).toContainText(shown);
+      await expect(page.getByRole('button', { name: 'Cerrar' })).toBeVisible();
+      await expect(
+        page.getByRole('button', { name: 'Eliminar bolsillo' }),
+      ).toHaveCount(0);
+      expect(deleteSent).toBe(false);
+    });
+  }
 });

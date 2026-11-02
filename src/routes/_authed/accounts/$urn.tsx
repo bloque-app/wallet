@@ -44,7 +44,6 @@ import {
 } from '~/domain/accounts/external-us-bank';
 import {
   isDefaultPocket,
-  minorUnitsToMajorInput,
   pocketDeletionBalances,
   pocketDeletionBlockers,
 } from '~/domain/accounts/pocket-deletion';
@@ -105,6 +104,11 @@ const ASSET_LABELS: Record<string, Asset> = {
 };
 
 type AddProductStep = 'closed' | 'pick' | 'card';
+
+/** Assets the wallet can move out of a pocket before deleting it. */
+function canMoveBeforeDeletion(rawAsset: string): boolean {
+  return !rawAsset.startsWith('KSM') && (USD_ENABLED || !isUsdAsset(rawAsset));
+}
 
 function parseAmount(rawAmount: string, rawAsset: string) {
   const [, precisionStr] = rawAsset.split('/');
@@ -227,7 +231,10 @@ function RouteComponent() {
   const deletionBlockers = pocketProduct
     ? pocketDeletionBlockers(account?.products ?? [], pocketProduct.urn)
     : [];
-  const deletionBalances = pocketDeletionBalances(balances);
+  const deletionBalances = pocketDeletionBalances(
+    account?.balances ?? [],
+    canMoveBeforeDeletion,
+  );
   const nextFundedBalance = deletionBalances.funded[0];
   const shownProducts = visibleProducts(account?.products ?? []);
   const associatedProducts = shownProducts.filter(
@@ -341,17 +348,33 @@ function RouteComponent() {
     setShowDeleteDrawer(true);
   };
 
-  const handlePrepareDeleteTransfer = () => {
-    if (!nextFundedBalance || !transferDestination) return;
-    setSelectedAsset(nextFundedBalance.asset);
-    setTransferAmount(
-      minorUnitsToMajorInput(
-        nextFundedBalance.current,
-        nextFundedBalance.asset,
-      ),
-    );
-    setShowDeleteDrawer(false);
-    setShowTransferDrawer(true);
+  const handleMoveBalanceBeforeDelete = async () => {
+    if (!account || !nextFundedBalance || !transferDestination) return;
+    const { asset, current } = nextFundedBalance;
+    const input = {
+      sourceUrn: account.primaryUrn,
+      destinationUrn: transferDestination.primaryUrn,
+      amount: current,
+      asset: asset as SupportedAsset,
+      metadata: { reference: `own-account-transfer-${Date.now()}` },
+    };
+    try {
+      await transferMutation.mutateAsync(input);
+      toast.success(
+        t('accounts.detail.transferSuccessToast', {
+          amount: formatSdkAssetAmountWithCode(asset, current),
+        }),
+      );
+    } catch (error) {
+      const display = {
+        amount: parseAmount(current, asset),
+        asset: getDisplayAsset(asset) ?? undefined,
+      };
+      if (redirectToApproval(error, { kind: 'transfer', input }, display)) {
+        return;
+      }
+      toast.error(t('accounts.detail.transferErrorToast'));
+    }
   };
 
   const handleDeletePocket = async () => {
@@ -359,6 +382,7 @@ function RouteComponent() {
       !pocketProduct ||
       deletionBalances.pending.length > 0 ||
       deletionBlockers.length > 0 ||
+      deletionBalances.unmovable.length > 0 ||
       deletionBalances.funded.length > 0
     ) {
       return;
@@ -876,6 +900,19 @@ function RouteComponent() {
                 ))}
               </ul>
             </div>
+          ) : deletionBalances.unmovable.length > 0 ? (
+            <div className="px-5 pb-4 text-sm text-muted-foreground">
+              {t('accounts.detail.deleteUnmovableBalance', {
+                amounts: deletionBalances.unmovable
+                  .map((balance) =>
+                    formatSdkAssetAmountWithCode(
+                      balance.asset,
+                      balance.current,
+                    ),
+                  )
+                  .join(', '),
+              })}
+            </div>
           ) : nextFundedBalance ? (
             <div className="flex flex-col gap-4 px-5 pb-2">
               <p className="text-sm text-muted-foreground">
@@ -923,7 +960,8 @@ function RouteComponent() {
 
           <DrawerFooter>
             {deletionBalances.pending.length > 0 ||
-            deletionBlockers.length > 0 ? (
+            deletionBlockers.length > 0 ||
+            deletionBalances.unmovable.length > 0 ? (
               <Button
                 variant="outline"
                 onClick={() => setShowDeleteDrawer(false)}
@@ -933,11 +971,22 @@ function RouteComponent() {
               </Button>
             ) : nextFundedBalance ? (
               <Button
-                onClick={handlePrepareDeleteTransfer}
-                disabled={!transferDestination}
+                onClick={handleMoveBalanceBeforeDelete}
+                disabled={
+                  !transferDestination ||
+                  transferMutation.isPending ||
+                  accountQuery.isFetching
+                }
                 className="h-12 w-full rounded-xl text-sm font-medium"
               >
-                {t('accounts.detail.deleteTransferBalance')}
+                {transferMutation.isPending
+                  ? t('accounts.detail.transferring')
+                  : t('accounts.detail.deleteTransferBalance', {
+                      amount: formatSdkAssetAmountWithCode(
+                        nextFundedBalance.asset,
+                        nextFundedBalance.current,
+                      ),
+                    })}
               </Button>
             ) : (
               <Button

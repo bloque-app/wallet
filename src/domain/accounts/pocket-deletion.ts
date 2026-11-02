@@ -22,25 +22,21 @@ function rawAmountIsNonZero(value: string): boolean {
   }
 }
 
-export function pocketDeletionBalances(balances: AssetBalance[]) {
+/**
+ * Splits every balance the backend checks before deleting: funds the wallet
+ * can move out (`funded`), funds it can't move yet (`unmovable`), and
+ * movements still settling (`pending`).
+ */
+export function pocketDeletionBalances(
+  balances: AssetBalance[],
+  canMove: (asset: string) => boolean,
+) {
+  const current = balances.filter((balance) =>
+    rawAmountIsNonZero(balance.current),
+  );
   return {
-    funded: balances.filter((balance) => rawAmountIsNonZero(balance.current)),
+    funded: current.filter((balance) => canMove(balance.asset)),
+    unmovable: current.filter((balance) => !canMove(balance.asset)),
     pending: balances.filter((balance) => rawAmountIsNonZero(balance.pending)),
   };
-}
-
-export function minorUnitsToMajorInput(
-  rawAmount: string,
-  rawAsset: string,
-): string {
-  const [, precisionValue] = rawAsset.split('/');
-  const precision = Number.parseInt(precisionValue ?? '', 10);
-  if (!/^\d+$/.test(rawAmount) || Number.isNaN(precision) || precision <= 0) {
-    return rawAmount;
-  }
-
-  const padded = rawAmount.padStart(precision + 1, '0');
-  const integer = padded.slice(0, -precision).replace(/^0+(?=\d)/, '');
-  const fraction = padded.slice(-precision).replace(/0+$/, '');
-  return fraction ? `${integer}.${fraction}` : integer;
 }

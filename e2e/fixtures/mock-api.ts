@@ -275,6 +275,8 @@ export type MockApiHandle = {
    * compliant when it loaded and stops being so while it is open.
    */
   setMissingRequirements(keys: string[]): void;
+  /** Bodies of every `POST /api/accounts/:urn/transfer`, in order. */
+  transfers: unknown[];
 };
 
 export async function installMockApi(
@@ -283,6 +285,15 @@ export async function installMockApi(
 ): Promise<MockApiHandle> {
   let missingRequirements = options.missingRequirements ?? [];
   const deletedAccounts = new Set<string>();
+  const drainedLedgers = new Set<string>();
+  const transfers: unknown[] = [];
+  const served = () =>
+    (options.accounts ?? mockAccounts).map((account) => {
+      const { ledger_account_id } = account as { ledger_account_id: string };
+      return drainedLedgers.has(ledger_account_id)
+        ? { ...(account as object), balance: {} }
+        : account;
+    });
 
   await page.route('**/api/**', async (route: Route) => {
     const url = new URL(route.request().url());
@@ -346,12 +357,30 @@ export async function installMockApi(
     }
 
     if (pathname === '/api/accounts') {
-      const accounts = options.accounts ?? mockAccounts;
       return route.fulfill({
         json: {
-          accounts: accounts.filter(
+          accounts: served().filter(
             (account) => !deletedAccounts.has((account as { urn: string }).urn),
           ),
+        },
+      });
+    }
+
+    if (
+      route.request().method() === 'POST' &&
+      pathname.startsWith('/api/accounts/') &&
+      pathname.endsWith('/transfer')
+    ) {
+      const urn = decodeURIComponent(pathname.split('/')[3] ?? '');
+      const source = (options.accounts ?? mockAccounts).find(
+        (candidate) => (candidate as { urn: string }).urn === urn,
+      ) as { ledger_account_id: string } | undefined;
+      if (source) drainedLedgers.add(source.ledger_account_id);
+      transfers.push(route.request().postDataJSON());
+      return route.fulfill({
+        json: {
+          result: { queue_id: 'queue-1', status: 'queued', message: 'queued' },
+          req_id: 'req_transfer',
         },
       });
     }
@@ -398,7 +427,7 @@ export async function installMockApi(
     }
 
     if (pathname.endsWith('/balance')) {
-      const accounts = (options.accounts ?? mockAccounts) as Array<{
+      const accounts = served() as Array<{
         urn: string;
         ledger_account_id: string;
         balance?: Record<string, unknown>;
@@ -425,5 +454,6 @@ export async function installMockApi(
     setMissingRequirements(keys: string[]) {
       missingRequirements = keys;
     },
+    transfers,
   };
 }

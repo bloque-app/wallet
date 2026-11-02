@@ -34,6 +34,7 @@ export function useAccount(urn: string | undefined) {
   return {
     data: account,
     isLoading: accountsQuery.isLoading,
+    isFetching: accountsQuery.isFetching,
     isSuccess: accountsQuery.isSuccess,
     isError: accountsQuery.isError,
     error: accountsQuery.error,
