@@ -61,6 +61,7 @@ import {
   currencyMajorToMinor,
   normalizeCurrencyInput,
 } from '~/lib/currency-input';
+import { pocketDeletionRefusal } from '~/lib/deletion-errors';
 import type { Asset, Movement } from '~/lib/formatters';
 import {
   formatAmount,
@@ -119,15 +120,6 @@ function parseAmount(rawAmount: string, rawAsset: string) {
 function getAssetLabel(rawAsset: string): Asset | null {
   const [assetKey] = rawAsset.split('/');
   return ASSET_LABELS[assetKey] ?? null;
-}
-
-function getApiErrorCode(error: unknown): string | undefined {
-  if (typeof error !== 'object' || error === null) return undefined;
-  const { code, message } = error as { code?: unknown; message?: unknown };
-  if (typeof code === 'string') return code;
-  return typeof message === 'string' && message.startsWith('E_')
-    ? message
-    : undefined;
 }
 
 function majorToMinor(amountMajor: string, rawAsset: string): string {
@@ -387,16 +379,9 @@ function RouteComponent() {
       ) {
         return;
       }
-      const code = getApiErrorCode(error);
-      if (code === 'E_ACCOUNT_HAS_BALANCE') {
-        toast.error(t('accounts.detail.deleteBalanceError'));
-        return;
-      }
-      if (code === 'E_DEFAULT_ACCOUNT_UNDELETABLE') {
-        toast.error(t('accounts.detail.deleteDefaultError'));
-        return;
-      }
-      toast.error(t('accounts.detail.deleteErrorToast'));
+      toast.error(
+        pocketDeletionRefusal(error) ?? t('accounts.detail.deleteErrorToast'),
+      );
     }
   };
 
