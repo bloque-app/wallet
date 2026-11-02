@@ -14,10 +14,15 @@ import type { ApprovalOutcome } from '~/domain/approval/ports';
 import {
   ApprovalFailedError,
   type ApprovalFailureReason,
+  type ApprovalOperation,
   type ApprovalOperationKind,
   type SavedApproval,
 } from '~/domain/approval/types';
 import { bloqueApprovalRepository } from '~/infra/bloque/approval-repository';
+import {
+  brebKeyDeletionRefusal,
+  pocketDeletionRefusal,
+} from '~/lib/deletion-errors';
 import { formatAmountWithCode } from '~/lib/formatters';
 import {
   clearPendingApproval,
@@ -45,6 +50,7 @@ type State =
   | { kind: 'none' }
   | { kind: 'done'; saved: SavedApproval; outcome: ApprovalOutcome }
   | { kind: 'failed'; saved: SavedApproval; reason: ApprovalFailureReason }
+  | { kind: 'refused'; saved: SavedApproval; message: string }
   | { kind: 'unconfirmed'; saved: SavedApproval };
 
 /** Refusals of the repeat that are certain to have run nothing. */
@@ -68,6 +74,21 @@ const ACCOUNT_DELETIONS: ReadonlySet<ApprovalOperationKind> = new Set([
 const KEY_DELETIONS: ReadonlySet<ApprovalOperationKind> = new Set([
   'delete-breb-key',
 ]);
+
+/** Why a repeated deletion was refused, when the refusal proves it ran nothing. */
+function deletionRefusal(
+  operation: ApprovalOperation,
+  error: unknown,
+): string | undefined {
+  switch (operation.kind) {
+    case 'delete-breb-key':
+      return brebKeyDeletionRefusal(error);
+    case 'delete-pocket':
+      return pocketDeletionRefusal(error);
+    default:
+      return undefined;
+  }
+}
 
 function RouteComponent() {
   const { t } = useTranslation();
@@ -115,11 +136,14 @@ function RouteComponent() {
       );
       setState({ kind: 'done', saved, outcome });
     } catch (error) {
+      const refusal = deletionRefusal(saved.operation, error);
       if (
         error instanceof ApprovalFailedError &&
         NOTHING_RAN.has(error.reason)
       ) {
         setState({ kind: 'failed', saved, reason: error.reason });
+      } else if (refusal) {
+        setState({ kind: 'refused', saved, message: refusal });
       } else {
         setState({ kind: 'unconfirmed', saved });
       }
@@ -235,7 +259,48 @@ function RouteComponent() {
     );
   }
 
+  if (state.kind === 'refused') {
+    return (
+      <ApprovalScreen
+        icon="cancelled"
+        title={t('approval.refused.title')}
+        description={state.message}
+        primary={{
+          label: t('common.back'),
+          onClick: () => goBack(state.saved),
+        }}
+      />
+    );
+  }
+
   if (state.kind === 'unconfirmed') {
+    const { kind } = state.saved.operation;
+    if (KEY_DELETIONS.has(kind)) {
+      return (
+        <ApprovalScreen
+          icon="alert"
+          title={t('approval.unconfirmed.title')}
+          description={t('approval.unconfirmed.keyDeletionDescription')}
+          primary={{
+            label: t('approval.seeKeys'),
+            onClick: () => goBack(state.saved),
+          }}
+        />
+      );
+    }
+    if (ACCOUNT_DELETIONS.has(kind)) {
+      return (
+        <ApprovalScreen
+          icon="alert"
+          title={t('approval.unconfirmed.title')}
+          description={t('approval.unconfirmed.pocketDeletionDescription')}
+          primary={{
+            label: t('approval.seePockets'),
+            onClick: () => void navigate({ to: '/accounts' }),
+          }}
+        />
+      );
+    }
     return (
       <ApprovalScreen
         icon="alert"

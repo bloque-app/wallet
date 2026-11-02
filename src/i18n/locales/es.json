@@ -754,6 +754,8 @@
     "cancel": "Cancelar operación",
     "registerPasskey": "Registrar passkey",
     "seeMovements": "Ver movimientos",
+    "seeKeys": "Ver mis llaves",
+    "seePockets": "Ver mis bolsillos",
     "none": {
       "title": "Nada por aprobar",
       "description": "No hay ninguna operación esperando tu aprobación."
@@ -769,9 +771,14 @@
       "keyDeletedTitle": "Llave eliminada",
       "keyDeletedDescription": "La eliminación fue aprobada y la llave ya no está registrada en BRE-B."
     },
+    "refused": {
+      "title": "No se pudo eliminar"
+    },
     "unconfirmed": {
       "title": "No pudimos confirmar tu operación",
-      "description": "Recibimos tu aprobación, pero no pudimos confirmar si la operación se realizó. Revisa tus movimientos antes de intentar de nuevo, para no enviarla dos veces."
+      "description": "Recibimos tu aprobación, pero no pudimos confirmar si la operación se realizó. Revisa tus movimientos antes de intentar de nuevo, para no enviarla dos veces.",
+      "keyDeletionDescription": "Recibimos tu aprobación, pero no pudimos confirmar si la llave se eliminó. Revisa tus llaves antes de intentarlo de nuevo.",
+      "pocketDeletionDescription": "Recibimos tu aprobación, pero no pudimos confirmar si el bolsillo se eliminó. Revisa tus bolsillos antes de intentarlo de nuevo."
     },
     "failed": {
       "not_approved": {

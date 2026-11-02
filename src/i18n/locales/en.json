@@ -754,6 +754,8 @@
     "cancel": "Cancel operation",
     "registerPasskey": "Register passkey",
     "seeMovements": "See movements",
+    "seeKeys": "See my keys",
+    "seePockets": "See my pockets",
     "none": {
       "title": "Nothing to approve",
       "description": "There is no operation waiting for your approval."
@@ -769,9 +771,14 @@
       "keyDeletedTitle": "Key deleted",
       "keyDeletedDescription": "The deletion was approved and the key is no longer registered in BRE-B."
     },
+    "refused": {
+      "title": "We couldn't delete it"
+    },
     "unconfirmed": {
       "title": "We couldn't confirm your operation",
-      "description": "Your approval was received, but we couldn't confirm whether the operation went through. Check your movements before trying again, so it isn't sent twice."
+      "description": "Your approval was received, but we couldn't confirm whether the operation went through. Check your movements before trying again, so it isn't sent twice.",
+      "keyDeletionDescription": "We received your approval, but couldn't confirm whether the key was deleted. Check your keys before trying again.",
+      "pocketDeletionDescription": "We received your approval, but couldn't confirm whether the pocket was deleted. Check your pockets before trying again."
     },
     "failed": {
       "not_approved": {
