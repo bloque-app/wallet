@@ -45,7 +45,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.5.1",
     "@playwright/test": "^1.62.0",
-    "@rsbuild/core": "^2.1.0",
+    "@rsbuild/core": "^2.3.0",
     "@rsbuild/plugin-react": "^2.1.0",
     "@rsbuild/plugin-tailwindcss": "^2.0.3",
     "@tanstack/router-plugin": "^1.168.18",
