@@ -88,19 +88,36 @@
       "transferToOwnAccount": "Transfer to another pocket",
       "transferDrawerTitle": "Transfer funds",
       "transferDestinationLabel": "Destination pocket",
-      "transferAmountLabel": "Amount to transfer",
+      "transferAmountLabel": "Amount to transfer ({{currency}})",
+      "transferCurrencyLabel": "Currency",
       "transferAvailable": "Available: {{amount}}",
       "transferInsufficientBalance": "Insufficient balance for this transfer.",
       "transferSubmit": "Transfer",
       "transferring": "Transferring...",
-      "transferSuccessToast": "Transfer completed successfully",
+      "transferSuccessToast": "You transferred {{amount}} successfully",
       "transferErrorToast": "Couldn't complete the transfer. Please try again.",
       "addProductCardLabel": "Card (Global)",
       "addProductBrebLabel": "BRE-B key (COP)",
       "addProductPlaidLabel": "Plaid (USD)",
       "addProductNeedsVirtualAccount": "You can only add products to an active pocket.",
       "usBankLinking": "Linking in progress",
-      "usBankPendingLink": "Linking not finished"
+      "usBankPendingLink": "Linking not finished",
+      "deletePocket": "Delete pocket",
+      "deleteDrawerTitle": "Delete pocket",
+      "deleteDrawerDescription": "Review {{label}}'s balance before deleting it.",
+      "deletePendingBalance": "This pocket has pending movements. Wait for them to finish before deleting it.",
+      "deleteMoveBalance": "First transfer {{amount}} to another pocket. If there are more balances, we'll show them one at a time.",
+      "deleteRemoveProducts": "First remove the products that share this pocket's balance:",
+      "deleteUnmovableBalance": "This pocket holds a balance you can't move from the wallet yet ({{amounts}}). Write to soporte@bloque.team to delete it.",
+      "deleteNeedsDestination": "Create another active pocket so you can move this balance before deleting it.",
+      "deleteTransferBalance": "Transfer {{amount}}",
+      "deleteConfirmation": "This action will delete the pocket. You can't undo it.",
+      "confirmDeletePocket": "Delete pocket",
+      "deletingPocket": "Deleting...",
+      "deleteSuccessToast": "Pocket deleted successfully",
+      "deleteBalanceError": "The pocket still has an available or pending balance.",
+      "deleteDefaultError": "You can't delete your primary pocket.",
+      "deleteErrorToast": "We couldn't delete the pocket. Please try again."
     }
   },
   "brebKeys": {
@@ -155,6 +172,7 @@
       "subtitle": "Register or edit your keys to receive money instantly",
       "readyKeys": "Keys ready to use",
       "registerYourKeys": "Register your BRE-B keys",
+      "validKeyHint": "A valid key has up to 20 letters and numbers, and at least half must match your verified information.",
       "registering": "Registering...",
       "register": "Register",
       "noKeysAvailable": "There are no keys available to register.",
@@ -179,18 +197,15 @@
       "understood": "Got it",
       "activeKey": "Active key",
       "suspendedKey": "Suspended key",
-      "suspending": "Suspending...",
-      "suspendKey": "Suspend key",
-      "keySuspendedToast": "Key suspended.",
-      "suspendErrorToast": "Couldn't suspend the key.",
-      "activating": "Activating...",
-      "activateKey": "Activate key",
-      "keyActivatedToast": "Key activated.",
-      "activateErrorToast": "Couldn't activate the key.",
       "deleting": "Deleting...",
       "deleteKey": "Delete key",
+      "keyActionsAria": "Options for key {{key}}",
+      "deleteKeyConfirmation": "Deleting the key cancels it in BRE-B and can't be undone.",
+      "confirmDeleteKey": "Yes, delete key",
       "keyDeletedToast": "Key deleted.",
       "deleteErrorToast": "Couldn't delete the key.",
+      "deleteBalanceError": "This key's pocket still has a balance. Transfer it before deleting the key.",
+      "deleteProviderError": "BRE-B couldn't cancel the key. Please try again later.",
       "chooseAccountTitle": "Choose the pocket for your new key",
       "chooseAccountDescriptionPrefix": "The key",
       "chooseAccountDescriptionSuffix": "will share the balance of the pocket you choose.",
@@ -744,6 +759,8 @@
     "cancel": "Cancel operation",
     "registerPasskey": "Register passkey",
     "seeMovements": "See movements",
+    "seeKeys": "See my keys",
+    "seePockets": "See my pockets",
     "none": {
       "title": "Nothing to approve",
       "description": "There is no operation waiting for your approval."
@@ -753,11 +770,20 @@
       "description": "Your operation was approved and sent.",
       "descriptionAmount": "Your operation for {{amount}} was approved and sent.",
       "cardTitle": "Change approved",
-      "cardDescription": "Your card change was approved and applied."
+      "cardDescription": "Your card change was approved and applied.",
+      "accountDeletedTitle": "Pocket deleted",
+      "accountDeletedDescription": "The deletion was approved and the pocket is no longer available.",
+      "keyDeletedTitle": "Key deleted",
+      "keyDeletedDescription": "The deletion was approved and the key is no longer registered in BRE-B."
+    },
+    "refused": {
+      "title": "We couldn't delete it"
     },
     "unconfirmed": {
       "title": "We couldn't confirm your operation",
-      "description": "Your approval was received, but we couldn't confirm whether the operation went through. Check your movements before trying again, so it isn't sent twice."
+      "description": "Your approval was received, but we couldn't confirm whether the operation went through. Check your movements before trying again, so it isn't sent twice.",
+      "keyDeletionDescription": "We received your approval, but couldn't confirm whether the key was deleted. Check your keys before trying again.",
+      "pocketDeletionDescription": "We received your approval, but couldn't confirm whether the pocket was deleted. Check your pockets before trying again."
     },
     "failed": {
       "not_approved": {

@@ -20,6 +20,7 @@ import { brebKeyAccounts } from '~/domain/accounts/breb-key-account';
 import {
   BREB_KEY_ALREADY_REGISTERED_CODE,
   brebKeyState,
+  isDeletableBrebKey,
   isRetryableBrebKey,
 } from '~/domain/accounts/breb-key-state';
 import {
@@ -32,13 +33,13 @@ import type { Account, BrebKeyProduct } from '~/domain/accounts/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useAccounts } from '~/hooks/accounts/use-accounts';
 import {
-  useActivateBrebKey,
   useCreateBrebKey,
   useDeleteBrebKey,
-  useSuspendBrebKey,
 } from '~/hooks/accounts/use-breb-keys';
+import { useApprovalRedirect } from '~/hooks/approval/use-approval-redirect';
 import i18n from '~/i18n/config';
 import { userFacingErrorMessage } from '~/lib/api-errors';
+import { brebKeyDeletionRefusal } from '~/lib/deletion-errors';
 import { getAssetPrecision } from '~/lib/formatters';
 import { type BrebKeyType, getBrebStatusLabel } from '../-lib/breb';
 
@@ -121,7 +122,8 @@ function RouteComponent() {
     urn: string;
     status: string;
     key: string;
-  }>({ open: false, urn: '', status: '', key: '' });
+    confirmingDelete: boolean;
+  }>({ open: false, urn: '', status: '', key: '', confirmingDelete: false });
   const [createDrawer, setCreateDrawer] = useState<{
     open: boolean;
     keyType: BrebKeyType;
@@ -215,15 +217,10 @@ function RouteComponent() {
   );
 
   const createMutation = useCreateBrebKey();
-  const suspendMutation = useSuspendBrebKey();
-  const activateMutation = useActivateBrebKey();
   const deleteMutation = useDeleteBrebKey();
+  const redirectToApproval = useApprovalRedirect();
 
   const isLoading = accountsQuery.isLoading;
-  const actionsPending =
-    suspendMutation.isPending ||
-    activateMutation.isPending ||
-    deleteMutation.isPending;
 
   const notifyRegistrationFailed = (key: string, code?: string) => {
     if (code && ALREADY_REGISTERED_CODES.has(code)) {
@@ -322,9 +319,7 @@ function RouteComponent() {
               </p>
               <div className="flex flex-col divide-y divide-border/60 rounded-2xl border border-border/75 bg-card/80 overflow-hidden">
                 {activeAccounts.map((product) => {
-                  const state = brebKeyState(product);
-                  const isManageable =
-                    state === 'ready' || state === 'suspended';
+                  const isManageable = isDeletableBrebKey(product);
                   return (
                     <div
                       key={product.urn}
@@ -355,12 +350,16 @@ function RouteComponent() {
                         <button
                           type="button"
                           className="shrink-0 rounded-xl p-1.5 text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                          aria-label={t('brebKeys.manageKeys.keyActionsAria', {
+                            key: product.keyValue,
+                          })}
                           onClick={() =>
                             setActionsDrawer({
                               open: true,
                               urn: product.urn,
                               status: product.status,
                               key: product.keyValue,
+                              confirmingDelete: false,
                             })
                           }
                         >
@@ -378,6 +377,9 @@ function RouteComponent() {
             <section className="flex flex-col gap-1">
               <p className="px-1 text-xs font-medium text-muted-foreground">
                 {t('brebKeys.manageKeys.registerYourKeys')}
+              </p>
+              <p className="px-1 pb-1 text-xs text-muted-foreground">
+                {t('brebKeys.manageKeys.validKeyHint')}
               </p>
               <div className="flex flex-col gap-3">
                 {unregisteredOptions.map((option) => {
@@ -508,68 +510,67 @@ function RouteComponent() {
                   : getBrebStatusLabel(actionsDrawer.status)}
             </DrawerDescription>
           </DrawerHeader>
+          {actionsDrawer.confirmingDelete ? (
+            <p className="px-4 text-sm text-muted-foreground">
+              {t('brebKeys.manageKeys.deleteKeyConfirmation')}
+            </p>
+          ) : null}
           <DrawerFooter>
-            {actionsDrawer.status === 'active' && (
+            {actionsDrawer.confirmingDelete ? (
               <Button
-                variant="outline"
+                variant="destructive"
                 className="h-12 w-full rounded-2xl text-sm"
-                disabled={actionsPending}
+                disabled={deleteMutation.isPending}
                 onClick={() =>
-                  suspendMutation.mutate(actionsDrawer.urn, {
+                  deleteMutation.mutate(actionsDrawer.urn, {
                     onSuccess: () => {
-                      toast.success(t('brebKeys.manageKeys.keySuspendedToast'));
+                      toast.success(t('brebKeys.manageKeys.keyDeletedToast'));
                       setActionsDrawer((s) => ({ ...s, open: false }));
                     },
-                    onError: () =>
-                      toast.error(t('brebKeys.manageKeys.suspendErrorToast')),
+                    onError: (error) => {
+                      if (
+                        redirectToApproval(error, {
+                          kind: 'delete-breb-key',
+                          urn: actionsDrawer.urn,
+                        })
+                      ) {
+                        return;
+                      }
+                      toast.error(
+                        brebKeyDeletionRefusal(error) ??
+                          t('brebKeys.manageKeys.deleteErrorToast'),
+                      );
+                    },
                   })
                 }
               >
-                {suspendMutation.isPending
-                  ? t('brebKeys.manageKeys.suspending')
-                  : t('brebKeys.manageKeys.suspendKey')}
+                {deleteMutation.isPending
+                  ? t('brebKeys.manageKeys.deleting')
+                  : t('brebKeys.manageKeys.confirmDeleteKey')}
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                className="h-12 w-full rounded-2xl text-sm text-destructive hover:text-destructive"
+                onClick={() =>
+                  setActionsDrawer((s) => ({ ...s, confirmingDelete: true }))
+                }
+              >
+                {t('brebKeys.manageKeys.deleteKey')}
               </Button>
             )}
-            {actionsDrawer.status === 'frozen' && (
+            {actionsDrawer.confirmingDelete ? (
               <Button
                 variant="outline"
                 className="h-12 w-full rounded-2xl text-sm"
-                disabled={actionsPending}
+                disabled={deleteMutation.isPending}
                 onClick={() =>
-                  activateMutation.mutate(actionsDrawer.urn, {
-                    onSuccess: () => {
-                      toast.success(t('brebKeys.manageKeys.keyActivatedToast'));
-                      setActionsDrawer((s) => ({ ...s, open: false }));
-                    },
-                    onError: () =>
-                      toast.error(t('brebKeys.manageKeys.activateErrorToast')),
-                  })
+                  setActionsDrawer((s) => ({ ...s, confirmingDelete: false }))
                 }
               >
-                {activateMutation.isPending
-                  ? t('brebKeys.manageKeys.activating')
-                  : t('brebKeys.manageKeys.activateKey')}
+                {t('common.cancel')}
               </Button>
-            )}
-            <Button
-              variant="outline"
-              className="h-12 w-full rounded-2xl text-sm text-destructive hover:text-destructive"
-              disabled={actionsPending}
-              onClick={() =>
-                deleteMutation.mutate(actionsDrawer.urn, {
-                  onSuccess: () => {
-                    toast.success(t('brebKeys.manageKeys.keyDeletedToast'));
-                    setActionsDrawer((s) => ({ ...s, open: false }));
-                  },
-                  onError: () =>
-                    toast.error(t('brebKeys.manageKeys.deleteErrorToast')),
-                })
-              }
-            >
-              {deleteMutation.isPending
-                ? t('brebKeys.manageKeys.deleting')
-                : t('brebKeys.manageKeys.deleteKey')}
-            </Button>
+            ) : null}
           </DrawerFooter>
         </DrawerContent>
       </Drawer>

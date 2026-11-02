@@ -26,6 +26,12 @@ const brebCreateMock = mock((_params: unknown, _options?: unknown) =>
 const cardActivateMock = mock((_urn: string, _options?: unknown) =>
   Promise.resolve({}),
 );
+const brebDeleteMock = mock((_urn: string, _options?: unknown) =>
+  Promise.resolve({ data: { deleted: true }, error: null }),
+);
+const virtualDeleteMock = mock((_urn: string, _options?: unknown) =>
+  Promise.resolve({}),
+);
 
 mock.module('~/lib/bloque', () => ({
   bloque: {
@@ -33,6 +39,8 @@ mock.module('~/lib/bloque', () => ({
     accounts: {
       transfer: transferMock,
       card: { activate: cardActivateMock },
+      breb: { deleteKey: brebDeleteMock },
+      virtual: { delete: virtualDeleteMock },
     },
     swap: { breb: { create: brebCreateMock } },
   },
@@ -102,6 +110,8 @@ describe('bloqueApprovalRepository.run', () => {
     transferMock.mockClear();
     brebCreateMock.mockClear();
     cardActivateMock.mockClear();
+    brebDeleteMock.mockClear();
+    virtualDeleteMock.mockClear();
   });
 
   test('repeats a transfer once with the exact params and the approval', async () => {
@@ -150,6 +160,28 @@ describe('bloqueApprovalRepository.run', () => {
     expect(cardActivateMock).toHaveBeenCalledWith('did:bloque:account:card:1', {
       approval: 'approval-1',
     });
+  });
+
+  test('repeats a BRE-B key deletion with the approval', async () => {
+    await bloqueApprovalRepository.run(
+      { kind: 'delete-breb-key', urn: 'did:bloque:account:breb:1' },
+      'approval-1',
+    );
+    expect(brebDeleteMock).toHaveBeenCalledWith(
+      { accountUrn: 'did:bloque:account:breb:1' },
+      { approval: 'approval-1' },
+    );
+  });
+
+  test('repeats a pocket deletion with the approval', async () => {
+    await bloqueApprovalRepository.run(
+      { kind: 'delete-pocket', urn: 'did:bloque:account:virtual:1' },
+      'approval-1',
+    );
+    expect(virtualDeleteMock).toHaveBeenCalledWith(
+      'did:bloque:account:virtual:1',
+      { approval: 'approval-1' },
+    );
   });
 
   test('says rate_expired when the rate expired while approving', async () => {

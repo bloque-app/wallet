@@ -7,6 +7,7 @@ minimumReleaseAge = 259200 # seconds
 minimumReleaseAgeExcludes = [
   "@bloque/sdk",
   "@bloque/sdk-accounts",
+  "@bloque/sdk-agents",
   "@bloque/sdk-compliance",
   "@bloque/sdk-core",
   "@bloque/sdk-identity",

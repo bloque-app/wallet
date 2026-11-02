@@ -5,7 +5,10 @@ import type {
   PolygonAccount,
   SupportedCardAsset,
 } from '@bloque/sdk-accounts';
-import { BrebKeyCreationError } from '~/domain/accounts/breb-key-suggestions';
+import {
+  BrebKeyCreationError,
+  BrebKeyDeletionError,
+} from '~/domain/accounts/breb-key-suggestions';
 import type {
   AccountsRepository,
   CreateBrebKeyInput,
@@ -452,19 +455,22 @@ async function resolveBrebKey(input: ResolveBrebKeyInput) {
   return result.data;
 }
 
-async function suspendBrebKey(urn: string): Promise<void> {
-  const result = await bloque.accounts.breb.suspendKey({ accountUrn: urn });
-  if (result.error) throw new Error(result.error.message);
-}
-
-async function activateBrebKey(urn: string): Promise<void> {
-  const result = await bloque.accounts.breb.activateKey({ accountUrn: urn });
-  if (result.error) throw new Error(result.error.message);
-}
-
-async function deleteBrebKey(urn: string): Promise<void> {
-  const result = await bloque.accounts.breb.deleteKey({ accountUrn: urn });
-  if (result.error) throw new Error(result.error.message);
+async function deleteBrebKey(
+  urn: string,
+  options?: ApprovalOptions,
+): Promise<void> {
+  const result = await withApprovalErrors(() =>
+    bloque.accounts.breb.deleteKey(
+      { accountUrn: urn },
+      sdkApprovalOptions(options),
+    ),
+  );
+  if (result.error) {
+    throw new BrebKeyDeletionError(
+      result.error.message,
+      result.error.code ?? undefined,
+    );
+  }
 }
 
 async function createPolygonAccount(
@@ -511,6 +517,15 @@ async function createVirtualAccount(
   return mapToProduct(account as ListedAccount);
 }
 
+async function deleteVirtualAccount(
+  urn: string,
+  options?: ApprovalOptions,
+): Promise<void> {
+  await withApprovalErrors(() =>
+    bloque.accounts.virtual.delete(urn, sdkApprovalOptions(options)),
+  );
+}
+
 async function createExternalUsBankAccount(
   input: CreateExternalUsBankAccountInput,
 ): Promise<Product> {
@@ -536,10 +551,9 @@ export const bloqueAccountsRepository: AccountsRepository = {
   getCardDetailsUrl,
   createBrebKey,
   resolveBrebKey,
-  suspendBrebKey,
-  activateBrebKey,
   deleteBrebKey,
   createPolygonAccount,
   createVirtualAccount,
+  deleteVirtualAccount,
   createExternalUsBankAccount,
 };

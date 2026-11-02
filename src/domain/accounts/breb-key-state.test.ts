@@ -1,5 +1,9 @@
 import { describe, expect, test } from 'bun:test';
-import { brebKeyState, isRetryableBrebKey } from './breb-key-state';
+import {
+  brebKeyState,
+  isDeletableBrebKey,
+  isRetryableBrebKey,
+} from './breb-key-state';
 
 describe('brebKeyState', () => {
   test('an active account whose key failed is failed', () => {
@@ -51,5 +55,18 @@ describe('isRetryableBrebKey', () => {
     expect(
       isRetryableBrebKey({ status: 'active', keyStatus: 'processing' }),
     ).toBe(false);
+  });
+});
+
+describe('isDeletableBrebKey', () => {
+  test('only registered keys, active or suspended, can be deleted', () => {
+    expect(
+      isDeletableBrebKey({ status: 'active', keyStatus: 'registered' }),
+    ).toBe(true);
+    expect(isDeletableBrebKey({ status: 'frozen' })).toBe(true);
+    expect(
+      isDeletableBrebKey({ status: 'active', keyStatus: 'processing' }),
+    ).toBe(false);
+    expect(isDeletableBrebKey({ status: 'creation_failed' })).toBe(false);
   });
 });

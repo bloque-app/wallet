@@ -4,7 +4,7 @@ import { ArrowLeft, ExternalLink } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '~/components/ui/button';
 import { Separator } from '~/components/ui/separator';
-import { formatCOP } from '~/lib/formatters';
+import { formatAmountWithCode } from '~/lib/formatters';
 
 interface ConfirmStepProps {
   amount: number;
@@ -63,7 +63,7 @@ export function TopUpConfirmStep({
               {t('topup.amountStep.amount')}
             </span>
             <span className="font-medium text-foreground">
-              {formatCOP(amount)}
+              {formatAmountWithCode('COP', amount)}
             </span>
           </div>
           <div className="flex justify-between text-sm">
@@ -114,7 +114,7 @@ export function TopUpConfirmStep({
               {t('topup.amountStep.youWillReceive')}
             </span>
             <span className="font-bold text-foreground">
-              {formatCOP(amountDst)}
+              {formatAmountWithCode('COP', amountDst)}
             </span>
           </div>
         </div>

@@ -13,7 +13,10 @@ import { visibleProducts } from '~/domain/accounts/external-us-bank';
 import type { Account } from '~/domain/accounts/types';
 import { useAccounts } from '~/hooks/accounts/use-accounts';
 import i18n from '~/i18n/config';
-import { formatSdkAssetAmount, sortBalancesForDisplay } from '~/lib/formatters';
+import {
+  formatSdkAssetAmountWithCode,
+  sortBalancesForDisplay,
+} from '~/lib/formatters';
 import {
   ACCOUNTS_ORIGIN_ROUTES,
   type AccountsOrigin,
@@ -127,7 +130,10 @@ function RouteComponent() {
                           key={balance.asset}
                           className="rounded-full border border-border/70 bg-background/70 px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
                         >
-                          {formatSdkAssetAmount(balance.asset, balance.current)}
+                          {formatSdkAssetAmountWithCode(
+                            balance.asset,
+                            balance.current,
+                          )}
                         </span>
                       ))}
                     </div>

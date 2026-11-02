@@ -15,6 +15,7 @@ import {
   SelectTrigger,
 } from '~/components/ui/select';
 import type { ApprovalOperation } from '~/domain/approval/types';
+import { calculateLatamRailFee } from '~/domain/payments/latam-rail-fee';
 import type { ExecutionOutcome } from '~/domain/payments/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useApprovalRedirect } from '~/hooks/approval/use-approval-redirect';
@@ -29,7 +30,7 @@ import {
   currencyMajorToMinor,
   normalizeCurrencyInput,
 } from '~/lib/currency-input';
-import { formatAmount } from '~/lib/formatters';
+import { formatAmount, formatAmountWithCode } from '~/lib/formatters';
 
 type Rail = 'spei' | 'pix';
 type Direction = 'topup' | 'send';
@@ -116,6 +117,7 @@ export function LatamRailFlow({
     if (Number.isFinite(rate.ratio)) return parsedAmount * rate.ratio;
     return (rate.rate[1] ?? 0) / 100;
   }, [parsedAmount, rate]);
+  const feeAmount = calculateLatamRailFee(parsedAmount, receiveAmount);
 
   const speiDeposit = useCreateSpeiDepositOrder();
   const speiPayout = useCreateSpeiOrder();
@@ -344,14 +346,12 @@ export function LatamRailFlow({
                     {rate ? formatAmount(displayAsset, receiveAmount) : '...'}
                   </span>
                 </div>
-                {rate?.fee?.formula && (
+                {rate?.fee && (
                   <div className="mt-2 flex justify-between gap-4">
                     <span className="text-muted-foreground">
                       {t('latamRails.fee')}
                     </span>
-                    <span className="text-right text-xs">
-                      {rate.fee.formula}
-                    </span>
+                    <span>{formatAmount(displayAsset, feeAmount)}</span>
                   </div>
                 )}
               </div>
@@ -491,13 +491,13 @@ export function LatamRailFlow({
                     ? t('topup.youPay')
                     : t('send.bloqueFriends.youSend')}
                 </span>
-                <span>{formatAmount(displayAsset, parsedAmount)}</span>
+                <span>{formatAmountWithCode(displayAsset, parsedAmount)}</span>
               </div>
               <div className="mt-2 flex justify-between text-sm">
                 <span className="text-muted-foreground">
                   {t('topup.youReceive')}
                 </span>
-                <span>{formatAmount(displayAsset, receiveAmount)}</span>
+                <span>{formatAmountWithCode(displayAsset, receiveAmount)}</span>
               </div>
             </div>
             <Button

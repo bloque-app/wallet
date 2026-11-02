@@ -88,19 +88,36 @@
       "transferToOwnAccount": "Transferir a otro bolsillo",
       "transferDrawerTitle": "Transferir fondos",
       "transferDestinationLabel": "Bolsillo destino",
-      "transferAmountLabel": "Monto a transferir",
+      "transferAmountLabel": "Monto a transferir ({{currency}})",
+      "transferCurrencyLabel": "Moneda",
       "transferAvailable": "Disponible: {{amount}}",
       "transferInsufficientBalance": "Saldo insuficiente para esta transferencia.",
       "transferSubmit": "Transferir",
       "transferring": "Transfiriendo...",
-      "transferSuccessToast": "Transferencia realizada exitosamente",
+      "transferSuccessToast": "Transferiste {{amount}} exitosamente",
       "transferErrorToast": "No se pudo completar la transferencia. Intenta de nuevo.",
       "addProductCardLabel": "Tarjeta (Global)",
       "addProductBrebLabel": "Llave BRE-B (COP)",
       "addProductPlaidLabel": "Plaid (USD)",
       "addProductNeedsVirtualAccount": "Solo puedes agregar productos a un bolsillo activo.",
       "usBankLinking": "Vinculación en proceso",
-      "usBankPendingLink": "Vinculación sin terminar"
+      "usBankPendingLink": "Vinculación sin terminar",
+      "deletePocket": "Eliminar bolsillo",
+      "deleteDrawerTitle": "Eliminar bolsillo",
+      "deleteDrawerDescription": "Revisa el saldo de {{label}} antes de eliminarlo.",
+      "deletePendingBalance": "Este bolsillo tiene movimientos pendientes. Espera a que terminen antes de eliminarlo.",
+      "deleteMoveBalance": "Primero transfiere {{amount}} a otro bolsillo. Si hay más saldos, te los mostraremos uno por uno.",
+      "deleteRemoveProducts": "Primero elimina los productos que comparten saldo con este bolsillo:",
+      "deleteUnmovableBalance": "Este bolsillo tiene saldo que todavía no puedes mover desde la wallet ({{amounts}}). Escríbenos a soporte@bloque.team para eliminarlo.",
+      "deleteNeedsDestination": "Crea otro bolsillo activo para poder mover este saldo antes de eliminarlo.",
+      "deleteTransferBalance": "Transferir {{amount}}",
+      "deleteConfirmation": "Esta acción eliminará el bolsillo. No podrás deshacerla.",
+      "confirmDeletePocket": "Eliminar bolsillo",
+      "deletingPocket": "Eliminando...",
+      "deleteSuccessToast": "Bolsillo eliminado correctamente",
+      "deleteBalanceError": "El bolsillo todavía tiene saldo disponible o pendiente.",
+      "deleteDefaultError": "No puedes eliminar el bolsillo principal de tu cuenta.",
+      "deleteErrorToast": "No se pudo eliminar el bolsillo. Intenta de nuevo."
     }
   },
   "brebKeys": {
@@ -155,6 +172,7 @@
       "subtitle": "Registra o edita tus llaves para recibir dinero al instante",
       "readyKeys": "Llaves listas para usar",
       "registerYourKeys": "Registra tus llaves en BRE-B",
+      "validKeyHint": "Una llave válida tiene máximo 20 letras y números, y al menos la mitad debe coincidir con tus datos verificados.",
       "registering": "Registrando...",
       "register": "Registrar",
       "noKeysAvailable": "No hay llaves disponibles para registrar.",
@@ -179,18 +197,15 @@
       "understood": "Entendido",
       "activeKey": "Llave activa",
       "suspendedKey": "Llave suspendida",
-      "suspending": "Suspendiendo...",
-      "suspendKey": "Suspender llave",
-      "keySuspendedToast": "Llave suspendida.",
-      "suspendErrorToast": "No se pudo suspender la llave.",
-      "activating": "Activando...",
-      "activateKey": "Activar llave",
-      "keyActivatedToast": "Llave activada.",
-      "activateErrorToast": "No se pudo activar la llave.",
       "deleting": "Eliminando...",
       "deleteKey": "Eliminar llave",
+      "keyActionsAria": "Opciones de la llave {{key}}",
+      "deleteKeyConfirmation": "Eliminar la llave la cancela en BRE-B y no se puede deshacer.",
+      "confirmDeleteKey": "Sí, eliminar llave",
       "keyDeletedToast": "Llave eliminada.",
       "deleteErrorToast": "No se pudo eliminar la llave.",
+      "deleteBalanceError": "El bolsillo de esta llave todavía tiene saldo. Transfiérelo antes de eliminarla.",
+      "deleteProviderError": "BRE-B no pudo cancelar la llave. Intenta de nuevo más tarde.",
       "chooseAccountTitle": "Elige el bolsillo para tu nueva llave",
       "chooseAccountDescriptionPrefix": "La llave",
       "chooseAccountDescriptionSuffix": "compartirá el saldo del bolsillo que elijas.",
@@ -744,6 +759,8 @@
     "cancel": "Cancelar operación",
     "registerPasskey": "Registrar passkey",
     "seeMovements": "Ver movimientos",
+    "seeKeys": "Ver mis llaves",
+    "seePockets": "Ver mis bolsillos",
     "none": {
       "title": "Nada por aprobar",
       "description": "No hay ninguna operación esperando tu aprobación."
@@ -753,11 +770,20 @@
       "description": "Tu operación fue aprobada y enviada.",
       "descriptionAmount": "Tu operación por {{amount}} fue aprobada y enviada.",
       "cardTitle": "Cambio aprobado",
-      "cardDescription": "El cambio en tu tarjeta fue aprobado y aplicado."
+      "cardDescription": "El cambio en tu tarjeta fue aprobado y aplicado.",
+      "accountDeletedTitle": "Bolsillo eliminado",
+      "accountDeletedDescription": "La eliminación fue aprobada y el bolsillo ya no está disponible.",
+      "keyDeletedTitle": "Llave eliminada",
+      "keyDeletedDescription": "La eliminación fue aprobada y la llave ya no está registrada en BRE-B."
+    },
+    "refused": {
+      "title": "No se pudo eliminar"
     },
     "unconfirmed": {
       "title": "No pudimos confirmar tu operación",
-      "description": "Recibimos tu aprobación, pero no pudimos confirmar si la operación se realizó. Revisa tus movimientos antes de intentar de nuevo, para no enviarla dos veces."
+      "description": "Recibimos tu aprobación, pero no pudimos confirmar si la operación se realizó. Revisa tus movimientos antes de intentar de nuevo, para no enviarla dos veces.",
+      "keyDeletionDescription": "Recibimos tu aprobación, pero no pudimos confirmar si la llave se eliminó. Revisa tus llaves antes de intentarlo de nuevo.",
+      "pocketDeletionDescription": "Recibimos tu aprobación, pero no pudimos confirmar si el bolsillo se eliminó. Revisa tus bolsillos antes de intentarlo de nuevo."
     },
     "failed": {
       "not_approved": {

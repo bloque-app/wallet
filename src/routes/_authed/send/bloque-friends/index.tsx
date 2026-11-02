@@ -31,7 +31,7 @@ import {
   currencyMajorToMinor,
   normalizeCurrencyInput,
 } from '~/lib/currency-input';
-import { formatAmount } from '~/lib/formatters';
+import { formatAmount, formatAmountWithCode } from '~/lib/formatters';
 
 export const Route = createFileRoute('/_authed/send/bloque-friends/')({
   component: RouteComponent,
@@ -264,7 +264,10 @@ function RouteComponent() {
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
             {t('send.bloqueFriends.transferSentDescription', {
-              amount: formatAmount(selectedAsset, lastTransfer?.amount ?? 0),
+              amount: formatAmountWithCode(
+                selectedAsset,
+                lastTransfer?.amount ?? 0,
+              ),
             })}
           </p>
         </div>
@@ -485,7 +488,7 @@ function RouteComponent() {
                   {t('send.bloqueFriends.amount')}
                 </span>
                 <span className="font-medium text-foreground">
-                  {formatAmount(selectedAsset, parsedAmount)}
+                  {formatAmountWithCode(selectedAsset, parsedAmount)}
                 </span>
               </div>
               {message.trim() ? (

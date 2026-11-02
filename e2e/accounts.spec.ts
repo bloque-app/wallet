@@ -122,4 +122,234 @@ test.describe('accounts', () => {
     await expect(plaid).toBeDisabled();
     await expect(plaid).toContainText('Próximamente');
   });
+
+  test('deletes an empty pocket through the account DELETE endpoint', async ({
+    page,
+  }) => {
+    await page.goto('/accounts/urn%3Apocket-orphan');
+
+    await page.getByRole('button', { name: 'Eliminar bolsillo' }).click();
+    await expect(
+      page.getByText('Esta acción eliminará el bolsillo.'),
+    ).toBeVisible();
+
+    const deletion = page.waitForRequest(
+      (request) =>
+        request.method() === 'DELETE' &&
+        new URL(request.url()).pathname.endsWith(
+          '/api/accounts/urn:pocket-orphan',
+        ),
+    );
+    await page
+      .getByRole('button', { name: 'Eliminar bolsillo' })
+      .last()
+      .click();
+    await deletion;
+
+    await expect(page).toHaveURL(/\/accounts$/);
+    await expect(page.getByText('Orphan', { exact: true })).toHaveCount(0);
+  });
+
+  test('asks to remove the products that share the pocket balance first', async ({
+    page,
+  }) => {
+    await page.goto('/accounts/urn%3Apocket-main');
+
+    await page.getByRole('button', { name: 'Eliminar bolsillo' }).click();
+    await expect(page.getByText(/Primero elimina los productos/)).toBeVisible();
+    await expect(
+      page.getByRole('listitem').filter({ hasText: '4242' }),
+    ).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Cerrar' })).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Eliminar bolsillo' }),
+    ).toHaveCount(0);
+  });
+
+  test('hides the delete action on the default pocket', async ({ page }) => {
+    await installMockApi(page, {
+      accounts: mockAccounts.map((account) =>
+        account.urn === 'urn:pocket-orphan'
+          ? { ...account, metadata: { default: true } }
+          : account,
+      ),
+    });
+    await page.goto('/accounts/urn%3Apocket-orphan');
+
+    await expect(
+      page.getByRole('button', { name: 'Agregar producto' }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Eliminar bolsillo' }),
+    ).toHaveCount(0);
+  });
+
+  test('moves a funded pocket balance in full before deleting it', async ({
+    page,
+  }) => {
+    const api = await installMockApi(page, {
+      accounts: mockAccounts
+        .filter(
+          (account) =>
+            account.urn === 'urn:pocket-main' ||
+            account.ledger_account_id !== 'ledger-main',
+        )
+        .map((account) =>
+          account.urn === 'urn:pocket-main'
+            ? {
+                ...account,
+                balance: { 'COPM/2': { current: '500050', pending: '0' } },
+              }
+            : account,
+        ),
+    });
+    await page.goto('/accounts/urn%3Apocket-main');
+
+    await page.getByRole('button', { name: 'Eliminar bolsillo' }).click();
+    await expect(page.getByText(/Primero transfiere/)).toBeVisible();
+    await page.getByRole('button', { name: 'Orphan' }).click();
+    await page.getByRole('button', { name: /^Transferir .*COP$/ }).click();
+
+    await expect(
+      page.getByText('Esta acción eliminará el bolsillo.', { exact: false }),
+    ).toBeVisible();
+    expect(api.transfers).toEqual([
+      expect.objectContaining({
+        destination_account_urn: 'urn:pocket-orphan',
+        amount: '500050',
+        asset: 'COPM/2',
+      }),
+    ]);
+  });
+
+  for (const { name, balance, shown } of [
+    {
+      name: 'KSM',
+      balance: { 'KSM/12': { current: '1500000000000', pending: '0' } },
+      shown: /KSM/,
+    },
+    {
+      name: 'USD',
+      balance: { 'DUSD/6': { current: '250000000', pending: '0' } },
+      shown: /USD/,
+    },
+  ]) {
+    test(`blocks deletion while the pocket holds ${name} it can't move`, async ({
+      page,
+    }) => {
+      await installMockApi(page, {
+        accounts: mockAccounts.map((account) =>
+          account.urn === 'urn:pocket-orphan'
+            ? { ...account, balance }
+            : account,
+        ),
+      });
+      let deleteSent = false;
+      page.on('request', (request) => {
+        if (request.method() === 'DELETE') deleteSent = true;
+      });
+      await page.goto('/accounts/urn%3Apocket-orphan');
+
+      await page.getByRole('button', { name: 'Eliminar bolsillo' }).click();
+      await expect(page.getByText(/soporte@bloque\.team/)).toContainText(shown);
+      await expect(page.getByRole('button', { name: 'Cerrar' })).toBeVisible();
+      await expect(
+        page.getByRole('button', { name: 'Eliminar bolsillo' }),
+      ).toHaveCount(0);
+      expect(deleteSent).toBe(false);
+    });
+  }
+  test('the transfer drawer names the currency being moved', async ({
+    page,
+  }) => {
+    await installMockApi(page, {
+      accounts: mockAccounts.map((account) =>
+        account.urn === 'urn:pocket-orphan'
+          ? {
+              ...account,
+              balance: {
+                'COPM/2': { current: '297400', pending: '0' },
+                'MXNB/2': { current: '2000', pending: '0' },
+              },
+            }
+          : account,
+      ),
+    });
+    await page.goto('/accounts/urn%3Apocket-orphan');
+
+    await page.getByRole('button', { name: 'Transferir' }).first().click();
+    await expect(page.getByLabel('Monto a transferir (COP)')).toBeVisible();
+    await expect(page.getByText(/Disponible: .*2\.974 COP/)).toBeVisible();
+
+    await page.getByRole('button', { name: 'MXN', exact: true }).click();
+    await expect(page.getByLabel('Monto a transferir (MXN)')).toBeVisible();
+    await expect(page.getByText(/Disponible: .*20\.00 MXN/)).toBeVisible();
+  });
+  test('deletes a blocking BRE-B key from the pocket deletion drawer', async ({
+    page,
+  }) => {
+    await page.goto('/accounts/urn%3Apocket-main');
+    await page.getByRole('button', { name: 'Eliminar bolsillo' }).click();
+
+    const keyRow = page
+      .getByRole('listitem')
+      .filter({ hasText: 'main-1@bloque.team' });
+    await expect(keyRow).toContainText('BRE-B • main-1@bloque.team');
+    await keyRow.getByRole('button', { name: 'Eliminar llave' }).click();
+    await expect(page.getByText(/no se puede deshacer/)).toBeVisible();
+
+    const deletion = page.waitForRequest(
+      (request) =>
+        request.method() === 'DELETE' &&
+        new URL(request.url()).pathname.endsWith(
+          `/api/accounts/${encodeURIComponent('urn:breb-main-1')}`,
+        ),
+    );
+    await page.getByRole('button', { name: 'Sí, eliminar llave' }).click();
+    await deletion;
+
+    await expect(
+      page.getByRole('listitem').filter({ hasText: 'main-1@bloque.team' }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole('listitem').filter({ hasText: '+573000000000' }),
+    ).toBeVisible();
+  });
+
+  test('a blocking key that needs a passkey opens the approval page', async ({
+    page,
+  }) => {
+    await page.route(
+      `**/api/accounts/${encodeURIComponent('urn:breb-main-1')}`,
+      (route) =>
+        route.request().method() === 'DELETE'
+          ? route.fulfill({
+              status: 428,
+              json: {
+                code: 'E_APPROVAL_REQUIRED',
+                message: 'E_APPROVAL_REQUIRED',
+                extra_details: {
+                  approval_token: 'approval-token',
+                  expires_at: Date.now() + 600_000,
+                  approval_url:
+                    'https://id.dev-bloque.app/approve#token=approval-token',
+                },
+              },
+            })
+          : route.fallback(),
+    );
+    await page.route('https://id.dev-bloque.app/**', (route) =>
+      route.fulfill({ contentType: 'text/html', body: '<h1>Aprobar</h1>' }),
+    );
+    await page.goto('/accounts/urn%3Apocket-main');
+    await page.getByRole('button', { name: 'Eliminar bolsillo' }).click();
+    await page
+      .getByRole('listitem')
+      .filter({ hasText: 'main-1@bloque.team' })
+      .getByRole('button', { name: 'Eliminar llave' })
+      .click();
+    await page.getByRole('button', { name: 'Sí, eliminar llave' }).click();
+
+    await expect(page).toHaveURL(/id\.dev-bloque\.app\/approve/);
+  });
 });

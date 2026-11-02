@@ -106,6 +106,8 @@ export type ApprovalOperation =
   | { kind: 'pix-order'; params: CreatePixOrderParams }
   | { kind: 'create-card'; input: CreateCardInput }
   | { kind: 'activate-card'; urn: string }
+  | { kind: 'delete-breb-key'; urn: string }
+  | { kind: 'delete-pocket'; urn: string }
   | { kind: 'card-preferred-asset'; urn: string; asset: SupportedCardAsset };
 
 export type ApprovalOperationKind = ApprovalOperation['kind'];

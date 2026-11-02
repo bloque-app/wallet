@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { type ComponentType, StrictMode } from 'react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { BrebKeyDeletionError } from '~/domain/accounts/breb-key-suggestions';
 import {
   ApprovalFailedError,
   type SavedApproval,
@@ -74,6 +75,7 @@ describe('approval return page', () => {
     renderPage();
 
     expect(await screen.findByText('Operación aprobada')).toBeInTheDocument();
+    expect(screen.getByText(/10\.000 COP/)).toBeInTheDocument();
     expect(collect).toHaveBeenCalledWith(SAVED.pending);
     expect(run).toHaveBeenCalledTimes(1);
     expect(run).toHaveBeenCalledWith(SAVED.operation, 'approval-1');
@@ -235,5 +237,95 @@ describe('approval return page', () => {
     renderPage();
 
     expect(await screen.findByText('Cambio aprobado')).toBeInTheDocument();
+  });
+
+  test('returns to the account list after an approved pocket deletion', async () => {
+    savePendingApproval({
+      ...SAVED,
+      operation: {
+        kind: 'delete-pocket',
+        urn: 'did:bloque:account:virtual:1',
+      },
+      display: undefined,
+    });
+    collect.mockResolvedValue('approval-1');
+    run.mockResolvedValue({ kind: 'done' });
+
+    renderPage();
+
+    expect(await screen.findByText('Bolsillo eliminado')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Listo' }));
+    expect(navigate).toHaveBeenCalledWith({ to: '/accounts' });
+  });
+
+  test('returns to the keys page after an approved BRE-B key deletion', async () => {
+    savePendingApproval({
+      ...SAVED,
+      operation: {
+        kind: 'delete-breb-key',
+        urn: 'did:bloque:account:breb:1',
+      },
+      returnTo: '/breb-keys/manage-keys',
+      display: undefined,
+    });
+    collect.mockResolvedValue('approval-1');
+    run.mockResolvedValue({ kind: 'done' });
+
+    renderPage();
+
+    expect(await screen.findByText('Llave eliminada')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Listo' }));
+    expect(navigate).toHaveBeenCalledWith({ href: '/breb-keys/manage-keys' });
+  });
+
+  test('says why an approved BRE-B key deletion was refused', async () => {
+    savePendingApproval({
+      ...SAVED,
+      operation: {
+        kind: 'delete-breb-key',
+        urn: 'did:bloque:account:breb:1',
+      },
+      returnTo: '/breb-keys/manage-keys',
+      display: undefined,
+    });
+    collect.mockResolvedValue('approval-1');
+    run.mockRejectedValue(
+      new BrebKeyDeletionError('failed', 'E_BREB_KEY_DELETION_FAILED'),
+    );
+
+    renderPage();
+
+    expect(await screen.findByText('No se pudo eliminar')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'BRE-B no pudo cancelar la llave. Intenta de nuevo más tarde.',
+      ),
+    ).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Volver' }));
+    expect(navigate).toHaveBeenCalledWith({ href: '/breb-keys/manage-keys' });
+  });
+
+  test('asks to check the pockets when a pocket deletion is unconfirmed', async () => {
+    savePendingApproval({
+      ...SAVED,
+      operation: {
+        kind: 'delete-pocket',
+        urn: 'did:bloque:account:virtual:1',
+      },
+      display: undefined,
+    });
+    collect.mockResolvedValue('approval-1');
+    run.mockRejectedValue(new Error('network down'));
+
+    renderPage();
+
+    expect(
+      await screen.findByText(/no pudimos confirmar si el bolsillo/),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/enviarla dos veces/)).not.toBeInTheDocument();
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Ver mis bolsillos' }),
+    );
+    expect(navigate).toHaveBeenCalledWith({ to: '/accounts' });
   });
 });
