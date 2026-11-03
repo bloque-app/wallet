@@ -21,6 +21,7 @@ interface AmountStepProps {
   minAmount?: number;
   minAmountLabel?: string;
   feeLabel?: string;
+  showTotalToDebit?: boolean;
   /** The PSE-specific default only applies to PSE deposits — pass `null` to hide it for other rails (e.g. a bank payout). */
   disclaimer?: string | null;
   /** Same as `disclaimer`: the "5-15 min" default is PSE-specific — pass `null` to hide it for other rails. */
@@ -42,6 +43,7 @@ export function TopUpAmountStep({
   minAmount = DEFAULT_MIN_AMOUNT,
   minAmountLabel,
   feeLabel,
+  showTotalToDebit = true,
   disclaimer,
   arrivalLabel,
 }: AmountStepProps) {
@@ -111,15 +113,19 @@ export function TopUpAmountStep({
                     {formatCOP(fee)}
                   </span>
                 </div>
-                <div className="my-1 h-px bg-border" />
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium text-foreground">
-                    {t('topup.amountStep.totalToDebit')}
-                  </span>
-                  <span className="font-bold text-foreground">
-                    {formatCOP(parsed + fee)}
-                  </span>
-                </div>
+                {showTotalToDebit && (
+                  <>
+                    <div className="my-1 h-px bg-border" />
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium text-foreground">
+                        {t('topup.amountStep.totalToDebit')}
+                      </span>
+                      <span className="font-bold text-foreground">
+                        {formatCOP(parsed + fee)}
+                      </span>
+                    </div>
+                  </>
+                )}
               </>
             )}
             {arrivalLabel !== null && (
