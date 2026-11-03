@@ -13,8 +13,6 @@ import { bloqueAccountsRepository } from './accounts-repository';
 import { withApprovalErrors } from './approval-errors';
 import { bloquePaymentsRepository } from './payments-repository';
 
-const BREB_APPROVAL_TIMEOUT_MS = 120_000;
-
 /**
  * Adapter for operation approvals, over the SDK's `approvals.collect` and
  * the accounts and payments adapters, which take the approval as an option.
@@ -50,10 +48,10 @@ async function runOperation(
       );
     case 'breb-order':
       return orderOutcome(
-        await bloquePaymentsRepository.createBrebOrder(operation.params, {
-          ...options,
-          timeout: BREB_APPROVAL_TIMEOUT_MS,
-        }),
+        await bloquePaymentsRepository.createBrebOrder(
+          operation.params,
+          options,
+        ),
       );
     case 'rtp-order':
       return orderOutcome(

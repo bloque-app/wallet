@@ -558,6 +558,7 @@
       "minAmount": "Monto mínimo: $5,000 COP",
       "amount": "Monto",
       "pseFee": "Comisión PSE",
+      "fee": "Comisión",
       "totalToDebit": "Total a debitar",
       "estimatedArrival": "Tiempo estimado de llegada: 5-15 minutos",
       "appliedRate": "Tasa aplicada",
@@ -681,6 +682,7 @@
     "stillAvailable": "siguen disponibles mientras tanto.",
     "rateFetchError": "No pudimos consultar la tasa. Intenta de nuevo.",
     "noRatesAvailable": "No hay tasas disponibles para este monto.",
+    "invalidQuote": "No pudimos calcular la comisión de esta cotización. Actualiza e inténtalo de nuevo.",
     "noCurrentRateError": "No hay una tasa vigente para confirmar la conversión.",
     "directConversionUnavailable": "La conversión directa entre saldos aún no está disponible desde la app. Usa Recargar o Enviar mientras tanto."
   },

@@ -11,6 +11,8 @@ function formatCopWithCode(amount: number) {
 
 interface PendingStepProps {
   amount: number;
+  fee?: number;
+  receivedAmount?: number;
   orderId?: string;
   actionLabel?: string;
   /** Defaults to COP with its code — pass a USD formatter for the RTP/ACH US-bank flows. */
@@ -21,6 +23,8 @@ interface PendingStepProps {
 
 export function TopUpPendingStep({
   amount,
+  fee,
+  receivedAmount,
   orderId,
   actionLabel,
   formatAmount = formatCopWithCode,
@@ -44,6 +48,17 @@ export function TopUpPendingStep({
         <p className="text-2xl font-bold tabular-nums text-foreground">
           {formatAmount(amount)}
         </p>
+        {typeof fee === 'number' && fee > 0 && (
+          <p className="text-sm text-muted-foreground">
+            {t('topup.amountStep.fee')}: {formatAmount(fee)}
+          </p>
+        )}
+        {typeof receivedAmount === 'number' && (
+          <p className="text-sm font-semibold text-foreground">
+            {t('topup.amountStep.youWillReceive')}:{' '}
+            {formatAmount(receivedAmount)}
+          </p>
+        )}
         {orderId && (
           <p className="text-xs text-muted-foreground">
             {t('topup.pendingStep.orderId', { orderId })}

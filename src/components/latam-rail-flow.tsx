@@ -15,7 +15,7 @@ import {
   SelectTrigger,
 } from '~/components/ui/select';
 import type { ApprovalOperation } from '~/domain/approval/types';
-import { calculateLatamRailFee } from '~/domain/payments/latam-rail-fee';
+import { calculateRateFeeQuote } from '~/domain/payments/topup-fee';
 import type { ExecutionOutcome } from '~/domain/payments/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useApprovalRedirect } from '~/hooks/approval/use-approval-redirect';
@@ -112,12 +112,12 @@ export function LatamRailFlow({
       : undefined,
   );
   const rate = ratesQuery.data?.[0] ?? null;
-  const receiveAmount = useMemo(() => {
-    if (!rate) return 0;
-    if (Number.isFinite(rate.ratio)) return parsedAmount * rate.ratio;
-    return (rate.rate[1] ?? 0) / 100;
+  const quote = useMemo(() => {
+    if (!rate) return null;
+    return calculateRateFeeQuote(parsedAmount, rate.fee);
   }, [parsedAmount, rate]);
-  const feeAmount = calculateLatamRailFee(parsedAmount, receiveAmount);
+  const receiveAmount = quote?.netAmount ?? 0;
+  const feeAmount = quote?.totalFee ?? 0;
 
   const speiDeposit = useCreateSpeiDepositOrder();
   const speiPayout = useCreateSpeiOrder();
@@ -343,10 +343,10 @@ export function LatamRailFlow({
                     {t('topup.youReceive')}
                   </span>
                   <span>
-                    {rate ? formatAmount(displayAsset, receiveAmount) : '...'}
+                    {quote ? formatAmount(displayAsset, receiveAmount) : '...'}
                   </span>
                 </div>
-                {rate?.fee && (
+                {quote && (
                   <div className="mt-2 flex justify-between gap-4">
                     <span className="text-muted-foreground">
                       {t('latamRails.fee')}
@@ -356,13 +356,18 @@ export function LatamRailFlow({
                 )}
               </div>
             )}
+            {rate && !quote && (
+              <p className="text-xs text-destructive">
+                {t('convert.invalidQuote')}
+              </p>
+            )}
             {!accountUrn && !isLoadingAccounts && (
               <p className="text-xs text-destructive">
                 {t('latamRails.noEligibleAccount')}
               </p>
             )}
             <Button
-              disabled={!rate || parsedAmount < 10 || !accountUrn}
+              disabled={!rate || !quote || parsedAmount < 10 || !accountUrn}
               onClick={() => setStep('details')}
               className="h-12 rounded-2xl"
             >
@@ -492,6 +497,12 @@ export function LatamRailFlow({
                     : t('send.bloqueFriends.youSend')}
                 </span>
                 <span>{formatAmountWithCode(displayAsset, parsedAmount)}</span>
+              </div>
+              <div className="mt-2 flex justify-between text-sm">
+                <span className="text-muted-foreground">
+                  {t('latamRails.fee')}
+                </span>
+                <span>{formatAmountWithCode(displayAsset, feeAmount)}</span>
               </div>
               <div className="mt-2 flex justify-between text-sm">
                 <span className="text-muted-foreground">

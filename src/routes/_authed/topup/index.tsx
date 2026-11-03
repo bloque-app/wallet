@@ -104,7 +104,6 @@ function RouteComponent() {
     id: string;
     execution: ExecutionOutcome;
   } | null>(null);
-  const [autoRetry, setAutoRetry] = useState(false);
 
   const parsedAmount = Number.parseInt(amount.replace(/\D/g, ''), 10) || 0;
   const amountSrc = useMemo(() => {
@@ -242,7 +241,7 @@ function RouteComponent() {
           const message = error instanceof Error ? error.message : '';
           if (message.includes('E_RATE_EXPIRED')) {
             toast.info(t('topup.rateExpiredToast'));
-            setAutoRetry(true);
+            setStep('amount');
             void ratesQuery.refetch();
             return;
           }
@@ -260,17 +259,6 @@ function RouteComponent() {
     ratesQuery,
     t,
   ]);
-
-  useEffect(() => {
-    if (!autoRetry || ratesQuery.isFetching) return;
-    setAutoRetry(false);
-    if (selectedRate) {
-      submitOrder();
-    } else {
-      toast.error(t('topup.noRateRetryToast'));
-      setStep('amount');
-    }
-  }, [autoRetry, ratesQuery.isFetching, selectedRate, submitOrder, t]);
 
   const selectedBankName =
     banksQuery.data?.find((bank) => bank.code === form.bankCode)?.name ??

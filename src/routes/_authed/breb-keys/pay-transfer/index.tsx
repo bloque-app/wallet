@@ -71,7 +71,6 @@ function RouteComponent() {
     id: string;
     execution: ExecutionOutcome;
   } | null>(null);
-  const [autoRetry, setAutoRetry] = useState(false);
   const [selectedLedgerId, setSelectedLedgerId] = useState<string | null>(null);
 
   const normalizedKey = key.trim();
@@ -155,6 +154,7 @@ function RouteComponent() {
     ) {
       return t('convert.noRatesAvailable');
     }
+    if (selectedRate && !quote) return t('convert.invalidQuote');
     return null;
   }, [
     isLoadingFundedAccounts,
@@ -165,6 +165,7 @@ function RouteComponent() {
     ratesQuery.isError,
     ratesQuery.isSuccess,
     selectedRate,
+    quote,
     selectedAccount,
     t,
   ]);
@@ -224,7 +225,6 @@ function RouteComponent() {
           if (msg.includes('E_RATE_EXPIRED')) {
             toast.info(t('topup.rateExpiredToast'));
             setConfirmOpen(false);
-            setAutoRetry(true);
             void ratesQuery.refetch();
             return;
           }
@@ -246,21 +246,12 @@ function RouteComponent() {
     t,
   ]);
 
-  useEffect(() => {
-    if (!autoRetry || ratesQuery.isFetching) return;
-    setAutoRetry(false);
-    if (selectedRate) {
-      submitOrder();
-    } else {
-      toast.error(t('topup.noRateRetryToast'));
-    }
-  }, [autoRetry, ratesQuery.isFetching, selectedRate, submitOrder, t]);
-
   const canSubmit =
     !!selectedSourceUrn &&
     hasValidKey &&
     parsedAmount >= MIN_TRANSFER_AMOUNT &&
     !!selectedRate &&
+    !!quote &&
     !createOrderMutation.isPending;
 
   const handleBack = () => {
@@ -279,6 +270,8 @@ function RouteComponent() {
 
         <ExecutionOutcomeStep
           amount={parsedAmount}
+          fee={quote?.totalFee}
+          receivedAmount={quote?.netAmount}
           orderId={lastOrder?.id}
           execution={lastOrder?.execution}
           onError={() => setView('error')}
@@ -520,14 +513,26 @@ function RouteComponent() {
                 </span>
               </div>
               {quote ? (
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-muted-foreground">
-                    {t('brebKeys.payTransfer.recipientReceives')}
-                  </span>
-                  <span className="font-semibold text-foreground">
-                    {formatAmountWithCode('COP', quote.netAmount)}
-                  </span>
-                </div>
+                <>
+                  {quote.totalFee > 0 ? (
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-muted-foreground">
+                        {t('brebKeys.payTransfer.fee')}
+                      </span>
+                      <span className="font-medium text-foreground">
+                        {formatAmountWithCode('COP', quote.totalFee)}
+                      </span>
+                    </div>
+                  ) : null}
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-muted-foreground">
+                      {t('brebKeys.payTransfer.recipientReceives')}
+                    </span>
+                    <span className="font-semibold text-foreground">
+                      {formatAmountWithCode('COP', quote.netAmount)}
+                    </span>
+                  </div>
+                </>
               ) : null}
               {message.trim() ? (
                 <div className="flex flex-col gap-1 pt-2">

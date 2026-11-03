@@ -10,6 +10,8 @@ import { TopUpPendingStep } from './pending-step';
 
 interface ExecutionOutcomeStepProps {
   amount: number;
+  fee?: number;
+  receivedAmount?: number;
   orderId?: string;
   /** The `execution` returned alongside a created swap order, already
    * translated by `resolveExecutionOutcome` — never a raw SDK `how`. */
@@ -29,6 +31,8 @@ interface ExecutionOutcomeStepProps {
  */
 export function ExecutionOutcomeStep({
   amount,
+  fee,
+  receivedAmount,
   orderId,
   execution,
   formatAmount,
@@ -120,6 +124,8 @@ export function ExecutionOutcomeStep({
   return (
     <TopUpPendingStep
       amount={amount}
+      fee={fee}
+      receivedAmount={receivedAmount}
       orderId={orderId}
       formatAmount={formatAmount}
       actionLabel={
