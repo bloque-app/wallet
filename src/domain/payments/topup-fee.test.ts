@@ -1,5 +1,28 @@
 import { describe, expect, test } from 'bun:test';
-import { calculatePseTopUpQuote } from './topup-fee';
+import { calculatePseTopUpQuote, calculateRateFeeQuote } from './topup-fee';
+
+describe('calculateRateFeeQuote', () => {
+  test('calculates a fixed-fee payout from the backend formula', () => {
+    expect(
+      calculateRateFeeQuote(10_000, {
+        formula: 'amount_src - provider_fee - bloque_fee',
+        components: [
+          { name: 'provider_fee', value: 3_500 },
+          { name: 'bloque_fee', value: 2_000 },
+        ],
+      }),
+    ).toEqual({ totalFee: 5_500, netAmount: 4_500 });
+  });
+
+  test('supports zero-fee quotes without applying a PSE fallback', () => {
+    expect(
+      calculateRateFeeQuote(10_000, {
+        formula: 'amount_src',
+        components: [],
+      }),
+    ).toEqual({ totalFee: 0, netAmount: 10_000 });
+  });
+});
 
 describe('calculatePseTopUpQuote', () => {
   test('uses the selected rate formula instead of duplicated fee constants', () => {

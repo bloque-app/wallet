@@ -19,6 +19,7 @@ import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { Textarea } from '~/components/ui/textarea';
+import { calculateRateFeeQuote } from '~/domain/payments/topup-fee';
 import type { ExecutionOutcome } from '~/domain/payments/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useResolveBrebKey } from '~/hooks/accounts/use-breb-keys';
@@ -123,6 +124,13 @@ function RouteComponent() {
   );
 
   const selectedRate = ratesQuery.data?.[0] ?? null;
+  const quote = useMemo(
+    () =>
+      selectedRate && parsedAmount >= MIN_TRANSFER_AMOUNT
+        ? calculateRateFeeQuote(parsedAmount, selectedRate.fee)
+        : null,
+    [parsedAmount, selectedRate],
+  );
 
   const formError = useMemo(() => {
     if (!isLoadingFundedAccounts && fundedAccounts.length === 0) {
@@ -406,6 +414,28 @@ function RouteComponent() {
                   {formatCOP(parsedAmount)}
                 </span>
               </div>
+              {quote ? (
+                <>
+                  {quote.totalFee > 0 ? (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">
+                        {t('brebKeys.payTransfer.fee')}
+                      </span>
+                      <span className="font-medium text-foreground">
+                        {formatCOP(quote.totalFee)}
+                      </span>
+                    </div>
+                  ) : null}
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      {t('brebKeys.payTransfer.recipientReceives')}
+                    </span>
+                    <span className="font-semibold text-foreground">
+                      {formatCOP(quote.netAmount)}
+                    </span>
+                  </div>
+                </>
+              ) : null}
             </div>
           ) : null}
 
@@ -489,6 +519,16 @@ function RouteComponent() {
                   {formatAmountWithCode('COP', parsedAmount)}
                 </span>
               </div>
+              {quote ? (
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-muted-foreground">
+                    {t('brebKeys.payTransfer.recipientReceives')}
+                  </span>
+                  <span className="font-semibold text-foreground">
+                    {formatAmountWithCode('COP', quote.netAmount)}
+                  </span>
+                </div>
+              ) : null}
               {message.trim() ? (
                 <div className="flex flex-col gap-1 pt-2">
                   <span className="text-muted-foreground">

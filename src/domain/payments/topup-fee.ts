@@ -1,4 +1,4 @@
-type RateFee = {
+export type RateFee = {
   formula: string;
   components: Array<{ name: string; value: number | string }>;
 };
@@ -7,6 +7,21 @@ export type TopUpQuote = {
   totalFee: number;
   netAmount: number;
 };
+
+export function calculateRateFeeQuote(
+  grossAmount: number,
+  rateFee?: RateFee,
+): TopUpQuote | null {
+  if (!rateFee) return null;
+  const grossAtoms = BigInt(Math.round(grossAmount * 100));
+  const netAtoms = evaluateRateFormulaToAtoms(rateFee, grossAtoms);
+  if (netAtoms === null || netAtoms > grossAtoms) return null;
+
+  return {
+    totalFee: Number(grossAtoms - netAtoms) / 100,
+    netAmount: Number(netAtoms) / 100,
+  };
+}
 
 type Token =
   | { type: 'number'; value: string }

@@ -224,6 +224,8 @@
       "message": "Mensaje",
       "messagePlaceholder": "¿Para qué es este envio?",
       "youSend": "Envias",
+      "fee": "Comisión",
+      "recipientReceives": "Se recibe",
       "validatingKey": "Validando llave...",
       "sending": "Enviando...",
       "sendMoney": "Enviar dinero",
