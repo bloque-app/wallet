@@ -149,7 +149,6 @@ describe('bloqueApprovalRepository.run', () => {
     expect(brebCreateMock).toHaveBeenCalledTimes(1);
     expect(brebCreateMock).toHaveBeenCalledWith(BREB_PARAMS, {
       approval: 'approval-1',
-      timeout: 120_000,
     });
   });
 

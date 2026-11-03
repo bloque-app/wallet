@@ -67,7 +67,6 @@ function RouteComponent() {
     id: string;
     execution: ExecutionOutcome;
   } | null>(null);
-  const [autoRetry, setAutoRetry] = useState(false);
   const [selectedBank, setSelectedBank] = useState('');
   const { accounts: sourceAccounts, isLoading: isLoadingAccounts } =
     useAccountPicker({
@@ -150,6 +149,7 @@ function RouteComponent() {
     if (ratesQuery.isSuccess && !selectedRate) {
       return t('convert.noRatesAvailable');
     }
+    if (selectedRate && !rateSummary) return t('convert.invalidQuote');
     return null;
   }, [
     parsedAmount,
@@ -158,6 +158,7 @@ function RouteComponent() {
     ratesQuery.isError,
     ratesQuery.isSuccess,
     selectedRate,
+    rateSummary,
     t,
   ]);
 
@@ -220,7 +221,7 @@ function RouteComponent() {
           const message = error instanceof Error ? error.message : '';
           if (message.includes('E_RATE_EXPIRED')) {
             toast.info(t('topup.rateExpiredToast'));
-            setAutoRetry(true);
+            setStep('amount');
             void ratesQuery.refetch();
             return;
           }
@@ -242,23 +243,12 @@ function RouteComponent() {
     t,
   ]);
 
-  useEffect(() => {
-    if (!autoRetry || ratesQuery.isFetching) return;
-    setAutoRetry(false);
-    if (selectedRate) {
-      submitOrder();
-    } else {
-      toast.error(t('topup.noRateRetryToast'));
-      setStep('amount');
-    }
-  }, [autoRetry, ratesQuery.isFetching, selectedRate, submitOrder, t]);
-
   const handleAmountNext = () => {
     if (parsedAmount < MIN_TRANSFER_AMOUNT) {
       toast.error(t('send.colombianBanks.minAmountToast'));
       return;
     }
-    if (!selectedRate) {
+    if (!selectedRate || !rateSummary) {
       toast.error(t('send.colombianBanks.noRateToContinue'));
       return;
     }
@@ -354,7 +344,7 @@ function RouteComponent() {
           form={bankForm}
           selectedBank={selectedBank}
           isRateLoading={ratesQuery.isFetching}
-          hasRate={!!selectedRate}
+          hasRate={!!rateSummary}
           rateError={rateError}
           onBankChange={setSelectedBank}
           onFormChange={setBankForm}
@@ -367,6 +357,7 @@ function RouteComponent() {
         <TopUpConfirmStep
           amount={parsedAmount}
           amountDst={rateSummary?.amountDst ?? 0}
+          fee={rateSummary?.fee ?? 0}
           ratio={rateSummary?.ratio ?? 0}
           bankName={selectedBankName}
           bankAccountType={bankForm.bankAccountType}
@@ -383,6 +374,8 @@ function RouteComponent() {
       {step === 'pending' && (
         <ExecutionOutcomeStep
           amount={parsedAmount}
+          fee={rateSummary?.fee}
+          receivedAmount={rateSummary?.amountDst}
           orderId={lastOrder?.id}
           execution={lastOrder?.execution}
           onError={() => setStep('error')}

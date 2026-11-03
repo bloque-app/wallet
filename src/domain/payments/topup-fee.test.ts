@@ -1,5 +1,9 @@
 import { describe, expect, test } from 'bun:test';
-import { calculatePseTopUpQuote, calculateRateFeeQuote } from './topup-fee';
+import {
+  calculatePseTopUpQuote,
+  calculateRateFeeQuote,
+  calculateRateFormulaAmount,
+} from './topup-fee';
 
 describe('calculateRateFeeQuote', () => {
   test('calculates a fixed-fee payout from the backend formula', () => {
@@ -21,6 +25,41 @@ describe('calculateRateFeeQuote', () => {
         components: [],
       }),
     ).toEqual({ totalFee: 0, netAmount: 10_000 });
+  });
+
+  test('calculates mixed fixed and percentage fees', () => {
+    expect(
+      calculateRateFeeQuote(20_000, {
+        formula: '(amount_src - fixed_fee) * (1 - percentage_fee)',
+        components: [
+          { name: 'fixed_fee', value: 2_500 },
+          { name: 'percentage_fee', value: '1/100' },
+        ],
+      }),
+    ).toEqual({ totalFee: 2_675, netAmount: 17_325 });
+  });
+
+  test.each([
+    ['', []],
+    ['amount_src - unknown_fee', []],
+    ['amount_src / zero', [{ name: 'zero', value: 0 }]],
+    ['-amount_src', []],
+    ['amount_src + 1', []],
+  ])('rejects an invalid payout formula: %s', (formula, components) => {
+    expect(calculateRateFeeQuote(10_000, { formula, components })).toBeNull();
+  });
+
+  test('uses source and destination asset precision for cross-asset quotes', () => {
+    expect(
+      calculateRateFormulaAmount(
+        10.25,
+        {
+          formula: 'amount_src * exchange_rate',
+          components: [{ name: 'exchange_rate', value: '4000.125' }],
+        },
+        { sourcePrecision: 6, destinationPrecision: 2 },
+      ),
+    ).toBe(41_001.28);
   });
 });
 

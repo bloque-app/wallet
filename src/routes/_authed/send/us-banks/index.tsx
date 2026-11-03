@@ -6,6 +6,7 @@ import { AccountCarousel } from '~/components/account/account-carousel';
 import { ComingSoonScreen } from '~/components/coming-soon';
 import { US_RAILS_ENABLED } from '~/config/features';
 import { useAuth } from '~/contexts/auth/auth-context';
+import { calculateRateFeeQuote } from '~/domain/payments/topup-fee';
 import type { ExecutionOutcome } from '~/domain/payments/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useApprovalRedirect } from '~/hooks/approval/use-approval-redirect';
@@ -79,7 +80,6 @@ function RouteComponent() {
     id: string;
     execution: ExecutionOutcome;
   } | null>(null);
-  const [autoRetry, setAutoRetry] = useState(false);
   const { accounts: sourceAccounts, isLoading: isLoadingAccounts } =
     useAccountPicker({
       asset: FROM_ASSET,
@@ -128,14 +128,15 @@ function RouteComponent() {
     const srcAmountMinor = Number(amountSrc);
     if (!srcAmountMinor) return null;
     const srcAmountMajor = minorToMajor(srcAmountMinor, FROM_PRECISION);
-    const ratio =
-      typeof selectedRate.ratio === 'number' &&
-      Number.isFinite(selectedRate.ratio)
-        ? selectedRate.ratio
-        : (selectedRate.rate?.[1] || 1) / (selectedRate.rate?.[0] || 1);
-    const dstAmountMajor = srcAmountMajor * ratio;
+    const quote = calculateRateFeeQuote(srcAmountMajor, selectedRate.fee, {
+      sourcePrecision: FROM_PRECISION,
+      destinationPrecision: getAssetPrecision(TO_ASSET),
+    });
+    if (!quote) return null;
+    const ratio = quote.netAmount / srcAmountMajor;
     return {
-      amountDst: dstAmountMajor,
+      amountDst: quote.netAmount,
+      fee: quote.totalFee,
       ratio,
       ratioLabel: `1 DUSD = ${ratio.toFixed(4)} USD`,
     };
@@ -157,6 +158,7 @@ function RouteComponent() {
     if (ratesQuery.isSuccess && !selectedRate) {
       return t('convert.noRatesAvailable');
     }
+    if (selectedRate && !rateSummary) return t('convert.invalidQuote');
     return null;
   }, [
     parsedAmount,
@@ -166,6 +168,7 @@ function RouteComponent() {
     ratesQuery.isError,
     ratesQuery.isSuccess,
     selectedRate,
+    rateSummary,
     t,
   ]);
 
@@ -223,7 +226,7 @@ function RouteComponent() {
           const message = error instanceof Error ? error.message : '';
           if (message.includes('E_RATE_EXPIRED')) {
             toast.info(t('topup.rateExpiredToast'));
-            setAutoRetry(true);
+            setStep('amount');
             void ratesQuery.refetch();
             return;
           }
@@ -244,23 +247,12 @@ function RouteComponent() {
     t,
   ]);
 
-  useEffect(() => {
-    if (!autoRetry || ratesQuery.isFetching) return;
-    setAutoRetry(false);
-    if (selectedRate) {
-      submitOrder();
-    } else {
-      toast.error(t('topup.noRateRetryToast'));
-      setStep('amount');
-    }
-  }, [autoRetry, ratesQuery.isFetching, selectedRate, submitOrder, t]);
-
   const handleAmountNext = () => {
     if (parsedAmount < MIN_TRANSFER_AMOUNT_USD) {
       toast.error(t('send.usBanks.minAmountToast'));
       return;
     }
-    if (!selectedRate) {
+    if (!selectedRate || !rateSummary) {
       toast.error(t('send.usBanks.noRateToContinue'));
       return;
     }
@@ -357,6 +349,14 @@ function RouteComponent() {
           amountDst={rateSummary?.amountDst ?? 0}
           ratioLabel={rateSummary?.ratioLabel ?? ''}
           details={[
+            ...(rateSummary?.fee
+              ? [
+                  {
+                    label: t('topup.amountStep.fee'),
+                    value: formatAmountWithCode('USD', rateSummary.fee),
+                  },
+                ]
+              : []),
             {
               label: t('send.usBanks.confirmStep.destinationBank'),
               value: bankForm.bankName || '—',
@@ -378,6 +378,8 @@ function RouteComponent() {
 
       {step === 'pending' && (
         <ExecutionOutcomeStep
+          fee={rateSummary?.fee}
+          receivedAmount={rateSummary?.amountDst}
           amount={parsedAmount}
           orderId={lastOrder?.id}
           execution={lastOrder?.execution}
