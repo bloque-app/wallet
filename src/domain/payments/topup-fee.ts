@@ -8,18 +8,43 @@ export type TopUpQuote = {
   netAmount: number;
 };
 
+type QuotePrecision = {
+  sourcePrecision?: number;
+  destinationPrecision?: number;
+};
+
+export function calculateRateFormulaAmount(
+  grossAmount: number,
+  rateFee?: RateFee,
+  precision: QuotePrecision = {},
+): number | null {
+  if (!rateFee) return null;
+  const sourcePrecision = precision.sourcePrecision ?? 2;
+  const destinationPrecision =
+    precision.destinationPrecision ?? sourcePrecision;
+  const sourceScale = 10n ** BigInt(sourcePrecision);
+  const destinationScale = 10n ** BigInt(destinationPrecision);
+  const grossAtoms = BigInt(Math.round(grossAmount * Number(sourceScale)));
+  const netAtoms = evaluateRateFormulaToAtoms(
+    rateFee,
+    grossAtoms,
+    sourceScale,
+    destinationScale,
+  );
+  return netAtoms === null ? null : Number(netAtoms) / Number(destinationScale);
+}
+
 export function calculateRateFeeQuote(
   grossAmount: number,
   rateFee?: RateFee,
+  precision: QuotePrecision = {},
 ): TopUpQuote | null {
-  if (!rateFee) return null;
-  const grossAtoms = BigInt(Math.round(grossAmount * 100));
-  const netAtoms = evaluateRateFormulaToAtoms(rateFee, grossAtoms);
-  if (netAtoms === null || netAtoms > grossAtoms) return null;
+  const netAmount = calculateRateFormulaAmount(grossAmount, rateFee, precision);
+  if (netAmount === null || netAmount > grossAmount) return null;
 
   return {
-    totalFee: Number(grossAtoms - netAtoms) / 100,
-    netAmount: Number(netAtoms) / 100,
+    totalFee: Number((grossAmount - netAmount).toFixed(12)),
+    netAmount,
   };
 }
 
@@ -136,12 +161,14 @@ function tokenize(formula: string): Token[] {
 function evaluateRateFormulaToAtoms(
   fee: RateFee,
   sourceAtoms: bigint,
+  sourceScale = 100n,
+  destinationScale = 100n,
 ): bigint | null {
   if (!fee.formula.trim()) return null;
 
   try {
     const variables = new Map<string, Rational>([
-      ['amount_src', rational(sourceAtoms, 100n)],
+      ['amount_src', rational(sourceAtoms, sourceScale)],
     ]);
     for (const component of fee.components) {
       variables.set(component.name, parseRational(component.value));
@@ -212,7 +239,7 @@ function evaluateRateFormulaToAtoms(
     };
     const result = parseAdditive();
     if (index !== tokens.length || result.numerator < 0n) return null;
-    return (result.numerator * 100n) / result.denominator;
+    return (result.numerator * destinationScale) / result.denominator;
   } catch {
     return null;
   }

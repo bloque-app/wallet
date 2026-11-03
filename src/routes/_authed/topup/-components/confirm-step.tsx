@@ -9,6 +9,7 @@ import { formatAmountWithCode } from '~/lib/formatters';
 interface ConfirmStepProps {
   amount: number;
   amountDst: number;
+  fee?: number;
   ratio: number;
   bankName: string;
   bankAccountType: 'savings' | 'checkings';
@@ -24,6 +25,7 @@ interface ConfirmStepProps {
 export function TopUpConfirmStep({
   amount,
   amountDst,
+  fee = 0,
   ratio,
   bankName,
   bankAccountType,
@@ -58,6 +60,16 @@ export function TopUpConfirmStep({
             </span>
             <span className="font-medium text-foreground">COP</span>
           </div>
+          {fee > 0 && (
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">
+                {t('topup.amountStep.fee')}
+              </span>
+              <span className="font-medium text-foreground">
+                {formatAmountWithCode('COP', fee)}
+              </span>
+            </div>
+          )}
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">
               {t('topup.amountStep.amount')}

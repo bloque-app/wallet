@@ -558,6 +558,7 @@
       "minAmount": "Minimum amount: $5,000 COP",
       "amount": "Amount",
       "pseFee": "PSE fee",
+      "fee": "Fee",
       "totalToDebit": "Total to debit",
       "estimatedArrival": "Estimated arrival time: 5-15 minutes",
       "appliedRate": "Applied rate",
@@ -681,6 +682,7 @@
     "stillAvailable": "are still available in the meantime.",
     "rateFetchError": "We couldn't fetch the rate. Please try again.",
     "noRatesAvailable": "No rates are available for this amount.",
+    "invalidQuote": "We could not calculate this quote's fee. Refresh and try again.",
     "noCurrentRateError": "There's no current rate to confirm the conversion.",
     "directConversionUnavailable": "Direct conversion between balances isn't available from the app yet. Use Top up or Send in the meantime."
   },

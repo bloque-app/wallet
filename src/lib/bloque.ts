@@ -7,6 +7,7 @@ export const createBloqueSdk = (origin?: string) => {
     auth: { type: 'jwt' },
     mode: PUBLIC_BLOQUE_MODE,
     platform: 'browser',
+    timeout: 120_000,
   });
 };
 

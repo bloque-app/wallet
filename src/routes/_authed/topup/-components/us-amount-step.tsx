@@ -14,6 +14,7 @@ interface UsAmountStepProps {
   rateError: string | null;
   rateSummary: {
     amountDst: number;
+    fee: number;
     ratio: number;
     /** e.g. "1 DUSD = 0.9998 USD" */
     ratioLabel: string;
@@ -120,6 +121,16 @@ export function UsAmountStep({
                     {rateSummary.ratioLabel}
                   </span>
                 </div>
+                {rateSummary.fee > 0 && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      {t('topup.amountStep.fee')}
+                    </span>
+                    <span className="font-medium text-foreground">
+                      {formatUSD(rateSummary.fee)}
+                    </span>
+                  </div>
+                )}
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">
                     {t('topup.usAmountStep.youWillReceive')}

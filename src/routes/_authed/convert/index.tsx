@@ -17,6 +17,7 @@ import {
 } from '~/components/ui/select';
 import { Separator } from '~/components/ui/separator';
 import { CONVERT_ENABLED } from '~/config/features';
+import { calculateRateFormulaAmount } from '~/domain/payments/topup-fee';
 import { useRates } from '~/hooks/payments/use-rates';
 import { bloque } from '~/lib/bloque';
 import { type Asset, formatAmount } from '~/lib/formatters';
@@ -71,10 +72,6 @@ function parseBalances(data: BalancesData | undefined): Record<Asset, number> {
 function majorToMinor(amountMajor: number, precision: number): string {
   if (!Number.isFinite(amountMajor) || amountMajor <= 0) return '';
   return Math.round(amountMajor * 10 ** precision).toString();
-}
-
-function minorToMajor(amountMinor: number, precision: number) {
-  return amountMinor / 10 ** precision;
 }
 
 export const Route = createFileRoute('/_authed/convert/')({
@@ -134,15 +131,13 @@ function RouteComponent() {
 
   const received = useMemo(() => {
     if (!selectedRate || parsed <= 0) return 0;
-    if (
-      typeof selectedRate.ratio === 'number' &&
-      Number.isFinite(selectedRate.ratio)
-    ) {
-      return parsed * selectedRate.ratio;
-    }
-    const dstAmountMinor = selectedRate.rate?.[1] ?? 0;
-    return minorToMajor(dstAmountMinor, toConfig.precision);
-  }, [selectedRate, parsed, toConfig.precision]);
+    return (
+      calculateRateFormulaAmount(parsed, selectedRate.fee, {
+        sourcePrecision: fromConfig.precision,
+        destinationPrecision: toConfig.precision,
+      }) ?? 0
+    );
+  }, [selectedRate, parsed, fromConfig.precision, toConfig.precision]);
 
   const rateError = useMemo(() => {
     if (parsed <= 0 || fromAsset === toAsset) return null;
@@ -152,6 +147,7 @@ function RouteComponent() {
     if (ratesQuery.isSuccess && !selectedRate) {
       return t('convert.noRatesAvailable');
     }
+    if (selectedRate && received <= 0) return t('convert.invalidQuote');
     return null;
   }, [
     parsed,
@@ -160,6 +156,7 @@ function RouteComponent() {
     ratesQuery.isError,
     ratesQuery.isSuccess,
     selectedRate,
+    received,
     t,
   ]);
 
@@ -168,6 +165,7 @@ function RouteComponent() {
     parsed <= available &&
     fromAsset !== toAsset &&
     !!selectedRate?.sig &&
+    received > 0 &&
     !ratesQuery.isFetching;
 
   function handleSwap() {
