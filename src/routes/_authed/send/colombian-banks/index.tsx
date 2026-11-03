@@ -7,6 +7,7 @@ import {
   isSupportedBank,
   SUPPORTED_BANK_LABELS,
 } from '~/domain/payments/supported-bank';
+import { calculateRateFeeQuote } from '~/domain/payments/topup-fee';
 import type { ExecutionOutcome } from '~/domain/payments/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useApprovalRedirect } from '~/hooks/approval/use-approval-redirect';
@@ -129,15 +130,12 @@ function RouteComponent() {
     const srcAmountMinor = Number(amountSrc);
     if (!srcAmountMinor) return null;
     const srcAmountMajor = minorToMajor(srcAmountMinor, FROM_PRECISION);
-    const ratio =
-      typeof selectedRate.ratio === 'number' &&
-      Number.isFinite(selectedRate.ratio)
-        ? selectedRate.ratio
-        : (selectedRate.rate?.[1] ?? 1) / (selectedRate.rate?.[0] ?? 1);
-    const dstAmountMajor = srcAmountMajor * ratio;
+    const quote = calculateRateFeeQuote(srcAmountMajor, selectedRate.fee);
+    if (!quote) return null;
     return {
-      amountDst: dstAmountMajor,
-      ratio,
+      amountDst: quote.netAmount,
+      fee: quote.totalFee,
+      ratio: quote.netAmount / srcAmountMajor,
     };
   }, [selectedRate, amountSrc]);
 
@@ -335,7 +333,7 @@ function RouteComponent() {
       {step === 'amount' && (
         <TopUpAmountStep
           amount={amount}
-          fee={0}
+          fee={rateSummary?.fee ?? 0}
           isLoadingRate={ratesQuery.isFetching}
           rateError={rateError}
           rateSummary={rateSummary}
@@ -345,6 +343,7 @@ function RouteComponent() {
           minAmount={MIN_TRANSFER_AMOUNT}
           minAmountLabel={t('send.colombianBanks.amountStep.minAmount')}
           feeLabel={t('send.colombianBanks.amountStep.feeLabel')}
+          showTotalToDebit={false}
           disclaimer={null}
           arrivalLabel={null}
         />

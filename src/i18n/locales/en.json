@@ -224,6 +224,8 @@
       "message": "Message",
       "messagePlaceholder": "What's this transfer for?",
       "youSend": "You send",
+      "fee": "Fee",
+      "recipientReceives": "Recipient receives",
       "validatingKey": "Validating key...",
       "sending": "Sending...",
       "sendMoney": "Send money",

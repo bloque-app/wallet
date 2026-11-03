@@ -32,6 +32,7 @@ import type { ExecutionOutcome, PaymentOrder, Rate } from './types';
  */
 export type CreateOrderOptions = ApprovalOptions & {
   idempotencyKey?: string;
+  timeout?: number;
 };
 
 export type CreateOrderResult = {

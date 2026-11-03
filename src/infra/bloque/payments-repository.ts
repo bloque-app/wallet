@@ -27,6 +27,7 @@ import { sdkApprovalOptions, withApprovalErrors } from './approval-errors';
 function orderOptions(options?: CreateOrderOptions) {
   return {
     ...(options?.idempotencyKey && { idempotencyKey: options.idempotencyKey }),
+    ...(options?.timeout && { timeout: options.timeout }),
     ...sdkApprovalOptions(options),
   };
 }
