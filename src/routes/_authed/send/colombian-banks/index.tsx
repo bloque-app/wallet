@@ -129,18 +129,14 @@ function RouteComponent() {
     const srcAmountMinor = Number(amountSrc);
     if (!srcAmountMinor) return null;
     const srcAmountMajor = minorToMajor(srcAmountMinor, FROM_PRECISION);
-    const marketRatio =
-      Number.isFinite(selectedRate.ratio) && selectedRate.ratio > 0
-        ? selectedRate.ratio
-        : (selectedRate.rate?.[1] ?? 0) / (selectedRate.rate?.[0] ?? 1);
     const quote = calculateRateFeeQuote(srcAmountMajor, selectedRate.fee, {
-      fallbackAmount: srcAmountMajor * marketRatio,
+      fallbackAmount: srcAmountMajor * selectedRate.ratio,
     });
     if (!quote) return null;
     return {
       amountDst: quote.netAmount,
       fee: quote.totalFee,
-      ratio: marketRatio,
+      ratio: 1,
     };
   }, [selectedRate, amountSrc]);
 

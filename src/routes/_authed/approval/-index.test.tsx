@@ -397,4 +397,31 @@ describe('approval return page', () => {
     expect(reconcile).toHaveBeenCalledWith(saved.operation, expect.any(Number));
     expect(screen.queryByText(/No pudimos confirmar/)).not.toBeInTheDocument();
   });
+
+  test('reconciles from the replay start after a delayed failure', async () => {
+    const replayStartedAt = new Date('2026-11-04T12:00:00.000Z');
+    let storedReplayStartedAt: number | undefined;
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(replayStartedAt);
+    try {
+      savePendingApproval(SAVED);
+      collect.mockResolvedValue('approval-1');
+      run.mockImplementation(async () => {
+        storedReplayStartedAt = readPendingApproval()?.replayStartedAt;
+        vi.setSystemTime(new Date((storedReplayStartedAt ?? 0) + 60_000));
+        throw new Error('response lost after timeout');
+      });
+
+      renderPage();
+      await vi.waitFor(() => expect(reconcile).toHaveBeenCalled());
+
+      expect(reconcile).toHaveBeenCalledWith(
+        SAVED.operation,
+        storedReplayStartedAt,
+      );
+      expect(storedReplayStartedAt).toEqual(expect.any(Number));
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

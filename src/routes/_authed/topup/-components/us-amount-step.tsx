@@ -15,9 +15,8 @@ interface UsAmountStepProps {
   rateSummary: {
     amountDst: number;
     fee: number;
-    ratio: number;
     /** e.g. "1 DUSD = 0.9998 USD" */
-    ratioLabel: string;
+    ratioLabel: string | null;
   } | null;
   onAmountChange: (v: string) => void;
   onBack?: () => void;
@@ -113,14 +112,16 @@ export function UsAmountStep({
               <p className="text-xs text-destructive">{rateError}</p>
             ) : rateSummary ? (
               <>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">
-                    {t('convert.rate')}
-                  </span>
-                  <span className="font-medium text-foreground">
-                    {rateSummary.ratioLabel}
-                  </span>
-                </div>
+                {rateSummary.ratioLabel && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      {t('convert.rate')}
+                    </span>
+                    <span className="font-medium text-foreground">
+                      {rateSummary.ratioLabel}
+                    </span>
+                  </div>
+                )}
                 {rateSummary.fee > 0 && (
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">
