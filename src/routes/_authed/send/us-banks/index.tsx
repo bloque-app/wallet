@@ -128,17 +128,21 @@ function RouteComponent() {
     const srcAmountMinor = Number(amountSrc);
     if (!srcAmountMinor) return null;
     const srcAmountMajor = minorToMajor(srcAmountMinor, FROM_PRECISION);
+    const marketRatio =
+      Number.isFinite(selectedRate.ratio) && selectedRate.ratio > 0
+        ? selectedRate.ratio
+        : (selectedRate.rate?.[1] ?? 0) / (selectedRate.rate?.[0] ?? 1);
     const quote = calculateRateFeeQuote(srcAmountMajor, selectedRate.fee, {
       sourcePrecision: FROM_PRECISION,
       destinationPrecision: getAssetPrecision(TO_ASSET),
+      fallbackAmount: srcAmountMajor * marketRatio,
     });
     if (!quote) return null;
-    const ratio = quote.netAmount / srcAmountMajor;
     return {
       amountDst: quote.netAmount,
       fee: quote.totalFee,
-      ratio,
-      ratioLabel: `1 DUSD = ${ratio.toFixed(4)} USD`,
+      ratio: marketRatio,
+      ratioLabel: `1 DUSD = ${marketRatio.toFixed(4)} USD`,
     };
   }, [selectedRate, amountSrc]);
 
@@ -347,6 +351,7 @@ function RouteComponent() {
         <UsConfirmStep
           amount={parsedAmount}
           amountDst={rateSummary?.amountDst ?? 0}
+          receiveLabel={t('brebKeys.payTransfer.recipientReceives')}
           ratioLabel={rateSummary?.ratioLabel ?? ''}
           details={[
             ...(rateSummary?.fee
@@ -380,6 +385,7 @@ function RouteComponent() {
         <ExecutionOutcomeStep
           fee={rateSummary?.fee}
           receivedAmount={rateSummary?.amountDst}
+          receivedLabel={t('brebKeys.payTransfer.recipientReceives')}
           amount={parsedAmount}
           orderId={lastOrder?.id}
           execution={lastOrder?.execution}

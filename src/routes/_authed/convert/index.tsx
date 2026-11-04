@@ -135,6 +135,7 @@ function RouteComponent() {
       calculateRateFormulaAmount(parsed, selectedRate.fee, {
         sourcePrecision: fromConfig.precision,
         destinationPrecision: toConfig.precision,
+        fallbackAmount: parsed * selectedRate.ratio,
       }) ?? 0
     );
   }, [selectedRate, parsed, fromConfig.precision, toConfig.precision]);

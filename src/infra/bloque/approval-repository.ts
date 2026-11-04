@@ -131,7 +131,40 @@ async function run(
   }
 }
 
+function operationRateSig(operation: ApprovalOperation): string | undefined {
+  switch (operation.kind) {
+    case 'bank-transfer-order':
+    case 'breb-order':
+    case 'rtp-order':
+    case 'external-us-bank-order':
+    case 'spei-order':
+    case 'pix-order':
+      return operation.params.rateSig;
+    default:
+      return undefined;
+  }
+}
+
+async function reconcile(
+  operation: ApprovalOperation,
+  replayStartedAt: number,
+): Promise<ApprovalOutcome | null> {
+  const rateSig = operationRateSig(operation);
+  if (!rateSig) return null;
+  const { orders } = await bloque.swap.listOrders({
+    rateSig,
+    after: replayStartedAt - 5_000,
+  });
+  const order = [...orders].sort((left, right) =>
+    right.createdAt.localeCompare(left.createdAt),
+  )[0];
+  return order
+    ? { kind: 'order', orderId: order.id, execution: { kind: 'none' } }
+    : null;
+}
+
 export const bloqueApprovalRepository: ApprovalRepository = {
   collect,
   run,
+  reconcile,
 };

@@ -501,7 +501,6 @@
     "pseStartedToast": "PSE top-up started successfully.",
     "rateExpiredToast": "The rate expired. Recalculating...",
     "startErrorToast": "Couldn't start the top-up.",
-    "noRateRetryToast": "No rate available. Please try again.",
     "groups": {
       "colombia": "Colombia",
       "us": "United States",
@@ -589,7 +588,7 @@
       "title": "Payment failed",
       "description": "We couldn't process your payment. This can happen due to insufficient funds, an expired session, or a temporary bank error.",
       "tryAgain": "Try again",
-      "contactSupport": "Contact support"
+      "contactSupport": "Email soporte@bloque.team"
     },
     "executionOutcome": {
       "brebTitle": "Complete the BRE-B payment",
