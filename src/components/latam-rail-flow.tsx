@@ -114,7 +114,13 @@ export function LatamRailFlow({
   const rate = ratesQuery.data?.[0] ?? null;
   const quote = useMemo(() => {
     if (!rate) return null;
-    return calculateRateFeeQuote(parsedAmount, rate.fee);
+    const marketRatio =
+      Number.isFinite(rate.ratio) && rate.ratio > 0
+        ? rate.ratio
+        : (rate.rate?.[1] ?? 0) / (rate.rate?.[0] ?? 1);
+    return calculateRateFeeQuote(parsedAmount, rate.fee, {
+      fallbackAmount: parsedAmount * marketRatio,
+    });
   }, [parsedAmount, rate]);
   const receiveAmount = quote?.netAmount ?? 0;
   const feeAmount = quote?.totalFee ?? 0;
@@ -498,12 +504,14 @@ export function LatamRailFlow({
                 </span>
                 <span>{formatAmountWithCode(displayAsset, parsedAmount)}</span>
               </div>
-              <div className="mt-2 flex justify-between text-sm">
-                <span className="text-muted-foreground">
-                  {t('latamRails.fee')}
-                </span>
-                <span>{formatAmountWithCode(displayAsset, feeAmount)}</span>
-              </div>
+              {feeAmount > 0 && (
+                <div className="mt-2 flex justify-between text-sm">
+                  <span className="text-muted-foreground">
+                    {t('latamRails.fee')}
+                  </span>
+                  <span>{formatAmountWithCode(displayAsset, feeAmount)}</span>
+                </div>
+              )}
               <div className="mt-2 flex justify-between text-sm">
                 <span className="text-muted-foreground">
                   {t('topup.youReceive')}

@@ -13,6 +13,7 @@ interface PendingStepProps {
   amount: number;
   fee?: number;
   receivedAmount?: number;
+  receivedLabel?: string;
   orderId?: string;
   actionLabel?: string;
   /** Defaults to COP with its code — pass a USD formatter for the RTP/ACH US-bank flows. */
@@ -25,6 +26,7 @@ export function TopUpPendingStep({
   amount,
   fee,
   receivedAmount,
+  receivedLabel,
   orderId,
   actionLabel,
   formatAmount = formatCopWithCode,
@@ -55,7 +57,7 @@ export function TopUpPendingStep({
         )}
         {typeof receivedAmount === 'number' && (
           <p className="text-sm font-semibold text-foreground">
-            {t('topup.amountStep.youWillReceive')}:{' '}
+            {receivedLabel ?? t('topup.amountStep.youWillReceive')}:{' '}
             {formatAmount(receivedAmount)}
           </p>
         )}

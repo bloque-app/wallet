@@ -129,12 +129,18 @@ function RouteComponent() {
     const srcAmountMinor = Number(amountSrc);
     if (!srcAmountMinor) return null;
     const srcAmountMajor = minorToMajor(srcAmountMinor, FROM_PRECISION);
-    const quote = calculateRateFeeQuote(srcAmountMajor, selectedRate.fee);
+    const marketRatio =
+      Number.isFinite(selectedRate.ratio) && selectedRate.ratio > 0
+        ? selectedRate.ratio
+        : (selectedRate.rate?.[1] ?? 0) / (selectedRate.rate?.[0] ?? 1);
+    const quote = calculateRateFeeQuote(srcAmountMajor, selectedRate.fee, {
+      fallbackAmount: srcAmountMajor * marketRatio,
+    });
     if (!quote) return null;
     return {
       amountDst: quote.netAmount,
       fee: quote.totalFee,
-      ratio: quote.netAmount / srcAmountMajor,
+      ratio: marketRatio,
     };
   }, [selectedRate, amountSrc]);
 
@@ -324,11 +330,13 @@ function RouteComponent() {
         <TopUpAmountStep
           amount={amount}
           fee={rateSummary?.fee ?? 0}
+          receiveLabel={t('brebKeys.payTransfer.recipientReceives')}
           isLoadingRate={ratesQuery.isFetching}
           rateError={rateError}
           rateSummary={rateSummary}
           onAmountChange={setAmount}
           onNext={handleAmountNext}
+          onBack={() => window.history.back()}
           label={t('send.colombianBanks.amountStep.label')}
           minAmount={MIN_TRANSFER_AMOUNT}
           minAmountLabel={t('send.colombianBanks.amountStep.minAmount')}
@@ -376,6 +384,7 @@ function RouteComponent() {
           amount={parsedAmount}
           fee={rateSummary?.fee}
           receivedAmount={rateSummary?.amountDst}
+          receivedLabel={t('brebKeys.payTransfer.recipientReceives')}
           orderId={lastOrder?.id}
           execution={lastOrder?.execution}
           onError={() => setStep('error')}

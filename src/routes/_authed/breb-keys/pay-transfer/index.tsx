@@ -272,6 +272,7 @@ function RouteComponent() {
           amount={parsedAmount}
           fee={quote?.totalFee}
           receivedAmount={quote?.netAmount}
+          receivedLabel={t('brebKeys.payTransfer.recipientReceives')}
           orderId={lastOrder?.id}
           execution={lastOrder?.execution}
           onError={() => setView('error')}

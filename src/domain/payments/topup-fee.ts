@@ -11,6 +11,7 @@ export type TopUpQuote = {
 type QuotePrecision = {
   sourcePrecision?: number;
   destinationPrecision?: number;
+  fallbackAmount?: number;
 };
 
 export function calculateRateFormulaAmount(
@@ -18,7 +19,14 @@ export function calculateRateFormulaAmount(
   rateFee?: RateFee,
   precision: QuotePrecision = {},
 ): number | null {
-  if (!rateFee) return null;
+  if (!rateFee?.formula.trim()) {
+    const fallback = precision.fallbackAmount;
+    return typeof fallback === 'number' &&
+      Number.isFinite(fallback) &&
+      fallback >= 0
+      ? fallback
+      : null;
+  }
   const sourcePrecision = precision.sourcePrecision ?? 2;
   const destinationPrecision =
     precision.destinationPrecision ?? sourcePrecision;

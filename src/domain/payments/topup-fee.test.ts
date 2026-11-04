@@ -27,6 +27,16 @@ describe('calculateRateFeeQuote', () => {
     ).toEqual({ totalFee: 0, netAmount: 10_000 });
   });
 
+  test('uses the quoted ratio for legacy rates without a fee formula', () => {
+    expect(
+      calculateRateFeeQuote(
+        10_000,
+        { formula: '', components: [] },
+        { fallbackAmount: 9_999 },
+      ),
+    ).toEqual({ totalFee: 1, netAmount: 9_999 });
+  });
+
   test('calculates mixed fixed and percentage fees', () => {
     expect(
       calculateRateFeeQuote(20_000, {

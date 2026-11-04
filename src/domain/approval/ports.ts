@@ -23,4 +23,10 @@ export type ApprovalRepository = {
    * when the approval is refused or the swap rate expired meanwhile.
    */
   run(operation: ApprovalOperation, approval: string): Promise<ApprovalOutcome>;
+
+  /** Finds an order created by an approved replay whose response was lost. */
+  reconcile(
+    operation: ApprovalOperation,
+    replayStartedAt: number,
+  ): Promise<ApprovalOutcome | null>;
 };

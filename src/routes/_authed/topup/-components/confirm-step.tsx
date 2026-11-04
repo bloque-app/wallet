@@ -10,6 +10,7 @@ interface ConfirmStepProps {
   amount: number;
   amountDst: number;
   fee?: number;
+  receiveLabel?: string;
   ratio: number;
   bankName: string;
   bankAccountType: 'savings' | 'checkings';
@@ -26,6 +27,7 @@ export function TopUpConfirmStep({
   amount,
   amountDst,
   fee = 0,
+  receiveLabel,
   ratio,
   bankName,
   bankAccountType,
@@ -123,7 +125,7 @@ export function TopUpConfirmStep({
           <Separator />
           <div className="flex justify-between text-sm">
             <span className="font-semibold text-foreground">
-              {t('topup.amountStep.youWillReceive')}
+              {receiveLabel ?? t('topup.amountStep.youWillReceive')}
             </span>
             <span className="font-bold text-foreground">
               {formatAmountWithCode('COP', amountDst)}

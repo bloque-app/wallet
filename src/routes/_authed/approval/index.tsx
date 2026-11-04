@@ -107,8 +107,15 @@ function RouteComponent() {
     }
     // A repeat already sent from an earlier load (reload, second tab).
     if (saved.replayStartedAt !== undefined) {
+      const reconciled = await bloqueApprovalRepository
+        .reconcile(saved.operation, saved.replayStartedAt)
+        .catch(() => null);
       clearPendingApproval();
-      setState({ kind: 'unconfirmed', saved });
+      setState(
+        reconciled
+          ? { kind: 'done', saved, outcome: reconciled }
+          : { kind: 'unconfirmed', saved },
+      );
       return;
     }
     setState({ kind: 'working' });
@@ -145,7 +152,14 @@ function RouteComponent() {
       } else if (refusal) {
         setState({ kind: 'refused', saved, message: refusal });
       } else {
-        setState({ kind: 'unconfirmed', saved });
+        const reconciled = await bloqueApprovalRepository
+          .reconcile(saved.operation, saved.replayStartedAt ?? Date.now())
+          .catch(() => null);
+        setState(
+          reconciled
+            ? { kind: 'done', saved, outcome: reconciled }
+            : { kind: 'unconfirmed', saved },
+        );
       }
     } finally {
       clearPendingApproval();
