@@ -32,6 +32,9 @@ const brebDeleteMock = mock((_urn: string, _options?: unknown) =>
 const virtualDeleteMock = mock((_urn: string, _options?: unknown) =>
   Promise.resolve({}),
 );
+const listOrdersMock = mock((_params?: unknown) =>
+  Promise.resolve({ orders: [] as Array<{ id: string; createdAt: string }> }),
+);
 
 mock.module('~/lib/bloque', () => ({
   bloque: {
@@ -42,7 +45,7 @@ mock.module('~/lib/bloque', () => ({
       breb: { deleteKey: brebDeleteMock },
       virtual: { delete: virtualDeleteMock },
     },
-    swap: { breb: { create: brebCreateMock } },
+    swap: { breb: { create: brebCreateMock }, listOrders: listOrdersMock },
   },
 }));
 
@@ -112,6 +115,7 @@ describe('bloqueApprovalRepository.run', () => {
     cardActivateMock.mockClear();
     brebDeleteMock.mockClear();
     virtualDeleteMock.mockClear();
+    listOrdersMock.mockClear();
   });
 
   test('repeats a transfer once with the exact params and the approval', async () => {
@@ -250,5 +254,28 @@ describe('bloqueApprovalRepository.run', () => {
       ),
     );
     expect(error).toBe(original);
+  });
+
+  test('reconciles an order created after an approved replay lost its response', async () => {
+    listOrdersMock.mockResolvedValueOnce({
+      orders: [
+        { id: 'order-reconciled', createdAt: '2026-11-04T12:00:00.000Z' },
+      ],
+    });
+
+    await expect(
+      bloqueApprovalRepository.reconcile(
+        { kind: 'breb-order', params: BREB_PARAMS },
+        1_762_257_600_000,
+      ),
+    ).resolves.toEqual({
+      kind: 'order',
+      orderId: 'order-reconciled',
+      execution: { kind: 'none' },
+    });
+    expect(listOrdersMock).toHaveBeenCalledWith({
+      rateSig: BREB_PARAMS.rateSig,
+      after: 1_762_257_595_000,
+    });
   });
 });

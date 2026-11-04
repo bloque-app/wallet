@@ -16,6 +16,7 @@ import {
 const navigate = vi.fn();
 const collect = vi.fn();
 const run = vi.fn();
+const reconcile = vi.fn();
 
 vi.mock('@tanstack/react-router', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@tanstack/react-router')>()),
@@ -23,7 +24,7 @@ vi.mock('@tanstack/react-router', async (importOriginal) => ({
 }));
 
 vi.mock('~/infra/bloque/approval-repository', () => ({
-  bloqueApprovalRepository: { collect, run },
+  bloqueApprovalRepository: { collect, run, reconcile },
 }));
 
 const { Route } = await import('./index');
@@ -65,6 +66,8 @@ describe('approval return page', () => {
     navigate.mockReset();
     collect.mockReset();
     run.mockReset();
+    reconcile.mockReset();
+    reconcile.mockResolvedValue(null);
   });
 
   test('repeats the approved operation once and shows it was sent', async () => {
@@ -173,7 +176,41 @@ describe('approval return page', () => {
     ).toBeInTheDocument();
     expect(collect).not.toHaveBeenCalled();
     expect(run).not.toHaveBeenCalled();
+    expect(reconcile).toHaveBeenCalledWith(SAVED.operation, expect.any(Number));
     expect(readPendingApproval()).toBeNull();
+  });
+
+  test('recovers an order after reloading during an approved replay', async () => {
+    const replayStartedAt = Date.now();
+    const saved = {
+      ...SAVED,
+      replayStartedAt,
+      operation: {
+        kind: 'breb-order' as const,
+        params: {
+          rateSig: 'rate-1',
+          amountSrc: '1000000',
+          depositInformation: {
+            resolutionId: 'resolution-1',
+            destinationKey: { keyValue: '@alice' },
+          },
+          args: { sourceAccountUrn: 'did:bloque:account:virtual:source' },
+        },
+      },
+    };
+    savePendingApproval(saved);
+    reconcile.mockResolvedValue({
+      kind: 'order',
+      orderId: 'order-1',
+      execution: { kind: 'none' },
+    });
+
+    renderPage();
+
+    expect(await screen.findByText(/order-1/)).toBeInTheDocument();
+    expect(reconcile).toHaveBeenCalledWith(saved.operation, replayStartedAt);
+    expect(collect).not.toHaveBeenCalled();
+    expect(run).not.toHaveBeenCalled();
   });
 
   test.each([
@@ -327,5 +364,37 @@ describe('approval return page', () => {
       screen.getByRole('button', { name: 'Ver mis bolsillos' }),
     );
     expect(navigate).toHaveBeenCalledWith({ to: '/accounts' });
+  });
+
+  test('shows a BRE-B order found after an approved replay lost its response', async () => {
+    const saved: SavedApproval = {
+      ...SAVED,
+      operation: {
+        kind: 'breb-order',
+        params: {
+          rateSig: 'rate-1',
+          amountSrc: '1000000',
+          depositInformation: {
+            resolutionId: 'resolution-1',
+            destinationKey: { keyValue: '@alice' },
+          },
+          args: { sourceAccountUrn: 'did:bloque:account:virtual:source' },
+        },
+      },
+    };
+    savePendingApproval(saved);
+    collect.mockResolvedValue('approval-1');
+    run.mockRejectedValue(new Error('response lost'));
+    reconcile.mockResolvedValue({
+      kind: 'order',
+      orderId: 'order-reconciled',
+      execution: { kind: 'none' },
+    });
+
+    renderPage();
+
+    expect(await screen.findByText(/order-reconciled/)).toBeInTheDocument();
+    expect(reconcile).toHaveBeenCalledWith(saved.operation, expect.any(Number));
+    expect(screen.queryByText(/No pudimos confirmar/)).not.toBeInTheDocument();
   });
 });

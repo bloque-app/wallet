@@ -34,6 +34,7 @@ export function TopUpErrorStep({ onRetry }: ErrorStepProps) {
         </Button>
         <Button
           variant="outline"
+          render={<a href="mailto:soporte@bloque.team" />}
           className="h-12 w-full rounded-2xl text-sm font-medium bg-transparent"
         >
           {t('topup.errorStep.contactSupport')}

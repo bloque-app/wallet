@@ -9,6 +9,7 @@ import { formatAmountWithCode } from '~/lib/formatters';
 interface UsConfirmStepProps {
   amount: number;
   amountDst: number;
+  receiveLabel?: string;
   ratioLabel: string;
   /** Extra summary rows, rendered between the rate and the receive total. */
   details: { label: string; value: string }[];
@@ -21,6 +22,7 @@ interface UsConfirmStepProps {
 export function UsConfirmStep({
   amount,
   amountDst,
+  receiveLabel,
   ratioLabel,
   details,
   isSubmitting = false,
@@ -70,7 +72,7 @@ export function UsConfirmStep({
           <Separator />
           <div className="flex justify-between text-sm">
             <span className="font-semibold text-foreground">
-              {t('topup.usAmountStep.youWillReceive')}
+              {receiveLabel ?? t('topup.usAmountStep.youWillReceive')}
             </span>
             <span className="font-bold text-foreground">
               {formatAmountWithCode('USD', amountDst)}

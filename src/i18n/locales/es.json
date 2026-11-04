@@ -501,7 +501,6 @@
     "pseStartedToast": "Recarga PSE iniciada correctamente.",
     "rateExpiredToast": "La tasa expiró. Recalculando...",
     "startErrorToast": "No se pudo iniciar la recarga.",
-    "noRateRetryToast": "No hay tasa disponible. Intenta de nuevo.",
     "groups": {
       "colombia": "Colombia",
       "us": "Estados Unidos",
@@ -589,7 +588,7 @@
       "title": "Pago fallido",
       "description": "No pudimos procesar tu pago. Esto puede ocurrir por fondos insuficientes, sesión expirada o un error temporal del banco.",
       "tryAgain": "Intentar de nuevo",
-      "contactSupport": "Contactar soporte"
+      "contactSupport": "Enviar email a soporte@bloque.team"
     },
     "executionOutcome": {
       "brebTitle": "Completa el pago por BRE-B",

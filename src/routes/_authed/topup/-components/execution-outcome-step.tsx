@@ -12,6 +12,7 @@ interface ExecutionOutcomeStepProps {
   amount: number;
   fee?: number;
   receivedAmount?: number;
+  receivedLabel?: string;
   orderId?: string;
   /** The `execution` returned alongside a created swap order, already
    * translated by `resolveExecutionOutcome` — never a raw SDK `how`. */
@@ -33,6 +34,7 @@ export function ExecutionOutcomeStep({
   amount,
   fee,
   receivedAmount,
+  receivedLabel,
   orderId,
   execution,
   formatAmount,
@@ -126,6 +128,7 @@ export function ExecutionOutcomeStep({
       amount={amount}
       fee={fee}
       receivedAmount={receivedAmount}
+      receivedLabel={receivedLabel}
       orderId={orderId}
       formatAmount={formatAmount}
       actionLabel={
