@@ -1,6 +1,10 @@
 export type RateFee = {
   formula: string;
-  components: Array<{ name: string; value: number | string }>;
+  components: Array<{
+    name: string;
+    value: number | string;
+    type?: string;
+  }>;
 };
 
 export type TopUpQuote = {
@@ -21,7 +25,8 @@ export function calculateRateFormulaAmount(
 ): number | null {
   if (!rateFee?.formula.trim()) {
     const fallback = precision.fallbackAmount;
-    return typeof fallback === 'number' &&
+    return rateFee?.components.length === 0 &&
+      typeof fallback === 'number' &&
       Number.isFinite(fallback) &&
       fallback >= 0
       ? fallback
@@ -40,6 +45,32 @@ export function calculateRateFormulaAmount(
     destinationScale,
   );
   return netAtoms === null ? null : Number(netAtoms) / Number(destinationScale);
+}
+
+/** Exchange-only ratio, with every non-rate fee component neutralized. */
+export function calculateRateMarketRatio(
+  grossAmount: number,
+  rateFee?: RateFee,
+  precision: QuotePrecision = {},
+): number | null {
+  if (!(grossAmount > 0) || !rateFee?.formula.trim()) return null;
+  const hasRate = rateFee.components.some(
+    (component) => component.type === 'rate',
+  );
+  if (!hasRate) return null;
+  const marketAmount = calculateRateFormulaAmount(
+    grossAmount,
+    {
+      ...rateFee,
+      components: rateFee.components.map((component) => ({
+        ...component,
+        value: component.type === 'rate' ? component.value : 0,
+      })),
+    },
+    precision,
+  );
+  if (marketAmount === null || !(marketAmount > 0)) return null;
+  return marketAmount / grossAmount;
 }
 
 export function calculateRateFeeQuote(

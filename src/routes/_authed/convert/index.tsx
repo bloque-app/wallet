@@ -17,7 +17,10 @@ import {
 } from '~/components/ui/select';
 import { Separator } from '~/components/ui/separator';
 import { CONVERT_ENABLED } from '~/config/features';
-import { calculateRateFormulaAmount } from '~/domain/payments/topup-fee';
+import {
+  calculateRateFormulaAmount,
+  calculateRateMarketRatio,
+} from '~/domain/payments/topup-fee';
 import { useRates } from '~/hooks/payments/use-rates';
 import { bloque } from '~/lib/bloque';
 import { type Asset, formatAmount } from '~/lib/formatters';
@@ -137,6 +140,17 @@ function RouteComponent() {
         destinationPrecision: toConfig.precision,
         fallbackAmount: parsed * selectedRate.ratio,
       }) ?? 0
+    );
+  }, [selectedRate, parsed, fromConfig.precision, toConfig.precision]);
+
+  const marketRatio = useMemo(() => {
+    if (!selectedRate || parsed <= 0) return null;
+    return (
+      calculateRateMarketRatio(parsed, selectedRate.fee, {
+        sourcePrecision: fromConfig.precision,
+        destinationPrecision: toConfig.precision,
+      }) ??
+      (selectedRate.fee?.components.length === 0 ? selectedRate.ratio : null)
     );
   }, [selectedRate, parsed, fromConfig.precision, toConfig.precision]);
 
@@ -275,17 +289,23 @@ function RouteComponent() {
       {parsed > 0 && fromAsset !== toAsset && selectedRate && (
         <div className="rounded-2xl border border-border/85 bg-card/85 p-4">
           <div className="flex flex-col gap-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">{t('convert.rate')}</span>
-              <span className="font-medium text-foreground tabular-nums">
-                1 {fromAsset} ={' '}
-                {selectedRate.ratio < 0.01
-                  ? selectedRate.ratio.toFixed(6)
-                  : selectedRate.ratio.toFixed(2)}{' '}
-                {toAsset}
-              </span>
-            </div>
-            <Separator />
+            {marketRatio !== null && (
+              <>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">
+                    {t('convert.rate')}
+                  </span>
+                  <span className="font-medium text-foreground tabular-nums">
+                    1 {fromAsset} ={' '}
+                    {marketRatio < 0.01
+                      ? marketRatio.toFixed(6)
+                      : marketRatio.toFixed(2)}{' '}
+                    {toAsset}
+                  </span>
+                </div>
+                <Separator />
+              </>
+            )}
             <div className="flex justify-between text-sm">
               <span className="font-medium text-foreground">
                 {t('convert.youReceive')}

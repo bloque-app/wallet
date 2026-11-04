@@ -158,7 +158,7 @@ async function reconcile(
   const order = [...orders].sort((left, right) =>
     right.createdAt.localeCompare(left.createdAt),
   )[0];
-  return order
+  return order && order.status !== 'failed'
     ? { kind: 'order', orderId: order.id, execution: { kind: 'none' } }
     : null;
 }

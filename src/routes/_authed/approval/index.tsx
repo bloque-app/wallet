@@ -132,7 +132,8 @@ function RouteComponent() {
       setState({ kind: 'failed', saved, reason });
       return;
     }
-    if (!savePendingApproval({ ...saved, replayStartedAt: Date.now() })) {
+    const replayStartedAt = Date.now();
+    if (!savePendingApproval({ ...saved, replayStartedAt })) {
       clearPendingApproval();
     }
 
@@ -153,7 +154,7 @@ function RouteComponent() {
         setState({ kind: 'refused', saved, message: refusal });
       } else {
         const reconciled = await bloqueApprovalRepository
-          .reconcile(saved.operation, saved.replayStartedAt ?? Date.now())
+          .reconcile(saved.operation, replayStartedAt)
           .catch(() => null);
         setState(
           reconciled
