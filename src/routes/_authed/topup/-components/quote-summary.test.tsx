@@ -72,7 +72,7 @@ describe('quoted transfer summaries', () => {
     render(<TopUpErrorStep onRetry={vi.fn()} />);
 
     expect(
-      screen.getByRole('link', {
+      screen.getByRole('button', {
         name: 'Enviar email a soporte@bloque.team',
       }),
     ).toHaveAttribute('href', 'mailto:soporte@bloque.team');

@@ -33,7 +33,9 @@ const virtualDeleteMock = mock((_urn: string, _options?: unknown) =>
   Promise.resolve({}),
 );
 const listOrdersMock = mock((_params?: unknown) =>
-  Promise.resolve({ orders: [] as Array<{ id: string; createdAt: string }> }),
+  Promise.resolve({
+    orders: [] as Array<{ id: string; createdAt: string; status: string }>,
+  }),
 );
 
 mock.module('~/lib/bloque', () => ({
@@ -259,7 +261,11 @@ describe('bloqueApprovalRepository.run', () => {
   test('reconciles an order created after an approved replay lost its response', async () => {
     listOrdersMock.mockResolvedValueOnce({
       orders: [
-        { id: 'order-reconciled', createdAt: '2026-11-04T12:00:00.000Z' },
+        {
+          id: 'order-reconciled',
+          createdAt: '2026-11-04T12:00:00.000Z',
+          status: 'pending',
+        },
       ],
     });
 
@@ -277,5 +283,24 @@ describe('bloqueApprovalRepository.run', () => {
       rateSig: BREB_PARAMS.rateSig,
       after: 1_762_257_595_000,
     });
+  });
+
+  test('does not reconcile a failed order as successfully sent', async () => {
+    listOrdersMock.mockResolvedValueOnce({
+      orders: [
+        {
+          id: 'order-failed',
+          createdAt: '2026-11-04T12:00:00.000Z',
+          status: 'failed',
+        },
+      ],
+    });
+
+    await expect(
+      bloqueApprovalRepository.reconcile(
+        { kind: 'breb-order', params: BREB_PARAMS },
+        1_762_257_600_000,
+      ),
+    ).resolves.toBeNull();
   });
 });

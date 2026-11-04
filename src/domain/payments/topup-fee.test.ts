@@ -3,6 +3,7 @@ import {
   calculatePseTopUpQuote,
   calculateRateFeeQuote,
   calculateRateFormulaAmount,
+  calculateRateMarketRatio,
 } from './topup-fee';
 
 describe('calculateRateFeeQuote', () => {
@@ -35,6 +36,45 @@ describe('calculateRateFeeQuote', () => {
         { fallbackAmount: 9_999 },
       ),
     ).toEqual({ totalFee: 1, netAmount: 9_999 });
+  });
+
+  test('does not scale a fixed-fee legacy rate from the tier ratio', () => {
+    expect(
+      calculateRateFeeQuote(
+        10_000,
+        {
+          formula: '',
+          components: [{ name: 'provider_fee', value: 5_500, type: 'fixed' }],
+        },
+        { fallbackAmount: 9_999 },
+      ),
+    ).toBeNull();
+  });
+
+  test('derives the exchange ratio with fixed and percentage fees neutralized', () => {
+    expect(
+      calculateRateMarketRatio(10_000, {
+        formula:
+          '(amount_src * exchange_rate - provider_fee) * (1 - service_fee)',
+        components: [
+          { name: 'exchange_rate', value: 0.98, type: 'rate' },
+          { name: 'provider_fee', value: 5, type: 'fixed' },
+          { name: 'service_fee', value: 0.02, type: 'percentage' },
+        ],
+      }),
+    ).toBe(0.98);
+  });
+
+  test('handles formulas that divide by the exchange-rate component', () => {
+    expect(
+      calculateRateMarketRatio(10_000, {
+        formula: '(amount_src - provider_fee) / exchange_rate',
+        components: [
+          { name: 'provider_fee', value: 5, type: 'fixed' },
+          { name: 'exchange_rate', value: 2, type: 'rate' },
+        ],
+      }),
+    ).toBe(0.5);
   });
 
   test('calculates mixed fixed and percentage fees', () => {

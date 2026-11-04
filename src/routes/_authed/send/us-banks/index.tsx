@@ -6,7 +6,10 @@ import { AccountCarousel } from '~/components/account/account-carousel';
 import { ComingSoonScreen } from '~/components/coming-soon';
 import { US_RAILS_ENABLED } from '~/config/features';
 import { useAuth } from '~/contexts/auth/auth-context';
-import { calculateRateFeeQuote } from '~/domain/payments/topup-fee';
+import {
+  calculateRateFeeQuote,
+  calculateRateMarketRatio,
+} from '~/domain/payments/topup-fee';
 import type { ExecutionOutcome } from '~/domain/payments/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useApprovalRedirect } from '~/hooks/approval/use-approval-redirect';
@@ -128,21 +131,23 @@ function RouteComponent() {
     const srcAmountMinor = Number(amountSrc);
     if (!srcAmountMinor) return null;
     const srcAmountMajor = minorToMajor(srcAmountMinor, FROM_PRECISION);
-    const marketRatio =
-      Number.isFinite(selectedRate.ratio) && selectedRate.ratio > 0
-        ? selectedRate.ratio
-        : (selectedRate.rate?.[1] ?? 0) / (selectedRate.rate?.[0] ?? 1);
     const quote = calculateRateFeeQuote(srcAmountMajor, selectedRate.fee, {
       sourcePrecision: FROM_PRECISION,
       destinationPrecision: getAssetPrecision(TO_ASSET),
-      fallbackAmount: srcAmountMajor * marketRatio,
+      fallbackAmount: srcAmountMajor * selectedRate.ratio,
     });
     if (!quote) return null;
+    const marketRatio =
+      calculateRateMarketRatio(srcAmountMajor, selectedRate.fee, {
+        sourcePrecision: FROM_PRECISION,
+        destinationPrecision: getAssetPrecision(TO_ASSET),
+      }) ??
+      (selectedRate.fee?.components.length === 0 ? selectedRate.ratio : null);
     return {
       amountDst: quote.netAmount,
       fee: quote.totalFee,
-      ratio: marketRatio,
-      ratioLabel: `1 DUSD = ${marketRatio.toFixed(4)} USD`,
+      ratioLabel:
+        marketRatio === null ? null : `1 DUSD = ${marketRatio.toFixed(4)} USD`,
     };
   }, [selectedRate, amountSrc]);
 
@@ -352,7 +357,7 @@ function RouteComponent() {
           amount={parsedAmount}
           amountDst={rateSummary?.amountDst ?? 0}
           receiveLabel={t('brebKeys.payTransfer.recipientReceives')}
-          ratioLabel={rateSummary?.ratioLabel ?? ''}
+          ratioLabel={rateSummary?.ratioLabel}
           details={[
             ...(rateSummary?.fee
               ? [

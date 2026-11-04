@@ -10,7 +10,7 @@ interface UsConfirmStepProps {
   amount: number;
   amountDst: number;
   receiveLabel?: string;
-  ratioLabel: string;
+  ratioLabel?: string | null;
   /** Extra summary rows, rendered between the rate and the receive total. */
   details: { label: string; value: string }[];
   isSubmitting?: boolean;
@@ -54,10 +54,12 @@ export function UsConfirmStep({
               {formatAmountWithCode('USD', amount)}
             </span>
           </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">{t('convert.rate')}</span>
-            <span className="font-medium text-foreground">{ratioLabel}</span>
-          </div>
+          {ratioLabel && (
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">{t('convert.rate')}</span>
+              <span className="font-medium text-foreground">{ratioLabel}</span>
+            </div>
+          )}
           {details.map((detail) => (
             <div
               key={detail.label}
