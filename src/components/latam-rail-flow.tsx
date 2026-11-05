@@ -1,4 +1,5 @@
 import type { PixDocumentType, PixKeyType } from '@bloque/sdk-swap';
+import { useNavigate } from '@tanstack/react-router';
 import { Copy } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -26,6 +27,7 @@ import {
   useCreateSpeiOrder,
 } from '~/hooks/payments/use-latam-rails';
 import { useRates } from '~/hooks/payments/use-rates';
+import { exceedsBalance } from '~/lib/balance';
 import {
   currencyMajorToMinor,
   normalizeCurrencyInput,
@@ -57,6 +59,7 @@ export function LatamRailFlow({
   direction: Direction;
 }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const config = RAIL_CONFIG[rail];
   const [step, setStep] = useState<Step>('amount');
   const [amount, setAmount] = useState('');
@@ -94,6 +97,14 @@ export function LatamRailFlow({
     accounts.find((candidate) => candidate.ledgerId === accountLedgerId) ??
     null;
   const accountUrn = account?.primaryUrn ?? '';
+  const isOverBalance =
+    direction === 'send' &&
+    !!account &&
+    exceedsBalance(
+      account.balances,
+      config.balanceAsset,
+      parsedAmount > 0 ? currencyMajorToMinor(amount, 2) : '',
+    );
   const fromAsset =
     direction === 'topup' ? config.fiatAsset : config.balanceAsset;
   const toAsset =
@@ -302,7 +313,7 @@ export function LatamRailFlow({
       <div className="flex items-center gap-2">
         <BackButton
           onClick={() => {
-            if (step === 'amount') history.back();
+            if (step === 'amount') void navigate({ to: `/${direction}` });
             else setStep(step === 'confirm' ? 'details' : 'amount');
           }}
         />
@@ -367,13 +378,24 @@ export function LatamRailFlow({
                 {t('convert.invalidQuote')}
               </p>
             )}
+            {isOverBalance && (
+              <p className="text-xs text-destructive">
+                {t('latamRails.insufficientBalance')}
+              </p>
+            )}
             {!accountUrn && !isLoadingAccounts && (
               <p className="text-xs text-destructive">
                 {t('latamRails.noEligibleAccount')}
               </p>
             )}
             <Button
-              disabled={!rate || !quote || parsedAmount < 10 || !accountUrn}
+              disabled={
+                !rate ||
+                !quote ||
+                parsedAmount < 10 ||
+                !accountUrn ||
+                isOverBalance
+              }
               onClick={() => setStep('details')}
               className="h-12 rounded-2xl"
             >

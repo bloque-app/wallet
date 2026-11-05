@@ -15,6 +15,7 @@ import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useApprovalRedirect } from '~/hooks/approval/use-approval-redirect';
 import { useRates } from '~/hooks/payments/use-rates';
 import { useCreateRtpOrder } from '~/hooks/payments/use-rtp-order';
+import { exceedsBalance } from '~/lib/balance';
 import { formatAmountWithCode, getAssetPrecision } from '~/lib/formatters';
 import { TopUpErrorStep } from '../../topup/-components/error-step';
 import { ExecutionOutcomeStep } from '../../topup/-components/execution-outcome-step';
@@ -112,6 +113,9 @@ function RouteComponent() {
     if (parsedAmount <= 0) return '';
     return majorToMinor(amount, FROM_PRECISION);
   }, [amount, parsedAmount]);
+  const isOverBalance =
+    !!sourceAccount &&
+    exceedsBalance(sourceAccount.balances, FROM_ASSET, amountSrc);
 
   const ratesQuery = useRates(
     parsedAmount >= MIN_TRANSFER_AMOUNT_USD && amountSrc && sourceAccountUrn
@@ -161,6 +165,9 @@ function RouteComponent() {
         ? t('send.usBanks.kycRejectedError')
         : t('send.usBanks.noSourceAccount');
     }
+    if (isOverBalance) {
+      return t('send.usBanks.insufficientBalance');
+    }
     if (ratesQuery.isError) {
       return t('convert.rateFetchError');
     }
@@ -174,6 +181,7 @@ function RouteComponent() {
     sourceAccountUrn,
     isLoadingAccounts,
     kycStatus,
+    isOverBalance,
     ratesQuery.isError,
     ratesQuery.isSuccess,
     selectedRate,
@@ -259,6 +267,10 @@ function RouteComponent() {
   const handleAmountNext = () => {
     if (parsedAmount < MIN_TRANSFER_AMOUNT_USD) {
       toast.error(t('send.usBanks.minAmountToast'));
+      return;
+    }
+    if (isOverBalance) {
+      toast.error(t('send.usBanks.insufficientBalance'));
       return;
     }
     if (!selectedRate || !rateSummary) {
@@ -395,7 +407,6 @@ function RouteComponent() {
           orderId={lastOrder?.id}
           execution={lastOrder?.execution}
           formatAmount={(value) => formatAmountWithCode('USD', value)}
-          onError={() => setStep('error')}
         />
       )}
 

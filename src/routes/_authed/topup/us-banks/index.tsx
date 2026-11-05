@@ -641,7 +641,6 @@ function RouteComponent() {
           orderId={lastOrder?.id}
           execution={lastOrder?.execution}
           formatAmount={(value) => formatAmountWithCode('USD', value)}
-          onError={() => setStep('error')}
         />
       )}
 

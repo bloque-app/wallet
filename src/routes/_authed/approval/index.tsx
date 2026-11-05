@@ -209,22 +209,12 @@ function RouteComponent() {
       formatAmountWithCode(asset ?? 'COP', value);
     if (outcome.kind === 'order') {
       return (
-        <div className="flex flex-col gap-2">
-          <ExecutionOutcomeStep
-            amount={amount ?? 0}
-            orderId={outcome.orderId}
-            execution={outcome.execution}
-            formatAmount={format}
-            onError={() => goBack(saved)}
-          />
-          <Button
-            variant="ghost"
-            onClick={() => goBack(saved)}
-            className="h-12 w-full rounded-2xl text-sm font-medium"
-          >
-            {t('common.done')}
-          </Button>
-        </div>
+        <ExecutionOutcomeStep
+          amount={amount ?? 0}
+          orderId={outcome.orderId}
+          execution={outcome.execution}
+          formatAmount={format}
+        />
       );
     }
     if (CARD_CHANGES.has(saved.operation.kind)) {

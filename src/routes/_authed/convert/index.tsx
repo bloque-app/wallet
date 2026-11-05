@@ -5,6 +5,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { ComingSoonScreen } from '~/components/coming-soon';
+import { CurrencyFlag, isFlagCurrency } from '~/components/currency-flag';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
@@ -13,7 +14,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from '~/components/ui/select';
 import { Separator } from '~/components/ui/separator';
 import { CONVERT_ENABLED } from '~/config/features';
@@ -75,6 +75,15 @@ function parseBalances(data: BalancesData | undefined): Record<Asset, number> {
 function majorToMinor(amountMajor: number, precision: number): string {
   if (!Number.isFinite(amountMajor) || amountMajor <= 0) return '';
   return Math.round(amountMajor * 10 ** precision).toString();
+}
+
+function CurrencyOption({ currency }: { currency: Asset }) {
+  return (
+    <span className="flex items-center gap-2">
+      {isFlagCurrency(currency) && <CurrencyFlag currency={currency} />}
+      {currency}
+    </span>
+  );
 }
 
 export const Route = createFileRoute('/_authed/convert/')({
@@ -228,11 +237,15 @@ function RouteComponent() {
             onValueChange={(v) => setFromAsset(v as Asset)}
           >
             <SelectTrigger className="h-12 w-28 rounded-2xl">
-              <SelectValue />
+              <CurrencyOption currency={fromAsset} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="USD">USD</SelectItem>
-              <SelectItem value="COP">COP</SelectItem>
+              <SelectItem value="USD">
+                <CurrencyOption currency="USD" />
+              </SelectItem>
+              <SelectItem value="COP">
+                <CurrencyOption currency="COP" />
+              </SelectItem>
             </SelectContent>
           </Select>
           <Input
@@ -269,11 +282,15 @@ function RouteComponent() {
         <div className="flex gap-2">
           <Select value={toAsset} onValueChange={(v) => setToAsset(v as Asset)}>
             <SelectTrigger className="h-12 w-28 rounded-2xl">
-              <SelectValue />
+              <CurrencyOption currency={toAsset} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="USD">USD</SelectItem>
-              <SelectItem value="COP">COP</SelectItem>
+              <SelectItem value="USD">
+                <CurrencyOption currency="USD" />
+              </SelectItem>
+              <SelectItem value="COP">
+                <CurrencyOption currency="COP" />
+              </SelectItem>
             </SelectContent>
           </Select>
           <div className="flex h-12 flex-1 items-center justify-end rounded-2xl border border-border bg-muted px-3 text-right font-bold tabular-nums text-foreground">

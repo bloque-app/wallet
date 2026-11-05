@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { AccountCarousel } from '~/components/account/account-carousel';
 import { BackButton } from '~/components/back-button';
+import { CurrencyFlag } from '~/components/currency-flag';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -346,7 +347,10 @@ function RouteComponent() {
                       : 'border-border bg-background/70 text-foreground hover:bg-muted/70'
                   }`}
                 >
-                  {asset.value}
+                  <span className="flex items-center gap-2">
+                    <CurrencyFlag currency={asset.value} />
+                    {asset.value}
+                  </span>
                   {isAssetBlocked(asset.value) ? (
                     <span className="text-[10px]">
                       {t('common.comingSoon')}
