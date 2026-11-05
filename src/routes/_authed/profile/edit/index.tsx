@@ -25,6 +25,7 @@ import {
   findPhoneCountry,
   isValidInternationalPhone,
   joinInternationalPhone,
+  parsePastedInternationalPhone,
   splitInternationalPhone,
 } from '~/lib/phone';
 import { cn } from '~/lib/utils';
@@ -163,6 +164,20 @@ function RouteComponent() {
     setErrors((e) => ({ ...e, [key]: undefined }));
   }
 
+  function setPhoneInput(value: string) {
+    const pasted = parsePastedInternationalPhone(value);
+    if (pasted) {
+      setForm((f) => ({
+        ...f,
+        phone_country: pasted.countryCode,
+        phone: pasted.nationalNumber,
+      }));
+      setErrors((e) => ({ ...e, phone: undefined }));
+      return;
+    }
+    setField('phone', value.replace(/\D/g, ''));
+  }
+
   function validate(): boolean {
     const next: Partial<Record<keyof ProfileFormState, string>> = {};
 
@@ -299,9 +314,7 @@ function RouteComponent() {
                 autoComplete="tel-national"
                 placeholder={t('profile.edit.fields.phonePlaceholder')}
                 value={form.phone}
-                onChange={(e) =>
-                  setField('phone', e.target.value.replace(/\D/g, ''))
-                }
+                onChange={(e) => setPhoneInput(e.target.value)}
                 aria-invalid={!!errors.phone}
                 className={cn(
                   'h-12 min-w-0 flex-1 rounded-2xl',

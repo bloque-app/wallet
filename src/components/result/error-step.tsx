@@ -3,6 +3,7 @@
 import { AlertTriangle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '~/components/ui/button';
+import { SUPPORT_EMAIL } from '~/lib/support';
 
 interface ErrorStepProps {
   onRetry: () => void;
@@ -35,7 +36,7 @@ export function TopUpErrorStep({ onRetry }: ErrorStepProps) {
         <Button
           variant="outline"
           nativeButton={false}
-          render={<a href="mailto:soporte@bloque.team" />}
+          render={<a href={`mailto:${SUPPORT_EMAIL}`} />}
           className="h-12 w-full rounded-2xl text-sm font-medium bg-transparent"
         >
           {t('topup.errorStep.contactSupport')}
