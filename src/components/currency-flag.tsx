@@ -70,24 +70,36 @@ export function isFlagCurrency(value: string): value is FlagCurrency {
   return value in FLAGS;
 }
 
+/** Decorative by default: it always sits next to the currency code, so it
+ * stays out of the accessible name unless `labelled` is set. */
 export function CurrencyFlag({
   currency,
   className,
+  labelled = false,
 }: {
   currency: FlagCurrency;
   className?: string;
+  labelled?: boolean;
 }) {
   const Flag = FLAGS[currency];
+  const classes = cn(
+    'h-4 w-6 shrink-0 overflow-hidden rounded-[3px] ring-1 ring-border/60',
+    className,
+  );
+  if (labelled) {
+    return (
+      <svg
+        viewBox="0 0 30 20"
+        role="img"
+        aria-label={FLAG_LABELS[currency]}
+        className={classes}
+      >
+        <Flag />
+      </svg>
+    );
+  }
   return (
-    <svg
-      viewBox="0 0 30 20"
-      role="img"
-      aria-label={FLAG_LABELS[currency]}
-      className={cn(
-        'h-4 w-6 shrink-0 overflow-hidden rounded-[3px] ring-1 ring-border/60',
-        className,
-      )}
-    >
+    <svg viewBox="0 0 30 20" aria-hidden="true" className={classes}>
       <Flag />
     </svg>
   );
