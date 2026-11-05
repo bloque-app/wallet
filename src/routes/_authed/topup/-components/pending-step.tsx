@@ -4,6 +4,7 @@ import { Clock, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '~/components/ui/button';
 import { formatAmountWithCode } from '~/lib/formatters';
+import { cn } from '~/lib/utils';
 
 function formatCopWithCode(amount: number) {
   return formatAmountWithCode('COP', amount);
@@ -18,6 +19,8 @@ interface PendingStepProps {
   actionLabel?: string;
   /** Defaults to COP with its code — pass a USD formatter for the RTP/ACH US-bank flows. */
   formatAmount?: (amount: number) => string;
+  /** Makes the action the main button, e.g. a payment link the user must open. */
+  emphasizeAction?: boolean;
   reportProblemHref: string;
   onRefresh: () => void;
   onDone: () => void;
@@ -31,6 +34,7 @@ export function TopUpPendingStep({
   orderId,
   actionLabel,
   formatAmount = formatCopWithCode,
+  emphasizeAction = false,
   reportProblemHref,
   onRefresh,
   onDone,
@@ -95,35 +99,77 @@ export function TopUpPendingStep({
         </div>
       )}
 
-      <div className="flex w-full flex-col gap-3">
-        <Button
-          onClick={onDone}
-          variant="default"
-          className="h-12 w-full rounded-2xl text-sm font-medium"
-        >
-          {t('common.done')}
-        </Button>
-        <Button
-          onClick={onRefresh}
-          variant="outline"
-          className="h-12 w-full gap-2 rounded-2xl text-sm font-medium bg-transparent"
-        >
-          <RefreshCw className="h-4 w-4" />
-          {actionLabel ?? t('topup.pendingStep.checkStatus')}
-        </Button>
-        <Button
-          variant="ghost"
-          nativeButton={false}
-          render={<a href={reportProblemHref} />}
-          className="h-12 w-full rounded-2xl text-sm font-medium"
-        >
-          {t('topup.executionOutcome.reportProblem')}
-        </Button>
-      </div>
+      <ResultActions
+        doneLabel={t('common.done')}
+        actionLabel={actionLabel ?? t('topup.pendingStep.checkStatus')}
+        reportProblemHref={reportProblemHref}
+        emphasizeAction={emphasizeAction}
+        onAction={onRefresh}
+        onDone={onDone}
+      />
 
       <p className="text-[11px] text-muted-foreground text-center">
         {t('topup.pendingStep.contactSupportDisclaimer')}
       </p>
+    </div>
+  );
+}
+
+export function ResultActions({
+  doneLabel,
+  actionLabel,
+  reportProblemHref,
+  emphasizeAction = false,
+  onAction,
+  onDone,
+}: {
+  doneLabel: string;
+  actionLabel: string;
+  reportProblemHref: string;
+  emphasizeAction?: boolean;
+  onAction: () => void;
+  onDone: () => void;
+}) {
+  const { t } = useTranslation();
+  const done = (
+    <Button
+      key="done"
+      onClick={onDone}
+      variant={emphasizeAction ? 'outline' : 'default'}
+      className={cn(
+        'h-12 w-full rounded-2xl text-sm font-medium',
+        emphasizeAction && 'bg-transparent',
+      )}
+    >
+      {doneLabel}
+    </Button>
+  );
+  const action = (
+    <Button
+      key="action"
+      onClick={onAction}
+      variant={emphasizeAction ? 'default' : 'outline'}
+      className={cn(
+        'h-12 w-full gap-2 rounded-2xl text-sm font-medium',
+        !emphasizeAction && 'bg-transparent',
+      )}
+    >
+      <RefreshCw className="h-4 w-4" />
+      {actionLabel}
+    </Button>
+  );
+
+  return (
+    <div className="flex w-full flex-col gap-3">
+      {emphasizeAction ? [action, done] : [done, action]}
+      <Button
+        variant="ghost"
+        nativeButton={false}
+        render={<a href={reportProblemHref} />}
+        className="h-12 w-full rounded-2xl text-sm font-medium"
+      >
+        {t('topup.executionOutcome.reportProblem')}
+      </Button>
     </div>
   );
 }

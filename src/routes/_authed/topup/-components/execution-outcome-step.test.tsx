@@ -58,4 +58,18 @@ describe('ExecutionOutcomeStep', () => {
       'mailto:soporte@bloque.team?subject=Problema%20con%20la%20orden%20order-1&body=Hola%2C%20tengo%20un%20problema%20con%20la%20orden%20order-1.',
     );
   });
+
+  test('puts the payment link first when the order has one', () => {
+    render(
+      <ExecutionOutcomeStep
+        amount={10_000}
+        orderId="order-1"
+        execution={{ kind: 'redirect', url: 'https://pay.example/1' }}
+      />,
+    );
+
+    const [first, second] = screen.getAllByRole('button');
+    expect(first).toHaveTextContent('Abrir enlace');
+    expect(second).toHaveTextContent('Listo');
+  });
 });

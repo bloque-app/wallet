@@ -394,6 +394,8 @@
       "transferSentTitle": "Transferencia enviada",
       "transferSentDescription": "Enviamos {{amount}} a tu contacto de Bloque.",
       "transferFailedTitle": "No se pudo enviar la transferencia",
+      "reportProblemSubject": "Problema con una transferencia a {{alias}}",
+      "reportProblemBody": "Hola, tengo un problema con la transferencia de {{amount}} a {{alias}}.",
       "subtitle": "Envia dinero a un alias de Bloque",
       "transferBetweenUsers": "Transferencia entre usuarios Bloque",
       "currency": "Moneda",
@@ -480,6 +482,8 @@
     "beneficiaryName": "Nombre del beneficiario",
     "pixKeyType": "Tipo de llave PIX",
     "pixKey": "Llave PIX",
+    "pixPhone": "Celular (llave PIX)",
+    "pixPhoneInvalid": "Ingresa el código de área y el número, sin +55.",
     "beneficiaryNameOptional": "Nombre del beneficiario (opcional)",
     "confirm": "Confirmar operación",
     "copied": "Copiado",
@@ -912,11 +916,13 @@
         "state": "Departamento/Estado",
         "postalCode": "Código postal",
         "selectCountry": "Selecciona un país",
-        "phoneCountry": "País del celular"
+        "phoneCountry": "País del celular",
+        "phoneCountryPlaceholder": "País"
       },
       "errors": {
         "phoneRequired": "Ingresa tu teléfono",
         "phoneInvalid": "Número de celular inválido. Revisa el país y el número.",
+        "phoneCountryRequired": "Selecciona el país de tu celular.",
         "birthdateRequired": "Ingresa tu fecha de nacimiento",
         "birthdateInvalid": "Fecha inválida",
         "postalCodeInvalid": "Código postal inválido",

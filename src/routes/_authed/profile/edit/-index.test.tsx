@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 const navigate = vi.fn();
 const mutateAsync = vi.fn();
-const profile = {
+const profile: Record<string, string> = {
   phone: '+573001234567',
   birthdate: '1990-01-01',
   address_line1: 'Calle 1',
@@ -39,6 +39,7 @@ describe('edit profile phone', () => {
   beforeEach(() => {
     navigate.mockReset();
     mutateAsync.mockReset().mockResolvedValue(undefined);
+    profile.phone = '+573001234567';
   });
 
   test('splits the stored phone into country and national number', () => {
@@ -72,6 +73,34 @@ describe('edit profile phone', () => {
       await screen.findByText(
         'Número de celular inválido. Revisa el país y el número.',
       ),
+    ).toBeInTheDocument();
+    expect(mutateAsync).not.toHaveBeenCalled();
+  });
+
+  test('keeps a stored phone it cannot read when saving other fields', async () => {
+    profile.phone = '+4915112345678';
+    render(<EditProfilePage />);
+
+    fireEvent.submit(phoneInput().closest('form') as HTMLFormElement);
+
+    await waitFor(() => expect(mutateAsync).toHaveBeenCalledTimes(1));
+    expect(mutateAsync.mock.calls[0]?.[0]).toMatchObject({
+      phone: '+4915112345678',
+    });
+  });
+
+  test('asks for the country of a 10-digit number without plus', async () => {
+    profile.phone = '4155550100';
+    render(<EditProfilePage />);
+
+    expect(
+      screen.getByRole('combobox', { name: 'País del celular' }),
+    ).toHaveTextContent('País');
+    fireEvent.change(phoneInput(), { target: { value: '4155550101' } });
+    fireEvent.submit(phoneInput().closest('form') as HTMLFormElement);
+
+    expect(
+      await screen.findByText('Selecciona el país de tu celular.'),
     ).toBeInTheDocument();
     expect(mutateAsync).not.toHaveBeenCalled();
   });

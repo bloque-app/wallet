@@ -150,6 +150,7 @@ export function ExecutionOutcomeStep({
       orderId={orderId}
       formatAmount={formatAmount}
       reportProblemHref={reportProblemHref}
+      emphasizeAction={!!redirectUrl}
       actionLabel={
         redirectUrl
           ? t('topup.executionOutcome.openLink')
