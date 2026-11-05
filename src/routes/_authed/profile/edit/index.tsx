@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { BackButton } from '~/components/back-button';
+import { PhoneCountrySelect } from '~/components/phone-country-select';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
@@ -20,11 +21,16 @@ import {
   useIdentityProfile,
   useUpdateIdentityProfile,
 } from '~/hooks/identity/use-identity-profile';
+import {
+  findPhoneCountry,
+  isValidInternationalPhone,
+  normalizeInternationalPhone,
+  splitInternationalPhone,
+} from '~/lib/phone';
 import { cn } from '~/lib/utils';
 
 // Mirrors payment-rails `update-identity.command.ts`'s validators, so a
 // client-side reject never sends a request the backend would 400 on anyway.
-const PHONE_REGEX = /^\+?[1-9]\d{6,14}$/;
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 const POSTAL_CODE_REGEX = /^[a-zA-Z0-9\s-]+$/;
 const COUNTRY_CODE_REGEX = /^[A-Z]{3}$/;
@@ -32,6 +38,7 @@ const COUNTRY_CODE_REGEX = /^[A-Z]{3}$/;
 /** Fields the wallet's edit-profile screen owns. Excludes `first_name` /
  * `last_name` / `email`, which stay onboarding-only. */
 interface ProfileFormState {
+  phone_country: string;
   phone: string;
   birthdate: string;
   address_line1: string;
@@ -45,6 +52,7 @@ interface ProfileFormState {
 }
 
 const EMPTY_FORM: ProfileFormState = {
+  phone_country: 'CO',
   phone: '',
   birthdate: '',
   address_line1: '',
@@ -58,8 +66,10 @@ const EMPTY_FORM: ProfileFormState = {
 };
 
 function toFormState(profile: IdentityMeProfile): ProfileFormState {
+  const phone = splitInternationalPhone(profile.phone ?? '');
   return {
-    phone: profile.phone ?? '',
+    phone_country: phone.countryCode,
+    phone: phone.nationalNumber,
     birthdate: profile.birthdate ?? '',
     address_line1: profile.address_line1 ?? '',
     address_line2: profile.address_line2 ?? '',
@@ -70,6 +80,11 @@ function toFormState(profile: IdentityMeProfile): ProfileFormState {
     country_of_residence_code: profile.country_of_residence_code ?? '',
     country_of_birth_code: profile.country_of_birth_code ?? '',
   };
+}
+
+function toInternationalDigits(form: ProfileFormState): string {
+  const country = findPhoneCountry(form.phone_country);
+  return normalizeInternationalPhone(country?.dialCode ?? '', form.phone);
 }
 
 /** Fields a caller can deep-link into via `?focus=`, matching the
@@ -134,9 +149,13 @@ function RouteComponent() {
   function validate(): boolean {
     const next: Partial<Record<keyof ProfileFormState, string>> = {};
 
-    const phone = form.phone.trim();
-    if (!phone) next.phone = t('profile.edit.errors.phoneRequired');
-    else if (!PHONE_REGEX.test(phone))
+    if (!form.phone) next.phone = t('profile.edit.errors.phoneRequired');
+    else if (
+      !isValidInternationalPhone(
+        toInternationalDigits(form),
+        findPhoneCountry(form.phone_country),
+      )
+    )
       next.phone = t('profile.edit.errors.phoneInvalid');
 
     if (!form.birthdate)
@@ -166,7 +185,7 @@ function RouteComponent() {
     if (!validate()) return;
 
     const profile: Partial<IdentityMeProfile> = {
-      phone: form.phone.trim(),
+      phone: `+${toInternationalDigits(form)}`,
       birthdate: form.birthdate,
       address_line1: form.address_line1.trim(),
       address_line2: form.address_line2.trim() || undefined,
@@ -234,21 +253,34 @@ function RouteComponent() {
             label={t('profile.edit.fields.phone')}
             error={errors.phone}
           >
-            <Input
-              ref={phoneRef}
-              id="phone"
-              type="tel"
-              inputMode="tel"
-              placeholder={t('profile.edit.fields.phonePlaceholder')}
-              value={form.phone}
-              onChange={(e) => setField('phone', e.target.value)}
-              aria-invalid={!!errors.phone}
-              className={cn(
-                'h-12 rounded-2xl',
-                search.focus === 'phone' &&
-                  'ring-3 ring-primary/40 border-primary',
-              )}
-            />
+            <div className="flex gap-2">
+              <PhoneCountrySelect
+                value={form.phone_country}
+                onChange={(next) => {
+                  setField('phone_country', next);
+                  setErrors((e) => ({ ...e, phone: undefined }));
+                }}
+                ariaLabel={t('profile.edit.fields.phoneCountry')}
+              />
+              <Input
+                ref={phoneRef}
+                id="phone"
+                type="tel"
+                inputMode="numeric"
+                autoComplete="tel-national"
+                placeholder={t('profile.edit.fields.phonePlaceholder')}
+                value={form.phone}
+                onChange={(e) =>
+                  setField('phone', e.target.value.replace(/\D/g, ''))
+                }
+                aria-invalid={!!errors.phone}
+                className={cn(
+                  'h-12 min-w-0 flex-1 rounded-2xl',
+                  search.focus === 'phone' &&
+                    'ring-3 ring-primary/40 border-primary',
+                )}
+              />
+            </div>
           </FormField>
 
           <FormField

@@ -52,20 +52,26 @@ describe('quoted transfer summaries', () => {
     expect(screen.getByText('1 COPM = 1.0000 COP')).toBeInTheDocument();
   });
 
-  test('uses a recipient label for payout pending state', () => {
+  test('shows fee, total and recipient amount in the payout pending state', () => {
     render(
       <TopUpPendingStep
         amount={10_000}
         fee={5_500}
         receivedAmount={4_500}
         receivedLabel="Se recibe"
+        reportProblemHref="mailto:soporte@bloque.team?subject=Ayuda"
         onRefresh={vi.fn()}
-        onError={vi.fn()}
+        onDone={vi.fn()}
       />,
     );
 
-    expect(screen.getByText(/Se recibe:/)).toBeInTheDocument();
-    expect(screen.queryByText(/Recibirás:/)).not.toBeInTheDocument();
+    expect(screen.getByText('Comisión')).toBeInTheDocument();
+    expect(screen.getByText('Total')).toBeInTheDocument();
+    expect(screen.getByText('Se recibe')).toBeInTheDocument();
+    expect(screen.queryByText(/Recibirás/)).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Reportar problema' }),
+    ).toHaveAttribute('href', 'mailto:soporte@bloque.team?subject=Ayuda');
   });
 
   test('links failed payments to support email', () => {

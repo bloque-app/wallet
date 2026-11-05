@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -13,6 +13,7 @@ import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useApprovalRedirect } from '~/hooks/approval/use-approval-redirect';
 import { useCreateBankTransferOrder } from '~/hooks/payments/use-bank-transfer';
 import { useRates } from '~/hooks/payments/use-rates';
+import { exceedsBalance } from '~/lib/balance';
 import { TopUpAmountStep } from '../../topup/-components/amount-step';
 import {
   type TopUpBankAccountData,
@@ -59,6 +60,7 @@ export const Route = createFileRoute('/_authed/send/colombian-banks/')({
 
 function RouteComponent() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [step, setStep] = useState<TransferStep>('amount');
   const [amount, setAmount] = useState('');
   const [bankForm, setBankForm] =
@@ -97,6 +99,9 @@ function RouteComponent() {
     if (parsedAmount <= 0) return '';
     return majorToMinor(parsedAmount, FROM_PRECISION);
   }, [parsedAmount]);
+  const isOverBalance =
+    !!sourceAccount &&
+    exceedsBalance(sourceAccount.balances, FROM_ASSET, amountSrc);
 
   // Different destination banks can live on different swap graphs with their
   // own rateSig (e.g. bancolombia/nequi are quoted separately from the rest),
@@ -145,6 +150,9 @@ function RouteComponent() {
     if (!sourceAccountUrn && !isLoadingAccounts) {
       return t('send.colombianBanks.noSourceAccount');
     }
+    if (isOverBalance) {
+      return t('send.colombianBanks.insufficientBalance');
+    }
     if (ratesQuery.isError) {
       return t('convert.rateFetchError');
     }
@@ -157,6 +165,7 @@ function RouteComponent() {
     parsedAmount,
     sourceAccountUrn,
     isLoadingAccounts,
+    isOverBalance,
     ratesQuery.isError,
     ratesQuery.isSuccess,
     selectedRate,
@@ -250,6 +259,10 @@ function RouteComponent() {
       toast.error(t('send.colombianBanks.minAmountToast'));
       return;
     }
+    if (isOverBalance) {
+      toast.error(t('send.colombianBanks.insufficientBalance'));
+      return;
+    }
     if (!selectedRate || !rateSummary) {
       toast.error(t('send.colombianBanks.noRateToContinue'));
       return;
@@ -332,7 +345,7 @@ function RouteComponent() {
           rateSummary={rateSummary}
           onAmountChange={setAmount}
           onNext={handleAmountNext}
-          onBack={() => window.history.back()}
+          onBack={() => void navigate({ to: '/send' })}
           label={t('send.colombianBanks.amountStep.label')}
           minAmount={MIN_TRANSFER_AMOUNT}
           minAmountLabel={t('send.colombianBanks.amountStep.minAmount')}
@@ -383,7 +396,6 @@ function RouteComponent() {
           receivedLabel={t('brebKeys.payTransfer.recipientReceives')}
           orderId={lastOrder?.id}
           execution={lastOrder?.execution}
-          onError={() => setStep('error')}
         />
       )}
 

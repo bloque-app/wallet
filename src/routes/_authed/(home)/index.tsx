@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AccountsCarousel } from '~/components/account/accounts-carousel';
 import { CreateAccountDrawer } from '~/components/account/create-account-drawer';
+import { CurrencyFlag, isFlagCurrency } from '~/components/currency-flag';
 import { MovementRow } from '~/components/movement-row';
 import { USD_ENABLED } from '~/config/features';
 import { hasActiveVirtualAccount } from '~/domain/accounts/virtual-account';
@@ -39,8 +40,6 @@ const ASSET_KEY_MAP: Record<string, Asset> = {
 };
 
 const ASSET_LOGO_MAP: Partial<Record<Asset, string>> = {
-  COP: '/images/assets/cop.webp',
-  USD: '/images/assets/usd.webp',
   KSM: '/images/assets/ksm.webp',
 };
 
@@ -125,7 +124,9 @@ function RouteComponent() {
                     : 'border-border/60 bg-background/70 text-muted-foreground hover:text-foreground'
                 }`}
               >
-                {ASSET_LOGO_MAP[asset] ? (
+                {isFlagCurrency(asset) ? (
+                  <CurrencyFlag currency={asset} className="h-3 w-[18px]" />
+                ) : ASSET_LOGO_MAP[asset] ? (
                   <img
                     src={ASSET_LOGO_MAP[asset]}
                     alt={t('home.assetLogoAlt', { asset })}

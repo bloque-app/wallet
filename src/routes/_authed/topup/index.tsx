@@ -799,7 +799,6 @@ function RouteComponent() {
           amount={parsedAmount}
           orderId={lastOrder?.id}
           execution={lastOrder?.execution}
-          onError={() => setStep('error')}
         />
       )}
 

@@ -1,0 +1,55 @@
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import type { Movement } from '~/lib/formatters';
+
+const downloadReceipt = vi.fn();
+
+vi.mock('~/lib/receipt', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('~/lib/receipt')>()),
+  downloadReceipt: (...args: unknown[]) => downloadReceipt(...args),
+}));
+
+const { MovementDetailDrawer } = await import('./movement-detail-drawer');
+
+const MOVEMENT: Movement = {
+  id: 'm-1',
+  type: 'send',
+  asset: 'COP',
+  amount: 10_000,
+  fee: 0,
+  status: 'completed',
+  createdAt: '2026-11-05T15:00:00.000Z',
+  reference: 'ref-123',
+  counterparty: 'Ana',
+  direction: 'outgoing',
+};
+
+describe('MovementDetailDrawer', () => {
+  beforeEach(() => downloadReceipt.mockReset().mockResolvedValue(undefined));
+
+  test('hides the fee row when the movement has no known fee', () => {
+    render(<MovementDetailDrawer movement={MOVEMENT} open onClose={vi.fn()} />);
+
+    expect(screen.queryByText('Comisión')).not.toBeInTheDocument();
+  });
+
+  test('downloads a PDF receipt for the movement', async () => {
+    render(<MovementDetailDrawer movement={MOVEMENT} open onClose={vi.fn()} />);
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /Descargar comprobante/ }),
+    );
+
+    await waitFor(() => expect(downloadReceipt).toHaveBeenCalledTimes(1));
+    const [content, fileName] = downloadReceipt.mock.calls[0] ?? [];
+    expect(fileName).toBe('comprobante-ref-123.pdf');
+    expect(content).toMatchObject({
+      title: 'Comprobante de movimiento',
+      status: 'Completado',
+    });
+    expect(content.rows).toContainEqual({
+      label: 'Referencia',
+      value: 'ref-123',
+    });
+  });
+});
