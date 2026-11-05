@@ -394,6 +394,8 @@
       "transferSentTitle": "Transfer sent",
       "transferSentDescription": "We sent {{amount}} to your Bloque contact.",
       "transferFailedTitle": "Couldn't send the transfer",
+      "reportProblemSubject": "Problem with a transfer to {{alias}}",
+      "reportProblemBody": "Hi, I have a problem with the {{amount}} transfer to {{alias}}.",
       "subtitle": "Send money to a Bloque alias",
       "transferBetweenUsers": "Transfer between Bloque users",
       "currency": "Currency",
@@ -480,6 +482,8 @@
     "beneficiaryName": "Beneficiary name",
     "pixKeyType": "PIX key type",
     "pixKey": "PIX key",
+    "pixPhone": "Phone (PIX key)",
+    "pixPhoneInvalid": "Enter the area code and number, without +55.",
     "beneficiaryNameOptional": "Beneficiary name (optional)",
     "confirm": "Confirm operation",
     "copied": "Copied",
@@ -912,11 +916,13 @@
         "state": "State/Province",
         "postalCode": "Postal code",
         "selectCountry": "Select a country",
-        "phoneCountry": "Phone country"
+        "phoneCountry": "Phone country",
+        "phoneCountryPlaceholder": "Country"
       },
       "errors": {
         "phoneRequired": "Enter your phone number",
         "phoneInvalid": "Invalid phone number. Check the country and the number.",
+        "phoneCountryRequired": "Select your phone's country.",
         "birthdateRequired": "Enter your date of birth",
         "birthdateInvalid": "Invalid date",
         "postalCodeInvalid": "Invalid postal code",

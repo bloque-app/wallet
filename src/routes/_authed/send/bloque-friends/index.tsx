@@ -33,6 +33,8 @@ import {
   normalizeCurrencyInput,
 } from '~/lib/currency-input';
 import { formatAmount, formatAmountWithCode } from '~/lib/formatters';
+import { buildSupportMailto } from '~/lib/support';
+import { ResultActions } from '~/routes/_authed/topup/-components/pending-step';
 
 export const Route = createFileRoute('/_authed/send/bloque-friends/')({
   component: RouteComponent,
@@ -75,6 +77,7 @@ function RouteComponent() {
   const [recipientPreview, setRecipientPreview] = useState<Alias | null>(null);
   const [lastTransfer, setLastTransfer] = useState<{
     destinationUrn: string;
+    alias: string;
     amount: number;
   } | null>(null);
 
@@ -215,6 +218,7 @@ function RouteComponent() {
         setConfirmOpen(false);
         setLastTransfer({
           destinationUrn: recipientPreview.account_urn as string,
+          alias: normalizedAlias,
           amount: parsedAmount,
         });
         setView('pending');
@@ -250,6 +254,11 @@ function RouteComponent() {
     !transferMutation.isPending;
 
   if (view === 'pending') {
+    const sentAmount = formatAmountWithCode(
+      selectedAsset,
+      lastTransfer?.amount ?? 0,
+    );
+    const alias = lastTransfer?.alias ?? '';
     return (
       <div className="flex flex-col gap-5">
         <div className="flex items-center gap-2">
@@ -265,13 +274,32 @@ function RouteComponent() {
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
             {t('send.bloqueFriends.transferSentDescription', {
-              amount: formatAmountWithCode(
-                selectedAsset,
-                lastTransfer?.amount ?? 0,
-              ),
+              amount: sentAmount,
             })}
           </p>
+          <div className="mt-4 flex items-center justify-between gap-3 border-t border-border/75 pt-4 text-sm">
+            <span className="text-muted-foreground">
+              {t('topup.pendingStep.total')}
+            </span>
+            <span className="font-semibold tabular-nums text-foreground">
+              {sentAmount}
+            </span>
+          </div>
         </div>
+
+        <ResultActions
+          doneLabel={t('common.done')}
+          actionLabel={t('topup.pendingStep.checkStatus')}
+          reportProblemHref={buildSupportMailto(
+            t('send.bloqueFriends.reportProblemSubject', { alias }),
+            t('send.bloqueFriends.reportProblemBody', {
+              alias,
+              amount: sentAmount,
+            }),
+          )}
+          onAction={() => void navigate({ to: '/movements' })}
+          onDone={() => void navigate({ to: '/' })}
+        />
       </div>
     );
   }
