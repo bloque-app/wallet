@@ -7,6 +7,7 @@ import {
   normalizeBrazilPhoneInput,
   normalizeInternationalPhone,
   PHONE_COUNTRIES,
+  parsePastedInternationalPhone,
   splitInternationalPhone,
 } from './phone';
 
@@ -133,11 +134,13 @@ describe('Brazilian PIX phone', () => {
   test('keeps only national digits', () => {
     expect(normalizeBrazilPhoneInput('(11) 91234-5678')).toBe('11912345678');
     expect(normalizeBrazilPhoneInput('+55 11 91234-5678')).toBe('11912345678');
-    expect(normalizeBrazilPhoneInput('5511912345678')).toBe('11912345678');
+    expect(normalizeBrazilPhoneInput('0055 11 91234-5678')).toBe('11912345678');
   });
 
-  test('keeps an area code 55 number', () => {
-    expect(normalizeBrazilPhoneInput('55 99123-4567')).toBe('55991234567');
+  test('never reads area code 55 as the country code', () => {
+    expect(normalizeBrazilPhoneInput('55991234567')).toBe('55991234567');
+    expect(normalizeBrazilPhoneInput('559912345678')).toBe('55991234567');
+    expect(normalizeBrazilPhoneInput('5511912345678')).toBe('55119123456');
   });
 
   test('validates area code plus 8 or 9 digits', () => {
@@ -145,5 +148,22 @@ describe('Brazilian PIX phone', () => {
     expect(isValidBrazilPhone('1132345678')).toBe(true);
     expect(isValidBrazilPhone('0191234567')).toBe(false);
     expect(isValidBrazilPhone('119123456')).toBe(false);
+  });
+});
+
+describe('parsePastedInternationalPhone', () => {
+  test('splits a number pasted with its country code', () => {
+    expect(parsePastedInternationalPhone('+52 55 1234 5678')).toEqual({
+      countryCode: 'MX',
+      nationalNumber: '5512345678',
+    });
+    expect(parsePastedInternationalPhone('0055 11 91234 5678')).toEqual({
+      countryCode: 'BR',
+      nationalNumber: '11912345678',
+    });
+  });
+
+  test('ignores a number without country code', () => {
+    expect(parsePastedInternationalPhone('300 123 4567')).toBeUndefined();
   });
 });

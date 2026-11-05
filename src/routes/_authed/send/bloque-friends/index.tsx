@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { AccountCarousel } from '~/components/account/account-carousel';
 import { BackButton } from '~/components/back-button';
 import { CurrencyFlag } from '~/components/currency-flag';
+import { ResultActions } from '~/components/result/pending-step';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,7 +35,6 @@ import {
 } from '~/lib/currency-input';
 import { formatAmount, formatAmountWithCode } from '~/lib/formatters';
 import { buildSupportMailto } from '~/lib/support';
-import { ResultActions } from '~/routes/_authed/topup/-components/pending-step';
 
 export const Route = createFileRoute('/_authed/send/bloque-friends/')({
   component: RouteComponent,
@@ -318,12 +318,28 @@ function RouteComponent() {
           <p className="text-sm font-medium text-foreground">
             {t('send.bloqueFriends.transferFailedTitle')}
           </p>
-          <Button
-            onClick={() => setView('form')}
-            className="mt-4 h-11 rounded-2xl"
-          >
-            {t('common.retry')}
-          </Button>
+          <div className="mt-4 flex flex-col gap-3">
+            <Button
+              onClick={() => setView('form')}
+              className="h-11 rounded-2xl"
+            >
+              {t('common.retry')}
+            </Button>
+            <Button
+              variant="outline"
+              nativeButton={false}
+              render={
+                <a
+                  href={buildSupportMailto(
+                    t('send.bloqueFriends.transferFailedTitle'),
+                  )}
+                />
+              }
+              className="h-11 rounded-2xl bg-transparent"
+            >
+              {t('topup.errorStep.contactSupport')}
+            </Button>
+          </div>
         </div>
       </div>
     );
