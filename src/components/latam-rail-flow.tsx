@@ -33,6 +33,14 @@ import {
   normalizeCurrencyInput,
 } from '~/lib/currency-input';
 import { formatAmount, formatAmountWithCode } from '~/lib/formatters';
+import {
+  BRAZIL_DIAL_CODE,
+  isValidBrazilPhone,
+  normalizeBrazilPhoneInput,
+} from '~/lib/phone';
+import { buildSupportMailto } from '~/lib/support';
+import { ExecutionOutcomeStep } from '~/routes/_authed/topup/-components/execution-outcome-step';
+import { ResultActions } from '~/routes/_authed/topup/-components/pending-step';
 
 type Rail = 'spei' | 'pix';
 type Direction = 'topup' | 'send';
@@ -154,6 +162,7 @@ export function LatamRailFlow({
       : rail === 'spei'
         ? /^\d{18}$/.test(clabe) && beneficiaryName.trim().length >= 2
         : pixKeyValue.trim().length > 0 &&
+          (pixKeyType !== 'PHONE' || isValidBrazilPhone(pixKeyValue)) &&
           (beneficiaryName.trim().length === 0 ||
             beneficiaryName.trim().length >= 2);
 
@@ -173,6 +182,9 @@ export function LatamRailFlow({
       redirectToApproval(error, operation, {
         amount: parsedAmount,
         asset: config.currency,
+        fee: feeAmount,
+        receivedAmount: receiveAmount,
+        receivedLabel: t('brebKeys.payTransfer.recipientReceives'),
       })
     ) {
       return;
@@ -275,14 +287,28 @@ export function LatamRailFlow({
   const displayAsset = config.currency;
 
   if (step === 'result') {
+    if (direction === 'send') {
+      return (
+        <div className="flex flex-col gap-5">
+          <h1 className="text-xl font-bold text-foreground">{title}</h1>
+          <ExecutionOutcomeStep
+            amount={parsedAmount}
+            fee={feeAmount}
+            receivedAmount={receiveAmount}
+            receivedLabel={t('brebKeys.payTransfer.recipientReceives')}
+            orderId={orderId}
+            execution={execution}
+            formatAmount={(value) => formatAmountWithCode(displayAsset, value)}
+          />
+        </div>
+      );
+    }
     return (
       <div className="flex flex-col gap-5">
         <h1 className="text-xl font-bold text-foreground">{title}</h1>
         <section className="flex flex-col gap-4 rounded-3xl border border-border/75 bg-card/80 p-5">
           <h2 className="text-lg font-semibold">
-            {direction === 'topup'
-              ? t('latamRails.depositInstructions')
-              : t('latamRails.transferSubmitted')}
+            {t('latamRails.depositInstructions')}
           </h2>
           {execution?.kind === 'spei-deposit' && (
             <InstructionRow label="CLABE" value={execution.clabe} />
@@ -304,6 +330,16 @@ export function LatamRailFlow({
             {t('latamRails.orderId', { orderId })}
           </p>
         </section>
+        <ResultActions
+          doneLabel={t('common.done')}
+          actionLabel={t('topup.pendingStep.checkStatus')}
+          reportProblemHref={buildSupportMailto(
+            t('topup.executionOutcome.reportProblemSubject', { orderId }),
+            t('topup.executionOutcome.reportProblemBody', { orderId }),
+          )}
+          onAction={() => void navigate({ to: '/movements' })}
+          onDone={() => void navigate({ to: '/' })}
+        />
       </div>
     );
   }
@@ -473,9 +509,10 @@ export function LatamRailFlow({
                   <Label>{t('latamRails.pixKeyType')}</Label>
                   <Select
                     value={pixKeyType}
-                    onValueChange={(value) =>
-                      setPixKeyType(value as PixKeyType)
-                    }
+                    onValueChange={(value) => {
+                      setPixKeyType(value as PixKeyType);
+                      setPixKeyValue('');
+                    }}
                   >
                     <SelectTrigger className="h-12 rounded-2xl">
                       {pixKeyType}
@@ -491,12 +528,47 @@ export function LatamRailFlow({
                     </SelectContent>
                   </Select>
                 </div>
-                <Field
-                  id="pix-key"
-                  label={t('latamRails.pixKey')}
-                  value={pixKeyValue}
-                  onChange={setPixKeyValue}
-                />
+                {pixKeyType === 'PHONE' ? (
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="pix-key">{t('latamRails.pixPhone')}</Label>
+                    <div className="flex gap-2">
+                      <span className="flex h-12 shrink-0 items-center gap-2 rounded-2xl border border-input px-3 text-sm">
+                        <span aria-hidden>🇧🇷</span>
+                        <span>+{BRAZIL_DIAL_CODE}</span>
+                      </span>
+                      <Input
+                        id="pix-key"
+                        inputMode="numeric"
+                        autoComplete="tel-national"
+                        placeholder="11 91234 5678"
+                        value={pixKeyValue}
+                        onChange={(event) =>
+                          setPixKeyValue(
+                            normalizeBrazilPhoneInput(event.target.value),
+                          )
+                        }
+                        aria-invalid={
+                          pixKeyValue.length > 0 &&
+                          !isValidBrazilPhone(pixKeyValue)
+                        }
+                        className="h-12 rounded-2xl"
+                      />
+                    </div>
+                    {pixKeyValue.length > 0 &&
+                      !isValidBrazilPhone(pixKeyValue) && (
+                        <p className="text-xs text-destructive">
+                          {t('latamRails.pixPhoneInvalid')}
+                        </p>
+                      )}
+                  </div>
+                ) : (
+                  <Field
+                    id="pix-key"
+                    label={t('latamRails.pixKey')}
+                    value={pixKeyValue}
+                    onChange={setPixKeyValue}
+                  />
+                )}
                 <Field
                   id="pix-beneficiary-name"
                   label={t('latamRails.beneficiaryNameOptional')}

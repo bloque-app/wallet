@@ -117,6 +117,11 @@ export type ApprovalDisplay = {
   /** Major units, as the flow showed it. */
   amount?: number;
   asset?: Asset;
+  /** Major units, as the flow's quote showed them. */
+  fee?: number;
+  receivedAmount?: number;
+  /** Already translated. */
+  receivedLabel?: string;
 };
 
 /** Saved before the redirect, read back on `/approval`. */

@@ -24,7 +24,7 @@ import {
 import {
   findPhoneCountry,
   isValidInternationalPhone,
-  normalizeInternationalPhone,
+  joinInternationalPhone,
   splitInternationalPhone,
 } from '~/lib/phone';
 import { cn } from '~/lib/utils';
@@ -84,7 +84,21 @@ function toFormState(profile: IdentityMeProfile): ProfileFormState {
 
 function toInternationalDigits(form: ProfileFormState): string {
   const country = findPhoneCountry(form.phone_country);
-  return normalizeInternationalPhone(country?.dialCode ?? '', form.phone);
+  return country ? joinInternationalPhone(country, form.phone) : '';
+}
+
+/** The stored phone is sent back as it was unless the user edits it, so
+ * saving other fields never rewrites a number the form can't read. */
+function isPhoneUnchanged(
+  form: ProfileFormState,
+  initial: ProfileFormState,
+  storedPhone: string,
+): boolean {
+  return (
+    !!storedPhone &&
+    form.phone === initial.phone &&
+    form.phone_country === initial.phone_country
+  );
 }
 
 /** Fields a caller can deep-link into via `?focus=`, matching the
@@ -116,6 +130,7 @@ function RouteComponent() {
   const updateMutation = useUpdateIdentityProfile();
 
   const [form, setForm] = useState<ProfileFormState>(EMPTY_FORM);
+  const [initialForm, setInitialForm] = useState<ProfileFormState>(EMPTY_FORM);
   const [errors, setErrors] = useState<
     Partial<Record<keyof ProfileFormState, string>>
   >({});
@@ -128,7 +143,9 @@ function RouteComponent() {
   // these fields (a background refetch mustn't stomp an in-progress edit).
   useEffect(() => {
     if (profileQuery.data && !loaded) {
-      setForm(toFormState(profileQuery.data));
+      const initial = toFormState(profileQuery.data);
+      setForm(initial);
+      setInitialForm(initial);
       setLoaded(true);
     }
   }, [profileQuery.data, loaded]);
@@ -149,7 +166,12 @@ function RouteComponent() {
   function validate(): boolean {
     const next: Partial<Record<keyof ProfileFormState, string>> = {};
 
+    const storedPhone = profileQuery.data?.phone?.trim() ?? '';
     if (!form.phone) next.phone = t('profile.edit.errors.phoneRequired');
+    else if (isPhoneUnchanged(form, initialForm, storedPhone)) {
+      // Kept as stored.
+    } else if (!form.phone_country)
+      next.phone = t('profile.edit.errors.phoneCountryRequired');
     else if (
       !isValidInternationalPhone(
         toInternationalDigits(form),
@@ -185,7 +207,13 @@ function RouteComponent() {
     if (!validate()) return;
 
     const profile: Partial<IdentityMeProfile> = {
-      phone: `+${toInternationalDigits(form)}`,
+      phone: isPhoneUnchanged(
+        form,
+        initialForm,
+        profileQuery.data?.phone?.trim() ?? '',
+      )
+        ? profileQuery.data?.phone?.trim()
+        : `+${toInternationalDigits(form)}`,
       birthdate: form.birthdate,
       address_line1: form.address_line1.trim(),
       address_line2: form.address_line2.trim() || undefined,
@@ -261,6 +289,7 @@ function RouteComponent() {
                   setErrors((e) => ({ ...e, phone: undefined }));
                 }}
                 ariaLabel={t('profile.edit.fields.phoneCountry')}
+                placeholder={t('profile.edit.fields.phoneCountryPlaceholder')}
               />
               <Input
                 ref={phoneRef}
