@@ -88,6 +88,19 @@ function toInternationalDigits(form: ProfileFormState): string {
   return country ? joinInternationalPhone(country, form.phone) : '';
 }
 
+/** Splits a phone typed with `+` and its country code into the form's
+ * country and national number. */
+function resolvePhone(form: ProfileFormState): ProfileFormState {
+  if (!form.phone.startsWith('+')) return form;
+  const parsed = parsePastedInternationalPhone(form.phone);
+  if (!parsed) return { ...form, phone: '' };
+  return {
+    ...form,
+    phone_country: parsed.countryCode,
+    phone: parsed.nationalNumber,
+  };
+}
+
 /** The stored phone is sent back as it was unless the user edits it, so
  * saving other fields never rewrites a number the form can't read. */
 function isPhoneUnchanged(
@@ -165,20 +178,23 @@ function RouteComponent() {
   }
 
   function setPhoneInput(value: string) {
-    const pasted = parsePastedInternationalPhone(value);
-    if (pasted) {
-      setForm((f) => ({
-        ...f,
-        phone_country: pasted.countryCode,
-        phone: pasted.nationalNumber,
-      }));
+    const digits = value.replace(/\D/g, '');
+    if (!/^\s*(\+|00)/.test(value)) {
+      setField('phone', digits);
+      return;
+    }
+    // A number typed with its country code keeps the `+` until it is done
+    // (blur or submit); a pasted one is read at once.
+    const typed = `+${digits.replace(/^00/, '')}`;
+    if (typed.length - form.phone.length > 1) {
+      setForm((f) => resolvePhone({ ...f, phone: typed }));
       setErrors((e) => ({ ...e, phone: undefined }));
       return;
     }
-    setField('phone', value.replace(/\D/g, ''));
+    setField('phone', typed);
   }
 
-  function validate(): boolean {
+  function validate(form: ProfileFormState): boolean {
     const next: Partial<Record<keyof ProfileFormState, string>> = {};
 
     const storedPhone = profileQuery.data?.phone?.trim() ?? '';
@@ -219,25 +235,27 @@ function RouteComponent() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!validate()) return;
+    const current = resolvePhone(form);
+    setForm(current);
+    if (!validate(current)) return;
 
     const profile: Partial<IdentityMeProfile> = {
       phone: isPhoneUnchanged(
-        form,
+        current,
         initialForm,
         profileQuery.data?.phone?.trim() ?? '',
       )
         ? profileQuery.data?.phone?.trim()
-        : `+${toInternationalDigits(form)}`,
-      birthdate: form.birthdate,
-      address_line1: form.address_line1.trim(),
-      address_line2: form.address_line2.trim() || undefined,
-      neighborhood: form.neighborhood.trim() || undefined,
-      city: form.city.trim(),
-      state: form.state.trim(),
-      postal_code: form.postal_code.trim(),
-      country_of_residence_code: form.country_of_residence_code,
-      country_of_birth_code: form.country_of_birth_code || undefined,
+        : `+${toInternationalDigits(current)}`,
+      birthdate: current.birthdate,
+      address_line1: current.address_line1.trim(),
+      address_line2: current.address_line2.trim() || undefined,
+      neighborhood: current.neighborhood.trim() || undefined,
+      city: current.city.trim(),
+      state: current.state.trim(),
+      postal_code: current.postal_code.trim(),
+      country_of_residence_code: current.country_of_residence_code,
+      country_of_birth_code: current.country_of_birth_code || undefined,
     };
 
     try {
@@ -310,11 +328,12 @@ function RouteComponent() {
                 ref={phoneRef}
                 id="phone"
                 type="tel"
-                inputMode="numeric"
+                inputMode="tel"
                 autoComplete="tel-national"
                 placeholder={t('profile.edit.fields.phonePlaceholder')}
                 value={form.phone}
                 onChange={(e) => setPhoneInput(e.target.value)}
+                onBlur={() => setForm((f) => resolvePhone(f))}
                 aria-invalid={!!errors.phone}
                 className={cn(
                   'h-12 min-w-0 flex-1 rounded-2xl',
