@@ -5,6 +5,17 @@ import { useState } from 'react';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+} from '~/components/ui/select';
+import {
+  isValidInternationalPhone,
+  normalizeInternationalPhone,
+  PHONE_COUNTRIES,
+} from '~/lib/phone';
 
 interface LoginMethodSelectProps {
   onContinue: (method: 'email' | 'phone', contact: string) => Promise<void>;
@@ -13,6 +24,7 @@ interface LoginMethodSelectProps {
 export function LoginMethodSelect({ onContinue }: LoginMethodSelectProps) {
   const [tab, setTab] = useState<'email' | 'phone' | null>(null);
   const [value, setValue] = useState('');
+  const [countryCode, setCountryCode] = useState('CO');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -22,8 +34,13 @@ export function LoginMethodSelect({ onContinue }: LoginMethodSelectProps) {
       return;
     }
 
+    const selectedCountry = PHONE_COUNTRIES.find(
+      (country) => country.code === countryCode,
+    );
     const normalizedValue =
-      tab === 'phone' ? value.replace('+', '').trim() : value.trim();
+      tab === 'phone' && selectedCountry
+        ? normalizeInternationalPhone(selectedCountry.dialCode, value)
+        : value.trim();
 
     if (!normalizedValue) {
       setError(
@@ -37,7 +54,10 @@ export function LoginMethodSelect({ onContinue }: LoginMethodSelectProps) {
       setError('Correo electrónico inválido');
       return;
     }
-    if (tab === 'phone' && normalizedValue.length < 10) {
+    if (
+      tab === 'phone' &&
+      !isValidInternationalPhone(normalizedValue, selectedCountry)
+    ) {
       setError('Número de teléfono inválido');
       return;
     }
@@ -111,23 +131,67 @@ export function LoginMethodSelect({ onContinue }: LoginMethodSelectProps) {
             >
               {tab === 'email' ? 'Correo electrónico' : 'Número de teléfono'}
             </Label>
-            <Input
-              id="login-input"
-              type={tab === 'email' ? 'email' : 'tel'}
-              placeholder={
-                tab === 'email' ? 'tu@correo.com' : '+57 300 123 4567'
-              }
-              value={value}
-              onChange={(e) => {
-                setValue(e.target.value);
-                setError('');
-              }}
-              autoFocus
-              className="h-12 rounded-2xl dark:shadow-[0_10px_24px_-24px_rgb(0_0_0_/_0.66)]"
-              inputMode={tab === 'phone' ? 'numeric' : 'email'}
-              autoComplete={tab === 'email' ? 'email' : 'tel'}
-              disabled={isSubmitting}
-            />
+            <div className={tab === 'phone' ? 'flex gap-2' : undefined}>
+              {tab === 'phone' && (
+                <Select
+                  value={countryCode}
+                  onValueChange={(next) => {
+                    if (next) setCountryCode(next);
+                    setError('');
+                  }}
+                  disabled={isSubmitting}
+                >
+                  <SelectTrigger
+                    className="h-12 w-[7.25rem] shrink-0 rounded-2xl"
+                    aria-label="País"
+                  >
+                    {(() => {
+                      const country = PHONE_COUNTRIES.find(
+                        (item) => item.code === countryCode,
+                      );
+                      return country ? (
+                        <span className="flex items-center gap-2">
+                          <span aria-hidden>{country.flag}</span>
+                          <span>+{country.dialCode}</span>
+                        </span>
+                      ) : null;
+                    })()}
+                  </SelectTrigger>
+                  <SelectContent align="start">
+                    {PHONE_COUNTRIES.map((country) => (
+                      <SelectItem key={country.code} value={country.code}>
+                        <span className="flex items-center gap-2">
+                          <span aria-hidden>{country.flag}</span>
+                          <span>{country.name}</span>
+                          <span className="text-muted-foreground">
+                            +{country.dialCode}
+                          </span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              <Input
+                id="login-input"
+                type={tab === 'email' ? 'email' : 'tel'}
+                placeholder={tab === 'email' ? 'tu@correo.com' : '300 123 4567'}
+                value={value}
+                onChange={(e) => {
+                  setValue(
+                    tab === 'phone'
+                      ? e.target.value.replace(/\D/g, '')
+                      : e.target.value,
+                  );
+                  setError('');
+                }}
+                autoFocus
+                className="h-12 min-w-0 flex-1 rounded-2xl dark:shadow-[0_10px_24px_-24px_rgb(0_0_0_/_0.66)]"
+                inputMode={tab === 'phone' ? 'numeric' : 'email'}
+                autoComplete={tab === 'email' ? 'email' : 'tel'}
+                disabled={isSubmitting}
+              />
+            </div>
             {error && <p className="text-xs text-destructive">{error}</p>}
           </div>
           <Button
