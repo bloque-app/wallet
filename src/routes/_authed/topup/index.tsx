@@ -7,6 +7,8 @@ import { AccountCarousel } from '~/components/account/account-carousel';
 import { BackButton } from '~/components/back-button';
 import { ComingSoonBadge } from '~/components/coming-soon';
 import { FeeInfo } from '~/components/fee-info';
+import { TopUpErrorStep } from '~/components/result/error-step';
+import { ExecutionOutcomeStep } from '~/components/result/execution-outcome-step';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
@@ -31,8 +33,6 @@ import {
   formatUSD,
 } from '~/lib/formatters';
 import { cn } from '~/lib/utils';
-import { TopUpErrorStep } from './-components/error-step';
-import { ExecutionOutcomeStep } from './-components/execution-outcome-step';
 
 type TopUpStep =
   | 'method'

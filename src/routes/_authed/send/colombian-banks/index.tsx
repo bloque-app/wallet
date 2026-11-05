@@ -3,6 +3,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { AccountCarousel } from '~/components/account/account-carousel';
+import { TopUpErrorStep } from '~/components/result/error-step';
+import { ExecutionOutcomeStep } from '~/components/result/execution-outcome-step';
 import {
   isSupportedBank,
   SUPPORTED_BANK_LABELS,
@@ -20,8 +22,6 @@ import {
   TopUpBankStep,
 } from '../../topup/-components/bank-step';
 import { TopUpConfirmStep } from '../../topup/-components/confirm-step';
-import { TopUpErrorStep } from '../../topup/-components/error-step';
-import { ExecutionOutcomeStep } from '../../topup/-components/execution-outcome-step';
 
 type TransferStep = 'amount' | 'bank' | 'confirm' | 'pending' | 'error';
 

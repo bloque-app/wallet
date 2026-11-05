@@ -148,16 +148,30 @@ export const BRAZIL_DIAL_CODE = '55';
 
 /**
  * Digits of a Brazilian phone typed without its country code (area code +
- * number). A pasted `+55…` keeps only the national part.
+ * number), at most 11. The country code is only removed from a number that
+ * comes with `+55` or `0055`: area code 55 is valid, so `55…` is kept.
  */
 export function normalizeBrazilPhoneInput(value: string): string {
-  let digits = value.replace(/\D/g, '');
-  if (value.trim().startsWith('+') || digits.length > 11) {
-    if (digits.startsWith(BRAZIL_DIAL_CODE)) {
-      digits = digits.slice(BRAZIL_DIAL_CODE.length);
-    }
+  const trimmed = value.trim();
+  let digits = trimmed.replace(/\D/g, '');
+  if (/^(\+|00)\s*55/.test(trimmed)) {
+    digits = digits.slice(trimmed.startsWith('00') ? 4 : 2);
   }
   return digits.slice(0, 11);
+}
+
+/**
+ * Reads a phone pasted with its country code (`+52 55…` or `0052 55…`).
+ * Undefined when the value has no country code.
+ */
+export function parsePastedInternationalPhone(
+  value: string,
+): { countryCode: string; nationalNumber: string } | undefined {
+  const trimmed = value.trim();
+  if (!/^(\+|00)/.test(trimmed)) return undefined;
+  const digits = trimmed.replace(/\D/g, '').replace(/^00/, '');
+  if (!digits) return undefined;
+  return splitInternationalPhone(`+${digits}`, '');
 }
 
 /** Area code (11–99) + 8 or 9 digits. */

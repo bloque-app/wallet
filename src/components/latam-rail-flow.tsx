@@ -6,6 +6,9 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { AccountCarousel } from '~/components/account/account-carousel';
 import { BackButton } from '~/components/back-button';
+import { TopUpErrorStep } from '~/components/result/error-step';
+import { ExecutionOutcomeStep } from '~/components/result/execution-outcome-step';
+import { ResultActions } from '~/components/result/pending-step';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
@@ -39,8 +42,6 @@ import {
   normalizeBrazilPhoneInput,
 } from '~/lib/phone';
 import { buildSupportMailto } from '~/lib/support';
-import { ExecutionOutcomeStep } from '~/routes/_authed/topup/-components/execution-outcome-step';
-import { ResultActions } from '~/routes/_authed/topup/-components/pending-step';
 
 type Rail = 'spei' | 'pix';
 type Direction = 'topup' | 'send';
@@ -624,12 +625,7 @@ export function LatamRailFlow({
         )}
 
         {step === 'error' && (
-          <Button
-            onClick={() => setStep('amount')}
-            className="h-12 rounded-2xl"
-          >
-            {t('common.retry')}
-          </Button>
+          <TopUpErrorStep onRetry={() => setStep('amount')} />
         )}
       </section>
     </div>

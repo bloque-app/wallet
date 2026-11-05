@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { AccountCarousel } from '~/components/account/account-carousel';
 import { BackButton } from '~/components/back-button';
+import { TopUpErrorStep } from '~/components/result/error-step';
+import { ExecutionOutcomeStep } from '~/components/result/execution-outcome-step';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,8 +34,6 @@ import {
   formatCOP,
   getAssetPrecision,
 } from '~/lib/formatters';
-import { TopUpErrorStep } from '../../topup/-components/error-step';
-import { ExecutionOutcomeStep } from '../../topup/-components/execution-outcome-step';
 import { getRecipientName, type ResolvedRecipient } from '../-lib/breb';
 
 type ViewState = 'form' | 'pending' | 'error';

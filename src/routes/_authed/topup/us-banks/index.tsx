@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { AccountCarousel } from '~/components/account/account-carousel';
 import { ComingSoonScreen } from '~/components/coming-soon';
+import { TopUpErrorStep } from '~/components/result/error-step';
+import { ExecutionOutcomeStep } from '~/components/result/execution-outcome-step';
 import { US_RAILS_ENABLED } from '~/config/features';
 import { useAuth } from '~/contexts/auth/auth-context';
 import {
@@ -26,8 +28,6 @@ import { useApprovalRedirect } from '~/hooks/approval/use-approval-redirect';
 import { useCreateExternalUsBankOrder } from '~/hooks/payments/use-external-us-bank-order';
 import { useRates } from '~/hooks/payments/use-rates';
 import { formatAmountWithCode, getAssetPrecision } from '~/lib/formatters';
-import { TopUpErrorStep } from '../-components/error-step';
-import { ExecutionOutcomeStep } from '../-components/execution-outcome-step';
 import { LinkBankStep } from '../-components/link-bank-step';
 import { UsAmountStep } from '../-components/us-amount-step';
 import { UsConfirmStep } from '../-components/us-confirm-step';

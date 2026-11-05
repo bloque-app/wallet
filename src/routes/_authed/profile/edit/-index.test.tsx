@@ -104,4 +104,17 @@ describe('edit profile phone', () => {
     ).toBeInTheDocument();
     expect(mutateAsync).not.toHaveBeenCalled();
   });
+
+  test('reads a number pasted with its country code', async () => {
+    render(<EditProfilePage />);
+
+    fireEvent.change(phoneInput(), { target: { value: '+52 55 1234 5678' } });
+    expect(phoneInput().value).toBe('5512345678');
+    fireEvent.submit(phoneInput().closest('form') as HTMLFormElement);
+
+    await waitFor(() => expect(mutateAsync).toHaveBeenCalledTimes(1));
+    expect(mutateAsync.mock.calls[0]?.[0]).toMatchObject({
+      phone: '+525512345678',
+    });
+  });
 });

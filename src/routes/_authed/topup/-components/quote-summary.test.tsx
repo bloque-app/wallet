@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
+import { TopUpErrorStep } from '~/components/result/error-step';
+import { TopUpPendingStep } from '~/components/result/pending-step';
 import { TopUpAmountStep } from './amount-step';
 import { TopUpConfirmStep } from './confirm-step';
-import { TopUpErrorStep } from './error-step';
-import { TopUpPendingStep } from './pending-step';
 
 describe('quoted transfer summaries', () => {
   test('shows gross, fee and net on the Colombian-bank amount step', () => {
