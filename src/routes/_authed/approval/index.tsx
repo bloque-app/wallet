@@ -310,6 +310,7 @@ function RouteComponent() {
         icon="cancelled"
         title={t('approval.refused.title')}
         description={state.message}
+        withSupport
         primary={{
           label: t('common.back'),
           onClick: () => goBack(state.saved),
@@ -326,6 +327,7 @@ function RouteComponent() {
           icon="alert"
           title={t('approval.unconfirmed.title')}
           description={t('approval.unconfirmed.keyDeletionDescription')}
+          withSupport
           primary={{
             label: t('approval.seeKeys'),
             onClick: () => goBack(state.saved),
@@ -339,6 +341,7 @@ function RouteComponent() {
           icon="alert"
           title={t('approval.unconfirmed.title')}
           description={t('approval.unconfirmed.pocketDeletionDescription')}
+          withSupport
           primary={{
             label: t('approval.seePockets'),
             onClick: () => void navigate({ to: '/accounts' }),
@@ -351,6 +354,7 @@ function RouteComponent() {
         icon="alert"
         title={t('approval.unconfirmed.title')}
         description={t('approval.unconfirmed.description')}
+        withSupport
         primary={{
           label: t('approval.seeMovements'),
           onClick: () => void navigate({ to: '/movements' }),
@@ -412,6 +416,7 @@ function RouteComponent() {
       icon={reason === 'unavailable' ? 'alert' : 'cancelled'}
       title={t(`approval.failed.${reason}.title`)}
       description={t(`approval.failed.${reason}.description`)}
+      withSupport
       primary={
         canRetry
           ? { label: t('common.retry'), onClick: () => void process() }
@@ -437,6 +442,7 @@ function ApprovalScreen({
   description,
   primary,
   secondary,
+  withSupport = false,
   children,
 }: {
   icon: keyof typeof ICONS;
@@ -444,9 +450,12 @@ function ApprovalScreen({
   description: string;
   primary?: { label: string; onClick: () => void };
   secondary?: { label: string; onClick: () => void };
+  /** Adds a link to contact support, with the screen's title as subject. */
+  withSupport?: boolean;
   /** Replaces the buttons. */
   children?: ReactNode;
 }) {
+  const { t } = useTranslation();
   const { Icon, tone } = ICONS[icon];
   return (
     <div className="flex flex-col items-center gap-6 py-8">
@@ -477,6 +486,16 @@ function ApprovalScreen({
               className="h-12 w-full rounded-2xl bg-transparent text-sm font-medium"
             >
               {secondary.label}
+            </Button>
+          )}
+          {withSupport && (
+            <Button
+              variant="ghost"
+              nativeButton={false}
+              render={<a href={buildSupportMailto(title)} />}
+              className="h-12 w-full rounded-2xl text-sm font-medium"
+            >
+              {t('topup.errorStep.contactSupport')}
             </Button>
           )}
         </div>
