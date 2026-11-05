@@ -474,4 +474,16 @@ describe('approval return page', () => {
     expect(screen.getByText('$ 500 COP')).toBeInTheDocument();
     expect(screen.getByText('$ 9.500 COP')).toBeInTheDocument();
   });
+
+  test('offers support when an approved operation is refused', async () => {
+    savePendingApproval(SAVED);
+    collect.mockResolvedValue('approval-1');
+    run.mockRejectedValue(new ApprovalFailedError('rejected'));
+
+    renderPage();
+
+    expect(
+      await screen.findByRole('button', { name: /soporte@bloque.team/ }),
+    ).toHaveAttribute('href', expect.stringContaining('mailto:'));
+  });
 });

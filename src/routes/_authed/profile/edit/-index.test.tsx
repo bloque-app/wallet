@@ -117,4 +117,22 @@ describe('edit profile phone', () => {
       phone: '+525512345678',
     });
   });
+
+  test('reads a number typed with its country code key by key', async () => {
+    render(<EditProfilePage />);
+
+    fireEvent.change(phoneInput(), { target: { value: '' } });
+    let typed = '';
+    for (const key of '+5511987654321') {
+      typed += key;
+      fireEvent.change(phoneInput(), { target: { value: typed } });
+    }
+    expect(phoneInput().value).toBe('+5511987654321');
+    fireEvent.submit(phoneInput().closest('form') as HTMLFormElement);
+
+    await waitFor(() => expect(mutateAsync).toHaveBeenCalledTimes(1));
+    expect(mutateAsync.mock.calls[0]?.[0]).toMatchObject({
+      phone: '+5511987654321',
+    });
+  });
 });
