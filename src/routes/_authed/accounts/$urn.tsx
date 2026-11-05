@@ -18,6 +18,7 @@ import {
 } from '~/components/account/product-presentation';
 import { BackButton } from '~/components/back-button';
 import { ComingSoonBadge } from '~/components/coming-soon';
+import { CurrencyFlag, isFlagCurrency } from '~/components/currency-flag';
 import { MovementDetailDrawer } from '~/components/movement-detail-drawer';
 import { MovementRow } from '~/components/movement-row';
 import { Button } from '~/components/ui/button';
@@ -86,6 +87,15 @@ import {
   type AccountsOrigin,
   parseAccountsOrigin,
 } from './-lib/origin';
+
+function CurrencyChipLabel({ label }: { label: string }) {
+  return (
+    <span className="flex items-center gap-1.5">
+      {isFlagCurrency(label) && <CurrencyFlag currency={label} />}
+      {label}
+    </span>
+  );
+}
 
 export const Route = createFileRoute('/_authed/accounts/$urn')({
   validateSearch: (
@@ -523,7 +533,7 @@ function RouteComponent() {
                             : 'border-border bg-background/70 text-muted-foreground hover:text-foreground',
                         )}
                       >
-                        {asset ?? balance.asset}
+                        <CurrencyChipLabel label={asset ?? balance.asset} />
                       </button>
                     );
                   })}
@@ -880,7 +890,9 @@ function RouteComponent() {
                           : 'border-border/75 bg-background/70 hover:bg-muted/60',
                       )}
                     >
-                      {getDisplayAsset(balance.asset) ?? balance.asset}
+                      <CurrencyChipLabel
+                        label={getDisplayAsset(balance.asset) ?? balance.asset}
+                      />
                     </button>
                   ))}
                 </div>

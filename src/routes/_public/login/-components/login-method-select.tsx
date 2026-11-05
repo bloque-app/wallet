@@ -2,15 +2,10 @@
 import { LoaderCircle, Mail, Phone } from 'lucide-react';
 import type React from 'react';
 import { useState } from 'react';
+import { PhoneCountrySelect } from '~/components/phone-country-select';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-} from '~/components/ui/select';
 import {
   isValidInternationalPhone,
   normalizeInternationalPhone,
@@ -133,44 +128,14 @@ export function LoginMethodSelect({ onContinue }: LoginMethodSelectProps) {
             </Label>
             <div className={tab === 'phone' ? 'flex gap-2' : undefined}>
               {tab === 'phone' && (
-                <Select
+                <PhoneCountrySelect
                   value={countryCode}
-                  onValueChange={(next) => {
-                    if (next) setCountryCode(next);
+                  onChange={(next) => {
+                    setCountryCode(next);
                     setError('');
                   }}
                   disabled={isSubmitting}
-                >
-                  <SelectTrigger
-                    className="h-12 w-[7.25rem] shrink-0 rounded-2xl"
-                    aria-label="País"
-                  >
-                    {(() => {
-                      const country = PHONE_COUNTRIES.find(
-                        (item) => item.code === countryCode,
-                      );
-                      return country ? (
-                        <span className="flex items-center gap-2">
-                          <span aria-hidden>{country.flag}</span>
-                          <span>+{country.dialCode}</span>
-                        </span>
-                      ) : null;
-                    })()}
-                  </SelectTrigger>
-                  <SelectContent align="start">
-                    {PHONE_COUNTRIES.map((country) => (
-                      <SelectItem key={country.code} value={country.code}>
-                        <span className="flex items-center gap-2">
-                          <span aria-hidden>{country.flag}</span>
-                          <span>{country.name}</span>
-                          <span className="text-muted-foreground">
-                            +{country.dialCode}
-                          </span>
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                />
               )}
               <Input
                 id="login-input"

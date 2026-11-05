@@ -18,8 +18,9 @@ interface PendingStepProps {
   actionLabel?: string;
   /** Defaults to COP with its code — pass a USD formatter for the RTP/ACH US-bank flows. */
   formatAmount?: (amount: number) => string;
+  reportProblemHref: string;
   onRefresh: () => void;
-  onError: () => void;
+  onDone: () => void;
 }
 
 export function TopUpPendingStep({
@@ -30,10 +31,14 @@ export function TopUpPendingStep({
   orderId,
   actionLabel,
   formatAmount = formatCopWithCode,
+  reportProblemHref,
   onRefresh,
-  onError,
+  onDone,
 }: PendingStepProps) {
   const { t } = useTranslation();
+  const hasBreakdown =
+    typeof fee === 'number' || typeof receivedAmount === 'number';
+
   return (
     <div className="flex flex-col items-center gap-6 py-8">
       <div className="flex h-16 w-16 items-center justify-center rounded-3xl border border-primary/25 bg-primary/[0.06]">
@@ -50,17 +55,6 @@ export function TopUpPendingStep({
         <p className="text-2xl font-bold tabular-nums text-foreground">
           {formatAmount(amount)}
         </p>
-        {typeof fee === 'number' && fee > 0 && (
-          <p className="text-sm text-muted-foreground">
-            {t('topup.amountStep.fee')}: {formatAmount(fee)}
-          </p>
-        )}
-        {typeof receivedAmount === 'number' && (
-          <p className="text-sm font-semibold text-foreground">
-            {receivedLabel ?? t('topup.amountStep.youWillReceive')}:{' '}
-            {formatAmount(receivedAmount)}
-          </p>
-        )}
         {orderId && (
           <p className="text-xs text-muted-foreground">
             {t('topup.pendingStep.orderId', { orderId })}
@@ -68,19 +62,60 @@ export function TopUpPendingStep({
         )}
       </div>
 
+      {hasBreakdown && (
+        <div className="flex w-full flex-col gap-2 rounded-2xl border border-border/85 bg-background/70 p-4 text-sm">
+          {typeof fee === 'number' && (
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-muted-foreground">
+                {t('topup.amountStep.fee')}
+              </span>
+              <span className="font-medium tabular-nums text-foreground">
+                {formatAmount(fee)}
+              </span>
+            </div>
+          )}
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-muted-foreground">
+              {t('topup.pendingStep.total')}
+            </span>
+            <span className="font-medium tabular-nums text-foreground">
+              {formatAmount(amount)}
+            </span>
+          </div>
+          {typeof receivedAmount === 'number' && (
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-muted-foreground">
+                {receivedLabel ?? t('topup.amountStep.youWillReceive')}
+              </span>
+              <span className="font-semibold tabular-nums text-foreground">
+                {formatAmount(receivedAmount)}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="flex w-full flex-col gap-3">
         <Button
-          onClick={onRefresh}
+          onClick={onDone}
           variant="default"
-          className="h-12 w-full gap-2 rounded-2xl text-sm font-medium"
+          className="h-12 w-full rounded-2xl text-sm font-medium"
+        >
+          {t('common.done')}
+        </Button>
+        <Button
+          onClick={onRefresh}
+          variant="outline"
+          className="h-12 w-full gap-2 rounded-2xl text-sm font-medium bg-transparent"
         >
           <RefreshCw className="h-4 w-4" />
           {actionLabel ?? t('topup.pendingStep.checkStatus')}
         </Button>
         <Button
-          onClick={onError}
-          variant="outline"
-          className="h-12 w-full rounded-2xl text-sm font-medium bg-transparent"
+          variant="ghost"
+          nativeButton={false}
+          render={<a href={reportProblemHref} />}
+          className="h-12 w-full rounded-2xl text-sm font-medium"
         >
           {t('topup.executionOutcome.reportProblem')}
         </Button>

@@ -26,6 +26,7 @@ import { useResolveBrebKey } from '~/hooks/accounts/use-breb-keys';
 import { useApprovalRedirect } from '~/hooks/approval/use-approval-redirect';
 import { useCreateBrebOrder } from '~/hooks/payments/use-breb-order';
 import { useRates } from '~/hooks/payments/use-rates';
+import { exceedsBalance } from '~/lib/balance';
 import {
   formatAmountWithCode,
   formatCOP,
@@ -109,6 +110,12 @@ function RouteComponent() {
   const selectedBalance = selectedAccount?.balances.find(
     (balance) => balance.asset === FROM_ASSET,
   );
+  const availableAmount = selectedBalance
+    ? Number.parseInt(selectedBalance.current, 10) / 10 ** FROM_PRECISION
+    : null;
+  const isOverBalance =
+    !!selectedAccount &&
+    exceedsBalance(selectedAccount.balances, FROM_ASSET, amountSrc);
 
   const ratesQuery = useRates(
     parsedAmount >= MIN_TRANSFER_AMOUNT && amountSrc
@@ -144,6 +151,9 @@ function RouteComponent() {
     if (parsedAmount > 0 && parsedAmount < MIN_TRANSFER_AMOUNT) {
       return t('brebKeys.payTransfer.minAmount');
     }
+    if (isOverBalance) {
+      return t('brebKeys.payTransfer.insufficientBalance');
+    }
     if (ratesQuery.isError) {
       return t('convert.rateFetchError');
     }
@@ -162,6 +172,7 @@ function RouteComponent() {
     hasValidKey,
     key.length,
     parsedAmount,
+    isOverBalance,
     ratesQuery.isError,
     ratesQuery.isSuccess,
     selectedRate,
@@ -250,6 +261,7 @@ function RouteComponent() {
     !!selectedSourceUrn &&
     hasValidKey &&
     parsedAmount >= MIN_TRANSFER_AMOUNT &&
+    !isOverBalance &&
     !!selectedRate &&
     !!quote &&
     !createOrderMutation.isPending;
@@ -275,7 +287,6 @@ function RouteComponent() {
           receivedLabel={t('brebKeys.payTransfer.recipientReceives')}
           orderId={lastOrder?.id}
           execution={lastOrder?.execution}
-          onError={() => setView('error')}
         />
       </div>
     );
@@ -360,10 +371,7 @@ function RouteComponent() {
               {selectedBalance ? (
                 <span className="text-xs text-muted-foreground">
                   {t('brebKeys.payTransfer.available', {
-                    amount: formatCOP(
-                      Number.parseInt(selectedBalance.current, 10) /
-                        10 ** FROM_PRECISION,
-                    ),
+                    amount: formatCOP(availableAmount ?? 0),
                   })}
                 </span>
               ) : null}

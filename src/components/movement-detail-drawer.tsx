@@ -2,7 +2,9 @@
 
 import { Copy, Download, X } from 'lucide-react';
 import type React from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 import { Button } from '~/components/ui/button';
 import {
   Drawer,
@@ -19,6 +21,7 @@ import {
   getMovementLabel,
   type Movement,
 } from '~/lib/formatters';
+import { downloadReceipt, receiptFileName } from '~/lib/receipt';
 import { StatusPill } from './status-pill';
 
 interface MovementDetailDrawerProps {
@@ -50,6 +53,62 @@ export function MovementDetailDrawer({
   onClose,
 }: MovementDetailDrawerProps) {
   const { t } = useTranslation();
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  async function handleDownload(current: Movement) {
+    setIsDownloading(true);
+    try {
+      const sign = current.direction === 'incoming' ? '+' : '-';
+      await downloadReceipt(
+        {
+          title: t('movements.detail.receiptTitle'),
+          amount: `${sign}${formatAmount(current.asset, current.amount)}`,
+          status: t(`movements.status.${current.status}`),
+          rows: [
+            {
+              label: t('movements.detail.type'),
+              value: getMovementLabel(current.type, current.direction),
+            },
+            { label: t('movements.detail.asset'), value: current.asset },
+            {
+              label: t('movements.detail.date'),
+              value: formatFullDate(current.createdAt),
+            },
+            ...(current.counterparty
+              ? [
+                  {
+                    label: t('movements.detail.counterparty'),
+                    value: current.counterparty,
+                  },
+                ]
+              : []),
+            ...(current.fee > 0
+              ? [
+                  {
+                    label: t('movements.detail.fee'),
+                    value: formatAmount(current.asset, current.fee),
+                  },
+                ]
+              : []),
+            {
+              label: t('movements.detail.reference'),
+              value: current.reference,
+            },
+          ],
+          footer: t('movements.detail.receiptFooter', {
+            date: formatFullDate(new Date().toISOString()),
+          }),
+        },
+        receiptFileName(current.reference),
+      );
+      toast.success(t('movements.detail.receiptDownloadedToast'));
+    } catch {
+      toast.error(t('movements.detail.receiptErrorToast'));
+    } finally {
+      setIsDownloading(false);
+    }
+  }
+
   return (
     <Drawer open={open} onOpenChange={(o) => !o && onClose()}>
       {movement && (
@@ -105,10 +164,12 @@ export function MovementDetailDrawer({
                   value={movement.counterparty}
                 />
               )}
-              <DetailRow
-                label={t('movements.detail.fee')}
-                value={formatAmount(movement.asset, movement.fee)}
-              />
+              {movement.fee > 0 && (
+                <DetailRow
+                  label={t('movements.detail.fee')}
+                  value={formatAmount(movement.asset, movement.fee)}
+                />
+              )}
               <DetailRow
                 label={t('movements.detail.reference')}
                 value={
@@ -135,6 +196,8 @@ export function MovementDetailDrawer({
           <DrawerFooter>
             <Button
               variant="outline"
+              onClick={() => void handleDownload(movement)}
+              disabled={isDownloading}
               className="h-12 w-full gap-2 rounded-2xl text-sm bg-transparent"
             >
               <Download className="h-4 w-4" />
