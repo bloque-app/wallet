@@ -242,7 +242,8 @@
       "noRateToSend": "No hay tasa disponible para enviar.",
       "transferSentToast": "Transferencia BRE-B enviada correctamente.",
       "transferErrorToast": "No se pudo enviar la transferencia BRE-B.",
-      "keyValidationErrorToast": "No se pudo validar la llave BRE-B."
+      "keyValidationErrorToast": "No se pudo validar la llave BRE-B.",
+      "insufficientBalance": "El saldo de este bolsillo no alcanza para la transferencia."
     }
   },
   "card": {
@@ -357,7 +358,7 @@
         "description": "Envia a cualquier banco colombiano al instante."
       },
       "colombianBanks": {
-        "title": "Bancos",
+        "title": "Bancos ACH",
         "description": "Transfiere a cuentas bancarias."
       },
       "bloqueFriends": {
@@ -424,7 +425,8 @@
         "label": "Monto a enviar (COP)",
         "minAmount": "Monto mínimo: $10,000 COP",
         "feeLabel": "Comisión"
-      }
+      },
+      "insufficientBalance": "El saldo de este bolsillo no alcanza para la transferencia."
     },
     "usBanks": {
       "title": "Enviar a bancos en EE.UU.",
@@ -454,7 +456,8 @@
       "confirmStep": {
         "destinationBank": "Banco destino",
         "owner": "Titular"
-      }
+      },
+      "insufficientBalance": "El saldo de este bolsillo no alcanza para la transferencia."
     },
     "feeInfo": "Este cobro cubre el procesamiento de tu envío por este medio."
   },
@@ -487,7 +490,8 @@
     "pix": {
       "topup": { "title": "Recargar con PIX" },
       "send": { "title": "Enviar por PIX" }
-    }
+    },
+    "insufficientBalance": "El saldo de este bolsillo no alcanza para la transferencia."
   },
   "topup": {
     "title": "Recargar saldo",
@@ -601,14 +605,16 @@
       "copyKey": "Copiar llave",
       "reportProblem": "Reportar problema",
       "openLink": "Abrir enlace",
-      "checkMovementsToast": "Revisa el estado en movimientos."
+      "reportProblemSubject": "Problema con la orden {{orderId}}",
+      "reportProblemBody": "Hola, tengo un problema con la orden {{orderId}}."
     },
     "pendingStep": {
       "title": "Orden creada",
       "description": "Tu orden está siendo procesada. Puede completarse, quedar pendiente o ser rechazada.",
       "orderId": "Orden: {{orderId}}",
       "checkStatus": "Verificar estado",
-      "contactSupportDisclaimer": "Si tienes dudas sobre el estado de tu orden, contacta soporte."
+      "contactSupportDisclaimer": "Si tienes dudas sobre el estado de tu orden, contacta soporte.",
+      "total": "Total"
     },
     "usAmountStep": {
       "label": "Monto (USD)",
@@ -742,7 +748,13 @@
       "fee": "Comisión",
       "reference": "Referencia",
       "copyReferenceAria": "Copiar referencia",
-      "downloadReceipt": "Descargar comprobante"
+      "downloadReceipt": "Descargar comprobante",
+      "receiptTitle": "Comprobante de movimiento",
+      "status": "Estado",
+      "amount": "Monto",
+      "receiptFooter": "Generado por Bloque · {{date}}",
+      "receiptDownloadedToast": "Comprobante descargado.",
+      "receiptErrorToast": "No se pudo generar el comprobante."
     }
   },
   "nav": {
@@ -889,7 +901,7 @@
       },
       "fields": {
         "phone": "Teléfono",
-        "phonePlaceholder": "+57 300 123 4567",
+        "phonePlaceholder": "300 123 4567",
         "birthdate": "Fecha de nacimiento",
         "countryOfBirth": "País de nacimiento",
         "countryOfResidence": "País de residencia",
@@ -899,11 +911,12 @@
         "city": "Ciudad",
         "state": "Departamento/Estado",
         "postalCode": "Código postal",
-        "selectCountry": "Selecciona un país"
+        "selectCountry": "Selecciona un país",
+        "phoneCountry": "País del celular"
       },
       "errors": {
         "phoneRequired": "Ingresa tu teléfono",
-        "phoneInvalid": "Formato inválido. Usa el código de país y el número, ej: +573001234567",
+        "phoneInvalid": "Número de celular inválido. Revisa el país y el número.",
         "birthdateRequired": "Ingresa tu fecha de nacimiento",
         "birthdateInvalid": "Fecha inválida",
         "postalCodeInvalid": "Código postal inválido",

@@ -3,6 +3,7 @@ import {
   isValidInternationalPhone,
   normalizeInternationalPhone,
   PHONE_COUNTRIES,
+  splitInternationalPhone,
 } from './phone';
 
 const colombia = PHONE_COUNTRIES.find((country) => country.code === 'CO');
@@ -41,5 +42,46 @@ describe('isValidInternationalPhone', () => {
     expect(isValidInternationalPhone('573213558313', colombia)).toBe(true);
     expect(isValidInternationalPhone('573213558', colombia)).toBe(false);
     expect(isValidInternationalPhone('5732135583130', colombia)).toBe(false);
+  });
+});
+
+describe('splitInternationalPhone', () => {
+  test('splits a stored Colombian number with plus sign', () => {
+    expect(splitInternationalPhone('+573001234567')).toEqual({
+      countryCode: 'CO',
+      nationalNumber: '3001234567',
+    });
+  });
+
+  test('splits a stored number without plus sign', () => {
+    expect(splitInternationalPhone('573001234567')).toEqual({
+      countryCode: 'CO',
+      nationalNumber: '3001234567',
+    });
+  });
+
+  test('matches the longest dial code first', () => {
+    expect(splitInternationalPhone('+593991234567')).toEqual({
+      countryCode: 'EC',
+      nationalNumber: '991234567',
+    });
+  });
+
+  test('uses the first country listed for a shared dial code', () => {
+    expect(splitInternationalPhone('+14155550100')).toEqual({
+      countryCode: 'US',
+      nationalNumber: '4155550100',
+    });
+  });
+
+  test('keeps a bare national number under the default country', () => {
+    expect(splitInternationalPhone('3001234567')).toEqual({
+      countryCode: 'CO',
+      nationalNumber: '3001234567',
+    });
+    expect(splitInternationalPhone('')).toEqual({
+      countryCode: 'CO',
+      nationalNumber: '',
+    });
   });
 });

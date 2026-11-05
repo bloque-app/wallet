@@ -1,11 +1,13 @@
 'use client';
 
+import { useNavigate } from '@tanstack/react-router';
 import { Copy, KeyRound } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Button } from '~/components/ui/button';
 import type { ExecutionOutcome } from '~/domain/payments/types';
 import { formatAmountWithCode } from '~/lib/formatters';
+import { buildSupportMailto } from '~/lib/support';
 import { TopUpPendingStep } from './pending-step';
 
 interface ExecutionOutcomeStepProps {
@@ -20,7 +22,6 @@ interface ExecutionOutcomeStepProps {
   /** Defaults to COP with its code — pass a USD formatter for the RTP/ACH US-bank flows.
    * Only affects the generic pending fallback; `breb-deposit` is always COP. */
   formatAmount?: (amount: number) => string;
-  onError: () => void;
 }
 
 /**
@@ -38,9 +39,18 @@ export function ExecutionOutcomeStep({
   orderId,
   execution,
   formatAmount,
-  onError,
 }: ExecutionOutcomeStepProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const reportProblemHref = buildSupportMailto(
+    orderId
+      ? t('topup.executionOutcome.reportProblemSubject', { orderId })
+      : t('topup.executionOutcome.reportProblem'),
+    orderId
+      ? t('topup.executionOutcome.reportProblemBody', { orderId })
+      : undefined,
+  );
+  const goHome = () => void navigate({ to: '/' });
   if (execution?.kind === 'breb-deposit') {
     const depositAmountMajor = Number.parseInt(execution.amount, 10) / 100;
 
@@ -109,9 +119,17 @@ export function ExecutionOutcomeStep({
             {t('topup.executionOutcome.copyKey')}
           </Button>
           <Button
-            onClick={onError}
+            onClick={goHome}
             variant="outline"
             className="h-12 w-full rounded-2xl text-sm font-medium bg-transparent"
+          >
+            {t('common.done')}
+          </Button>
+          <Button
+            variant="ghost"
+            nativeButton={false}
+            render={<a href={reportProblemHref} />}
+            className="h-12 w-full rounded-2xl text-sm font-medium"
           >
             {t('topup.executionOutcome.reportProblem')}
           </Button>
@@ -131,6 +149,7 @@ export function ExecutionOutcomeStep({
       receivedLabel={receivedLabel}
       orderId={orderId}
       formatAmount={formatAmount}
+      reportProblemHref={reportProblemHref}
       actionLabel={
         redirectUrl
           ? t('topup.executionOutcome.openLink')
@@ -141,9 +160,9 @@ export function ExecutionOutcomeStep({
           window.open(redirectUrl, '_blank', 'noopener,noreferrer');
           return;
         }
-        toast.info(t('topup.executionOutcome.checkMovementsToast'));
+        void navigate({ to: '/movements' });
       }}
-      onError={onError}
+      onDone={goHome}
     />
   );
 }

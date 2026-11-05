@@ -64,3 +64,40 @@ export function isValidInternationalPhone(
     value.length - country.dialCode.length === country.nationalLength
   );
 }
+
+export function findPhoneCountry(code: string): PhoneCountry | undefined {
+  return PHONE_COUNTRIES.find((country) => country.code === code);
+}
+
+/**
+ * Splits a stored international phone (`+573001234567` or `573001234567`)
+ * into the country it belongs to and its national digits. Numbers without a
+ * recognizable country code default to Colombia, keeping their digits.
+ */
+export function splitInternationalPhone(
+  value: string,
+  defaultCountry = 'CO',
+): { countryCode: string; nationalNumber: string } {
+  const digits = value.replace(/\D/g, '');
+  const hasCountryCode = value.trim().startsWith('+') || digits.length > 10;
+
+  if (hasCountryCode) {
+    const match = [...PHONE_COUNTRIES]
+      .sort((a, b) => b.dialCode.length - a.dialCode.length)
+      .find((country) => digits.startsWith(country.dialCode));
+    if (match) {
+      const preferred =
+        PHONE_COUNTRIES.find(
+          (country) =>
+            country.dialCode === match.dialCode &&
+            country.code === defaultCountry,
+        ) ?? match;
+      return {
+        countryCode: preferred.code,
+        nationalNumber: digits.slice(match.dialCode.length),
+      };
+    }
+  }
+
+  return { countryCode: defaultCountry, nationalNumber: digits };
+}
