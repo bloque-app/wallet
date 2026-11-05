@@ -204,13 +204,17 @@ function RouteComponent() {
 
   if (state.kind === 'done') {
     const { saved, outcome } = state;
-    const { amount, asset } = saved.display ?? {};
+    const { amount, asset, fee, receivedAmount, receivedLabel } =
+      saved.display ?? {};
     const format = (value: number) =>
       formatAmountWithCode(asset ?? 'COP', value);
     if (outcome.kind === 'order') {
       return (
         <ExecutionOutcomeStep
           amount={amount ?? 0}
+          fee={fee}
+          receivedAmount={receivedAmount}
+          receivedLabel={receivedLabel}
           orderId={outcome.orderId}
           execution={outcome.execution}
           formatAmount={format}

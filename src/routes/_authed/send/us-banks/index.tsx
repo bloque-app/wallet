@@ -235,7 +235,13 @@ function RouteComponent() {
             redirectToApproval(
               error,
               { kind: 'rtp-order', params },
-              { amount: parsedAmount, asset: 'USD' },
+              {
+                amount: parsedAmount,
+                asset: 'USD',
+                fee: rateSummary?.fee,
+                receivedAmount: rateSummary?.amountDst,
+                receivedLabel: t('brebKeys.payTransfer.recipientReceives'),
+              },
             )
           ) {
             return;
@@ -262,6 +268,8 @@ function RouteComponent() {
     redirectToApproval,
     ratesQuery,
     t,
+    rateSummary?.fee,
+    rateSummary?.amountDst,
   ]);
 
   const handleAmountNext = () => {

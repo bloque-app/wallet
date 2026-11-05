@@ -11,6 +11,8 @@ interface PhoneCountrySelectProps {
   onChange: (countryCode: string) => void;
   disabled?: boolean;
   ariaLabel?: string;
+  /** Shown while no country is selected. */
+  placeholder?: string;
 }
 
 export function PhoneCountrySelect({
@@ -18,6 +20,7 @@ export function PhoneCountrySelect({
   onChange,
   disabled,
   ariaLabel = 'País',
+  placeholder = 'País',
 }: PhoneCountrySelectProps) {
   const selected = PHONE_COUNTRIES.find((country) => country.code === value);
 
@@ -38,7 +41,9 @@ export function PhoneCountrySelect({
             <span aria-hidden>{selected.flag}</span>
             <span>+{selected.dialCode}</span>
           </span>
-        ) : null}
+        ) : (
+          <span className="text-muted-foreground">{placeholder}</span>
+        )}
       </SelectTrigger>
       <SelectContent align="start">
         {PHONE_COUNTRIES.map((country) => (

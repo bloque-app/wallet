@@ -227,7 +227,13 @@ function RouteComponent() {
             redirectToApproval(
               error,
               { kind: 'breb-order', params },
-              { amount: parsedAmount, asset: 'COP' },
+              {
+                amount: parsedAmount,
+                asset: 'COP',
+                fee: quote?.totalFee,
+                receivedAmount: quote?.netAmount,
+                receivedLabel: t('brebKeys.payTransfer.recipientReceives'),
+              },
             )
           ) {
             return;
@@ -255,6 +261,8 @@ function RouteComponent() {
     redirectToApproval,
     ratesQuery,
     t,
+    quote?.totalFee,
+    quote?.netAmount,
   ]);
 
   const canSubmit =

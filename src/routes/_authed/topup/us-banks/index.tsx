@@ -457,7 +457,12 @@ function RouteComponent() {
             redirectToApproval(
               error,
               { kind: 'external-us-bank-order', params },
-              { amount: parsedAmount, asset: 'USD' },
+              {
+                amount: parsedAmount,
+                asset: 'USD',
+                fee: rateSummary?.fee,
+                receivedAmount: rateSummary?.amountDst,
+              },
             )
           ) {
             return;
@@ -484,6 +489,8 @@ function RouteComponent() {
     redirectToApproval,
     ratesQuery,
     t,
+    rateSummary?.fee,
+    rateSummary?.amountDst,
   ]);
 
   const handleAmountNext = () => {

@@ -1,6 +1,10 @@
 import { describe, expect, test } from 'bun:test';
 import {
+  findPhoneCountry,
+  isValidBrazilPhone,
   isValidInternationalPhone,
+  joinInternationalPhone,
+  normalizeBrazilPhoneInput,
   normalizeInternationalPhone,
   PHONE_COUNTRIES,
   splitInternationalPhone,
@@ -74,6 +78,17 @@ describe('splitInternationalPhone', () => {
     });
   });
 
+  test('leaves the country empty when it cannot be told apart', () => {
+    expect(splitInternationalPhone('4155550100')).toEqual({
+      countryCode: '',
+      nationalNumber: '4155550100',
+    });
+    expect(splitInternationalPhone('+4915112345678')).toEqual({
+      countryCode: '',
+      nationalNumber: '4915112345678',
+    });
+  });
+
   test('keeps a bare national number under the default country', () => {
     expect(splitInternationalPhone('3001234567')).toEqual({
       countryCode: 'CO',
@@ -83,5 +98,52 @@ describe('splitInternationalPhone', () => {
       countryCode: 'CO',
       nationalNumber: '',
     });
+  });
+});
+
+describe('joinInternationalPhone', () => {
+  const brazil = findPhoneCountry('BR');
+  const colombia = findPhoneCountry('CO');
+  if (!brazil || !colombia) throw new Error('missing countries');
+
+  test('always prepends the dial code when the country has no fixed length', () => {
+    expect(joinInternationalPhone(brazil, '55991234567')).toBe('5555991234567');
+  });
+
+  test('accepts the dial code already typed for a fixed-length country', () => {
+    expect(joinInternationalPhone(colombia, '573001234567')).toBe(
+      '573001234567',
+    );
+    expect(joinInternationalPhone(colombia, '300 123 4567')).toBe(
+      '573001234567',
+    );
+  });
+});
+
+describe('US numbers', () => {
+  const us = findPhoneCountry('US');
+
+  test('require 10 national digits', () => {
+    expect(isValidInternationalPhone('14155550100', us)).toBe(true);
+    expect(isValidInternationalPhone('1415555010', us)).toBe(false);
+  });
+});
+
+describe('Brazilian PIX phone', () => {
+  test('keeps only national digits', () => {
+    expect(normalizeBrazilPhoneInput('(11) 91234-5678')).toBe('11912345678');
+    expect(normalizeBrazilPhoneInput('+55 11 91234-5678')).toBe('11912345678');
+    expect(normalizeBrazilPhoneInput('5511912345678')).toBe('11912345678');
+  });
+
+  test('keeps an area code 55 number', () => {
+    expect(normalizeBrazilPhoneInput('55 99123-4567')).toBe('55991234567');
+  });
+
+  test('validates area code plus 8 or 9 digits', () => {
+    expect(isValidBrazilPhone('11912345678')).toBe(true);
+    expect(isValidBrazilPhone('1132345678')).toBe(true);
+    expect(isValidBrazilPhone('0191234567')).toBe(false);
+    expect(isValidBrazilPhone('119123456')).toBe(false);
   });
 });
