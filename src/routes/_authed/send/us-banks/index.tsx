@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { AccountCarousel } from '~/components/account/account-carousel';
 import { ComingSoonScreen } from '~/components/coming-soon';
+import { TopUpErrorStep } from '~/components/result/error-step';
+import { ExecutionOutcomeStep } from '~/components/result/execution-outcome-step';
 import { US_RAILS_ENABLED } from '~/config/features';
 import { useAuth } from '~/contexts/auth/auth-context';
 import {
@@ -17,8 +19,6 @@ import { useRates } from '~/hooks/payments/use-rates';
 import { useCreateRtpOrder } from '~/hooks/payments/use-rtp-order';
 import { exceedsBalance } from '~/lib/balance';
 import { formatAmountWithCode, getAssetPrecision } from '~/lib/formatters';
-import { TopUpErrorStep } from '../../topup/-components/error-step';
-import { ExecutionOutcomeStep } from '../../topup/-components/execution-outcome-step';
 import { UsAmountStep } from '../../topup/-components/us-amount-step';
 import {
   type UsBankAccountData,

@@ -7,8 +7,16 @@ import {
   OctagonX,
   TriangleAlert,
 } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { useTranslation } from 'react-i18next';
+import { ExecutionOutcomeStep } from '~/components/result/execution-outcome-step';
+import { ResultActions } from '~/components/result/pending-step';
 import { Button } from '~/components/ui/button';
 import type { ApprovalOutcome } from '~/domain/approval/ports';
 import {
@@ -30,7 +38,7 @@ import {
   savePendingApproval,
 } from '~/lib/pending-approval';
 import { safeRedirectPath } from '~/lib/safe-redirect';
-import { ExecutionOutcomeStep } from '../topup/-components/execution-outcome-step';
+import { buildSupportMailto } from '~/lib/support';
 
 /**
  * Where the identity app sends the person back after the approval page.
@@ -254,6 +262,34 @@ function RouteComponent() {
         />
       );
     }
+    if (saved.operation.kind === 'transfer' && amount !== undefined) {
+      const total = format(amount);
+      return (
+        <ApprovalScreen
+          icon="success"
+          title={t('approval.done.title')}
+          description={t('approval.done.descriptionAmount', { amount: total })}
+        >
+          <div className="flex w-full items-center justify-between gap-3 rounded-2xl border border-border/85 bg-background/70 p-4 text-sm">
+            <span className="text-muted-foreground">
+              {t('topup.pendingStep.total')}
+            </span>
+            <span className="font-semibold tabular-nums text-foreground">
+              {total}
+            </span>
+          </div>
+          <ResultActions
+            doneLabel={t('common.done')}
+            actionLabel={t('topup.pendingStep.checkStatus')}
+            reportProblemHref={buildSupportMailto(
+              t('approval.done.reportProblemSubject', { amount: total }),
+            )}
+            onAction={() => void navigate({ to: '/movements' })}
+            onDone={() => void navigate({ to: '/' })}
+          />
+        </ApprovalScreen>
+      );
+    }
     return (
       <ApprovalScreen
         icon="success"
@@ -401,12 +437,15 @@ function ApprovalScreen({
   description,
   primary,
   secondary,
+  children,
 }: {
   icon: keyof typeof ICONS;
   title: string;
   description: string;
   primary?: { label: string; onClick: () => void };
   secondary?: { label: string; onClick: () => void };
+  /** Replaces the buttons. */
+  children?: ReactNode;
 }) {
   const { Icon, tone } = ICONS[icon];
   return (
@@ -421,25 +460,27 @@ function ApprovalScreen({
         <h1 className="text-lg font-bold text-foreground">{title}</h1>
         <p className="text-sm text-muted-foreground">{description}</p>
       </div>
-      <div className="flex w-full flex-col gap-3">
-        {primary && (
-          <Button
-            onClick={primary.onClick}
-            className="h-12 w-full rounded-2xl text-sm font-medium"
-          >
-            {primary.label}
-          </Button>
-        )}
-        {secondary && (
-          <Button
-            variant="outline"
-            onClick={secondary.onClick}
-            className="h-12 w-full rounded-2xl bg-transparent text-sm font-medium"
-          >
-            {secondary.label}
-          </Button>
-        )}
-      </div>
+      {children ?? (
+        <div className="flex w-full flex-col gap-3">
+          {primary && (
+            <Button
+              onClick={primary.onClick}
+              className="h-12 w-full rounded-2xl text-sm font-medium"
+            >
+              {primary.label}
+            </Button>
+          )}
+          {secondary && (
+            <Button
+              variant="outline"
+              onClick={secondary.onClick}
+              className="h-12 w-full rounded-2xl bg-transparent text-sm font-medium"
+            >
+              {secondary.label}
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -78,7 +78,7 @@ describe('approval return page', () => {
     renderPage();
 
     expect(await screen.findByText('Operación aprobada')).toBeInTheDocument();
-    expect(screen.getByText(/10\.000 COP/)).toBeInTheDocument();
+    expect(screen.getAllByText(/10\.000 COP/).length).toBeGreaterThan(0);
     expect(collect).toHaveBeenCalledWith(SAVED.pending);
     expect(run).toHaveBeenCalledTimes(1);
     expect(run).toHaveBeenCalledWith(SAVED.operation, 'approval-1');
@@ -423,5 +423,55 @@ describe('approval return page', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  test('ends an approved transfer with the send result actions', async () => {
+    savePendingApproval(SAVED);
+    collect.mockResolvedValue('approval-1');
+    run.mockResolvedValue({ kind: 'done' });
+
+    renderPage();
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Listo' }));
+    expect(navigate).toHaveBeenCalledWith({ to: '/' });
+    expect(
+      screen.getByRole('button', { name: 'Reportar problema' }),
+    ).toHaveAttribute('href', expect.stringContaining('mailto:'));
+  });
+
+  test('keeps the fee of an approved order', async () => {
+    savePendingApproval({
+      ...SAVED,
+      operation: {
+        kind: 'breb-order',
+        params: {
+          rateSig: 'rate-1',
+          amountSrc: '1000000',
+          depositInformation: {
+            resolutionId: 'resolution-1',
+            destinationKey: { keyValue: '@alice' },
+          },
+          args: { sourceAccountUrn: 'did:bloque:account:virtual:source' },
+        },
+      },
+      display: {
+        amount: 10_000,
+        asset: 'COP',
+        fee: 500,
+        receivedAmount: 9_500,
+      },
+    });
+    collect.mockResolvedValue('approval-1');
+    run.mockResolvedValue({
+      kind: 'order',
+      orderId: 'order-1',
+      execution: { kind: 'none' },
+    });
+
+    renderPage();
+
+    expect(await screen.findByText('Comisión')).toBeInTheDocument();
+    expect(screen.getByText('$ 500 COP')).toBeInTheDocument();
+    expect(screen.getByText('$ 9.500 COP')).toBeInTheDocument();
   });
 });

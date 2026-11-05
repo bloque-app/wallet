@@ -201,5 +201,7 @@ export async function downloadReceipt(
   document.body.appendChild(link);
   link.click();
   link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 0);
+  // The download keeps reading the blob after click() returns (Safari,
+  // Firefox), so the URL is only released once it has had time to finish.
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
