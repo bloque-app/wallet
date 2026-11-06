@@ -10,7 +10,8 @@ export const Route = createFileRoute('/_authed/kyc/')({
 function RouteComponent() {
   const { t } = useTranslation();
   const { history } = useRouter();
-  const { url, status, isBootstrapping, isError, hasUser } = useVerification();
+  const { url, status, isBootstrapping, isError, hasUser, retry } =
+    useVerification();
 
   if (!hasUser) {
     return (
@@ -62,6 +63,13 @@ function RouteComponent() {
         <p className="text-sm text-muted-foreground">
           {t('kyc.route.startError')}
         </p>
+        <button
+          type="button"
+          onClick={retry}
+          className="rounded-full border border-primary/25 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20"
+        >
+          {t('common.retry')}
+        </button>
         <Link
           to="/"
           replace
