@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { AccountCarousel } from '~/components/account/account-carousel';
 import { BackButton } from '~/components/back-button';
-import { KycRequiredDrawer } from '~/components/kyc/kyc-required-drawer';
+import { RequireKyc } from '~/components/kyc/require-kyc';
 import { Button } from '~/components/ui/button';
 import {
   Drawer,
@@ -48,8 +48,20 @@ export const Route = createFileRoute('/_authed/breb-keys/manage-keys/')({
   validateSearch: (search: Record<string, unknown>) => ({
     ledgerId: search.ledgerId as string | undefined,
   }),
-  component: RouteComponent,
+  component: GatedRouteComponent,
 });
+
+function GatedRouteComponent() {
+  const navigate = useNavigate();
+  return (
+    <RequireKyc
+      variant="brebKey"
+      onBack={() => void navigate({ to: '/breb-keys' })}
+    >
+      <RouteComponent />
+    </RequireKyc>
+  );
+}
 
 const FROM_ASSET = 'COPM/2';
 const FROM_PRECISION = getAssetPrecision(FROM_ASSET);
@@ -142,7 +154,6 @@ function RouteComponent() {
   }, [refreshUser]);
 
   const [pendingKey, setPendingKey] = useState<PendingKey | null>(null);
-  const [kycDrawerOpen, setKycDrawerOpen] = useState(false);
 
   const accountsQuery = useAccounts({
     refetchInterval: (query) => {
@@ -250,18 +261,10 @@ function RouteComponent() {
     void navigate({ to: '/breb-keys' });
   };
 
-  const ensureKycApproved = (): boolean => {
-    if (user.kycStatus === 'approved') return true;
-    setCreateDrawer(null);
-    setKycDrawerOpen(true);
-    return false;
-  };
-
   const registerKey = (
     option: { keyType: BrebKeyType; value: string },
     ledgerId: string,
   ) => {
-    if (!ensureKycApproved()) return;
     createMutation.mutate(
       {
         keyType: option.keyType,
@@ -434,7 +437,6 @@ function RouteComponent() {
                           createMutation.isPending || accountPicker.isLoading
                         }
                         onClick={() => {
-                          if (!ensureKycApproved()) return;
                           if (contextAccount) {
                             registerKey(option, contextAccount.ledgerId);
                             return;
@@ -473,8 +475,6 @@ function RouteComponent() {
           )}
         </>
       )}
-
-      <KycRequiredDrawer open={kycDrawerOpen} onOpenChange={setKycDrawerOpen} />
 
       {/* Conflict drawer: the key already exists in BRE-B */}
       <Drawer

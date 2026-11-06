@@ -15,7 +15,17 @@ const ICONS: Record<Exclude<KycGateState, 'allowed'>, typeof ShieldCheck> = {
 };
 
 /** Renders `children` only once the user's KYC is approved. */
-export function RequireKyc({ children }: { children: ReactNode }) {
+export function RequireKyc({
+  children,
+  onBack,
+  variant = 'default',
+}: {
+  children: ReactNode;
+  /** Back button target. Defaults to home. */
+  onBack?: () => void;
+  /** `brebKey` swaps the not-started copy for key registration. */
+  variant?: 'default' | 'brebKey';
+}) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, refreshUser } = useAuth();
@@ -36,6 +46,10 @@ export function RequireKyc({ children }: { children: ReactNode }) {
   }
 
   const Icon = ICONS[state];
+  const copyKey =
+    variant === 'brebKey' && state === 'not_started'
+      ? 'kycGate.brebKey'
+      : `kycGate.${state}`;
 
   const handleAction = async () => {
     if (state !== 'unconfirmed') {
@@ -53,17 +67,17 @@ export function RequireKyc({ children }: { children: ReactNode }) {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center gap-2">
-        <BackButton onClick={() => void navigate({ to: '/' })} />
+        <BackButton onClick={onBack ?? (() => void navigate({ to: '/' }))} />
       </div>
       <section className="flex flex-col items-center gap-3 rounded-3xl border border-border/75 bg-card/85 px-6 py-10 text-center">
         <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-primary/25 bg-primary/[0.06]">
           <Icon className="h-5 w-5 text-primary" />
         </div>
         <p className="text-base font-semibold text-foreground">
-          {t(`kycGate.${state}.title`)}
+          {t(`${copyKey}.title`)}
         </p>
         <p className="text-sm text-muted-foreground">
-          {t(`kycGate.${state}.description`)}
+          {t(`${copyKey}.description`)}
         </p>
         <Button
           className="mt-2 h-11 w-full rounded-xl text-sm font-medium"

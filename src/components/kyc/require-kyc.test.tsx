@@ -71,6 +71,53 @@ describe('RequireKyc', () => {
     expect(screen.getByText('Reintentar verificación')).toBeInTheDocument();
   });
 
+  test('renders the flow once the re-read status comes back approved', () => {
+    kycStatus = 'not_started';
+    const { rerender } = renderGate();
+    expect(screen.queryByText('flow content')).not.toBeInTheDocument();
+
+    kycStatus = 'approved';
+    rerender(
+      <RequireKyc>
+        <p>flow content</p>
+      </RequireKyc>,
+    );
+
+    expect(screen.getByText('flow content')).toBeInTheDocument();
+  });
+
+  test('the brebKey variant asks to verify for key registration', () => {
+    kycStatus = 'not_started';
+    render(
+      <RequireKyc variant="brebKey">
+        <p>flow content</p>
+      </RequireKyc>,
+    );
+
+    expect(
+      screen.getByText('Verifica tu identidad para registrar tu llave'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Verificar identidad')).toBeInTheDocument();
+  });
+
+  test('the back button uses onBack when given, home otherwise', () => {
+    kycStatus = 'not_started';
+    const onBack = vi.fn();
+    const { unmount } = render(
+      <RequireKyc onBack={onBack}>
+        <p>flow content</p>
+      </RequireKyc>,
+    );
+    fireEvent.click(screen.getByText('Volver'));
+    expect(onBack).toHaveBeenCalledTimes(1);
+    expect(navigate).not.toHaveBeenCalled();
+    unmount();
+
+    renderGate();
+    fireEvent.click(screen.getByText('Volver'));
+    expect(navigate).toHaveBeenCalledWith({ to: '/' });
+  });
+
   test('an unconfirmed status retries the lookup instead of opening verification', async () => {
     kycStatus = undefined;
     renderGate();

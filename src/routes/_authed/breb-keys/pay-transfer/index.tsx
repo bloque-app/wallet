@@ -59,8 +59,10 @@ export const Route = createFileRoute('/_authed/breb-keys/pay-transfer/')({
 });
 
 function GatedRouteComponent() {
+  const { from } = Route.useSearch();
+  const { history } = useRouter();
   return (
-    <RequireKyc>
+    <RequireKyc onBack={() => history.push(from)}>
       <RouteComponent />
     </RequireKyc>
   );
