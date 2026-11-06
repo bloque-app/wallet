@@ -973,12 +973,12 @@
     },
     "in_review": {
       "title": "Your verification is under review",
-      "description": "You'll be able to move money as soon as your verification is approved.",
+      "description": "You'll be able to continue as soon as your verification is approved.",
       "cta": "View status"
     },
     "rejected": {
       "title": "We couldn't verify your identity",
-      "description": "Your verification wasn't approved. Try again to be able to move money.",
+      "description": "Your verification wasn't approved. Try again to continue.",
       "cta": "Retry verification"
     },
     "unconfirmed": {
