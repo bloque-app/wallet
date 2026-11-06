@@ -1,6 +1,5 @@
 'use client';
 
-import { ArrowLeft } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
@@ -18,17 +17,11 @@ export interface UsBankAccountData {
 interface UsBankStepProps {
   form: UsBankAccountData;
   onFormChange: (value: UsBankAccountData) => void;
-  onBack: () => void;
   onNext: () => void;
 }
 
 /** Destination US bank details for an RTP payout — mirrors `TopUpBankStep`'s shape. */
-export function UsBankStep({
-  form,
-  onFormChange,
-  onBack,
-  onNext,
-}: UsBankStepProps) {
+export function UsBankStep({ form, onFormChange, onNext }: UsBankStepProps) {
   const { t } = useTranslation();
 
   const isValid =
@@ -46,15 +39,6 @@ export function UsBankStep({
 
   return (
     <div className="flex flex-col gap-5">
-      <button
-        type="button"
-        onClick={onBack}
-        className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {t('common.back')}
-      </button>
-
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
           <Label className="text-sm font-medium text-foreground">
