@@ -17,9 +17,13 @@ import type { VerificationStatus } from '~/domain/kyc/types';
  *
  * So: only when we positively know they are unverified. This also suppresses
  * the banner flash on first paint, before the status has resolved.
+ *
+ * Only for a verification already started (in review or rejected). Someone who
+ * never started is asked to verify when they first try to move money (see
+ * `RequireKyc`), not from the home screen.
  */
 export function shouldShowKycBanner(
   kycStatus: VerificationStatus | undefined,
 ): boolean {
-  return kycStatus !== undefined && kycStatus !== 'approved';
+  return kycStatus === 'awaiting_verification' || kycStatus === 'rejected';
 }

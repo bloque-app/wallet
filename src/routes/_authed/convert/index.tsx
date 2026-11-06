@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { ComingSoonScreen } from '~/components/coming-soon';
 import { CurrencyFlag, isFlagCurrency } from '~/components/currency-flag';
+import { RequireKyc } from '~/components/kyc/require-kyc';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
@@ -87,8 +88,16 @@ function CurrencyOption({ currency }: { currency: Asset }) {
 }
 
 export const Route = createFileRoute('/_authed/convert/')({
-  component: CONVERT_ENABLED ? RouteComponent : ConvertComingSoon,
+  component: CONVERT_ENABLED ? GatedRouteComponent : ConvertComingSoon,
 });
+
+function GatedRouteComponent() {
+  return (
+    <RequireKyc>
+      <RouteComponent />
+    </RequireKyc>
+  );
+}
 
 function ConvertComingSoon() {
   const { t } = useTranslation();

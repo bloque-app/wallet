@@ -960,5 +960,27 @@
     "title": "Necesitas un bolsillo",
     "description": "Crea un bolsillo para poder recargar, enviar dinero, usar BRE-B y crear tarjetas.",
     "loadError": "No pudimos cargar tus bolsillos."
+  },
+  "kycGate": {
+    "not_started": {
+      "title": "Verifica tu identidad para mover dinero",
+      "description": "Antes de tu primer movimiento necesitamos verificar tu identidad. Solo toma unos minutos.",
+      "cta": "Verificar identidad"
+    },
+    "in_review": {
+      "title": "Tu verificación está en revisión",
+      "description": "Podrás mover dinero apenas aprobemos tu verificación.",
+      "cta": "Ver estado"
+    },
+    "rejected": {
+      "title": "No pudimos verificar tu identidad",
+      "description": "Tu verificación no fue aprobada. Inténtalo de nuevo para poder mover dinero.",
+      "cta": "Reintentar verificación"
+    },
+    "unconfirmed": {
+      "title": "No pudimos confirmar tu verificación",
+      "description": "Revisa tu conexión e inténtalo de nuevo.",
+      "cta": "Reintentar"
+    }
   }
 }
