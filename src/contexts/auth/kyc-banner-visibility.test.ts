@@ -14,8 +14,11 @@ describe('shouldShowKycBanner', () => {
     expect(shouldShowKycBanner(undefined)).toBe(false);
   });
 
-  it('shows for every status we positively know is unverified', () => {
-    expect(shouldShowKycBanner('not_started')).toBe(true);
+  it('does not push a user who never started verification', () => {
+    expect(shouldShowKycBanner('not_started')).toBe(false);
+  });
+
+  it('shows for a verification already in review or rejected', () => {
     expect(shouldShowKycBanner('awaiting_verification')).toBe(true);
     expect(shouldShowKycBanner('rejected')).toBe(true);
   });

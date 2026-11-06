@@ -960,5 +960,27 @@
     "title": "You need a pocket",
     "description": "Create a pocket to top up, send money, use BRE-B and create cards.",
     "loadError": "We couldn't load your pockets."
+  },
+  "kycGate": {
+    "not_started": {
+      "title": "Verify your identity to move money",
+      "description": "Before your first transaction we need to verify your identity. It only takes a few minutes.",
+      "cta": "Verify identity"
+    },
+    "in_review": {
+      "title": "Your verification is under review",
+      "description": "You'll be able to move money as soon as your verification is approved.",
+      "cta": "View status"
+    },
+    "rejected": {
+      "title": "We couldn't verify your identity",
+      "description": "Your verification wasn't approved. Try again to be able to move money.",
+      "cta": "Retry verification"
+    },
+    "unconfirmed": {
+      "title": "We couldn't confirm your verification",
+      "description": "Check your connection and try again.",
+      "cta": "Retry"
+    }
   }
 }
