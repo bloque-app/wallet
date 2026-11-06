@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { AccountCarousel } from '~/components/account/account-carousel';
+import { PageHeader } from '~/components/page-header';
 import { TopUpErrorStep } from '~/components/result/error-step';
 import { ExecutionOutcomeStep } from '~/components/result/execution-outcome-step';
 import {
@@ -284,9 +285,18 @@ function RouteComponent() {
 
   return (
     <div className="flex flex-col gap-5">
-      <h1 className="text-2xl font-bold tracking-[-0.025em] text-foreground">
-        {t('send.colombianBanks.title')}
-      </h1>
+      <PageHeader
+        title={t('send.colombianBanks.title')}
+        onBack={
+          step === 'amount'
+            ? () => void navigate({ to: '/send' })
+            : step === 'bank'
+              ? () => setStep('amount')
+              : step === 'confirm'
+                ? () => setStep('bank')
+                : undefined
+        }
+      />
 
       <div className="flex items-center gap-2 rounded-2xl border border-border/75 bg-card/80 p-3">
         {[
@@ -353,7 +363,6 @@ function RouteComponent() {
           rateSummary={rateSummary}
           onAmountChange={setAmount}
           onNext={handleAmountNext}
-          onBack={() => void navigate({ to: '/send' })}
           label={t('send.colombianBanks.amountStep.label')}
           minAmount={MIN_TRANSFER_AMOUNT}
           minAmountLabel={t('send.colombianBanks.amountStep.minAmount')}
@@ -373,7 +382,6 @@ function RouteComponent() {
           rateError={rateError}
           onBankChange={setSelectedBank}
           onFormChange={setBankForm}
-          onBack={() => setStep('amount')}
           onNext={() => setStep('confirm')}
         />
       )}
@@ -391,7 +399,6 @@ function RouteComponent() {
           identificationLabel={bankForm.bankAccountHolderIdentificationType}
           identificationValue={bankForm.bankAccountHolderIdentificationValue}
           isSubmitting={createOrderMutation.isPending}
-          onBack={() => setStep('bank')}
           onConfirm={handleConfirm}
         />
       )}

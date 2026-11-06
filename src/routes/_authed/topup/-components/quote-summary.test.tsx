@@ -16,14 +16,13 @@ describe('quoted transfer summaries', () => {
         rateSummary={{ amountDst: 4_500, ratio: 1 }}
         onAmountChange={vi.fn()}
         onNext={vi.fn()}
-        onBack={vi.fn()}
         showTotalToDebit={false}
         disclaimer={null}
         arrivalLabel={null}
       />,
     );
 
-    expect(screen.getByText('Volver')).toBeInTheDocument();
+    expect(screen.queryByText('Volver')).not.toBeInTheDocument();
     expect(screen.getByText('$ 5.500')).toBeInTheDocument();
     expect(screen.getByText('$ 4.500')).toBeInTheDocument();
     expect(screen.getByText('1 COPM = 1.0000 COP')).toBeInTheDocument();
@@ -42,7 +41,6 @@ describe('quoted transfer summaries', () => {
         bankAccountHolderName="Vanesa"
         identificationLabel="CC"
         identificationValue="100"
-        onBack={vi.fn()}
         onConfirm={vi.fn()}
       />,
     );

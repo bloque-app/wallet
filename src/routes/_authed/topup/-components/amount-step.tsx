@@ -1,6 +1,5 @@
 'use client';
 
-import { ArrowLeft } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
@@ -18,7 +17,6 @@ interface AmountStepProps {
   } | null;
   onAmountChange: (v: string) => void;
   onNext: () => void;
-  onBack?: () => void;
   label?: string;
   minAmount?: number;
   minAmountLabel?: string;
@@ -42,7 +40,6 @@ export function TopUpAmountStep({
   rateSummary,
   onAmountChange,
   onNext,
-  onBack,
   label,
   minAmount = DEFAULT_MIN_AMOUNT,
   minAmountLabel,
@@ -58,16 +55,6 @@ export function TopUpAmountStep({
 
   return (
     <div className="flex flex-col gap-5">
-      {onBack && (
-        <button
-          type="button"
-          onClick={onBack}
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          {t('common.back')}
-        </button>
-      )}
       <div className="flex flex-col gap-2">
         <Label
           htmlFor="topup-amount"
