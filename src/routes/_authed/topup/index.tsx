@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { AccountCarousel } from '~/components/account/account-carousel';
 import { ComingSoonBadge } from '~/components/coming-soon';
 import { FeeInfo } from '~/components/fee-info';
+import { RequireKyc } from '~/components/kyc/require-kyc';
 import { PageHeader } from '~/components/page-header';
 import { TopUpErrorStep } from '~/components/result/error-step';
 import { ExecutionOutcomeStep } from '~/components/result/execution-outcome-step';
@@ -270,7 +271,7 @@ function RouteComponent() {
     t('topup.stepConfirm'),
   ];
 
-  return (
+  const content = (
     <div className="flex flex-col gap-5">
       <PageHeader
         title={step === 'method' ? t('topup.title') : t('topup.pseTitle')}
@@ -802,4 +803,9 @@ function RouteComponent() {
       {step === 'error' && <TopUpErrorStep onRetry={() => setStep('amount')} />}
     </div>
   );
+
+  // The method list and its fees stay open; the PSE flow asks for KYC.
+  if (step === 'method') return content;
+
+  return <RequireKyc onBack={() => setStep('method')}>{content}</RequireKyc>;
 }
