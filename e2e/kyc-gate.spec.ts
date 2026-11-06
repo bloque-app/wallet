@@ -18,21 +18,58 @@ test.describe('a user who never started verification', () => {
     await expect(page.getByText('Completa tu verificación')).toHaveCount(0);
   });
 
-  for (const path of ['/send', '/topup']) {
-    test(`is stopped before ${path} and verifies only on demand`, async ({
-      page,
-    }) => {
-      await page.goto(path);
+  test('sees the send methods and their fees, and is stopped inside one', async ({
+    page,
+  }) => {
+    await page.goto('/send');
+    const method = page.getByRole('link', { name: /Bancos ACH/ });
+    await expect(method).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText(/0\.4%/).first()).toBeVisible();
+    await expect(page.getByText(MOVE_MONEY_GATE)).toHaveCount(0);
 
-      await expect(page.getByText(MOVE_MONEY_GATE)).toBeVisible({
-        timeout: 15_000,
-      });
-      await expect(page).not.toHaveURL(/\/kyc/);
-
-      await page.getByRole('button', { name: 'Verificar identidad' }).click();
-      await expect(page).toHaveURL(/\/kyc/);
+    await method.click();
+    await expect(page.getByText(MOVE_MONEY_GATE)).toBeVisible({
+      timeout: 15_000,
     });
-  }
+    await expect(page).not.toHaveURL(/\/kyc/);
+
+    await page.getByRole('button', { name: 'Volver' }).click();
+    await expect(page).toHaveURL(/\/send$/);
+  });
+
+  test('a deep link to a send method is stopped and verifies only on demand', async ({
+    page,
+  }) => {
+    await page.goto('/send/colombian-banks');
+
+    await expect(page.getByText(MOVE_MONEY_GATE)).toBeVisible({
+      timeout: 15_000,
+    });
+    await page.getByRole('button', { name: 'Verificar identidad' }).click();
+    await expect(page).toHaveURL(/\/kyc/);
+  });
+
+  test('sees the top-up methods, and the PSE flow is stopped', async ({
+    page,
+  }) => {
+    await page.goto('/topup');
+    await expect(page.getByText('Recargar saldo')).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page.getByText(MOVE_MONEY_GATE)).toHaveCount(0);
+
+    await page
+      .getByRole('button', { name: /^Bancos/ })
+      .first()
+      .click();
+    await expect(page.getByText(MOVE_MONEY_GATE)).toBeVisible({
+      timeout: 15_000,
+    });
+
+    await page.getByRole('button', { name: 'Volver' }).click();
+    await expect(page.getByText('Recargar saldo')).toBeVisible();
+    await expect(page.getByText(MOVE_MONEY_GATE)).toHaveCount(0);
+  });
 
   test('can browse BRE-B and see where to receive without verifying', async ({
     page,
@@ -79,7 +116,7 @@ test('a verification in review keeps the flow closed with its own copy', async (
     kycWireStatus: 'awaiting_compliance_verification',
   });
 
-  await page.goto('/send');
+  await page.goto('/send/colombian-banks');
 
   await expect(page.getByText('Tu verificación está en revisión')).toBeVisible({
     timeout: 15_000,
