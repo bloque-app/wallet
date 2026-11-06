@@ -973,12 +973,12 @@
     },
     "in_review": {
       "title": "Tu verificación está en revisión",
-      "description": "Podrás mover dinero apenas aprobemos tu verificación.",
+      "description": "Podrás continuar apenas aprobemos tu verificación.",
       "cta": "Ver estado"
     },
     "rejected": {
       "title": "No pudimos verificar tu identidad",
-      "description": "Tu verificación no fue aprobada. Inténtalo de nuevo para poder mover dinero.",
+      "description": "Tu verificación no fue aprobada. Inténtalo de nuevo para continuar.",
       "cta": "Reintentar verificación"
     },
     "unconfirmed": {

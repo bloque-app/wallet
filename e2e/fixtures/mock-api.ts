@@ -252,10 +252,15 @@ export type MockApiOptions = {
   missingRequirements?: string[];
   /**
    * Wire status for `GET /api/compliance/:urn`, the call `deriveKycStatus`
-   * makes. Omit to leave it unmocked (404), which the repository reads as
-   * "no verification started".
+   * makes. Defaults to `approved`, so suites for money-moving flows are not
+   * stopped by the KYC gate. `not_started` leaves it unmocked (404), which the
+   * repository reads as "no verification started".
    */
-  kycWireStatus?: 'awaiting_compliance_verification' | 'approved' | 'rejected';
+  kycWireStatus?:
+    | 'not_started'
+    | 'awaiting_compliance_verification'
+    | 'approved'
+    | 'rejected';
   /** Wire accounts served by `GET /api/accounts`. Defaults to `mockAccounts`. */
   accounts?: unknown[];
 };
@@ -284,6 +289,7 @@ export async function installMockApi(
   options: MockApiOptions = {},
 ): Promise<MockApiHandle> {
   let missingRequirements = options.missingRequirements ?? [];
+  const kycWireStatus = options.kycWireStatus ?? 'approved';
   const deletedAccounts = new Set<string>();
   const drainedLedgers = new Set<string>();
   const transfers: unknown[] = [];
@@ -304,14 +310,14 @@ export async function installMockApi(
     }
 
     if (
-      options.kycWireStatus &&
+      kycWireStatus !== 'not_started' &&
       pathname.startsWith('/api/compliance/') &&
       !pathname.endsWith('/tier-status') &&
       !pathname.endsWith('/documents')
     ) {
       return route.fulfill({
         json: {
-          status: options.kycWireStatus,
+          status: kycWireStatus,
           verification_url: 'https://verify.example.com/session',
           completed_at: null,
         },

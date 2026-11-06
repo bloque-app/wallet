@@ -4,10 +4,10 @@ import { RequireKyc } from '~/components/kyc/require-kyc';
 
 export const Route = createFileRoute('/_authed/topup')({
   component: () => (
-    <RequireKyc>
-      <RequireVirtualAccount>
+    <RequireVirtualAccount>
+      <RequireKyc>
         <Outlet />
-      </RequireVirtualAccount>
-    </RequireKyc>
+      </RequireKyc>
+    </RequireVirtualAccount>
   ),
 });
