@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { AccountCarousel } from '~/components/account/account-carousel';
 import { ComingSoonScreen } from '~/components/coming-soon';
+import { PageHeader } from '~/components/page-header';
 import { TopUpErrorStep } from '~/components/result/error-step';
 import { ExecutionOutcomeStep } from '~/components/result/execution-outcome-step';
 import { US_RAILS_ENABLED } from '~/config/features';
@@ -514,9 +515,18 @@ function RouteComponent() {
 
   return (
     <div className="flex flex-col gap-5">
-      <h1 className="text-2xl font-bold tracking-[-0.025em] text-foreground">
-        {t('topup.usBanks.title')}
-      </h1>
+      <PageHeader
+        title={t('topup.usBanks.title')}
+        onBack={
+          step === 'link'
+            ? () => void navigate({ to: '/topup' })
+            : step === 'amount'
+              ? () => setStep('link')
+              : step === 'confirm'
+                ? () => setStep('amount')
+                : undefined
+        }
+      />
 
       {step !== 'link' && (
         <div className="flex items-center gap-2 rounded-2xl border border-border/75 bg-card/80 p-3">
@@ -610,7 +620,6 @@ function RouteComponent() {
           rateError={rateError}
           rateSummary={rateSummary}
           onAmountChange={setAmount}
-          onBack={() => setStep('link')}
           onNext={handleAmountNext}
         />
       )}
@@ -635,7 +644,6 @@ function RouteComponent() {
             },
           ]}
           isSubmitting={createOrderMutation.isPending}
-          onBack={() => setStep('amount')}
           onConfirm={submitOrder}
         />
       )}
