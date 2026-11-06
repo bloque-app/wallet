@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { AccountCarousel } from '~/components/account/account-carousel';
 import { BackButton } from '~/components/back-button';
+import { RequireKyc } from '~/components/kyc/require-kyc';
 import { TopUpErrorStep } from '~/components/result/error-step';
 import { ExecutionOutcomeStep } from '~/components/result/execution-outcome-step';
 import {
@@ -54,8 +55,16 @@ export const Route = createFileRoute('/_authed/breb-keys/pay-transfer/')({
   validateSearch: (search: Record<string, unknown>) => ({
     from: (search.from as string | undefined) ?? '/breb-keys',
   }),
-  component: RouteComponent,
+  component: GatedRouteComponent,
 });
+
+function GatedRouteComponent() {
+  return (
+    <RequireKyc>
+      <RouteComponent />
+    </RequireKyc>
+  );
+}
 
 function RouteComponent() {
   const { t } = useTranslation();
