@@ -100,9 +100,20 @@ export function useVerification() {
 
   const isBootstrapping =
     verificationQuery.isPending ||
-    (shouldStartVerification && (startVerification.isPending || !url));
+    (shouldStartVerification &&
+      !startVerification.isError &&
+      (startVerification.isPending || !url));
 
   const isError = hasUnhandledGetError || startVerification.isError;
+
+  const retry = () => {
+    if (!urn) return;
+    if (startVerification.isError) {
+      startVerification.mutate(urn);
+      return;
+    }
+    void verificationQuery.refetch();
+  };
 
   return {
     /** The verification the user should complete, once one exists. */
@@ -116,5 +127,7 @@ export function useVerification() {
     /** True if either call failed for a reason other than "not started yet". */
     isError,
     hasUser: !!urn,
+    /** Re-runs whichever call failed. */
+    retry,
   };
 }
