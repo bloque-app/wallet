@@ -962,6 +962,10 @@
     "loadError": "We couldn't load your pockets."
   },
   "kycGate": {
+    "brebKey": {
+      "title": "Verify your identity to register your key",
+      "description": "To register a BRE-B key we need to verify your identity. It only takes a few minutes."
+    },
     "not_started": {
       "title": "Verify your identity to move money",
       "description": "Before your first transaction we need to verify your identity. It only takes a few minutes.",
