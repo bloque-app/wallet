@@ -962,6 +962,10 @@
     "loadError": "No pudimos cargar tus bolsillos."
   },
   "kycGate": {
+    "brebKey": {
+      "title": "Verifica tu identidad para registrar tu llave",
+      "description": "Para registrar una llave BRE-B necesitamos verificar tu identidad. Solo toma unos minutos."
+    },
     "not_started": {
       "title": "Verifica tu identidad para mover dinero",
       "description": "Antes de tu primer movimiento necesitamos verificar tu identidad. Solo toma unos minutos.",
