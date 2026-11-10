@@ -30,4 +30,24 @@ describe('MovementRow', () => {
 
     expect(screen.queryByText(/Comisión/)).not.toBeInTheDocument();
   });
+
+  test('hides a zero fee in the list', () => {
+    render(
+      <MovementRow
+        movement={{ ...MOVEMENT, fee: { amount: 0, asset: 'COP' } }}
+      />,
+    );
+
+    expect(screen.queryByText(/Comisión/)).not.toBeInTheDocument();
+  });
+
+  test('a fee in another currency shows its code', () => {
+    render(
+      <MovementRow
+        movement={{ ...MOVEMENT, fee: { amount: 0.1, asset: 'USD' } }}
+      />,
+    );
+
+    expect(screen.getByText(/Comisión/)).toHaveTextContent(/0[.,]10\s*USD/);
+  });
 });

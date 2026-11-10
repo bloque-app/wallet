@@ -674,4 +674,28 @@ describe('bloqueAccountsRepository — order fee', () => {
     expect(plain).not.toHaveProperty('fee');
     expect(plain).not.toHaveProperty('orderSig');
   });
+
+  test('a malformed fee is dropped, the movement still maps', async () => {
+    movementsMock.mockImplementationOnce(() =>
+      Promise.resolve({
+        data: [
+          { ...base, fee: { amount: 50100 }, orderSig: 'sig-1' },
+          { ...base, reference: 'ref-null', fee: null, orderSig: 42 },
+        ],
+        pageSize: 2,
+        hasMore: false,
+      }),
+    );
+
+    const page = await bloqueAccountsRepository.getMovements({
+      urn: 'urn:to',
+      asset: 'COPM/2',
+    });
+
+    expect(page.movements).toHaveLength(2);
+    expect(page.movements[0]).not.toHaveProperty('fee');
+    expect(page.movements[0]?.orderSig).toBe('sig-1');
+    expect(page.movements[1]).not.toHaveProperty('fee');
+    expect(page.movements[1]).not.toHaveProperty('orderSig');
+  });
 });
