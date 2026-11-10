@@ -82,11 +82,11 @@ export function MovementDetailDrawer({
                   },
                 ]
               : []),
-            ...(current.fee > 0
+            ...(current.fee
               ? [
                   {
                     label: t('movements.detail.fee'),
-                    value: formatAmount(current.asset, current.fee),
+                    value: formatAmount(current.fee.asset, current.fee.amount),
                   },
                 ]
               : []),
@@ -164,10 +164,10 @@ export function MovementDetailDrawer({
                   value={movement.counterparty}
                 />
               )}
-              {movement.fee > 0 && (
+              {movement.fee && (
                 <DetailRow
                   label={t('movements.detail.fee')}
-                  value={formatAmount(movement.asset, movement.fee)}
+                  value={formatAmount(movement.fee.asset, movement.fee.amount)}
                 />
               )}
               <DetailRow

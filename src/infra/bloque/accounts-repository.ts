@@ -233,6 +233,24 @@ async function getBalance(urn: string): Promise<AssetBalance[]> {
   return mapBalances(balance as unknown as RawBalance);
 }
 
+/**
+ * The order fields the API returns on movements and transactions (`fee`,
+ * `orderSig`). Read structurally so this compiles on SDK versions that
+ * predate them; on those they are simply absent.
+ */
+type OrderFields = {
+  fee?: { amount: string; asset: string };
+  orderSig?: string;
+};
+
+function orderFieldsOf(record: object): OrderFields {
+  const { fee, orderSig } = record as OrderFields;
+  return {
+    ...(fee && { fee: { amount: fee.amount, asset: fee.asset } }),
+    ...(typeof orderSig === 'string' && { orderSig }),
+  };
+}
+
 async function getMovements(
   params: GetMovementsParams,
 ): Promise<MovementsPage> {
@@ -261,6 +279,7 @@ async function getMovements(
           : movement.toAccountId,
       railName: movement.railName,
       type: movement.type,
+      ...orderFieldsOf(movement),
     })),
     hasMore: result.hasMore,
     next: result.next,
@@ -293,6 +312,7 @@ function mapTransaction(transaction: RawTransaction): MovementEntry {
     railName: transaction.railName,
     type: transaction.type,
     details: transaction.details,
+    ...orderFieldsOf(transaction),
   };
 }
 

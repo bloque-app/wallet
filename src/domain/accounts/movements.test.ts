@@ -1,7 +1,11 @@
 import { describe, expect, test } from 'bun:test';
 import type { Movement } from '~/lib/formatters';
 import type { RawMovementFields } from './movements';
-import { dedupeGlobalMovements, toDomainMovement } from './movements';
+import {
+  dedupeGlobalMovements,
+  settleOrderFees,
+  toDomainMovement,
+} from './movements';
 
 function raw(overrides: Partial<RawMovementFields>): RawMovementFields {
   return {
@@ -237,7 +241,6 @@ describe('dedupeGlobalMovements', () => {
       type: 'topup' as const,
       asset: 'COP' as const,
       amount: 94.65,
-      fee: 0,
       status: 'completed' as const,
       createdAt: '2026-07-26T16:51:00.000Z',
       reference,
@@ -290,5 +293,118 @@ describe('dedupeGlobalMovements', () => {
 
   test('an empty list stays empty', () => {
     expect(dedupeGlobalMovements([])).toEqual([]);
+  });
+});
+
+describe('toDomainMovement — order fee', () => {
+  test('maps fee to human units in its own asset, and keeps orderSig', () => {
+    const movement = toDomainMovement(
+      raw({
+        asset: 'DUSD/6',
+        amount: '10000000',
+        fee: { amount: '50100', asset: 'COPM/2' },
+        orderSig: 'sig-1',
+      }),
+    );
+
+    expect(movement?.fee).toEqual({ amount: 501, asset: 'COP' });
+    expect(movement?.orderSig).toBe('sig-1');
+  });
+
+  test('no fee or orderSig when the API did not record them', () => {
+    const movement = toDomainMovement(raw({}));
+
+    expect(movement).not.toHaveProperty('fee');
+    expect(movement).not.toHaveProperty('orderSig');
+  });
+
+  test('drops a fee in an asset the app does not render', () => {
+    const movement = toDomainMovement(
+      raw({ fee: { amount: '1', asset: 'XYZ/2' } }),
+    );
+
+    expect(movement).not.toHaveProperty('fee');
+  });
+
+  test('a failed direction is a failed outgoing movement', () => {
+    const movement = toDomainMovement(
+      raw({ direction: 'failed', status: 'pending' }),
+    );
+
+    expect(movement?.status).toBe('failed');
+    expect(movement?.direction).toBe('outgoing');
+  });
+});
+
+describe('settleOrderFees', () => {
+  const FEE = { amount: 501, asset: 'COP' as const };
+
+  function movement(
+    reference: string,
+    overrides: Partial<Movement> = {},
+  ): Movement {
+    return {
+      id: `${reference}-id`,
+      type: 'withdraw',
+      asset: 'COP',
+      amount: 50_000,
+      status: 'completed',
+      createdAt: '2026-11-05T00:00:00.000Z',
+      reference,
+      direction: 'outgoing',
+      ...overrides,
+    };
+  }
+
+  test('shows an order fee once, on its first movement', () => {
+    const result = settleOrderFees([
+      movement('a', { orderSig: 'sig-1', fee: FEE }),
+      movement('b', { orderSig: 'sig-1', fee: FEE }),
+    ]);
+
+    expect(result[0]?.fee).toEqual(FEE);
+    expect(result[1]).not.toHaveProperty('fee');
+  });
+
+  test('keeps the fee of a pending order', () => {
+    const result = settleOrderFees([
+      movement('a', { orderSig: 'sig-1', fee: FEE, status: 'pending' }),
+    ]);
+
+    expect(result[0]?.fee).toEqual(FEE);
+  });
+
+  test('drops the fee on a failed movement', () => {
+    const result = settleOrderFees([
+      movement('a', { orderSig: 'sig-1', fee: FEE, status: 'failed' }),
+    ]);
+
+    expect(result[0]).not.toHaveProperty('fee');
+  });
+
+  test('drops the fee of a refunded order', () => {
+    const result = settleOrderFees([
+      movement('refund', { orderSig: 'sig-1', direction: 'incoming' }),
+      movement('a', { orderSig: 'sig-1', fee: FEE }),
+    ]);
+
+    expect(result.some((m) => m.fee)).toBe(false);
+  });
+
+  test('keeps a fee recorded without an order', () => {
+    const result = settleOrderFees([movement('a', { fee: FEE })]);
+
+    expect(result[0]?.fee).toEqual(FEE);
+  });
+
+  test('orders do not affect each other', () => {
+    const result = settleOrderFees([
+      movement('a', { orderSig: 'sig-1', fee: FEE }),
+      movement('b', { orderSig: 'sig-2', fee: FEE }),
+      movement('c', { orderSig: 'sig-2' }),
+    ]);
+
+    expect(result[0]?.fee).toEqual(FEE);
+    expect(result[1]).not.toHaveProperty('fee');
   });
 });
