@@ -78,4 +78,47 @@ describe('MovementDetailDrawer', () => {
     );
     expect(feeRow?.value).toMatch(/501/);
   });
+
+  test('shows what the recipient receives, on screen and in the receipt', async () => {
+    render(
+      <MovementDetailDrawer
+        movement={{
+          ...MOVEMENT,
+          amount: 1000,
+          fee: { amount: 501, asset: 'COP' },
+        }}
+        open
+        onClose={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText('Se recibe')).toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /Descargar comprobante/ }),
+    );
+
+    await waitFor(() => expect(downloadReceipt).toHaveBeenCalledTimes(1));
+    const [content] = downloadReceipt.mock.calls[0] ?? [];
+    const receivedRow = content.rows.find(
+      (row: { label: string }) => row.label === 'Se recibe',
+    );
+    expect(receivedRow?.value).toMatch(/499/);
+  });
+
+  test('no received row when the fee is in another asset', () => {
+    render(
+      <MovementDetailDrawer
+        movement={{
+          ...MOVEMENT,
+          asset: 'USD',
+          fee: { amount: 501, asset: 'COP' },
+        }}
+        open
+        onClose={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByText('Se recibe')).not.toBeInTheDocument();
+  });
 });

@@ -3,6 +3,7 @@ import type { Movement } from '~/lib/formatters';
 import type { RawMovementFields } from './movements';
 import {
   dedupeGlobalMovements,
+  receivedAmount,
   settleOrderFees,
   toDomainMovement,
 } from './movements';
@@ -406,5 +407,38 @@ describe('settleOrderFees', () => {
 
     expect(result[0]?.fee).toEqual(FEE);
     expect(result[1]).not.toHaveProperty('fee');
+  });
+});
+
+describe('receivedAmount', () => {
+  const SENT: Movement = {
+    id: 'm-1',
+    type: 'withdraw',
+    asset: 'COP',
+    amount: 1000,
+    status: 'completed',
+    createdAt: '2026-11-10T17:47:46.307Z',
+    reference: 'ref-1',
+    direction: 'outgoing',
+    fee: { amount: 501, asset: 'COP' },
+  };
+
+  test('an outgoing movement delivers its amount minus the fee', () => {
+    expect(receivedAmount(SENT)).toBe(499);
+  });
+
+  test('nothing to subtract without a fee', () => {
+    const { fee: _fee, ...noFee } = SENT;
+    expect(receivedAmount(noFee)).toBeUndefined();
+  });
+
+  test('not across assets', () => {
+    expect(
+      receivedAmount({ ...SENT, asset: 'USD', amount: 10 }),
+    ).toBeUndefined();
+  });
+
+  test('not on incoming movements: their amount is already what arrived', () => {
+    expect(receivedAmount({ ...SENT, direction: 'incoming' })).toBeUndefined();
   });
 });
