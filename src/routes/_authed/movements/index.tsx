@@ -7,7 +7,7 @@ import { MovementRow } from '~/components/movement-row';
 import { Input } from '~/components/ui/input';
 import {
   dedupeGlobalMovements,
-  settleOrderFees,
+  dropUnchargedFees,
 } from '~/domain/accounts/movements';
 import { useGlobalTransactionsInfinite } from '~/hooks/accounts/use-global-transactions-infinite';
 import type { Asset, Movement } from '~/lib/formatters';
@@ -57,7 +57,7 @@ function RouteComponent() {
       // Deduped across ALL accumulated pages, not per-page — a ledger
       // with N linked accounts reports the same transfer N times, and
       // those duplicate rows aren't guaranteed to land on the same page.
-      settleOrderFees(
+      dropUnchargedFees(
         dedupeGlobalMovements(
           (data?.pages ?? []).flatMap((page) => page.movements ?? []),
         ),

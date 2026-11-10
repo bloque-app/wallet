@@ -121,4 +121,34 @@ describe('MovementDetailDrawer', () => {
 
     expect(screen.queryByText('Se recibe')).not.toBeInTheDocument();
   });
+
+  test('incoming: shows the original amount, on screen and in the receipt', async () => {
+    render(
+      <MovementDetailDrawer
+        movement={{
+          ...MOVEMENT,
+          type: 'topup',
+          direction: 'incoming',
+          amount: 499,
+          fee: { amount: 501, asset: 'COP' },
+        }}
+        open
+        onClose={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText('Monto original')).toBeInTheDocument();
+    expect(screen.queryByText('Se recibe')).not.toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /Descargar comprobante/ }),
+    );
+
+    await waitFor(() => expect(downloadReceipt).toHaveBeenCalledTimes(1));
+    const [content] = downloadReceipt.mock.calls[0] ?? [];
+    const row = content.rows.find(
+      (r: { label: string }) => r.label === 'Monto original',
+    );
+    expect(row?.value).toMatch(/1\.000/);
+  });
 });

@@ -15,7 +15,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '~/components/ui/drawer';
-import { receivedAmount } from '~/domain/accounts/movements';
+import { feeCounterpart } from '~/domain/accounts/movements';
 import {
   formatAmount,
   formatFullDate,
@@ -58,7 +58,7 @@ export function MovementDetailDrawer({
 
   async function handleDownload(current: Movement) {
     setIsDownloading(true);
-    const received = receivedAmount(current);
+    const counterpart = feeCounterpart(current);
     try {
       const sign = current.direction === 'incoming' ? '+' : '-';
       await downloadReceipt(
@@ -92,11 +92,11 @@ export function MovementDetailDrawer({
                   },
                 ]
               : []),
-            ...(received !== undefined
+            ...(counterpart
               ? [
                   {
-                    label: t('movements.detail.received'),
-                    value: formatAmount(current.asset, received),
+                    label: t(`movements.detail.${counterpart.kind}`),
+                    value: formatAmount(current.asset, counterpart.amount),
                   },
                 ]
               : []),
@@ -119,7 +119,7 @@ export function MovementDetailDrawer({
     }
   }
 
-  const received = movement ? receivedAmount(movement) : undefined;
+  const counterpart = movement ? feeCounterpart(movement) : undefined;
 
   return (
     <Drawer open={open} onOpenChange={(o) => !o && onClose()}>
@@ -182,10 +182,10 @@ export function MovementDetailDrawer({
                   value={formatAmount(movement.fee.asset, movement.fee.amount)}
                 />
               )}
-              {received !== undefined && (
+              {counterpart && (
                 <DetailRow
-                  label={t('movements.detail.received')}
-                  value={formatAmount(movement.asset, received)}
+                  label={t(`movements.detail.${counterpart.kind}`)}
+                  value={formatAmount(movement.asset, counterpart.amount)}
                 />
               )}
               <DetailRow
