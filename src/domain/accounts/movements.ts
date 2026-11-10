@@ -286,3 +286,16 @@ export function dedupeGlobalMovements(movements: Movement[]): Movement[] {
 
   return result;
 }
+
+/**
+ * What the other side receives from an outgoing movement: its amount minus
+ * the order fee, as in the summary shown before paying. Only when the fee is
+ * in the movement's own asset; across assets the amount and the fee cannot
+ * be subtracted. `undefined` when there is no fee to subtract.
+ */
+export function receivedAmount(movement: Movement): number | undefined {
+  const { fee } = movement;
+  if (!fee || movement.direction !== 'outgoing') return undefined;
+  if (fee.asset !== movement.asset) return undefined;
+  return Math.max(movement.amount - fee.amount, 0);
+}

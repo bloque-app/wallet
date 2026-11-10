@@ -15,6 +15,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '~/components/ui/drawer';
+import { receivedAmount } from '~/domain/accounts/movements';
 import {
   formatAmount,
   formatFullDate,
@@ -57,6 +58,7 @@ export function MovementDetailDrawer({
 
   async function handleDownload(current: Movement) {
     setIsDownloading(true);
+    const received = receivedAmount(current);
     try {
       const sign = current.direction === 'incoming' ? '+' : '-';
       await downloadReceipt(
@@ -90,6 +92,14 @@ export function MovementDetailDrawer({
                   },
                 ]
               : []),
+            ...(received !== undefined
+              ? [
+                  {
+                    label: t('movements.detail.received'),
+                    value: formatAmount(current.asset, received),
+                  },
+                ]
+              : []),
             {
               label: t('movements.detail.reference'),
               value: current.reference,
@@ -108,6 +118,8 @@ export function MovementDetailDrawer({
       setIsDownloading(false);
     }
   }
+
+  const received = movement ? receivedAmount(movement) : undefined;
 
   return (
     <Drawer open={open} onOpenChange={(o) => !o && onClose()}>
@@ -168,6 +180,12 @@ export function MovementDetailDrawer({
                 <DetailRow
                   label={t('movements.detail.fee')}
                   value={formatAmount(movement.fee.asset, movement.fee.amount)}
+                />
+              )}
+              {received !== undefined && (
+                <DetailRow
+                  label={t('movements.detail.received')}
+                  value={formatAmount(movement.asset, received)}
                 />
               )}
               <DetailRow
