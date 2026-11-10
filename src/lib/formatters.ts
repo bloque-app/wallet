@@ -90,6 +90,21 @@ export function formatAmount(asset: Asset, amount: number): string {
   }
 }
 
+/** Like `formatAmount`, but COP keeps its cents: fee arithmetic must add
+ * up on screen. */
+export function formatAmountPrecise(asset: Asset, amount: number): string {
+  return asset === 'COP'
+    ? formatCOPPrecise(amount)
+    : formatAmount(asset, amount);
+}
+
+/** An order fee, always with its currency code: it can be in a different
+ * currency than the movement it is shown on. */
+export function formatFee(fee: { asset: Asset; amount: number }): string {
+  const formatted = formatAmountPrecise(fee.asset, fee.amount);
+  return fee.asset === 'KSM' ? formatted : `${formatted} ${fee.asset}`;
+}
+
 export function formatAmountWithCode(asset: Asset, amount: number): string {
   const formatted = formatAmount(asset, amount);
   return asset === 'KSM' ? formatted : `${formatted} ${asset}`;

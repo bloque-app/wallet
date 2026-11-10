@@ -182,6 +182,15 @@ function toType(
   return raw.direction === 'in' ? 'topup' : 'withdraw';
 }
 
+/** The order fee in human units, or `undefined` when it is in an asset
+ * this app does not render. */
+function toFee(rawFee: RawMovementFields['fee']): MovementFee | undefined {
+  if (!rawFee) return undefined;
+  const asset = toAsset(rawFee.asset);
+  if (!asset) return undefined;
+  return { amount: toAmount(rawFee.amount, rawFee.asset), asset };
+}
+
 /**
  * Converts a raw movement/transaction record into the app's domain
  * `Movement` shape, or `null` when `asset` isn't one of the assets this
@@ -193,13 +202,6 @@ function toType(
  * (notably the domain `MovementEntry` type, which is `RawMovementFields`
  * plus an `id` field) — callers don't need to build a fresh object.
  */
-function toFee(rawFee: RawMovementFields['fee']): MovementFee | undefined {
-  if (!rawFee) return undefined;
-  const asset = toAsset(rawFee.asset);
-  if (!asset) return undefined;
-  return { amount: toAmount(rawFee.amount, rawFee.asset), asset };
-}
-
 export function toDomainMovement(raw: RawMovementFields): Movement | null {
   const asset = toAsset(raw.asset);
   if (!asset) return null;
@@ -280,6 +282,8 @@ export function dedupeGlobalMovements(movements: Movement[]): Movement[] {
   return result;
 }
 
+export type FeeCounterpart = { kind: 'received' | 'original'; amount: number };
+
 /**
  * The other side of the fee, as the summary before paying shows it:
  * - outgoing: what the recipient receives, the amount minus the fee;
@@ -288,8 +292,6 @@ export function dedupeGlobalMovements(movements: Movement[]): Movement[] {
  * Only when the fee is in the movement's own asset; across assets the two
  * cannot be added or subtracted. `undefined` when there is no fee.
  */
-export type FeeCounterpart = { kind: 'received' | 'original'; amount: number };
-
 export function feeCounterpart(movement: Movement): FeeCounterpart | undefined {
   const { fee } = movement;
   if (!fee || fee.asset !== movement.asset) return undefined;

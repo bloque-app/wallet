@@ -236,7 +236,8 @@ async function getBalance(urn: string): Promise<AssetBalance[]> {
 /**
  * The order fields the API returns on movements and transactions (`fee`,
  * `orderSig`). Read structurally so this compiles on SDK versions that
- * predate them; on those they are simply absent.
+ * predate them; on those they are simply absent. A malformed value is
+ * dropped rather than allowed to break the list.
  */
 type OrderFields = {
   fee?: { amount: string; asset: string };
@@ -244,9 +245,14 @@ type OrderFields = {
 };
 
 function orderFieldsOf(record: object): OrderFields {
-  const { fee, orderSig } = record as OrderFields;
+  const { fee, orderSig } = record as { fee?: unknown; orderSig?: unknown };
+  const { amount, asset } = (fee ?? {}) as {
+    amount?: unknown;
+    asset?: unknown;
+  };
   return {
-    ...(fee && { fee: { amount: fee.amount, asset: fee.asset } }),
+    ...(typeof amount === 'string' &&
+      typeof asset === 'string' && { fee: { amount, asset } }),
     ...(typeof orderSig === 'string' && { orderSig }),
   };
 }

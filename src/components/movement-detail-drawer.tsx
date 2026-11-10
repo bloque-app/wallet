@@ -18,6 +18,8 @@ import {
 import { feeCounterpart } from '~/domain/accounts/movements';
 import {
   formatAmount,
+  formatAmountPrecise,
+  formatFee,
   formatFullDate,
   getMovementLabel,
   type Movement,
@@ -88,7 +90,7 @@ export function MovementDetailDrawer({
               ? [
                   {
                     label: t('movements.detail.fee'),
-                    value: formatAmount(current.fee.asset, current.fee.amount),
+                    value: formatFee(current.fee),
                   },
                 ]
               : []),
@@ -96,7 +98,10 @@ export function MovementDetailDrawer({
               ? [
                   {
                     label: t(`movements.detail.${counterpart.kind}`),
-                    value: formatAmount(current.asset, counterpart.amount),
+                    value: formatAmountPrecise(
+                      current.asset,
+                      counterpart.amount,
+                    ),
                   },
                 ]
               : []),
@@ -179,13 +184,16 @@ export function MovementDetailDrawer({
               {movement.fee && (
                 <DetailRow
                   label={t('movements.detail.fee')}
-                  value={formatAmount(movement.fee.asset, movement.fee.amount)}
+                  value={formatFee(movement.fee)}
                 />
               )}
               {counterpart && (
                 <DetailRow
                   label={t(`movements.detail.${counterpart.kind}`)}
-                  value={formatAmount(movement.asset, counterpart.amount)}
+                  value={formatAmountPrecise(
+                    movement.asset,
+                    counterpart.amount,
+                  )}
                 />
               )}
               <DetailRow

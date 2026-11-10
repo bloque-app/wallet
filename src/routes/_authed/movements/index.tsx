@@ -35,6 +35,9 @@ function RouteComponent() {
   );
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [search, setSearch] = useState('');
+  // With a direction filter on, an order's refund (the other direction) is
+  // not fetched, so `dropUnchargedFees` cannot see it and the refunded
+  // movement keeps its fee. Known limitation: such refunds are rare.
   const direction =
     activeFilter === 'incoming'
       ? 'in'
