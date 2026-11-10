@@ -749,6 +749,7 @@
       "date": "Date",
       "counterparty": "Counterparty",
       "fee": "Fee",
+      "received": "Recipient receives",
       "reference": "Reference",
       "copyReferenceAria": "Copy reference",
       "downloadReceipt": "Download receipt",

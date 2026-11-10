@@ -749,6 +749,7 @@
       "date": "Fecha",
       "counterparty": "Contraparte",
       "fee": "Comisión",
+      "received": "Se recibe",
       "reference": "Referencia",
       "copyReferenceAria": "Copiar referencia",
       "downloadReceipt": "Descargar comprobante",
