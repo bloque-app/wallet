@@ -750,6 +750,7 @@
       "counterparty": "Counterparty",
       "fee": "Fee",
       "received": "Recipient receives",
+      "original": "Original amount",
       "reference": "Reference",
       "copyReferenceAria": "Copy reference",
       "downloadReceipt": "Download receipt",

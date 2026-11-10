@@ -222,36 +222,29 @@ export function toDomainMovement(raw: RawMovementFields): Movement | null {
 }
 
 /**
- * Keeps each order's fee on one movement of the list, the first one.
+ * Drops the fee of an order that did not go through: on failed movements
+ * (failed direction, or status cancelled/failed/ignored) and on every
+ * movement of an order that has a refund — a movement with the same
+ * `orderSig` and no `fee`. Every other movement keeps its order's fee.
  *
- * Every movement of the operation that charged an order carries the same
- * `fee`, so showing it on each would count it several times. It is dropped
- * entirely when the order did not go through: on failed movements (failed
- * direction, or status cancelled/failed/ignored) and when the order has a
- * refund — a movement with the same `orderSig` and no `fee`.
+ * For display only: each movement of the order shows the fee. Adding fees
+ * up is a different job (count once per `orderSig`).
  *
  * Apply it to the whole list being shown (after `dedupeGlobalMovements` on
- * the global feed): an order's movements can land on different pages.
+ * the global feed): an order's refund can land on another page.
  */
-export function settleOrderFees(movements: Movement[]): Movement[] {
+export function dropUnchargedFees(movements: Movement[]): Movement[] {
   const refunded = new Set<string>();
   for (const movement of movements) {
     if (movement.orderSig && !movement.fee) refunded.add(movement.orderSig);
   }
 
-  const shown = new Set<string>();
   return movements.map((movement) => {
     if (!movement.fee) return movement;
-
-    const order = movement.orderSig;
-    const keep =
+    const charged =
       movement.status !== 'failed' &&
-      !(order && refunded.has(order)) &&
-      !(order && shown.has(order));
-    if (keep) {
-      if (order) shown.add(order);
-      return movement;
-    }
+      !(movement.orderSig && refunded.has(movement.orderSig));
+    if (charged) return movement;
 
     const { fee: _dropped, ...rest } = movement;
     return rest;
@@ -288,14 +281,19 @@ export function dedupeGlobalMovements(movements: Movement[]): Movement[] {
 }
 
 /**
- * What the other side receives from an outgoing movement: its amount minus
- * the order fee, as in the summary shown before paying. Only when the fee is
- * in the movement's own asset; across assets the amount and the fee cannot
- * be subtracted. `undefined` when there is no fee to subtract.
+ * The other side of the fee, as the summary before paying shows it:
+ * - outgoing: what the recipient receives, the amount minus the fee;
+ * - incoming: the original amount, the net amount that arrived plus the fee.
+ *
+ * Only when the fee is in the movement's own asset; across assets the two
+ * cannot be added or subtracted. `undefined` when there is no fee.
  */
-export function receivedAmount(movement: Movement): number | undefined {
+export type FeeCounterpart = { kind: 'received' | 'original'; amount: number };
+
+export function feeCounterpart(movement: Movement): FeeCounterpart | undefined {
   const { fee } = movement;
-  if (!fee || movement.direction !== 'outgoing') return undefined;
-  if (fee.asset !== movement.asset) return undefined;
-  return Math.max(movement.amount - fee.amount, 0);
+  if (!fee || fee.asset !== movement.asset) return undefined;
+  return movement.direction === 'outgoing'
+    ? { kind: 'received', amount: Math.max(movement.amount - fee.amount, 0) }
+    : { kind: 'original', amount: movement.amount + fee.amount };
 }

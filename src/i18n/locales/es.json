@@ -750,6 +750,7 @@
       "counterparty": "Contraparte",
       "fee": "Comisión",
       "received": "Se recibe",
+      "original": "Monto original",
       "reference": "Referencia",
       "copyReferenceAria": "Copiar referencia",
       "downloadReceipt": "Descargar comprobante",

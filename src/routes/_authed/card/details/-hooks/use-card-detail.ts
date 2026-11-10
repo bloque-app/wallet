@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { settleOrderFees } from '~/domain/accounts/movements';
+import { dropUnchargedFees } from '~/domain/accounts/movements';
 import type { CardProduct } from '~/domain/accounts/types';
 import { useAccounts } from '~/hooks/accounts/use-accounts';
 import { useCardMovements } from '~/hooks/accounts/use-card-movements';
@@ -123,7 +123,9 @@ export function useCardDetail(urn: string) {
 
   const movements = useMemo(
     () =>
-      settleOrderFees((txPages?.pages ?? []).flatMap((page) => page.movements)),
+      dropUnchargedFees(
+        (txPages?.pages ?? []).flatMap((page) => page.movements),
+      ),
     [txPages?.pages],
   );
 
