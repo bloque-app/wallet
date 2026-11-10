@@ -3,8 +3,8 @@ import type { Movement } from '~/lib/formatters';
 import type { RawMovementFields } from './movements';
 import {
   dedupeGlobalMovements,
-  receivedAmount,
-  settleOrderFees,
+  dropUnchargedFees,
+  feeCounterpart,
   toDomainMovement,
 } from './movements';
 
@@ -337,7 +337,7 @@ describe('toDomainMovement — order fee', () => {
   });
 });
 
-describe('settleOrderFees', () => {
+describe('dropUnchargedFees', () => {
   const FEE = { amount: 501, asset: 'COP' as const };
 
   function movement(
@@ -357,18 +357,18 @@ describe('settleOrderFees', () => {
     };
   }
 
-  test('shows an order fee once, on its first movement', () => {
-    const result = settleOrderFees([
-      movement('a', { orderSig: 'sig-1', fee: FEE }),
-      movement('b', { orderSig: 'sig-1', fee: FEE }),
+  test('every movement of a charged order shows its fee', () => {
+    const result = dropUnchargedFees([
+      movement('out', { orderSig: 'sig-1', fee: FEE }),
+      movement('in', { orderSig: 'sig-1', fee: FEE, direction: 'incoming' }),
     ]);
 
     expect(result[0]?.fee).toEqual(FEE);
-    expect(result[1]).not.toHaveProperty('fee');
+    expect(result[1]?.fee).toEqual(FEE);
   });
 
   test('keeps the fee of a pending order', () => {
-    const result = settleOrderFees([
+    const result = dropUnchargedFees([
       movement('a', { orderSig: 'sig-1', fee: FEE, status: 'pending' }),
     ]);
 
@@ -376,7 +376,7 @@ describe('settleOrderFees', () => {
   });
 
   test('drops the fee on a failed movement', () => {
-    const result = settleOrderFees([
+    const result = dropUnchargedFees([
       movement('a', { orderSig: 'sig-1', fee: FEE, status: 'failed' }),
     ]);
 
@@ -384,7 +384,7 @@ describe('settleOrderFees', () => {
   });
 
   test('drops the fee of a refunded order', () => {
-    const result = settleOrderFees([
+    const result = dropUnchargedFees([
       movement('refund', { orderSig: 'sig-1', direction: 'incoming' }),
       movement('a', { orderSig: 'sig-1', fee: FEE }),
     ]);
@@ -393,13 +393,13 @@ describe('settleOrderFees', () => {
   });
 
   test('keeps a fee recorded without an order', () => {
-    const result = settleOrderFees([movement('a', { fee: FEE })]);
+    const result = dropUnchargedFees([movement('a', { fee: FEE })]);
 
     expect(result[0]?.fee).toEqual(FEE);
   });
 
-  test('orders do not affect each other', () => {
-    const result = settleOrderFees([
+  test('a refund only affects its own order', () => {
+    const result = dropUnchargedFees([
       movement('a', { orderSig: 'sig-1', fee: FEE }),
       movement('b', { orderSig: 'sig-2', fee: FEE }),
       movement('c', { orderSig: 'sig-2' }),
@@ -410,7 +410,7 @@ describe('settleOrderFees', () => {
   });
 });
 
-describe('receivedAmount', () => {
+describe('feeCounterpart', () => {
   const SENT: Movement = {
     id: 'm-1',
     type: 'withdraw',
@@ -423,22 +423,29 @@ describe('receivedAmount', () => {
     fee: { amount: 501, asset: 'COP' },
   };
 
-  test('an outgoing movement delivers its amount minus the fee', () => {
-    expect(receivedAmount(SENT)).toBe(499);
+  test('outgoing: the recipient receives the amount minus the fee', () => {
+    expect(feeCounterpart(SENT)).toEqual({ kind: 'received', amount: 499 });
   });
 
-  test('nothing to subtract without a fee', () => {
+  test('incoming: the original amount is the net amount plus the fee', () => {
+    expect(
+      feeCounterpart({
+        ...SENT,
+        type: 'topup',
+        amount: 499,
+        direction: 'incoming',
+      }),
+    ).toEqual({ kind: 'original', amount: 1000 });
+  });
+
+  test('nothing without a fee', () => {
     const { fee: _fee, ...noFee } = SENT;
-    expect(receivedAmount(noFee)).toBeUndefined();
+    expect(feeCounterpart(noFee)).toBeUndefined();
   });
 
   test('not across assets', () => {
     expect(
-      receivedAmount({ ...SENT, asset: 'USD', amount: 10 }),
+      feeCounterpart({ ...SENT, asset: 'USD', amount: 10 }),
     ).toBeUndefined();
-  });
-
-  test('not on incoming movements: their amount is already what arrived', () => {
-    expect(receivedAmount({ ...SENT, direction: 'incoming' })).toBeUndefined();
   });
 });

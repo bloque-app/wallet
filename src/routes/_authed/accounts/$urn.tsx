@@ -44,7 +44,7 @@ import {
   isPendingLinkUsBank,
   visibleProducts,
 } from '~/domain/accounts/external-us-bank';
-import { settleOrderFees } from '~/domain/accounts/movements';
+import { dropUnchargedFees } from '~/domain/accounts/movements';
 import {
   isDefaultPocket,
   pocketDeletionBalances,
@@ -238,7 +238,7 @@ function RouteComponent() {
 
   const movements = useMemo(
     () =>
-      settleOrderFees(
+      dropUnchargedFees(
         (movementsQuery.data?.pages ?? []).flatMap((page) => page.movements),
       ),
     [movementsQuery.data?.pages],

@@ -18,7 +18,7 @@ export interface Movement {
   type: MovementType;
   asset: Asset;
   amount: number;
-  /** Shown once per order; see `settleOrderFees`. */
+  /** Shown once per order; see `dropUnchargedFees`. */
   fee?: MovementFee;
   /** The order that produced the movement, when recorded. */
   orderSig?: string;

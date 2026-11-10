@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import {
   dedupeGlobalMovements,
-  settleOrderFees,
+  dropUnchargedFees,
   toDomainMovement,
 } from '~/domain/accounts/movements';
 import { bloqueAccountsRepository } from '~/infra/bloque/accounts-repository';
@@ -29,7 +29,7 @@ export function useGlobalTransactions(limit: number, asset?: string) {
       });
 
       return {
-        movements: settleOrderFees(
+        movements: dropUnchargedFees(
           dedupeGlobalMovements(
             page.movements
               .map(toDomainMovement)
