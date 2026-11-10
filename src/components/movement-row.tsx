@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import {
   formatAmount,
   formatDate,
+  formatFee,
   getMovementLabel,
   type Movement,
 } from '~/lib/formatters';
@@ -71,10 +72,9 @@ export function MovementRow({ movement, onClick }: MovementRowProps) {
           {movement.direction === 'incoming' ? '+' : '-'}
           {formatAmount(movement.asset, movement.amount)}
         </p>
-        {movement.fee && (
+        {movement.fee && movement.fee.amount > 0 && (
           <p className="text-xs tabular-nums text-muted-foreground">
-            {t('movements.detail.fee')}{' '}
-            {formatAmount(movement.fee.asset, movement.fee.amount)}
+            {t('movements.detail.fee')} {formatFee(movement.fee)}
           </p>
         )}
         <StatusPill status={movement.status} />

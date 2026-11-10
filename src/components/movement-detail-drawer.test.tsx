@@ -151,4 +151,21 @@ describe('MovementDetailDrawer', () => {
     );
     expect(row?.value).toMatch(/1\.000/);
   });
+
+  test('COP cents add up: fee and received keep their cents', () => {
+    render(
+      <MovementDetailDrawer
+        movement={{
+          ...MOVEMENT,
+          amount: 1000,
+          fee: { amount: 0.5, asset: 'COP' },
+        }}
+        open
+        onClose={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText(/0,50\s*COP/)).toBeInTheDocument();
+    expect(screen.getByText(/999,50/)).toBeInTheDocument();
+  });
 });

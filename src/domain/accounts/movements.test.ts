@@ -398,6 +398,14 @@ describe('dropUnchargedFees', () => {
     expect(result[0]?.fee).toEqual(FEE);
   });
 
+  test('a refund outside the list cannot drop the fee (direction-filtered views)', () => {
+    const result = dropUnchargedFees([
+      movement('a', { orderSig: 'sig-1', fee: FEE }),
+    ]);
+
+    expect(result[0]?.fee).toEqual(FEE);
+  });
+
   test('a refund only affects its own order', () => {
     const result = dropUnchargedFees([
       movement('a', { orderSig: 'sig-1', fee: FEE }),
