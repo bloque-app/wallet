@@ -16,6 +16,7 @@
 import type {
   Asset,
   Movement,
+  MovementFee,
   MovementStatus,
   MovementType,
 } from '~/lib/formatters';
@@ -31,7 +32,7 @@ export type RawMovementFields = {
   amount: string;
   status: string;
   type?: string;
-  direction: 'in' | 'out';
+  direction: 'in' | 'out' | 'failed';
   railName?: string;
   reference: string;
   createdAt: string;
@@ -42,6 +43,10 @@ export type RawMovementFields = {
    * when it's missing; the per-account feed's `type` is always present, so
    * this stays unused there. */
   details?: Record<string, unknown>;
+  /** What the customer paid on the order, in the asset the order delivers. */
+  fee?: { amount: string; asset: string };
+  /** The order that produced the movement, also on its refund. */
+  orderSig?: string;
 };
 
 const ASSET_KEY_MAP: Record<string, Asset> = {
@@ -188,22 +193,69 @@ function toType(
  * (notably the domain `MovementEntry` type, which is `RawMovementFields`
  * plus an `id` field) — callers don't need to build a fresh object.
  */
+function toFee(rawFee: RawMovementFields['fee']): MovementFee | undefined {
+  if (!rawFee) return undefined;
+  const asset = toAsset(rawFee.asset);
+  if (!asset) return undefined;
+  return { amount: toAmount(rawFee.amount, rawFee.asset), asset };
+}
+
 export function toDomainMovement(raw: RawMovementFields): Movement | null {
   const asset = toAsset(raw.asset);
   if (!asset) return null;
 
+  const fee = toFee(raw.fee);
   return {
     id: [raw.reference, raw.createdAt, raw.amount].join('-'),
     type: toType(raw),
     asset,
     amount: toAmount(raw.amount, raw.asset),
-    fee: 0,
-    status: toStatus(raw.status),
+    ...(fee && { fee }),
+    ...(raw.orderSig && { orderSig: raw.orderSig }),
+    // A `failed` direction is a held movement whose operation never settled.
+    status: raw.direction === 'failed' ? 'failed' : toStatus(raw.status),
     createdAt: raw.createdAt,
     reference: raw.reference,
     counterparty: raw.counterparty,
     direction: raw.direction === 'in' ? 'incoming' : 'outgoing',
   };
+}
+
+/**
+ * Keeps each order's fee on one movement of the list, the first one.
+ *
+ * Every movement of the operation that charged an order carries the same
+ * `fee`, so showing it on each would count it several times. It is dropped
+ * entirely when the order did not go through: on failed movements (failed
+ * direction, or status cancelled/failed/ignored) and when the order has a
+ * refund — a movement with the same `orderSig` and no `fee`.
+ *
+ * Apply it to the whole list being shown (after `dedupeGlobalMovements` on
+ * the global feed): an order's movements can land on different pages.
+ */
+export function settleOrderFees(movements: Movement[]): Movement[] {
+  const refunded = new Set<string>();
+  for (const movement of movements) {
+    if (movement.orderSig && !movement.fee) refunded.add(movement.orderSig);
+  }
+
+  const shown = new Set<string>();
+  return movements.map((movement) => {
+    if (!movement.fee) return movement;
+
+    const order = movement.orderSig;
+    const keep =
+      movement.status !== 'failed' &&
+      !(order && refunded.has(order)) &&
+      !(order && shown.has(order));
+    if (keep) {
+      if (order) shown.add(order);
+      return movement;
+    }
+
+    const { fee: _dropped, ...rest } = movement;
+    return rest;
+  });
 }
 
 /**

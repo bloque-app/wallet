@@ -12,7 +12,9 @@ export type MovementEntry = {
   id: string;
   asset: string;
   amount: string;
-  direction: 'in' | 'out';
+  /** `failed`: a held movement whose operation ended cancelled, failed or
+   * ignored. */
+  direction: 'in' | 'out' | 'failed';
   status: string;
   createdAt: string;
   reference: string;
@@ -24,6 +26,11 @@ export type MovementEntry = {
    * from when it's missing. Per-account `Movement.type` is always present,
    * so this stays unset there. */
   details?: Record<string, unknown>;
+  /** What the customer paid on the order, in the asset the order
+   * delivers. Absent means not recorded, not free. */
+  fee?: { amount: string; asset: string };
+  /** The order that produced the movement, also on its refund. */
+  orderSig?: string;
 };
 
 export type MovementsPage = {

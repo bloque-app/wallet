@@ -7,12 +7,21 @@ export type MovementStatus = 'completed' | 'pending' | 'failed';
 export type Asset = 'COP' | 'USD' | 'MXN' | 'BRL' | 'KSM';
 export type CardStatus = 'none' | 'active' | 'frozen';
 
+/** What the customer paid on the order a movement belongs to. */
+export interface MovementFee {
+  amount: number;
+  asset: Asset;
+}
+
 export interface Movement {
   id: string;
   type: MovementType;
   asset: Asset;
   amount: number;
-  fee: number;
+  /** Shown once per order; see `settleOrderFees`. */
+  fee?: MovementFee;
+  /** The order that produced the movement, when recorded. */
+  orderSig?: string;
   status: MovementStatus;
   createdAt: string;
   reference: string;
