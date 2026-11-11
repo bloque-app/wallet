@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useTranslation } from 'react-i18next';
 import { BackButton } from '~/components/back-button';
 import { US_RAILS_ENABLED } from '~/config/features';
-import { formatCOP, formatUSD } from '~/lib/formatters';
+import { formatAmountWithCode, formatCOP, formatUSD } from '~/lib/formatters';
 
 export const Route = createFileRoute('/_authed/legal/fees/')({
   component: RouteComponent,
@@ -86,12 +86,12 @@ function RouteComponent() {
     {
       method: t('send.options.spei.title'),
       direction: sendLabel,
-      fee: '2.5% + 2%',
+      fee: `2% + ${formatAmountWithCode('MXN', 5)}`,
     },
     {
       method: t('topup.methods.spei.title'),
       direction: topupLabel,
-      fee: '2.5% + 2%',
+      fee: `2% + ${formatAmountWithCode('MXN', 5)}`,
     },
   ];
 

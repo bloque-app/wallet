@@ -43,6 +43,37 @@ describe('quoteRate', () => {
     expect(quoteRate(spei, '10000')?.netAmount).toBe(93);
   });
 
+  test('chained percentages show the effective rate, not their sum', () => {
+    const pix: Rate = {
+      ...spei,
+      fromAsset: 'BRL/2',
+      toAsset: 'BRLB/2',
+      fee: {
+        formula: 'amount_src * (1 - provider_pct) * (1 - bloque_pct)',
+        components: [
+          {
+            name: 'provider_pct',
+            type: 'percentage',
+            value: '1/50',
+            percentage: '2',
+          },
+          {
+            name: 'bloque_pct',
+            type: 'percentage',
+            value: '1/50',
+            percentage: '2',
+          },
+        ],
+      },
+    };
+    expect(quoteRate(pix, '100000')).toEqual({
+      netAmount: 960.4,
+      totalFee: 39.6,
+      feePercentage: 3.96,
+      feeFixed: 0,
+    });
+  });
+
   test('returns null when the fees exceed the amount', () => {
     expect(quoteRate(spei, '100')).toBeNull();
   });

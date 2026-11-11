@@ -46,7 +46,7 @@ export type RateQuote = {
   netAmount: number;
   /** Total fee, in the destination asset. */
   totalFee: number;
-  /** Sum of the percentage fees, e.g. `2` for 2%. */
+  /** Effective percentage fee, fixed fees aside, e.g. `2` for 2%. */
   feePercentage: number;
   /** Sum of the fixed fees, in the source asset, e.g. `5` for 5 MXN. */
   feeFixed: number;

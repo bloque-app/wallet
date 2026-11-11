@@ -5,7 +5,7 @@ import { BackButton } from '~/components/back-button';
 import { ComingSoonBadge } from '~/components/coming-soon';
 import { FeeInfo } from '~/components/fee-info';
 import { US_RAILS_ENABLED } from '~/config/features';
-import { formatCOP, formatUSD } from '~/lib/formatters';
+import { formatAmountWithCode, formatCOP, formatUSD } from '~/lib/formatters';
 import { cn } from '~/lib/utils';
 
 export const Route = createFileRoute('/_authed/send/')({
@@ -73,7 +73,7 @@ function RouteComponent() {
       to: '/send/spei',
       icon: Building2,
       group: 'mexico',
-      fee: '2.5% + 2%',
+      fee: `2% + ${formatAmountWithCode('MXN', 5)}`,
       hasFeeInfo: true,
     },
     {
