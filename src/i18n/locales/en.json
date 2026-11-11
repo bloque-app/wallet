@@ -473,6 +473,8 @@
     "orderId": "Order: {{orderId}}",
     "amount": "Amount ({{currency}})",
     "fee": "Fee",
+    "feeBreakdown": "Fee ({{breakdown}})",
+    "noRateForAmount": "No rate is available for this amount. Try a different amount.",
     "noEligibleAccount": "We couldn't find a pocket compatible with this currency.",
     "payerName": "Payer's full name",
     "documentType": "Document type",

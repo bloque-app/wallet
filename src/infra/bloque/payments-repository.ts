@@ -82,6 +82,12 @@ async function findRates(params: FindRatesParams): Promise<Rate[]> {
         name: component.name,
         type: component.type,
         value: component.value,
+        ...(component.percentage !== undefined && {
+          percentage: String(component.percentage),
+        }),
+        ...(component.amount !== undefined && {
+          amount: String(component.amount),
+        }),
       })),
     },
   }));
