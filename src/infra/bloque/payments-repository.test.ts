@@ -159,6 +159,50 @@ describe('bloquePaymentsRepository.findRates', () => {
     // Internal-only SDK fields must not leak into the domain type.
     expect(rates[0]).not.toHaveProperty('maker');
   });
+
+  test('keeps percentage and fixed amount on fee components', async () => {
+    findRatesMock.mockImplementationOnce(() =>
+      Promise.resolve({
+        rates: [
+          {
+            sig: 'sig-spei',
+            edge: ['MXN/2', 'MXNB/2'],
+            fee: {
+              at: 1,
+              value: '97995',
+              formula: 'amount_src * (1 - pct) - fixed',
+              components: [
+                {
+                  at: 1,
+                  name: 'pct',
+                  type: 'percentage',
+                  value: '1/50',
+                  percentage: 2,
+                },
+                { at: 1, name: 'fixed', type: 'fixed', value: '5', amount: 5 },
+              ],
+            },
+            until: '2026-01-01T00:05:00.000Z',
+            rate: [100000, 97995],
+            ratio: 0.97995,
+          },
+        ],
+      }),
+    );
+
+    const [rate] = await bloquePaymentsRepository.findRates({
+      fromAsset: 'MXN/2',
+      toAsset: 'MXNB/2',
+      fromMediums: ['spei'],
+      toMediums: ['kusama'],
+      amountSrc: '100000',
+    });
+
+    expect(rate?.fee?.components).toEqual([
+      { name: 'pct', type: 'percentage', value: '1/50', percentage: '2' },
+      { name: 'fixed', type: 'fixed', value: '5', amount: '5' },
+    ]);
+  });
 });
 
 describe('bloquePaymentsRepository order creation — execution outcome mapping', () => {
