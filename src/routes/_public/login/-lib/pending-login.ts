@@ -50,5 +50,10 @@ export function clearPendingLogin() {
 function isProfile(value: unknown): value is OnboardingProfile {
   if (!value || typeof value !== 'object') return false;
   const { firstName, lastName } = value as Partial<OnboardingProfile>;
-  return typeof firstName === 'string' && typeof lastName === 'string';
+  return (
+    typeof firstName === 'string' &&
+    typeof lastName === 'string' &&
+    firstName.trim() !== '' &&
+    lastName.trim() !== ''
+  );
 }

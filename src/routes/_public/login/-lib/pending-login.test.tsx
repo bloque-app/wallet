@@ -44,7 +44,7 @@ describe('pending login', () => {
         method: 'email',
         contact: 'a@b.co',
         resendAvailableAt: 1,
-        profile: { firstName: 1 },
+        profile: { firstName: '  ', lastName: 'Zapata' },
       }),
     );
     expect(readPendingLogin()?.profile).toBeUndefined();

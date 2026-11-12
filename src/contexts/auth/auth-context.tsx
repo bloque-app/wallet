@@ -15,6 +15,7 @@ import { apiFetch } from '~/lib/api-fetch';
 import { createBloqueSdk, resetBloque } from '~/lib/bloque';
 import { clearPendingApproval } from '~/lib/pending-approval';
 import { queryClient, SESSION_EXPIRED_EVENT } from '~/lib/query-client';
+import { clearPendingLogin } from '~/routes/_public/login/-lib/pending-login';
 import {
   isIdentityAlreadyExistsError,
   resolveAliasStatus,
@@ -219,12 +220,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await setAuthenticatedUser(me);
         return { status: 'authenticated' };
       } catch (error) {
-        pendingProfileOnboardingRef.current = null;
+        // Any other failure (a mistyped code, a timeout) keeps the profile,
+        // so the next code still signs up instead of signing in.
         if (pendingProfile && isIdentityAlreadyExistsError(error)) {
+          pendingProfileOnboardingRef.current = null;
           return { status: 'already_registered' };
         }
         if (!pendingProfile && isIdentityNotFoundError(error)) {
-          return { status: 'onboarding_required', method, alias };
+          return { status: 'onboarding_required' };
         }
         throw error;
       }
@@ -292,6 +295,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       queryClient.clear();
       localStorage.clear();
       clearPendingApproval();
+      clearPendingLogin();
+      pendingProfileOnboardingRef.current = null;
       // The memoized client holds the session that was just ended.
       resetBloque();
       signedInUrnRef.current = null;

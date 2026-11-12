@@ -32,14 +32,16 @@ function RouteComponent() {
 
   const [pendingLogin] = useState(() => {
     const restored = readPendingLogin();
-    if (restored?.profile) {
-      setPendingProfileOnboarding({
-        method: restored.method,
-        alias: restored.contact,
-        origin: WALLET_ORIGIN,
-        profile: restored.profile,
-      });
-    }
+    setPendingProfileOnboarding(
+      restored?.profile
+        ? {
+            method: restored.method,
+            alias: restored.contact,
+            origin: WALLET_ORIGIN,
+            profile: restored.profile,
+          }
+        : null,
+    );
     return restored;
   });
   const [step, setStep] = useState<'method' | 'otp' | 'onboarding'>(
@@ -140,6 +142,7 @@ function RouteComponent() {
             }}
             onAlreadyRegistered={() => {
               forgetProfile();
+              savePendingLogin({ method, contact, resendAvailableAt });
             }}
           />
         ) : (

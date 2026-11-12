@@ -109,4 +109,33 @@ describe('OTPVerify', () => {
     expect(sendOTP).toHaveBeenCalledWith('email', 'alice@example.com');
     expect(onResendAvailableAtChange).toHaveBeenCalled();
   });
+
+  test('says so when the new code for an existing account cannot be sent', async () => {
+    login.mockResolvedValueOnce({ status: 'already_registered' });
+    sendOTP.mockRejectedValueOnce(new Error('down'));
+    const onResendAvailableAtChange = vi.fn();
+    render(
+      <OTPVerify
+        method="email"
+        contact="alice@example.com"
+        resendAvailableAt={0}
+        redirectTo="/"
+        onResendAvailableAtChange={onResendAvailableAtChange}
+        onVerified={vi.fn()}
+        onBack={vi.fn()}
+        onOnboardingRequired={vi.fn()}
+        onAlreadyRegistered={vi.fn()}
+      />,
+    );
+
+    await userEvent.type(screen.getByRole('textbox'), '123456');
+
+    await waitFor(() =>
+      expect(
+        screen.getByText(/no pudimos enviarte un nuevo codigo/),
+      ).toBeTruthy(),
+    );
+    expect(onResendAvailableAtChange).not.toHaveBeenCalled();
+    expect(screen.getByText('Reenviar codigo')).toBeTruthy();
+  });
 });

@@ -85,16 +85,24 @@ export function OTPVerify({
       }
       if (result.status === 'already_registered') {
         onAlreadyRegistered();
-        await sendOTP(method, contact);
+        setOtp('');
+        setLastFailedOtp('');
+        setLoading(false);
+        try {
+          await sendOTP(method, contact);
+        } catch {
+          setResendTimer(0);
+          setError(
+            'Ya tienes una cuenta, pero no pudimos enviarte un nuevo codigo. Toca Reenviar codigo.',
+          );
+          return;
+        }
         const availableAt = Date.now() + 60_000;
         onResendAvailableAtChange(availableAt);
         setResendTimer(60);
-        setOtp('');
-        setLastFailedOtp('');
         setNotice(
           'Ya tienes una cuenta. Te enviamos un nuevo codigo para entrar.',
         );
-        setLoading(false);
         return;
       }
 

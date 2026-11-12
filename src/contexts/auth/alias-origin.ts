@@ -29,7 +29,7 @@ export async function resolveAliasStatus(
 
 /** Registration refused because the identity already exists on the origin. */
 export function isIdentityAlreadyExistsError(error: unknown): boolean {
-  return hasStatus(error, 409) || hasCode(error, 'E_IDENTITY_ALREADY_EXISTS');
+  return hasCode(error, 'E_IDENTITY_ALREADY_EXISTS');
 }
 
 function hasStatus(error: unknown, status: number): boolean {
