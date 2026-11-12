@@ -15,6 +15,7 @@ import { apiFetch } from '~/lib/api-fetch';
 import { createBloqueSdk, resetBloque } from '~/lib/bloque';
 import { clearPendingApproval } from '~/lib/pending-approval';
 import { queryClient, SESSION_EXPIRED_EVENT } from '~/lib/query-client';
+import { isAliasOfOrigin } from './alias-origin';
 import { deriveKycStatus } from './kyc-status';
 import { makeLatestWins } from './latest-wins';
 import { deriveTosStatus } from './tos-status';
@@ -146,8 +147,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const identitySdk = sdk as unknown as AliasLookupApi;
 
       try {
-        await identitySdk.identity.aliases.get(alias);
-        return { status: 'registered' };
+        const found = await identitySdk.identity.aliases.get(alias);
+        return isAliasOfOrigin(found, origin)
+          ? { status: 'registered' }
+          : { status: 'not_registered' };
       } catch (error) {
         if (isNotFoundError(error)) {
           return { status: 'not_registered' };
