@@ -235,16 +235,12 @@ async function getBalance(urn: string): Promise<AssetBalance[]> {
 
 /**
  * The order fields the API returns on movements and transactions (`fee`,
- * `orderSig`). Read structurally so this compiles on SDK versions that
- * predate them; on those they are simply absent. A malformed value is
- * dropped rather than allowed to break the list.
+ * `orderSig`), typed by the SDK. A malformed value is dropped rather than
+ * allowed to break the list.
  */
-type OrderFields = {
-  fee?: { amount: string; asset: string };
-  orderSig?: string;
-};
+type OrderFields = Pick<RawTransaction, 'fee' | 'orderSig'>;
 
-function orderFieldsOf(record: object): OrderFields {
+function orderFieldsOf(record: OrderFields): OrderFields {
   const { fee, orderSig } = record as { fee?: unknown; orderSig?: unknown };
   const { amount, asset } = (fee ?? {}) as {
     amount?: unknown;
@@ -293,7 +289,7 @@ async function getMovements(
 }
 
 /** `bloque.accounts.transactions()`'s param shape, properly typed by the
- * installed SDK (0.2.7) — no `as never` casts needed here. */
+ * installed SDK — no `as never` casts needed here. */
 type TransactionsParams = NonNullable<
   Parameters<typeof bloque.accounts.transactions>[0]
 >;
