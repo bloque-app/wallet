@@ -15,13 +15,6 @@ export type LoginMethod = 'email' | 'phone';
 export const WALLET_ORIGIN = '30m' as const;
 export type WalletOrigin = typeof WALLET_ORIGIN;
 
-export interface PendingOnboarding {
-  method: LoginMethod;
-  origin: WalletOrigin;
-  alias: string;
-  code: string;
-}
-
 export interface OnboardingProfile {
   firstName: string;
   lastName: string;
@@ -40,4 +33,7 @@ export type AliasCheckResult =
 
 export type LoginResult =
   | { status: 'authenticated' }
-  | { status: 'onboarding_required'; pending: PendingOnboarding };
+  /** Signed in with a code, but this origin has no identity: sign up first. */
+  | { status: 'onboarding_required'; method: LoginMethod; alias: string }
+  /** Tried to sign up, but the identity exists: sign in with a new code. */
+  | { status: 'already_registered' };

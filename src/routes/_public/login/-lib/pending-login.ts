@@ -1,4 +1,4 @@
-import type { LoginMethod } from '~/contexts/auth/types';
+import type { LoginMethod, OnboardingProfile } from '~/contexts/auth/types';
 
 const PENDING_LOGIN_KEY = 'bloque:pending-otp-login';
 
@@ -6,6 +6,8 @@ export interface PendingLogin {
   method: LoginMethod;
   contact: string;
   resendAvailableAt: number;
+  /** Set while signing up, so a reload still registers instead of signing in. */
+  profile?: OnboardingProfile;
 }
 
 export function readPendingLogin(): PendingLogin | null {
@@ -18,7 +20,10 @@ export function readPendingLogin(): PendingLogin | null {
       typeof parsed.contact === 'string' &&
       typeof parsed.resendAvailableAt === 'number'
     ) {
-      return parsed as PendingLogin;
+      const { method, contact, resendAvailableAt, profile } = parsed;
+      return isProfile(profile)
+        ? { method, contact, resendAvailableAt, profile }
+        : { method, contact, resendAvailableAt };
     }
     return null;
   } catch {
@@ -40,4 +45,10 @@ export function clearPendingLogin() {
   } catch {
     // ignore
   }
+}
+
+function isProfile(value: unknown): value is OnboardingProfile {
+  if (!value || typeof value !== 'object') return false;
+  const { firstName, lastName } = value as Partial<OnboardingProfile>;
+  return typeof firstName === 'string' && typeof lastName === 'string';
 }

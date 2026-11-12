@@ -15,7 +15,10 @@ import { apiFetch } from '~/lib/api-fetch';
 import { createBloqueSdk, resetBloque } from '~/lib/bloque';
 import { clearPendingApproval } from '~/lib/pending-approval';
 import { queryClient, SESSION_EXPIRED_EVENT } from '~/lib/query-client';
-import { isAliasOfOrigin } from './alias-origin';
+import {
+  isIdentityAlreadyExistsError,
+  resolveAliasStatus,
+} from './alias-origin';
 import { deriveKycStatus } from './kyc-status';
 import { makeLatestWins } from './latest-wins';
 import { deriveTosStatus } from './tos-status';
@@ -24,8 +27,6 @@ import {
   type LoginData,
   type LoginMethod,
   type LoginResult,
-  type OnboardingProfile,
-  type PendingOnboarding,
   type PendingProfileOnboarding,
   WALLET_ORIGIN,
   type WalletOrigin,
@@ -51,10 +52,6 @@ export type AuthContextProps = {
   sendOTP: (method: 'email' | 'phone', alias: string) => Promise<void>;
   setPendingProfileOnboarding: (data: PendingProfileOnboarding | null) => void;
   login: (data: LoginData) => Promise<LoginResult>;
-  completeOnboarding: (
-    pending: PendingOnboarding,
-    profile: OnboardingProfile,
-  ) => Promise<void>;
   resetOnboardingState: () => void;
   logout: () => Promise<void>;
   /** Silently re-fetches the current profile without affecting `loading` or signing the user out on failure. */
@@ -75,14 +72,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
   /**
-   * Orders the four overlapping paths that can resolve "who is signed in", so
+   * Orders the overlapping paths that can resolve "who is signed in", so
    * a superseded `GET /identities/me` cannot land after a newer one. See
    * `latest-wins.ts` for the incident this comes from.
    */
   const authSeqRef = useRef(makeLatestWins());
   /** Whose session the memoized SDK client currently holds. */
   const signedInUrnRef = useRef<string | null>(null);
-  const pendingOnboardingSessionRef = useRef<OnboardingSession | null>(null);
   const pendingProfileOnboardingRef = useRef<PendingProfileOnboarding | null>(
     null,
   );
@@ -119,7 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!authSeqRef.current.isCurrent(token)) return;
 
       // This wallet only ever registers/logs in `type: 'individual'`
-      // identities (see `login`/`completeOnboarding` below), so `profile` is
+      // identities (see `login` below), so `profile` is
       // always shaped as `IdentityMeProfile` in practice — but the SDK types
       // it as a union with the business/other shapes, which don't carry
       // these fields at all.
@@ -146,17 +142,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const sdk = createBloqueSdk(origin);
       const identitySdk = sdk as unknown as AliasLookupApi;
 
-      try {
-        const found = await identitySdk.identity.aliases.get(alias);
-        return isAliasOfOrigin(found, origin)
-          ? { status: 'registered' }
-          : { status: 'not_registered' };
-      } catch (error) {
-        if (isNotFoundError(error)) {
-          return { status: 'not_registered' };
-        }
-        throw error;
-      }
+      return resolveAliasStatus(
+        () => identitySdk.identity.aliases.get(alias),
+        origin,
+      );
     },
     [],
   );
@@ -194,9 +183,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const sdk = createBloqueSdk(origin);
       const registerApi = sdk as unknown as OriginRegisterApi;
 
+      const pendingProfile = pendingProfileOnboardingRef.current;
       try {
-        if (pendingProfileOnboardingRef.current) {
-          const pendingProfile = pendingProfileOnboardingRef.current;
+        if (pendingProfile) {
           await registerApi.identity.origins.register(alias, origin, {
             type: 'individual',
             profile: {
@@ -221,61 +210,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             },
             extraContext: {},
           });
-          pendingOnboardingSessionRef.current = null;
         } else {
-          const session = await sdk.connect(origin, alias, data.code);
-          pendingOnboardingSessionRef.current = session;
+          await sdk.connect(origin, alias, data.code);
         }
 
         const me = await sdk.me();
-        pendingOnboardingSessionRef.current = null;
         pendingProfileOnboardingRef.current = null;
         await setAuthenticatedUser(me);
         return { status: 'authenticated' };
       } catch (error) {
-        if (isIdentityNotFoundError(error)) {
-          return {
-            status: 'onboarding_required',
-            pending: { method, origin, alias, code: data.code },
-          };
-        }
-
-        pendingOnboardingSessionRef.current = null;
         pendingProfileOnboardingRef.current = null;
+        if (pendingProfile && isIdentityAlreadyExistsError(error)) {
+          return { status: 'already_registered' };
+        }
+        if (!pendingProfile && isIdentityNotFoundError(error)) {
+          return { status: 'onboarding_required', method, alias };
+        }
         throw error;
       }
     },
     [setAuthenticatedUser],
   );
 
-  const completeOnboarding = useCallback(
-    async (pending: PendingOnboarding, profile: OnboardingProfile) => {
-      const sdk = createBloqueSdk(pending.origin);
-      const session = pendingOnboardingSessionRef.current;
-
-      if (!session) {
-        throw new Error('Missing onboarding session');
-      }
-
-      await session.identity.updateMe({
-        profile: {
-          firstName: profile.firstName,
-          lastName: profile.lastName,
-          email: pending.method === 'email' ? pending.alias : undefined,
-          phone: pending.method === 'phone' ? pending.alias : undefined,
-        },
-      });
-
-      const me = await sdk.me();
-      pendingOnboardingSessionRef.current = null;
-      pendingProfileOnboardingRef.current = null;
-      await setAuthenticatedUser(me);
-    },
-    [setAuthenticatedUser],
-  );
-
   const resetOnboardingState = useCallback(() => {
-    pendingOnboardingSessionRef.current = null;
     pendingProfileOnboardingRef.current = null;
   }, []);
 
@@ -412,7 +369,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         sendOTP,
         setPendingProfileOnboarding,
         login,
-        completeOnboarding,
         resetOnboardingState,
         logout,
         refreshUser,
@@ -445,24 +401,6 @@ function isIdentityNotFoundError(error: unknown): boolean {
   }
   return false;
 }
-
-function isNotFoundError(error: unknown): boolean {
-  if (!error || typeof error !== 'object') return false;
-  return 'status' in error && (error as { status?: unknown }).status === 404;
-}
-
-type OnboardingSession = {
-  identity: {
-    updateMe: (params: {
-      profile?: {
-        firstName?: string;
-        lastName?: string;
-        email?: string;
-        phone?: string;
-      };
-    }) => Promise<unknown>;
-  };
-};
 
 type AliasLookupApi = {
   identity: {

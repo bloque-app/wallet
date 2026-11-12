@@ -1,9 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useAuth } from '~/contexts/auth/auth-context';
 import {
   type OnboardingProfile as OnboardingProfileData,
-  type PendingOnboarding,
   WALLET_ORIGIN,
 } from '~/contexts/auth/types';
 import { safeRedirectPath } from '~/lib/safe-redirect';
@@ -31,7 +30,18 @@ function RouteComponent() {
   } = useAuth();
   const { redirect } = Route.useSearch();
 
-  const [pendingLogin] = useState(() => readPendingLogin());
+  const [pendingLogin] = useState(() => {
+    const restored = readPendingLogin();
+    if (restored?.profile) {
+      setPendingProfileOnboarding({
+        method: restored.method,
+        alias: restored.contact,
+        origin: WALLET_ORIGIN,
+        profile: restored.profile,
+      });
+    }
+    return restored;
+  });
   const [step, setStep] = useState<'method' | 'otp' | 'onboarding'>(
     pendingLogin ? 'otp' : 'method',
   );
@@ -42,13 +52,18 @@ function RouteComponent() {
   const [resendAvailableAt, setResendAvailableAt] = useState(
     pendingLogin?.resendAvailableAt ?? 0,
   );
-  const [pendingOnboarding, setPendingOnboarding] =
-    useState<PendingOnboarding | null>(null);
+  const profileRef = useRef<OnboardingProfileData | undefined>(
+    pendingLogin?.profile,
+  );
+
+  function forgetProfile() {
+    setPendingProfileOnboarding(null);
+    profileRef.current = undefined;
+  }
 
   async function handleMethodSelect(m: 'email' | 'phone', c: string) {
     resetOnboardingState();
-    setPendingOnboarding(null);
-    setPendingProfileOnboarding(null);
+    forgetProfile();
     setMethod(m);
     setContact(c);
     const aliasStatus = await checkAlias(m, c);
@@ -67,14 +82,23 @@ function RouteComponent() {
     setStep('onboarding');
   }
 
-  async function handleProfileSubmit(profile: OnboardingProfileData) {
-    const origin = WALLET_ORIGIN;
-    const pending = { method, alias: contact, origin, profile };
-    setPendingProfileOnboarding(pending);
+  async function handleProfileSubmit(submitted: OnboardingProfileData) {
+    setPendingProfileOnboarding({
+      method,
+      alias: contact,
+      origin: WALLET_ORIGIN,
+      profile: submitted,
+    });
+    profileRef.current = submitted;
     await sendOTP(method, contact);
     const availableAt = Date.now() + OTP_RESEND_INTERVAL_MS;
     setResendAvailableAt(availableAt);
-    savePendingLogin({ method, contact, resendAvailableAt: availableAt });
+    savePendingLogin({
+      method,
+      contact,
+      resendAvailableAt: availableAt,
+      profile: submitted,
+    });
     setStep('otp');
   }
 
@@ -99,44 +123,34 @@ function RouteComponent() {
                 method,
                 contact,
                 resendAvailableAt: availableAt,
+                profile: profileRef.current,
               });
             }}
             onVerified={() => clearPendingLogin()}
             onBack={() => {
               resetOnboardingState();
-              setPendingOnboarding(null);
-              setPendingProfileOnboarding(null);
+              forgetProfile();
               clearPendingLogin();
               setStep('method');
             }}
-            onOnboardingRequired={(pending) => {
+            onOnboardingRequired={() => {
               clearPendingLogin();
-              setPendingOnboarding(pending);
+              forgetProfile();
               setStep('onboarding');
+            }}
+            onAlreadyRegistered={() => {
+              forgetProfile();
             }}
           />
         ) : (
           <OnboardingProfile
-            pending={pendingOnboarding}
-            isPreOtp={!pendingOnboarding}
             onBack={() => {
-              if (pendingOnboarding) {
-                setStep('otp');
-                return;
-              }
               resetOnboardingState();
-              setPendingOnboarding(null);
-              setPendingProfileOnboarding(null);
+              forgetProfile();
               clearPendingLogin();
               setStep('method');
             }}
             onSubmitProfile={handleProfileSubmit}
-            onCompleted={() => {
-              clearPendingLogin();
-              setPendingOnboarding(null);
-              setPendingProfileOnboarding(null);
-              window.location.replace('/');
-            }}
           />
         )}
       </div>
