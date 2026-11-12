@@ -15,8 +15,11 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '~/components/ui/drawer';
+import { feeCounterpart } from '~/domain/accounts/movements';
 import {
   formatAmount,
+  formatAmountPrecise,
+  formatFee,
   formatFullDate,
   getMovementLabel,
   type Movement,
@@ -57,6 +60,7 @@ export function MovementDetailDrawer({
 
   async function handleDownload(current: Movement) {
     setIsDownloading(true);
+    const counterpart = feeCounterpart(current);
     try {
       const sign = current.direction === 'incoming' ? '+' : '-';
       await downloadReceipt(
@@ -82,11 +86,22 @@ export function MovementDetailDrawer({
                   },
                 ]
               : []),
-            ...(current.fee > 0
+            ...(current.fee
               ? [
                   {
                     label: t('movements.detail.fee'),
-                    value: formatAmount(current.asset, current.fee),
+                    value: formatFee(current.fee),
+                  },
+                ]
+              : []),
+            ...(counterpart
+              ? [
+                  {
+                    label: t(`movements.detail.${counterpart.kind}`),
+                    value: formatAmountPrecise(
+                      current.asset,
+                      counterpart.amount,
+                    ),
                   },
                 ]
               : []),
@@ -108,6 +123,8 @@ export function MovementDetailDrawer({
       setIsDownloading(false);
     }
   }
+
+  const counterpart = movement ? feeCounterpart(movement) : undefined;
 
   return (
     <Drawer open={open} onOpenChange={(o) => !o && onClose()}>
@@ -164,10 +181,19 @@ export function MovementDetailDrawer({
                   value={movement.counterparty}
                 />
               )}
-              {movement.fee > 0 && (
+              {movement.fee && (
                 <DetailRow
                   label={t('movements.detail.fee')}
-                  value={formatAmount(movement.asset, movement.fee)}
+                  value={formatFee(movement.fee)}
+                />
+              )}
+              {counterpart && (
+                <DetailRow
+                  label={t(`movements.detail.${counterpart.kind}`)}
+                  value={formatAmountPrecise(
+                    movement.asset,
+                    counterpart.amount,
+                  )}
                 />
               )}
               <DetailRow

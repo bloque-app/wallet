@@ -376,7 +376,7 @@ function RouteComponent() {
               enabled: true,
               onClick: () => navigate({ to: '/topup/spei' }),
               group: 'mexico',
-              fee: '2.5% + 2%',
+              fee: `2% + ${formatAmountWithCode('MXN', 5)}`,
             },
             {
               title: t('topup.methods.pix.title'),

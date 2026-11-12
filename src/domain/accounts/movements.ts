@@ -16,6 +16,7 @@
 import type {
   Asset,
   Movement,
+  MovementFee,
   MovementStatus,
   MovementType,
 } from '~/lib/formatters';
@@ -31,7 +32,7 @@ export type RawMovementFields = {
   amount: string;
   status: string;
   type?: string;
-  direction: 'in' | 'out';
+  direction: 'in' | 'out' | 'failed';
   railName?: string;
   reference: string;
   createdAt: string;
@@ -42,6 +43,10 @@ export type RawMovementFields = {
    * when it's missing; the per-account feed's `type` is always present, so
    * this stays unused there. */
   details?: Record<string, unknown>;
+  /** What the customer paid on the order, in the asset the order delivers. */
+  fee?: { amount: string; asset: string };
+  /** The order that produced the movement, also on its refund. */
+  orderSig?: string;
 };
 
 const ASSET_KEY_MAP: Record<string, Asset> = {
@@ -177,6 +182,15 @@ function toType(
   return raw.direction === 'in' ? 'topup' : 'withdraw';
 }
 
+/** The order fee in human units, or `undefined` when it is in an asset
+ * this app does not render. */
+function toFee(rawFee: RawMovementFields['fee']): MovementFee | undefined {
+  if (!rawFee) return undefined;
+  const asset = toAsset(rawFee.asset);
+  if (!asset) return undefined;
+  return { amount: toAmount(rawFee.amount, rawFee.asset), asset };
+}
+
 /**
  * Converts a raw movement/transaction record into the app's domain
  * `Movement` shape, or `null` when `asset` isn't one of the assets this
@@ -192,18 +206,51 @@ export function toDomainMovement(raw: RawMovementFields): Movement | null {
   const asset = toAsset(raw.asset);
   if (!asset) return null;
 
+  const fee = toFee(raw.fee);
   return {
     id: [raw.reference, raw.createdAt, raw.amount].join('-'),
     type: toType(raw),
     asset,
     amount: toAmount(raw.amount, raw.asset),
-    fee: 0,
-    status: toStatus(raw.status),
+    ...(fee && { fee }),
+    ...(raw.orderSig && { orderSig: raw.orderSig }),
+    // A `failed` direction is a held movement whose operation never settled.
+    status: raw.direction === 'failed' ? 'failed' : toStatus(raw.status),
     createdAt: raw.createdAt,
     reference: raw.reference,
     counterparty: raw.counterparty,
     direction: raw.direction === 'in' ? 'incoming' : 'outgoing',
   };
+}
+
+/**
+ * Drops the fee of an order that did not go through: on failed movements
+ * (failed direction, or status cancelled/failed/ignored) and on every
+ * movement of an order that has a refund — a movement with the same
+ * `orderSig` and no `fee`. Every other movement keeps its order's fee.
+ *
+ * For display only: each movement of the order shows the fee. Adding fees
+ * up is a different job (count once per `orderSig`).
+ *
+ * Apply it to the whole list being shown (after `dedupeGlobalMovements` on
+ * the global feed): an order's refund can land on another page.
+ */
+export function dropUnchargedFees(movements: Movement[]): Movement[] {
+  const refunded = new Set<string>();
+  for (const movement of movements) {
+    if (movement.orderSig && !movement.fee) refunded.add(movement.orderSig);
+  }
+
+  return movements.map((movement) => {
+    if (!movement.fee) return movement;
+    const charged =
+      movement.status !== 'failed' &&
+      !(movement.orderSig && refunded.has(movement.orderSig));
+    if (charged) return movement;
+
+    const { fee: _dropped, ...rest } = movement;
+    return rest;
+  });
 }
 
 /**
@@ -233,4 +280,22 @@ export function dedupeGlobalMovements(movements: Movement[]): Movement[] {
   }
 
   return result;
+}
+
+export type FeeCounterpart = { kind: 'received' | 'original'; amount: number };
+
+/**
+ * The other side of the fee, as the summary before paying shows it:
+ * - outgoing: what the recipient receives, the amount minus the fee;
+ * - incoming: the original amount, the net amount that arrived plus the fee.
+ *
+ * Only when the fee is in the movement's own asset; across assets the two
+ * cannot be added or subtracted. `undefined` when there is no fee.
+ */
+export function feeCounterpart(movement: Movement): FeeCounterpart | undefined {
+  const { fee } = movement;
+  if (!fee || fee.asset !== movement.asset) return undefined;
+  return movement.direction === 'outgoing'
+    ? { kind: 'received', amount: Math.max(movement.amount - fee.amount, 0) }
+    : { kind: 'original', amount: movement.amount + fee.amount };
 }

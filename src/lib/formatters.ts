@@ -7,12 +7,22 @@ export type MovementStatus = 'completed' | 'pending' | 'failed';
 export type Asset = 'COP' | 'USD' | 'MXN' | 'BRL' | 'KSM';
 export type CardStatus = 'none' | 'active' | 'frozen';
 
+/** What the customer paid on the order a movement belongs to. */
+export interface MovementFee {
+  amount: number;
+  asset: Asset;
+}
+
 export interface Movement {
   id: string;
   type: MovementType;
   asset: Asset;
   amount: number;
-  fee: number;
+  /** The order's fee, on every movement of a charged order; see
+   * `dropUnchargedFees`. */
+  fee?: MovementFee;
+  /** The order that produced the movement, when recorded. */
+  orderSig?: string;
   status: MovementStatus;
   createdAt: string;
   reference: string;
@@ -79,6 +89,21 @@ export function formatAmount(asset: Asset, amount: number): string {
     case 'KSM':
       return formatKSM(amount);
   }
+}
+
+/** Like `formatAmount`, but COP keeps its cents: fee arithmetic must add
+ * up on screen. */
+export function formatAmountPrecise(asset: Asset, amount: number): string {
+  return asset === 'COP'
+    ? formatCOPPrecise(amount)
+    : formatAmount(asset, amount);
+}
+
+/** An order fee, always with its currency code: it can be in a different
+ * currency than the movement it is shown on. */
+export function formatFee(fee: { asset: Asset; amount: number }): string {
+  const formatted = formatAmountPrecise(fee.asset, fee.amount);
+  return fee.asset === 'KSM' ? formatted : `${formatted} ${fee.asset}`;
 }
 
 export function formatAmountWithCode(asset: Asset, amount: number): string {

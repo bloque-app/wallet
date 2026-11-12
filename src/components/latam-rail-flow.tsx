@@ -20,7 +20,7 @@ import {
 } from '~/components/ui/select';
 import type { ApprovalOperation } from '~/domain/approval/types';
 import { calculateRateFeeQuote } from '~/domain/payments/topup-fee';
-import type { ExecutionOutcome } from '~/domain/payments/types';
+import type { ExecutionOutcome, RateQuote } from '~/domain/payments/types';
 import { useAccountPicker } from '~/hooks/accounts/use-account-picker';
 import { useApprovalRedirect } from '~/hooks/approval/use-approval-redirect';
 import {
@@ -30,12 +30,13 @@ import {
   useCreateSpeiOrder,
 } from '~/hooks/payments/use-latam-rails';
 import { useRates } from '~/hooks/payments/use-rates';
+import { quoteRate } from '~/infra/bloque/rate-quote';
 import { exceedsBalance } from '~/lib/balance';
 import {
   currencyMajorToMinor,
   normalizeCurrencyInput,
 } from '~/lib/currency-input';
-import { formatAmount, formatAmountWithCode } from '~/lib/formatters';
+import { formatAmountWithCode } from '~/lib/formatters';
 import {
   BRAZIL_DIAL_CODE,
   isValidBrazilPhone,
@@ -132,16 +133,18 @@ export function LatamRailFlow({
       : undefined,
   );
   const rate = ratesQuery.data?.[0] ?? null;
-  const quote = useMemo(() => {
-    if (!rate) return null;
+  const quote = useMemo((): RateQuote | null => {
+    if (!rate || !amountSrc) return null;
+    if (rate.fee?.formula.trim()) return quoteRate(rate, amountSrc);
     const marketRatio =
       Number.isFinite(rate.ratio) && rate.ratio > 0
         ? rate.ratio
         : (rate.rate?.[1] ?? 0) / (rate.rate?.[0] ?? 1);
-    return calculateRateFeeQuote(parsedAmount, rate.fee, {
+    const fallback = calculateRateFeeQuote(parsedAmount, rate.fee, {
       fallbackAmount: parsedAmount * marketRatio,
     });
-  }, [parsedAmount, rate]);
+    return fallback && { ...fallback, feePercentage: 0, feeFixed: 0 };
+  }, [amountSrc, parsedAmount, rate]);
   const receiveAmount = quote?.netAmount ?? 0;
   const feeAmount = quote?.totalFee ?? 0;
 
@@ -286,6 +289,15 @@ export function LatamRailFlow({
 
   const title = t(`latamRails.${rail}.${direction}.title`);
   const displayAsset = config.currency;
+  const feeBreakdown = [
+    quote?.feePercentage ? `${quote.feePercentage}%` : null,
+    quote?.feeFixed ? formatAmountWithCode(displayAsset, quote.feeFixed) : null,
+  ]
+    .filter(Boolean)
+    .join(' + ');
+  const feeLabel = feeBreakdown
+    ? t('latamRails.feeBreakdown', { breakdown: feeBreakdown })
+    : t('latamRails.fee');
 
   if (step === 'result') {
     if (direction === 'send') {
@@ -392,23 +404,32 @@ export function LatamRailFlow({
             </div>
             {parsedAmount > 0 && (
               <div className="rounded-2xl border border-border/85 bg-background/70 p-4 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">
+                <div className="flex items-start justify-between gap-3">
+                  <span className="min-w-0 text-muted-foreground">
                     {t('topup.youReceive')}
                   </span>
-                  <span>
-                    {quote ? formatAmount(displayAsset, receiveAmount) : '...'}
+                  <span className="shrink-0 whitespace-nowrap text-right">
+                    {quote
+                      ? formatAmountWithCode(displayAsset, receiveAmount)
+                      : '...'}
                   </span>
                 </div>
                 {quote && (
-                  <div className="mt-2 flex justify-between gap-4">
-                    <span className="text-muted-foreground">
-                      {t('latamRails.fee')}
+                  <div className="mt-2 flex items-start justify-between gap-3">
+                    <span className="min-w-0 text-muted-foreground">
+                      {feeLabel}
                     </span>
-                    <span>{formatAmount(displayAsset, feeAmount)}</span>
+                    <span className="shrink-0 whitespace-nowrap text-right">
+                      {formatAmountWithCode(displayAsset, feeAmount)}
+                    </span>
                   </div>
                 )}
               </div>
+            )}
+            {amountSrc && ratesQuery.isSuccess && !rate && (
+              <p className="text-xs text-destructive">
+                {t('latamRails.noRateForAmount')}
+              </p>
             )}
             {rate && !quote && (
               <p className="text-xs text-destructive">
@@ -591,27 +612,33 @@ export function LatamRailFlow({
         {step === 'confirm' && (
           <>
             <div className="rounded-2xl border border-border/85 bg-background/70 p-4">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">
+              <div className="flex items-start justify-between gap-3 text-sm">
+                <span className="min-w-0 text-muted-foreground">
                   {direction === 'topup'
                     ? t('topup.youPay')
                     : t('send.bloqueFriends.youSend')}
                 </span>
-                <span>{formatAmountWithCode(displayAsset, parsedAmount)}</span>
+                <span className="shrink-0 whitespace-nowrap text-right">
+                  {formatAmountWithCode(displayAsset, parsedAmount)}
+                </span>
               </div>
               {feeAmount > 0 && (
-                <div className="mt-2 flex justify-between text-sm">
-                  <span className="text-muted-foreground">
-                    {t('latamRails.fee')}
+                <div className="mt-2 flex items-start justify-between gap-3 text-sm">
+                  <span className="min-w-0 text-muted-foreground">
+                    {feeLabel}
                   </span>
-                  <span>{formatAmountWithCode(displayAsset, feeAmount)}</span>
+                  <span className="shrink-0 whitespace-nowrap text-right">
+                    {formatAmountWithCode(displayAsset, feeAmount)}
+                  </span>
                 </div>
               )}
-              <div className="mt-2 flex justify-between text-sm">
-                <span className="text-muted-foreground">
+              <div className="mt-2 flex items-start justify-between gap-3 text-sm">
+                <span className="min-w-0 text-muted-foreground">
                   {t('topup.youReceive')}
                 </span>
-                <span>{formatAmountWithCode(displayAsset, receiveAmount)}</span>
+                <span className="shrink-0 whitespace-nowrap text-right">
+                  {formatAmountWithCode(displayAsset, receiveAmount)}
+                </span>
               </div>
             </div>
             <Button

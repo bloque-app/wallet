@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import {
   dedupeGlobalMovements,
+  dropUnchargedFees,
   toDomainMovement,
 } from '~/domain/accounts/movements';
 import { bloqueAccountsRepository } from '~/infra/bloque/accounts-repository';
@@ -28,10 +29,12 @@ export function useGlobalTransactions(limit: number, asset?: string) {
       });
 
       return {
-        movements: dedupeGlobalMovements(
-          page.movements
-            .map(toDomainMovement)
-            .filter((movement): movement is Movement => movement !== null),
+        movements: dropUnchargedFees(
+          dedupeGlobalMovements(
+            page.movements
+              .map(toDomainMovement)
+              .filter((movement): movement is Movement => movement !== null),
+          ),
         ),
         hasMore: page.hasMore,
         next: page.next,

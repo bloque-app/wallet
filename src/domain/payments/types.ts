@@ -30,8 +30,26 @@ export type Rate = {
       name: string;
       type: string;
       value: number | string;
+      /** Percentage for `percentage` components, e.g. `"1.75"`. */
+      percentage?: string;
+      /** Fixed amount in source units for `fixed` components, e.g. `"5"`. */
+      amount?: string;
     }>;
   };
+};
+
+/**
+ * What a rate delivers for the amount the user typed, in major units.
+ */
+export type RateQuote = {
+  /** Amount received, in the destination asset. */
+  netAmount: number;
+  /** Total fee, in the destination asset. */
+  totalFee: number;
+  /** Effective percentage fee, fixed fees aside, e.g. `2` for 2%. */
+  feePercentage: number;
+  /** Sum of the fixed fees, in the source asset, e.g. `5` for 5 MXN. */
+  feeFixed: number;
 };
 
 /**

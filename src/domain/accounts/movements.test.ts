@@ -1,7 +1,12 @@
 import { describe, expect, test } from 'bun:test';
 import type { Movement } from '~/lib/formatters';
 import type { RawMovementFields } from './movements';
-import { dedupeGlobalMovements, toDomainMovement } from './movements';
+import {
+  dedupeGlobalMovements,
+  dropUnchargedFees,
+  feeCounterpart,
+  toDomainMovement,
+} from './movements';
 
 function raw(overrides: Partial<RawMovementFields>): RawMovementFields {
   return {
@@ -237,7 +242,6 @@ describe('dedupeGlobalMovements', () => {
       type: 'topup' as const,
       asset: 'COP' as const,
       amount: 94.65,
-      fee: 0,
       status: 'completed' as const,
       createdAt: '2026-07-26T16:51:00.000Z',
       reference,
@@ -290,5 +294,166 @@ describe('dedupeGlobalMovements', () => {
 
   test('an empty list stays empty', () => {
     expect(dedupeGlobalMovements([])).toEqual([]);
+  });
+});
+
+describe('toDomainMovement — order fee', () => {
+  test('maps fee to human units in its own asset, and keeps orderSig', () => {
+    const movement = toDomainMovement(
+      raw({
+        asset: 'DUSD/6',
+        amount: '10000000',
+        fee: { amount: '50100', asset: 'COPM/2' },
+        orderSig: 'sig-1',
+      }),
+    );
+
+    expect(movement?.fee).toEqual({ amount: 501, asset: 'COP' });
+    expect(movement?.orderSig).toBe('sig-1');
+  });
+
+  test('no fee or orderSig when the API did not record them', () => {
+    const movement = toDomainMovement(raw({}));
+
+    expect(movement).not.toHaveProperty('fee');
+    expect(movement).not.toHaveProperty('orderSig');
+  });
+
+  test('drops a fee in an asset the app does not render', () => {
+    const movement = toDomainMovement(
+      raw({ fee: { amount: '1', asset: 'XYZ/2' } }),
+    );
+
+    expect(movement).not.toHaveProperty('fee');
+  });
+
+  test('a failed direction is a failed outgoing movement', () => {
+    const movement = toDomainMovement(
+      raw({ direction: 'failed', status: 'pending' }),
+    );
+
+    expect(movement?.status).toBe('failed');
+    expect(movement?.direction).toBe('outgoing');
+  });
+});
+
+describe('dropUnchargedFees', () => {
+  const FEE = { amount: 501, asset: 'COP' as const };
+
+  function movement(
+    reference: string,
+    overrides: Partial<Movement> = {},
+  ): Movement {
+    return {
+      id: `${reference}-id`,
+      type: 'withdraw',
+      asset: 'COP',
+      amount: 50_000,
+      status: 'completed',
+      createdAt: '2026-11-05T00:00:00.000Z',
+      reference,
+      direction: 'outgoing',
+      ...overrides,
+    };
+  }
+
+  test('every movement of a charged order shows its fee', () => {
+    const result = dropUnchargedFees([
+      movement('out', { orderSig: 'sig-1', fee: FEE }),
+      movement('in', { orderSig: 'sig-1', fee: FEE, direction: 'incoming' }),
+    ]);
+
+    expect(result[0]?.fee).toEqual(FEE);
+    expect(result[1]?.fee).toEqual(FEE);
+  });
+
+  test('keeps the fee of a pending order', () => {
+    const result = dropUnchargedFees([
+      movement('a', { orderSig: 'sig-1', fee: FEE, status: 'pending' }),
+    ]);
+
+    expect(result[0]?.fee).toEqual(FEE);
+  });
+
+  test('drops the fee on a failed movement', () => {
+    const result = dropUnchargedFees([
+      movement('a', { orderSig: 'sig-1', fee: FEE, status: 'failed' }),
+    ]);
+
+    expect(result[0]).not.toHaveProperty('fee');
+  });
+
+  test('drops the fee of a refunded order', () => {
+    const result = dropUnchargedFees([
+      movement('refund', { orderSig: 'sig-1', direction: 'incoming' }),
+      movement('a', { orderSig: 'sig-1', fee: FEE }),
+    ]);
+
+    expect(result.some((m) => m.fee)).toBe(false);
+  });
+
+  test('keeps a fee recorded without an order', () => {
+    const result = dropUnchargedFees([movement('a', { fee: FEE })]);
+
+    expect(result[0]?.fee).toEqual(FEE);
+  });
+
+  test('a refund outside the list cannot drop the fee (direction-filtered views)', () => {
+    const result = dropUnchargedFees([
+      movement('a', { orderSig: 'sig-1', fee: FEE }),
+    ]);
+
+    expect(result[0]?.fee).toEqual(FEE);
+  });
+
+  test('a refund only affects its own order', () => {
+    const result = dropUnchargedFees([
+      movement('a', { orderSig: 'sig-1', fee: FEE }),
+      movement('b', { orderSig: 'sig-2', fee: FEE }),
+      movement('c', { orderSig: 'sig-2' }),
+    ]);
+
+    expect(result[0]?.fee).toEqual(FEE);
+    expect(result[1]).not.toHaveProperty('fee');
+  });
+});
+
+describe('feeCounterpart', () => {
+  const SENT: Movement = {
+    id: 'm-1',
+    type: 'withdraw',
+    asset: 'COP',
+    amount: 1000,
+    status: 'completed',
+    createdAt: '2026-11-10T17:47:46.307Z',
+    reference: 'ref-1',
+    direction: 'outgoing',
+    fee: { amount: 501, asset: 'COP' },
+  };
+
+  test('outgoing: the recipient receives the amount minus the fee', () => {
+    expect(feeCounterpart(SENT)).toEqual({ kind: 'received', amount: 499 });
+  });
+
+  test('incoming: the original amount is the net amount plus the fee', () => {
+    expect(
+      feeCounterpart({
+        ...SENT,
+        type: 'topup',
+        amount: 499,
+        direction: 'incoming',
+      }),
+    ).toEqual({ kind: 'original', amount: 1000 });
+  });
+
+  test('nothing without a fee', () => {
+    const { fee: _fee, ...noFee } = SENT;
+    expect(feeCounterpart(noFee)).toBeUndefined();
+  });
+
+  test('not across assets', () => {
+    expect(
+      feeCounterpart({ ...SENT, asset: 'USD', amount: 10 }),
+    ).toBeUndefined();
   });
 });

@@ -44,6 +44,7 @@ import {
   isPendingLinkUsBank,
   visibleProducts,
 } from '~/domain/accounts/external-us-bank';
+import { dropUnchargedFees } from '~/domain/accounts/movements';
 import {
   isDefaultPocket,
   pocketDeletionBalances,
@@ -236,7 +237,10 @@ function RouteComponent() {
   const movementsQuery = useAccountMovements(urn, movementsAsset);
 
   const movements = useMemo(
-    () => (movementsQuery.data?.pages ?? []).flatMap((page) => page.movements),
+    () =>
+      dropUnchargedFees(
+        (movementsQuery.data?.pages ?? []).flatMap((page) => page.movements),
+      ),
     [movementsQuery.data?.pages],
   );
 

@@ -4,6 +4,9 @@ const listMock = mock(() => Promise.resolve({ accounts: [] as unknown[] }));
 const transactionsMock = mock((_params?: { asset?: string }) =>
   Promise.resolve({ data: [] as unknown[], pageSize: 0, hasMore: false }),
 );
+const movementsMock = mock((_params?: { urn: string }) =>
+  Promise.resolve({ data: [] as unknown[], pageSize: 0, hasMore: false }),
+);
 const resolveBrebKeyMock = mock((params: { key: string }) =>
   Promise.resolve({
     data: {
@@ -44,6 +47,7 @@ mock.module('~/lib/bloque', () => ({
     accounts: {
       list: listMock,
       transactions: transactionsMock,
+      movements: movementsMock,
       breb: {
         resolveKey: resolveBrebKeyMock,
         createKey: createBrebKeyMock,
@@ -595,5 +599,103 @@ describe('bloqueAccountsRepository.getTransactions — global feed adapter', () 
       limit: 10,
       next: undefined,
     });
+  });
+});
+
+describe('bloqueAccountsRepository — order fee', () => {
+  const base = {
+    status: 'settled',
+    amount: '5000000',
+    asset: 'COPM/2',
+    fromAccountId: 'urn:from',
+    toAccountId: 'urn:to',
+    direction: 'out',
+    reference: 'ref-fee',
+    railName: 'breb',
+    details: {},
+    createdAt: '2026-11-05T00:00:00.000Z',
+    type: 'withdraw',
+  };
+
+  test('getMovements forwards fee and orderSig', async () => {
+    movementsMock.mockImplementationOnce(() =>
+      Promise.resolve({
+        data: [
+          {
+            ...base,
+            fee: { amount: '50100', asset: 'COPM/2' },
+            orderSig: 'sig-1',
+          },
+        ],
+        pageSize: 1,
+        hasMore: false,
+      }),
+    );
+
+    const page = await bloqueAccountsRepository.getMovements({
+      urn: 'urn:to',
+      asset: 'COPM/2',
+    });
+
+    expect(page.movements[0]).toMatchObject({
+      fee: { amount: '50100', asset: 'COPM/2' },
+      orderSig: 'sig-1',
+    });
+  });
+
+  test('getTransactions forwards fee and orderSig, and leaves them out when absent', async () => {
+    transactionsMock.mockImplementation(({ asset } = {}) =>
+      Promise.resolve(
+        asset === 'COPM/2'
+          ? {
+              data: [
+                {
+                  ...base,
+                  fee: { amount: '50100', asset: 'COPM/2' },
+                  orderSig: 'sig-1',
+                },
+                { ...base, reference: 'ref-plain' },
+              ],
+              pageSize: 2,
+              hasMore: false,
+            }
+          : { data: [], pageSize: 0, hasMore: false },
+      ),
+    );
+
+    const page = await bloqueAccountsRepository.getTransactions({});
+    const withFee = page.movements.find((m) => m.reference === 'ref-fee');
+    const plain = page.movements.find((m) => m.reference === 'ref-plain');
+
+    expect(withFee).toMatchObject({
+      fee: { amount: '50100', asset: 'COPM/2' },
+      orderSig: 'sig-1',
+    });
+    expect(plain).not.toHaveProperty('fee');
+    expect(plain).not.toHaveProperty('orderSig');
+  });
+
+  test('a malformed fee is dropped, the movement still maps', async () => {
+    movementsMock.mockImplementationOnce(() =>
+      Promise.resolve({
+        data: [
+          { ...base, fee: { amount: 50100 }, orderSig: 'sig-1' },
+          { ...base, reference: 'ref-null', fee: null, orderSig: 42 },
+        ],
+        pageSize: 2,
+        hasMore: false,
+      }),
+    );
+
+    const page = await bloqueAccountsRepository.getMovements({
+      urn: 'urn:to',
+      asset: 'COPM/2',
+    });
+
+    expect(page.movements).toHaveLength(2);
+    expect(page.movements[0]).not.toHaveProperty('fee');
+    expect(page.movements[0]?.orderSig).toBe('sig-1');
+    expect(page.movements[1]).not.toHaveProperty('fee');
+    expect(page.movements[1]).not.toHaveProperty('orderSig');
   });
 });

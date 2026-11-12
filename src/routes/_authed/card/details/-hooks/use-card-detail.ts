@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { dropUnchargedFees } from '~/domain/accounts/movements';
 import type { CardProduct } from '~/domain/accounts/types';
 import { useAccounts } from '~/hooks/accounts/use-accounts';
 import { useCardMovements } from '~/hooks/accounts/use-card-movements';
@@ -121,7 +122,10 @@ export function useCardDetail(urn: string) {
   }, [selectedAssetKey, assetList]);
 
   const movements = useMemo(
-    () => (txPages?.pages ?? []).flatMap((page) => page.movements),
+    () =>
+      dropUnchargedFees(
+        (txPages?.pages ?? []).flatMap((page) => page.movements),
+      ),
     [txPages?.pages],
   );
 

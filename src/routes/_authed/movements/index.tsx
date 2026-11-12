@@ -5,7 +5,10 @@ import { useTranslation } from 'react-i18next';
 import { MovementDetailDrawer } from '~/components/movement-detail-drawer';
 import { MovementRow } from '~/components/movement-row';
 import { Input } from '~/components/ui/input';
-import { dedupeGlobalMovements } from '~/domain/accounts/movements';
+import {
+  dedupeGlobalMovements,
+  dropUnchargedFees,
+} from '~/domain/accounts/movements';
 import { useGlobalTransactionsInfinite } from '~/hooks/accounts/use-global-transactions-infinite';
 import type { Asset, Movement } from '~/lib/formatters';
 import { cn } from '~/lib/utils';
@@ -32,6 +35,9 @@ function RouteComponent() {
   );
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [search, setSearch] = useState('');
+  // With a direction filter on, an order's refund (the other direction) is
+  // not fetched, so `dropUnchargedFees` cannot see it and the refunded
+  // movement keeps its fee. Known limitation: such refunds are rare.
   const direction =
     activeFilter === 'incoming'
       ? 'in'
@@ -54,8 +60,10 @@ function RouteComponent() {
       // Deduped across ALL accumulated pages, not per-page — a ledger
       // with N linked accounts reports the same transfer N times, and
       // those duplicate rows aren't guaranteed to land on the same page.
-      dedupeGlobalMovements(
-        (data?.pages ?? []).flatMap((page) => page.movements ?? []),
+      dropUnchargedFees(
+        dedupeGlobalMovements(
+          (data?.pages ?? []).flatMap((page) => page.movements ?? []),
+        ),
       ),
     [data?.pages],
   );

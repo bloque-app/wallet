@@ -233,6 +233,26 @@ async function getBalance(urn: string): Promise<AssetBalance[]> {
   return mapBalances(balance as unknown as RawBalance);
 }
 
+/**
+ * The order fields the API returns on movements and transactions (`fee`,
+ * `orderSig`), typed by the SDK. A malformed value is dropped rather than
+ * allowed to break the list.
+ */
+type OrderFields = Pick<RawTransaction, 'fee' | 'orderSig'>;
+
+function orderFieldsOf(record: OrderFields): OrderFields {
+  const { fee, orderSig } = record as { fee?: unknown; orderSig?: unknown };
+  const { amount, asset } = (fee ?? {}) as {
+    amount?: unknown;
+    asset?: unknown;
+  };
+  return {
+    ...(typeof amount === 'string' &&
+      typeof asset === 'string' && { fee: { amount, asset } }),
+    ...(typeof orderSig === 'string' && { orderSig }),
+  };
+}
+
 async function getMovements(
   params: GetMovementsParams,
 ): Promise<MovementsPage> {
@@ -261,6 +281,7 @@ async function getMovements(
           : movement.toAccountId,
       railName: movement.railName,
       type: movement.type,
+      ...orderFieldsOf(movement),
     })),
     hasMore: result.hasMore,
     next: result.next,
@@ -268,7 +289,7 @@ async function getMovements(
 }
 
 /** `bloque.accounts.transactions()`'s param shape, properly typed by the
- * installed SDK (0.2.7) — no `as never` casts needed here. */
+ * installed SDK — no `as never` casts needed here. */
 type TransactionsParams = NonNullable<
   Parameters<typeof bloque.accounts.transactions>[0]
 >;
@@ -293,6 +314,7 @@ function mapTransaction(transaction: RawTransaction): MovementEntry {
     railName: transaction.railName,
     type: transaction.type,
     details: transaction.details,
+    ...orderFieldsOf(transaction),
   };
 }
 
