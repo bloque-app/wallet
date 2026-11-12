@@ -20,8 +20,8 @@ describe('makeLatestWins', () => {
   });
 
   it('keeps only the newest of many overlapping attempts', () => {
-    // Four callers can be in flight at once: login, completeOnboarding,
-    // refreshUser and the mount-time checkAuth.
+    // Several callers can be in flight at once: login, refreshUser and the
+    // mount-time checkAuth.
     const seq = makeLatestWins();
     const tokens = [seq.begin(), seq.begin(), seq.begin(), seq.begin()];
 

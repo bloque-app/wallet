@@ -15,14 +15,17 @@ vi.stubGlobal(
 );
 
 const navigate = vi.fn();
-const login = vi.fn(async () => ({ status: 'authenticated' }));
+const login = vi.fn(
+  async (): Promise<{ status: string }> => ({ status: 'authenticated' }),
+);
+const sendOTP = vi.fn(async () => {});
 
 vi.mock('@tanstack/react-router', () => ({
   useRouter: () => ({ navigate }),
 }));
 
 vi.mock('~/contexts/auth/auth-context', () => ({
-  useAuth: () => ({ sendOTP: vi.fn(), login }),
+  useAuth: () => ({ sendOTP, login }),
 }));
 
 describe('OTPVerify', () => {
@@ -37,6 +40,7 @@ describe('OTPVerify', () => {
         onVerified={vi.fn()}
         onBack={vi.fn()}
         onOnboardingRequired={vi.fn()}
+        onAlreadyRegistered={vi.fn()}
       />,
     );
 
@@ -52,5 +56,57 @@ describe('OTPVerify', () => {
       code: '123456',
       email: 'alice@example.com',
     });
+  });
+
+  test('goes back to the profile step when this origin has no identity', async () => {
+    login.mockResolvedValueOnce({ status: 'onboarding_required' });
+    const onOnboardingRequired = vi.fn();
+    render(
+      <OTPVerify
+        method="phone"
+        contact="573155085949"
+        resendAvailableAt={0}
+        redirectTo="/"
+        onResendAvailableAtChange={vi.fn()}
+        onVerified={vi.fn()}
+        onBack={vi.fn()}
+        onOnboardingRequired={onOnboardingRequired}
+        onAlreadyRegistered={vi.fn()}
+      />,
+    );
+
+    await userEvent.type(screen.getByRole('textbox'), '123456');
+
+    await waitFor(() => expect(onOnboardingRequired).toHaveBeenCalled());
+    expect(navigate).not.toHaveBeenCalledWith({ href: '/', replace: true });
+  });
+
+  test('sends a new code to sign in when the identity already exists', async () => {
+    login.mockResolvedValueOnce({ status: 'already_registered' });
+    sendOTP.mockClear();
+    const onAlreadyRegistered = vi.fn();
+    const onResendAvailableAtChange = vi.fn();
+    render(
+      <OTPVerify
+        method="email"
+        contact="alice@example.com"
+        resendAvailableAt={0}
+        redirectTo="/"
+        onResendAvailableAtChange={onResendAvailableAtChange}
+        onVerified={vi.fn()}
+        onBack={vi.fn()}
+        onOnboardingRequired={vi.fn()}
+        onAlreadyRegistered={onAlreadyRegistered}
+      />,
+    );
+
+    await userEvent.type(screen.getByRole('textbox'), '123456');
+
+    await waitFor(() =>
+      expect(screen.getByText(/Ya tienes una cuenta/)).toBeTruthy(),
+    );
+    expect(onAlreadyRegistered).toHaveBeenCalled();
+    expect(sendOTP).toHaveBeenCalledWith('email', 'alice@example.com');
+    expect(onResendAvailableAtChange).toHaveBeenCalled();
   });
 });

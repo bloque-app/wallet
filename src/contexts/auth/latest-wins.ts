@@ -2,8 +2,8 @@
  * A sequencer for overlapping async writes to the same piece of state, where
  * only the most recently *started* one should be allowed to land.
  *
- * The wallet resolves "who is signed in" from four places — `login`,
- * `completeOnboarding`, `refreshUser` and the mount-time `checkAuth` — any of
+ * The wallet resolves "who is signed in" from three places — `login`,
+ * `refreshUser` and the mount-time `checkAuth` — any of
  * which can be in flight at once, each ending in `setCurrentUser`. Nothing
  * ordered them, so the winner was whichever `GET /identities/me` happened to
  * resolve last.
