@@ -71,8 +71,7 @@ describe('resolveAliasStatus', () => {
 });
 
 describe('isIdentityAlreadyExistsError', () => {
-  it('matches a 409 or the error code', () => {
-    expect(isIdentityAlreadyExistsError({ status: 409 })).toBe(true);
+  it('matches the error code', () => {
     expect(
       isIdentityAlreadyExistsError({ code: 'E_IDENTITY_ALREADY_EXISTS' }),
     ).toBe(true);
@@ -81,7 +80,10 @@ describe('isIdentityAlreadyExistsError', () => {
     ).toBe(true);
   });
 
-  it('ignores other errors', () => {
+  it('ignores other errors, including an unrelated 409', () => {
+    expect(
+      isIdentityAlreadyExistsError({ status: 409, code: 'E_IDEMPOTENCY' }),
+    ).toBe(false);
     expect(isIdentityAlreadyExistsError({ status: 400 })).toBe(false);
     expect(isIdentityAlreadyExistsError(null)).toBe(false);
   });

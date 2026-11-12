@@ -34,6 +34,6 @@ export type AliasCheckResult =
 export type LoginResult =
   | { status: 'authenticated' }
   /** Signed in with a code, but this origin has no identity: sign up first. */
-  | { status: 'onboarding_required'; method: LoginMethod; alias: string }
+  | { status: 'onboarding_required' }
   /** Tried to sign up, but the identity exists: sign in with a new code. */
   | { status: 'already_registered' };
