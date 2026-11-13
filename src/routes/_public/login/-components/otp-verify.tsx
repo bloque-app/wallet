@@ -10,7 +10,6 @@ import {
   InputOTPSlot,
 } from '~/components/ui/input-otp';
 import { useAuth } from '~/contexts/auth/auth-context';
-import type { PendingOnboarding } from '~/contexts/auth/types';
 
 interface OTPVerifyProps {
   method: 'email' | 'phone';
@@ -21,7 +20,10 @@ interface OTPVerifyProps {
   onResendAvailableAtChange: (availableAt: number) => void;
   onVerified: () => void;
   onBack: () => void;
-  onOnboardingRequired: (pending: PendingOnboarding) => void;
+  /** No identity on this origin: collect the profile and sign up. */
+  onOnboardingRequired: () => void;
+  /** Signing up found an existing identity: sign in instead. */
+  onAlreadyRegistered: () => void;
 }
 
 export function OTPVerify({
@@ -33,11 +35,13 @@ export function OTPVerify({
   onVerified,
   onBack,
   onOnboardingRequired,
+  onAlreadyRegistered,
 }: OTPVerifyProps) {
   const { sendOTP, login } = useAuth();
 
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
   const [loading, setLoading] = useState(false);
   const [lastFailedOtp, setLastFailedOtp] = useState('');
   const [resendTimer, setResendTimer] = useState(() =>
@@ -67,6 +71,7 @@ export function OTPVerify({
 
     setLoading(true);
     setError('');
+    setNotice('');
 
     const data = method === 'email' ? { email: contact } : { phone: contact };
 
@@ -75,8 +80,29 @@ export function OTPVerify({
       if (result.status === 'onboarding_required') {
         setLoading(false);
         setOtp('');
-        setError('');
-        onOnboardingRequired(result.pending);
+        onOnboardingRequired();
+        return;
+      }
+      if (result.status === 'already_registered') {
+        onAlreadyRegistered();
+        setOtp('');
+        setLastFailedOtp('');
+        setLoading(false);
+        try {
+          await sendOTP(method, contact);
+        } catch {
+          setResendTimer(0);
+          setError(
+            'Ya tienes una cuenta, pero no pudimos enviarte un nuevo codigo. Toca Reenviar codigo.',
+          );
+          return;
+        }
+        const availableAt = Date.now() + 60_000;
+        onResendAvailableAtChange(availableAt);
+        setResendTimer(60);
+        setNotice(
+          'Ya tienes una cuenta. Te enviamos un nuevo codigo para entrar.',
+        );
         return;
       }
 
@@ -97,7 +123,10 @@ export function OTPVerify({
     method,
     contact,
     login,
+    sendOTP,
     onOnboardingRequired,
+    onAlreadyRegistered,
+    onResendAvailableAtChange,
     onVerified,
     navigate,
     redirectTo,
@@ -117,6 +146,7 @@ export function OTPVerify({
     setOtp('');
     setLastFailedOtp('');
     setError('');
+    setNotice('');
   }
 
   return (
@@ -165,6 +195,9 @@ export function OTPVerify({
         </InputOTP>
 
         {error && <p className="text-xs text-destructive">{error}</p>}
+        {notice && !error && (
+          <p className="text-center text-xs text-muted-foreground">{notice}</p>
+        )}
       </div>
 
       <Button

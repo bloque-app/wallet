@@ -5,28 +5,17 @@ import { useState } from 'react';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
-import { useAuth } from '~/contexts/auth/auth-context';
-import type {
-  OnboardingProfile as OnboardingProfileData,
-  PendingOnboarding,
-} from '~/contexts/auth/types';
+import type { OnboardingProfile as OnboardingProfileData } from '~/contexts/auth/types';
 
 interface OnboardingProfileProps {
-  pending: PendingOnboarding | null;
-  isPreOtp: boolean;
   onBack: () => void;
   onSubmitProfile: (profile: OnboardingProfileData) => Promise<void>;
-  onCompleted: () => void;
 }
 
 export function OnboardingProfile({
-  pending,
-  isPreOtp,
   onBack,
   onSubmitProfile,
-  onCompleted,
 }: OnboardingProfileProps) {
-  const { completeOnboarding } = useAuth();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [error, setError] = useState('');
@@ -45,22 +34,12 @@ export function OnboardingProfile({
     setLoading(true);
     setError('');
     try {
-      const profile = {
+      await onSubmitProfile({
         firstName: normalizedFirstName,
         lastName: normalizedLastName,
-      };
-      if (isPreOtp) {
-        await onSubmitProfile(profile);
-        return;
-      }
-      if (pending) {
-        await completeOnboarding(pending, profile);
-      } else {
-        throw new Error('Missing onboarding state');
-      }
-      onCompleted();
-    } catch (error) {
-      setError(getOnboardingErrorMessage(error));
+      });
+    } catch {
+      setError('No pudimos enviarte el codigo. Intenta de nuevo.');
       setLoading(false);
     }
   }
@@ -79,12 +58,10 @@ export function OnboardingProfile({
 
       <div className="flex flex-col gap-2">
         <h2 className="text-2xl font-bold tracking-tight text-foreground">
-          {isPreOtp ? 'Completa tu perfil' : 'Termina tu registro'}
+          Completa tu perfil
         </h2>
         <p className="text-sm leading-relaxed text-muted-foreground">
-          {isPreOtp
-            ? 'Necesitamos tus datos basicos antes de enviarte el codigo.'
-            : 'Necesitamos tus datos basicos para terminar de crear tu identidad.'}
+          Necesitamos tus datos basicos antes de enviarte el codigo.
         </p>
       </div>
 
@@ -135,27 +112,9 @@ export function OnboardingProfile({
           disabled={loading}
           className="h-12 w-full rounded-2xl text-sm font-medium dark:shadow-[0_14px_28px_-20px_rgb(0_0_0_/_0.72)]"
         >
-          {loading
-            ? 'Guardando...'
-            : isPreOtp
-              ? 'Continuar a verificacion'
-              : 'Continuar'}
+          {loading ? 'Guardando...' : 'Continuar a verificacion'}
         </Button>
       </form>
     </div>
   );
-}
-
-function getOnboardingErrorMessage(error: unknown): string {
-  if (!error || typeof error !== 'object') {
-    return 'No pudimos completar el registro. Intenta de nuevo.';
-  }
-
-  const status = (error as { status?: unknown }).status;
-  const code = (error as { code?: unknown }).code;
-  if (status === 409 || code === 'E_IDENTITY_ALREADY_EXISTS') {
-    return 'Tu identidad ya existe. Vuelve e intenta verificar el codigo otra vez.';
-  }
-
-  return 'No pudimos completar el registro. Intenta de nuevo.';
 }
