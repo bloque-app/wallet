@@ -46,16 +46,18 @@ export function getRecipientName(data: {
   participant: ResolvedRecipient['participant'];
 }) {
   const owner = data.owner;
-  const personalName = [
-    owner?.name,
-    owner?.firstName,
-    owner?.secondName,
-    owner?.firstLastName,
-    owner?.secondLastName,
-  ]
-    .filter((value): value is string => !!value?.trim())
-    .join(' ')
-    .trim();
+  const fullName = owner?.name?.trim();
+  const personalName = fullName
+    ? fullName
+    : [
+        owner?.firstName,
+        owner?.secondName,
+        owner?.firstLastName,
+        owner?.secondLastName,
+      ]
+        .filter((value): value is string => !!value?.trim())
+        .join(' ')
+        .trim();
   const participantName = data.participant?.name ?? null;
 
   return (
