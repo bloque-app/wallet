@@ -84,6 +84,7 @@ function RouteComponent() {
       group: 'brazil',
       fee: '2% + 2%',
       hasFeeInfo: true,
+      comingSoon: true,
     },
   ];
 

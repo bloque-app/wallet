@@ -382,7 +382,7 @@ function RouteComponent() {
               title: t('topup.methods.pix.title'),
               subtitle: t('topup.methods.pix.subtitle'),
               icon: KeyRound,
-              enabled: true,
+              enabled: false,
               onClick: () => navigate({ to: '/topup/pix' }),
               group: 'brazil',
               fee: '2% + 2%',
