@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { AccountCarousel } from '~/components/account/account-carousel';
 import { ComingSoonBadge } from '~/components/coming-soon';
+import { CurrencyFlag } from '~/components/currency-flag';
 import { FeeInfo } from '~/components/fee-info';
 import { RequireKyc } from '~/components/kyc/require-kyc';
 import { PageHeader } from '~/components/page-header';
@@ -439,28 +440,32 @@ function RouteComponent() {
           return (
             <>
               <section className="flex flex-col gap-3">
-                <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <CurrencyFlag currency="COP" className="h-3 w-[18px]" />
                   {t('topup.groups.colombia')}
                 </h2>
                 {colombiaMethods.map(renderMethod)}
               </section>
 
               <section className="flex flex-col gap-3">
-                <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <CurrencyFlag currency="USD" className="h-3 w-[18px]" />
                   {t('topup.groups.us')}
                 </h2>
                 {usMethods.map(renderMethod)}
               </section>
 
               <section className="flex flex-col gap-3">
-                <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <CurrencyFlag currency="MXN" className="h-3 w-[18px]" />
                   {t('topup.groups.mexico')}
                 </h2>
                 {mexicoMethods.map(renderMethod)}
               </section>
 
               <section className="flex flex-col gap-3">
-                <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <CurrencyFlag currency="BRL" className="h-3 w-[18px]" />
                   {t('topup.groups.brazil')}
                 </h2>
                 {brazilMethods.map(renderMethod)}

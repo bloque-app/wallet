@@ -3,6 +3,7 @@ import { Building2, KeyRound, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { BackButton } from '~/components/back-button';
 import { ComingSoonBadge } from '~/components/coming-soon';
+import { CurrencyFlag } from '~/components/currency-flag';
 import { FeeInfo } from '~/components/fee-info';
 import { US_RAILS_ENABLED } from '~/config/features';
 import { formatAmountWithCode, formatCOP, formatUSD } from '~/lib/formatters';
@@ -117,7 +118,8 @@ function RouteComponent() {
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <CurrencyFlag currency="COP" className="h-3 w-[18px]" />
           {t('send.groups.colombia')}
         </h2>
         {colombiaOptions.map((option) =>
@@ -126,7 +128,8 @@ function RouteComponent() {
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <CurrencyFlag currency="USD" className="h-3 w-[18px]" />
           {t('send.groups.us')}
         </h2>
         {usOptions.map((option) =>
@@ -135,7 +138,8 @@ function RouteComponent() {
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <CurrencyFlag currency="MXN" className="h-3 w-[18px]" />
           {t('send.groups.mexico')}
         </h2>
         {mexicoOptions.map((option) =>
@@ -144,7 +148,8 @@ function RouteComponent() {
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <CurrencyFlag currency="BRL" className="h-3 w-[18px]" />
           {t('send.groups.brazil')}
         </h2>
         {brazilOptions.map((option) =>

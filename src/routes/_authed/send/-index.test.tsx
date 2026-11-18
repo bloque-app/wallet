@@ -28,4 +28,14 @@ describe('send route', () => {
 
     expect(container.querySelector('a[href="/send/spei"]')).not.toBeNull();
   });
+
+  test('each country group shows its flag next to the title', () => {
+    render(<SendPage />);
+
+    const headings = screen.getAllByRole('heading', { level: 2 });
+    expect(headings).toHaveLength(4);
+    for (const heading of headings) {
+      expect(heading.querySelector('svg')).not.toBeNull();
+    }
+  });
 });
